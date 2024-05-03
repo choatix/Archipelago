@@ -2204,6 +2204,70 @@ def set_rules(multiworld: MultiWorld, world: World, player: int, gate_bosses: ty
     # Mission Progression Rules (Mission 1 begets Mission 2, etc.)
     set_mission_progress_rules(multiworld, player, mission_map, mission_count_map)
 
+    if True:
+        for location in world.multiworld.get_locations(world.player):
+            if "Sand Ocean" in location.name:
+                add_rule(
+                    location,
+                    lambda state: state.has(ItemName.eggman_jet_engine, player)
+                )
+            if "Final Chase" in location.name:
+                add_rule(
+                    location,
+                    lambda state: state.has(ItemName.shadow_ancient_light, player)
+                )
+
+            if "Final Rush" in location.name:
+                add_rule(
+                    location,
+                    lambda state: state.has(ItemName.sonic_ancient_light, player)
+                )
+
+            if "Eternal Engine" in location.name:
+                add_rule(
+                    location,
+                    lambda state: state.has(ItemName.tails_laser_blaster, player)
+                )
+
+            if "Cosmic Wall" in location.name:
+                add_rule(
+                    location,
+                    lambda state: state.has(ItemName.eggman_laser_blaster, player)
+                )
+
+            if "Cannon's Core" in location.name:
+                add_rule(
+                    location,
+                    lambda state: state.has(ItemName.sonic_gloves, player)
+                                  and state.has(ItemName.sonic_ancient_light, player)
+                                  and state.has(ItemName.sonic_bounce_bracelet, player)
+                                  and state.has(ItemName.sonic_mystic_melody, player)
+                                  and state.has(ItemName.sonic_flame_ring, player)
+                                  and state.has(ItemName.sonic_mystic_melody, player)
+                                  and state.has(ItemName.eggman_laser_blaster, player)
+                                  and state.has(ItemName.eggman_protective_armor, player)
+                                  and state.has(ItemName.eggman_jet_engine, player)
+                                  and state.has(ItemName.eggman_mystic_melody, player)
+                                  and state.has(ItemName.eggman_large_cannon, player)
+                                  and state.has(ItemName.rouge_pick_nails, player)
+                                  and state.has(ItemName.rouge_iron_boots, player)
+                                  and state.has(ItemName.rouge_treasure_scope, player)
+                                  and state.has(ItemName.rouge_mystic_melody, player)
+                                  and state.has(ItemName.tails_booster, player)
+                                  and state.has(ItemName.tails_laser_blaster, player)
+                                  and state.has(ItemName.tails_bazooka, player)
+                                  and state.has(ItemName.tails_mystic_melody, player)
+                                  and state.has(ItemName.shadow_air_shoes, player)
+                                  and state.has(ItemName.shadow_ancient_light, player)
+                                  and state.has(ItemName.shadow_flame_ring, player)
+                                  and state.has(ItemName.shadow_mystic_melody, player)
+                                  and state.has(ItemName.knuckles_sunglasses, player)
+                                  and state.has(ItemName.knuckles_shovel_claws, player)
+                                  and state.has(ItemName.knuckles_air_necklace, player)
+                                  and state.has(ItemName.knuckles_hammer_gloves, player)
+                                  and state.has(ItemName.knuckles_mystic_melody, player)
+                )
+
     if world.options.goal.value != 3:
         # Upgrade Requirements for each mission location
         if world.options.logic_difficulty.value == 0:

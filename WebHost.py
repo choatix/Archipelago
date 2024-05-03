@@ -132,9 +132,10 @@ if __name__ == "__main__":
         autohost(app.config)
     if app.config["SELFGEN"]:
         autogen(app.config)
+    port=51000
     if app.config["SELFHOST"]:  # using WSGI, you just want to run get_app()
         if app.config["DEBUG"]:
-            app.run(debug=True, port=app.config["PORT"])
+            app.run(debug=True, port=port)
         else:
             from waitress import serve
-            serve(app, port=app.config["PORT"], threads=app.config["WAITRESS_THREADS"])
+            serve(app, port=port, threads=app.config["WAITRESS_THREADS"])

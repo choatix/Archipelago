@@ -1,3 +1,6 @@
+import ast
+import json
+import random
 import typing
 import copy
 
@@ -237,15 +240,41 @@ def get_mission_count_table(multiworld: MultiWorld, world: World, player: int):
             cannons_core_active_missions
         ]
 
+        x = getattr(world.options, "level_weights")
+        if x is None or x.current_option_name == "":
+            weight_json = {}
+        else:
+            weight_json = ast.literal_eval(x.current_option_name)
+        # Don't know how to implement this properly
+
         for level in range(31):
             level_style = level_styles[level]
             level_mission_count = active_missions[level_style]
-            mission_count_table[level] = level_mission_count
+
+            level_name = stage_name_prefixes[level].replace(" - ", "")
+            if level_name in weight_json:
+                weights = weight_json[level_name]
+                # Choose one
+
+                mission_count_options = [ count for count in list(weights.keys()) if count <= level_mission_count ]
+                if len(mission_count_options) == 0:
+                    mission_count_table[level] = level_mission_count
+                else:
+                    for keyvalue in weights.items():
+                        if keyvalue[0] > level_mission_count:
+                            weights[keyvalue[0]] = 0
+
+                    chosen_count = random.choices(list(weights.keys()),
+                                             weights=list(map(int, weights.values())))[0]
+                    mission_count_table[level] = min(level_mission_count, chosen_count)
+
+            else:
+                mission_count_table[level] = level_mission_count
 
     return mission_count_table
 
 
-def get_mission_table(multiworld: MultiWorld, world: World, player: int):
+def get_mission_table(multiworld: MultiWorld, world: World, player: int, mission_count_map: typing.Dict[int, int]):
     mission_table: typing.Dict[int, int] = {}
 
     if world.options.goal == 3:
@@ -283,7 +312,20 @@ def get_mission_table(multiworld: MultiWorld, world: World, player: int):
             cannons_core_active_missions
         ]
 
+        excluded_set = multiworld.exclude_locations[player].value
+        excluded = {}
+        for stage_name in stage_name_prefixes:
+            for i in range(1, 6):
+                if stage_name + str(i) in excluded_set:
+                    level_name = stage_name.replace(" - ", "")
+                    if level_name not in excluded:
+                        excluded[level_name] = []
+                    excluded[level_name].append(i)
+
         for level in range(31):
+
+            mission_count = mission_count_map[level]
+
             level_style = level_styles[level]
 
             level_active_missions: typing.List[int] = copy.deepcopy(active_missions[level_style])
@@ -293,21 +335,44 @@ def get_mission_table(multiworld: MultiWorld, world: World, player: int):
             first_mission = 1
             first_mission_options = [1, 2, 3]
 
+            level_name = stage_name_prefixes[level].replace(" - ", "")
+            excluded_missions = []
+            if level_name in excluded:
+                excluded_missions = excluded[level_name]
+
+
+            if mission_count == 1 and level_style != 3:
+                first_mission_options.remove(2)
+
             if not world.options.animalsanity:
                 first_mission_options.append(4)
 
             if world.options.mission_shuffle:
-                first_mission = multiworld.random.choice([mission for mission in level_active_missions if mission in first_mission_options])
+                first_mission = multiworld.random.choice([mission for mission in level_active_missions if mission in first_mission_options
+                                                          and mission not in excluded_missions])
 
             level_active_missions.remove(first_mission)
 
             # Place Active Missions in the chosen mission list
             for mission in level_active_missions:
-                if mission not in level_chosen_missions:
+                if mission not in level_chosen_missions and mission not in excluded_missions:
                     level_chosen_missions.append(mission)
 
             if world.options.mission_shuffle:
+                cannot_be_5 = False
+                if mission_count == 2 and first_mission == 2 and len(level_chosen_missions) > 1:
+                    cannot_be_5 = True
+
                 multiworld.random.shuffle(level_chosen_missions)
+
+                valid = False
+                while not valid:
+                    valid = True
+                    if cannot_be_5 and level_chosen_missions[0] == 5:
+                        valid = False
+
+                    multiworld.random.shuffle(level_chosen_missions)
+
 
             level_chosen_missions.insert(0, first_mission)
 

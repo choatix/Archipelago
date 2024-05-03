@@ -742,6 +742,7 @@ class VoiceShuffle(Choice):
     option_rude = 2
     option_chao = 3
     option_singularity = 4
+    option_shuffled_no_omochao = 5
     default = 0
 
 
@@ -774,6 +775,9 @@ class LogicDifficulty(Choice):
     option_standard = 0
     option_hard = 1
     default = 0
+
+class LevelWeights(OptionList):
+    exists = True
 
 
 sa2b_options: typing.Dict[str, type(Option)] = {
@@ -868,4 +872,5 @@ sa2b_options: typing.Dict[str, type(Option)] = {
 
     "ring_link": RingLink,
     "death_link": DeathLink,
+    "level_weights": LevelWeights
 }
