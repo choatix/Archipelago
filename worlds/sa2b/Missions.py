@@ -6,7 +6,7 @@ import copy
 
 from BaseClasses import MultiWorld
 from worlds.AutoWorld import World
-
+from worlds.sa2b.Options import BaseLevelCount
 
 mission_orders: typing.List[typing.List[int]] = [
     [1, 2, 3, 4, 5],
@@ -240,33 +240,39 @@ def get_mission_count_table(multiworld: MultiWorld, world: World, player: int):
             cannons_core_active_missions
         ]
 
-        x = getattr(world.options, "level_weights")
-        if x is None or x.current_option_name == "":
-            weight_json = {}
-        else:
-            weight_json = ast.literal_eval(x.current_option_name)
-        # Don't know how to implement this properly
+        use_level_weights = False
+        use_level_weight = getattr(world.options, "level_weights")
+        if use_level_weight:
+            use_level_weights = True
 
         for level in range(31):
             level_style = level_styles[level]
             level_mission_count = active_missions[level_style]
 
             level_name = stage_name_prefixes[level].replace(" - ", "")
-            if level_name in weight_json:
-                weights = weight_json[level_name]
-                # Choose one
 
-                mission_count_options = [ count for count in list(weights.keys()) if count <= level_mission_count ]
-                if len(mission_count_options) == 0:
-                    mission_count_table[level] = level_mission_count
+            # TODO: Count excluded levels in settings and remove
+            max_non_excluded = 5
+
+
+
+            level_name_variable = level_name.lower().replace(" ","_")+"_levels"
+            if hasattr(world.options, level_name_variable) and use_level_weights:
+                count = getattr(world.options, level_name_variable)
+                if not isinstance(count,BaseLevelCount):
+                    print("Count unknown for::", level_name_variable, type(count))
+                if count == 0:
+                    count = level_mission_count
+                if count > level_mission_count:
+                    count = level_mission_count
+                if count > max_non_excluded:
+                    count = max_non_excluded
+
+                if type(count) == int:
+                    print("Issue with processing field:", level_name_variable)
+                    mission_count_table[level] = count
                 else:
-                    for keyvalue in weights.items():
-                        if keyvalue[0] > level_mission_count:
-                            weights[keyvalue[0]] = 0
-
-                    chosen_count = random.choices(list(weights.keys()),
-                                             weights=list(map(int, weights.values())))[0]
-                    mission_count_table[level] = min(level_mission_count, chosen_count)
+                    mission_count_table[level] = count.value
 
             else:
                 mission_count_table[level] = level_mission_count
@@ -314,13 +320,25 @@ def get_mission_table(multiworld: MultiWorld, world: World, player: int, mission
 
         excluded_set = multiworld.exclude_locations[player].value
         excluded = {}
-        for stage_name in stage_name_prefixes:
-            for i in range(1, 6):
-                if stage_name + str(i) in excluded_set:
-                    level_name = stage_name.replace(" - ", "")
-                    if level_name not in excluded:
-                        excluded[level_name] = []
-                    excluded[level_name].append(i)
+        if excluded_set is not None:
+            for stage_name in stage_name_prefixes:
+                for i in range(1, 6):
+                    if stage_name + str(i) in excluded_set:
+                        level_name = stage_name.replace(" - ", "")
+                        if level_name not in excluded:
+                            excluded[level_name] = []
+                        excluded[level_name].append(i)
+
+        required_in_shuffle = getattr(world.options, "required_missions", None)
+        required = {}
+        if required_in_shuffle is not None:
+            for stage_name in stage_name_prefixes:
+                for i in range(1, 6):
+                    if stage_name + str(i) in required_in_shuffle:
+                        level_name = stage_name.replace(" - ", "")
+                        if level_name not in required:
+                            required[level_name] = []
+                        required[level_name].append(i)
 
         for level in range(31):
 
@@ -340,6 +358,9 @@ def get_mission_table(multiworld: MultiWorld, world: World, player: int, mission
             if level_name in excluded:
                 excluded_missions = excluded[level_name]
 
+            required_missions = []
+            if level_name in required:
+                required_missions = required[level_name]
 
             if mission_count == 1 and level_style != 3:
                 first_mission_options.remove(2)
@@ -347,37 +368,46 @@ def get_mission_table(multiworld: MultiWorld, world: World, player: int, mission
             if not world.options.animalsanity:
                 first_mission_options.append(4)
 
+            use_required = False
+            if len(required_missions) > mission_count:
+                print("There is an issue with your required count settings...")
+                use_required = True
+            elif len(required_missions) == mission_count:
+                # First mission must be a required mission
+                use_required = True
+
+                pass
+
             if world.options.mission_shuffle:
-                first_mission = multiworld.random.choice([mission for mission in level_active_missions if mission in first_mission_options
-                                                          and mission not in excluded_missions])
+                valid_options = [mission for mission in level_active_missions if mission in first_mission_options
+                                                          and mission not in excluded_missions and
+                                                         (mission in required_missions if use_required else True)]
+                if len(valid_options) == 0:
+                    print("Error, invalid pick for:", mission_count, required_missions, use_required, level_name)
+                first_mission = multiworld.random.choice(valid_options)
+                if first_mission in required_missions:
+                    required_missions.remove(first_mission)
 
             level_active_missions.remove(first_mission)
 
+            for mission in required_missions:
+                if mission not in level_chosen_missions and mission not in excluded_missions:
+                    level_chosen_missions.append(mission)
+
             # Place Active Missions in the chosen mission list
             for mission in level_active_missions:
+                if len(level_chosen_missions) + 1 == mission_count:
+                    break
                 if mission not in level_chosen_missions and mission not in excluded_missions:
                     level_chosen_missions.append(mission)
 
             if world.options.mission_shuffle:
-                cannot_be_5 = False
-                if mission_count == 2 and first_mission == 2 and len(level_chosen_missions) > 1:
-                    cannot_be_5 = True
-
                 multiworld.random.shuffle(level_chosen_missions)
-
-                valid = False
-                while not valid:
-                    valid = True
-                    if cannot_be_5 and level_chosen_missions[0] == 5:
-                        valid = False
-
-                    multiworld.random.shuffle(level_chosen_missions)
-
 
             level_chosen_missions.insert(0, first_mission)
 
             # Fill in the non-included missions
-            for i in range(2,6):
+            for i in range(1,6):
                 if i not in level_chosen_missions:
                     level_chosen_missions.append(i)
 

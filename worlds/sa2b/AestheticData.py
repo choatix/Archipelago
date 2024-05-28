@@ -212,6 +212,8 @@ totally_real_item_names = [
 	"Shadow - Bounce Bracelet",
 	"Rouge - Air Necklace",
 	"Big Key (Eggman's Pyramid)",
+	"Sonic - Air Shoes",
+	"Shadow - Light Shoes"
 
 	"Sensor Bunker",
 	"Phantom",

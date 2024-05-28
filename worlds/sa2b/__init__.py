@@ -247,7 +247,8 @@ class SA2BWorld(World):
         current_gate_emblems = 0
         self.gate_costs = dict()
         self.gate_costs[0] = 0
-        gates = list()
+        self.gates = list()
+        gates = self.gates
         gates.append(LevelGate(0))
         for i in range(30):
             gates[current_gate].gate_levels.append(shuffled_region_list[i])
@@ -302,8 +303,9 @@ class SA2BWorld(World):
         junk_keys = list(junk_table.keys())
 
         # Chao Junk
-        if chao_active:
+        if chao_active and self.options.chaos_drives_enabled:
             junk_keys += list(chaos_drives_table.keys())
+
         eggs_keys = list(eggs_table.keys())
         fruits_keys = list(fruits_table.keys())
         seeds_keys = list(seeds_table.keys())
@@ -399,6 +401,48 @@ class SA2BWorld(World):
                     text = text.format((x + 1), get_boss_name(self.boss_rush_map[x]))
                     spoiler_handle.writelines(text)
                 spoiler_handle.write("\n")
+
+        header_text = "Sonic Adventure 2 Level Gates for {}:\n"
+        header_text = header_text.format(self.multiworld.player_name[self.player])
+        spoiler_handle.write(header_text)
+
+        for i in self.gates:
+            index = self.gates.index(i)
+            emblem_count = i.gate_emblem_count
+            levels = i.gate_levels
+
+            levels_list = [ Missions.stage_name_prefixes[level].replace(" - ", "") for level in levels ]
+
+            text = "Gate: {0}, Unlock: {1}\n Levels {2}\n"
+            text = text.format(index, emblem_count, levels_list)
+            spoiler_handle.writelines(text)
+
+
+        if self.options.mission_shuffle:
+            header_text = "Sonic Adventure 2 Missions for {}:\n"
+            header_text = header_text.format(self.multiworld.player_name[self.player])
+            spoiler_handle.write(header_text)
+
+            #self.mission_count_map = get_mission_count_table(self.multiworld, self, self.player)
+            #self.mission_map       = get_mission_table(self.multiworld, self, self.player, self.mission_count_map)
+
+            counter = self.mission_count_map
+            missions = self.mission_map
+
+            for missionKey in missions.keys():
+                level_name = Missions.stage_name_prefixes[missionKey].replace(" - ", "")
+                count = counter[missionKey]
+                missionOrder = missions[missionKey]
+                missionOrderIndex = Missions.mission_orders[missionOrder]
+
+                possibleMissions = missionOrderIndex[0:count]
+                text = "Level: {0} Missions: {1}\n"
+                text = text.format(level_name, possibleMissions)
+                spoiler_handle.writelines(text)
+
+            # mission_table[level] = level_mission_index
+
+
 
     def extend_hint_information(self, hint_data: typing.Dict[int, typing.Dict[int, str]]):
         gate_names = [
@@ -808,13 +852,23 @@ class SA2BWorld(World):
         name_list_copy = list(self.multiworld.player_name.values())
         name_list_copy.remove(self.multiworld.player_name[self.player])
 
+        if self.options.replace_chao_names.value:
+            chao_name_options = []
+        else:
+            chao_name_options = sample_chao_names.copy()
+
+        chao_name_options.extend(list(self.options.additional_chao_names.value))
+
         if len(name_list_copy) >= number_of_names:
             name_list_base = self.random.sample(name_list_copy, number_of_names)
         else:
             name_list_base = name_list_copy
             self.random.shuffle(name_list_base)
 
-            name_list_base += self.random.sample(sample_chao_names, number_of_names - len(name_list_base))
+            while len(chao_name_options) < number_of_names - len(name_list_base):
+                chao_name_options.append(random.choice(chao_name_options))
+
+            name_list_base += self.random.sample(chao_name_options, number_of_names - len(name_list_base))
 
         for name in name_list_base:
             for char_idx in range(7):
@@ -835,7 +889,14 @@ class SA2BWorld(World):
         item_names = []
         player_names = []
         progression_flags = []
-        totally_real_item_names_copy = totally_real_item_names.copy()
+
+        if self.options.replace_trap_names:
+            totally_real_item_names_copy = []
+        else:
+            totally_real_item_names_copy = totally_real_item_names.copy()
+
+        totally_real_item_names_copy.extend(list(self.options.additional_trap_names.value))
+
         location_names = [(LocationName.chao_black_market_base + str(i)) for i in range(1, self.options.black_market_slots.value + 1)]
         locations = [self.multiworld.get_location(location_name, self.player) for location_name in location_names]
         for location in locations:
@@ -860,7 +921,11 @@ class SA2BWorld(World):
             for chr_idx in range(len(player_names[item_idx][:16])):
                 market_data[(item_idx * 46) + 26 + chr_idx] = ord(player_names[item_idx][chr_idx])
 
-            market_data[(item_idx * 46) + 42] = ring_costs[progression_flags[item_idx]] * self.options.black_market_price_multiplier.value
+            # TODO: This feature could do with more configuration
+            multiplier_min = self.options.black_market_price_multiplier_min
+            random_multiplier = random.choice(range(multiplier_min, self.options.black_market_price_multiplier.value))
+            item_price = math.floor(ring_costs[progression_flags[item_idx]] * random_multiplier)
+            market_data[(item_idx * 46) + 42] = item_price
 
         return market_data
 

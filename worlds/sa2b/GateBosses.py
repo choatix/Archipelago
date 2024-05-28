@@ -20,14 +20,14 @@ gate_bosses_no_requirements_table = {
     mech_characters_1: 2,
     mech_characters_2: 3,
     hunt_characters_1: 4,
-    big_foot: 5,
-    hot_shot: 6,
     flying_dog: 7,
     egg_golem_sonic: 8,
     egg_golem_eggman: 9,
 }
 
 gate_bosses_with_requirements_table = {
+    big_foot: 5,
+    hot_shot: 6,
     king_boom_boo: 10,
 }
 

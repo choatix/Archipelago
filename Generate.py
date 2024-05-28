@@ -315,6 +315,64 @@ def roll_percentage(percentage: Union[int, float]) -> bool:
     return random.random() < (float(percentage) / 100)
 
 
+MATCH_TYPE_EQUAL = 0
+MATCH_TYPE_LESSTHAN = 1
+MATCH_TYPE_MORETHAN = 2
+MATCH_TYPE_RANGE = 3
+class MatchParams:
+
+    def __init__(self, option_set):
+        self.equalTo = []
+        self.ranges = []
+        self.match_type = None
+
+        # Maintain trigger result of single value
+        if "option_result" in option_set:
+            trigger_result = get_choice("option_result", option_set)
+            self.equalTo.append(trigger_result)
+            self.match_type = MATCH_TYPE_EQUAL
+
+        if "option_results" in option_set:
+            option_results = option_set["option_results"]
+            self.equalTo.extend(option_results)
+            self.match_type = MATCH_TYPE_EQUAL
+
+        if "option_less_than" in option_set:
+            trigger_result = get_choice("option_less_than", option_set)
+            self.ranges.append((trigger_result,))
+            self.match_type = MATCH_TYPE_LESSTHAN
+
+        if "option_more_than" in option_set:
+            trigger_result = get_choice("option_more_than", option_set)
+            trigger_tuple = (trigger_result,)
+            self.ranges.append(trigger_tuple)
+            self.match_type = MATCH_TYPE_MORETHAN
+
+        if "option_range" in option_set:
+            trigger_data = option_set["option_range"]
+            split_trigger_range = trigger_data.split(",")
+            trigger_tuple = (split_trigger_range[0],split_trigger_range[1])
+            self.ranges.append(trigger_tuple)
+            self.match_type = MATCH_TYPE_RANGE
+
+    def compare(self, value):
+        if self.match_type is None:
+            return False
+
+        if self.match_type == MATCH_TYPE_EQUAL:
+            count = len([ e for e in self.equalTo if e == value])
+        elif self.match_type == MATCH_TYPE_RANGE:
+            count = len([r for r in self.ranges if r[0] < value <= r[1]])
+        elif self.match_type == MATCH_TYPE_LESSTHAN:
+            count = len([r for r in self.ranges if len(r) == 1 and value < r[0]])
+        elif self.match_type == MATCH_TYPE_MORETHAN:
+            count = len([r for r in self.ranges if len(r) == 1 and value > r[0]])
+        else:
+            count = 0
+
+        return count > 0
+
+
 def update_weights(weights: dict, new_weights: dict, update_type: str, name: str) -> dict:
     logging.debug(f'Applying {new_weights}')
     cleaned_weights = {}
@@ -323,9 +381,9 @@ def update_weights(weights: dict, new_weights: dict, update_type: str, name: str
         if option.startswith("+") and option_name in weights:
             cleaned_value = weights[option_name]
             new_value = new_weights[option]
-            if isinstance(new_value, (set, dict)):
+            if isinstance(new_value, (set, dict)) and isinstance(cleaned_value, (set,dict)) :
                 cleaned_value.update(new_value)
-            elif isinstance(new_value, list):
+            elif isinstance(new_value, list) and isinstance(cleaned_value, list):
                 cleaned_value.extend(new_value)
             else:
                 raise Exception(f"Cannot apply merge to non-dict, set, or list type {option_name},"
@@ -392,10 +450,17 @@ def roll_triggers(weights: dict, triggers: list) -> dict:
                 logging.warning(f'Specified option name {option_set["option_name"]} did not '
                                 f'match with a root option. '
                                 f'This is probably in error.')
+
+            # TODO: Check type of option_set
             trigger_result = get_choice("option_result", option_set)
+            trigger_match_result = MatchParams(option_set)
+
+
+
             result = get_choice(key, currently_targeted_weights)
             currently_targeted_weights[key] = result
-            if result == trigger_result and roll_percentage(get_choice("percentage", option_set, 100)):
+            if (trigger_match_result.compare(result) and
+                    roll_percentage(get_choice("percentage", option_set, 100))):
                 for category_name, category_options in option_set["options"].items():
                     currently_targeted_weights = weights
                     if category_name:

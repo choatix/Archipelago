@@ -2206,34 +2206,34 @@ def set_rules(multiworld: MultiWorld, world: World, player: int, gate_bosses: ty
 
     if True:
         for location in world.multiworld.get_locations(world.player):
-            if "Sand Ocean" in location.name:
-                add_rule(
-                    location,
-                    lambda state: state.has(ItemName.eggman_jet_engine, player)
-                )
-            if "Final Chase" in location.name:
-                add_rule(
-                    location,
-                    lambda state: state.has(ItemName.shadow_ancient_light, player)
-                )
-
-            if "Final Rush" in location.name:
-                add_rule(
-                    location,
-                    lambda state: state.has(ItemName.sonic_ancient_light, player)
-                )
-
-            if "Eternal Engine" in location.name:
-                add_rule(
-                    location,
-                    lambda state: state.has(ItemName.tails_laser_blaster, player)
-                )
-
-            if "Cosmic Wall" in location.name:
-                add_rule(
-                    location,
-                    lambda state: state.has(ItemName.eggman_laser_blaster, player)
-                )
+            # if "Sand Ocean" in location.name:
+            #     add_rule(
+            #         location,
+            #         lambda state: state.has(ItemName.eggman_jet_engine, player)
+            #     )
+            # if "Final Chase" in location.name:
+            #     add_rule(
+            #         location,
+            #         lambda state: state.has(ItemName.shadow_ancient_light, player)
+            #     )
+            #
+            # if "Final Rush" in location.name:
+            #     add_rule(
+            #         location,
+            #         lambda state: state.has(ItemName.sonic_ancient_light, player)
+            #     )
+            #
+            # if "Eternal Engine" in location.name:
+            #     add_rule(
+            #         location,
+            #         lambda state: state.has(ItemName.tails_laser_blaster, player)
+            #     )
+            #
+            # if "Cosmic Wall" in location.name:
+            #     add_rule(
+            #         location,
+            #         lambda state: state.has(ItemName.eggman_laser_blaster, player)
+            #     )
 
             if "Cannon's Core" in location.name:
                 add_rule(
