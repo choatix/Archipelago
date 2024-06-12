@@ -1,8 +1,8 @@
 from typing import TYPE_CHECKING, Optional, Dict, FrozenSet
-from BaseClasses import Location, Region
 
-from .items import offset_item_value
+from BaseClasses import Location, Region
 from .data import data, BASE_OFFSET
+from .items import offset_item_value
 
 if TYPE_CHECKING:
     from . import PokemonCrystalWorld
@@ -61,6 +61,8 @@ def create_locations(world: PokemonCrystalWorld, regions: Dict[str, Region]) -> 
         exclude.add("Trainersanity")
     if not world.options.randomize_badges:
         exclude.add("Badge")
+    if not world.options.randomize_berry_trees:
+        exclude.add("BerryTree")
 
     for region_name, region_data in data.regions.items():
         if region_name in regions:

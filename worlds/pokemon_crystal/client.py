@@ -1,17 +1,14 @@
 from typing import TYPE_CHECKING, Dict, Set, List
 
-from NetUtils import ClientStatus
 import worlds._bizhawk as bizhawk
+from NetUtils import ClientStatus
 from worlds._bizhawk.client import BizHawkClient
-
 from .data import BASE_OFFSET, data
 
 if TYPE_CHECKING:
     from worlds._bizhawk.context import BizHawkClientContext
 else:
     BizHawkClientContext = object
-
-EXPECTED_ROM_VERSION = 3
 
 TRACKER_EVENT_FLAGS = [
     "EVENT_GOT_KENYA",
@@ -50,7 +47,9 @@ TRACKER_KEY_ITEM_FLAGS = [
     "EVENT_GOT_PHONE_CARD",
     "EVENT_GOT_EXPN_CARD",
     "EVENT_GOT_POKEGEAR",
-    "EVENT_GOT_POKEDEX"
+    "EVENT_GOT_POKEDEX",
+    "EVENT_MART_ESCAPE_ROPE",
+    "EVENT_MART_WATER_STONE"
 ]
 KEY_ITEM_FLAG_MAP = {data.event_flags[event]: event for event in TRACKER_KEY_ITEM_FLAGS}
 
@@ -63,6 +62,7 @@ class PokemonCrystalClient(BizHawkClient):
     local_set_events: Dict[str, bool]
     local_found_key_items: Dict[str, bool]
     phone_trap_locations: List[int]
+    current_map: List[int]
 
     def __init__(self) -> None:
         super().__init__()
@@ -71,6 +71,7 @@ class PokemonCrystalClient(BizHawkClient):
         self.local_set_events = {}
         self.local_found_key_items = {}
         self.phone_trap_locations = []
+        self.current_map = [0, 0]
 
     async def validate_rom(self, ctx: BizHawkClientContext) -> bool:
         from CommonClient import logger
@@ -82,8 +83,7 @@ class PokemonCrystalClient(BizHawkClient):
 
             rom_name = bytes([byte for byte in rom_info[0] if byte != 0]).decode("ascii")
             rom_version = int.from_bytes(rom_info[1], "little")
-            # logger.info(rom_name)
-            # logger.info(rom_version)
+
             if rom_name == "PM_CRYSTAL":
                 logger.info("ERROR: You appear to be running an unpatched version of Pokemon Crystal. "
                             "You need to generate a patch file and use it to create a patched ROM.")
@@ -94,8 +94,8 @@ class PokemonCrystalClient(BizHawkClient):
                 generator_version = "{0:x}".format(rom_version)
                 client_version = "{0:x}".format(data.rom_version)
                 logger.info("ERROR: The patch file used to create this ROM is not compatible with "
-                            "this client. Double check your client version against the version being "
-                            "used by the generator.")
+                            "this client. Double check your version of pokemon_crystal.apworld "
+                            "against the version used to generate this game.")
                 logger.info(f"Client checksum: {client_version}, Generator checksum: {generator_version}")
                 return False
         except UnicodeDecodeError:
@@ -143,7 +143,7 @@ class PokemonCrystalClient(BizHawkClient):
 
             read_result = await bizhawk.guarded_read(
                 ctx.bizhawk_ctx,
-                [(data.ram_addresses["wEventFlags"], 0x100, "WRAM")],  # Flags
+                [(data.ram_addresses["wEventFlags"], 0x104, "WRAM")],  # Flags
                 [overworld_guard]
             )
 
@@ -158,10 +158,9 @@ class PokemonCrystalClient(BizHawkClient):
             flag_bytes = read_result[0]
             for byte_i, byte in enumerate(flag_bytes):
                 for i in range(8):
+                    flag_id = byte_i * 8 + i
+                    location_id = flag_id + BASE_OFFSET
                     if byte & (1 << i) != 0:
-                        flag_id = byte_i * 8 + i
-
-                        location_id = flag_id + BASE_OFFSET
                         if location_id in ctx.server_locations:
                             local_checked_locations.add(location_id)
 
@@ -173,6 +172,13 @@ class PokemonCrystalClient(BizHawkClient):
 
                         if flag_id in KEY_ITEM_FLAG_MAP:
                             local_found_key_items[KEY_ITEM_FLAG_MAP[flag_id]] = True
+                    # else: # TODO: check if item is an overworld itemball
+                    #     if location_id in ctx.checked_locations:
+                    #         write_byte = byte & (1 << i)
+                    #         await bizhawk.write(ctx.bizhawk_ctx, [
+                    #             (data.ram_addresses["wEventFlags"],
+                    #              write_byte.to_bytes(1, "little"), "WRAM")
+                    #         ])
 
             if local_checked_locations != self.local_checked_locations:
                 self.local_checked_locations = local_checked_locations
@@ -204,7 +210,8 @@ class PokemonCrystalClient(BizHawkClient):
                     self.phone_trap_locations = read_locations
             else:
                 hint_locations = [location for location in self.phone_trap_locations[:phone_trap_index] if
-                                  location != 0 and location not in local_checked_locations]
+                                  location != 0 and location not in local_checked_locations
+                                  and location not in ctx.checked_locations]
                 if len(hint_locations):
                     await ctx.send_msgs([{
                         "cmd": "LocationScouts",
@@ -241,6 +248,20 @@ class PokemonCrystalClient(BizHawkClient):
                     "operations": [{"operation": "or", "value": key_bitfield}],
                 }])
                 self.local_found_key_items = local_found_key_items
+
+            read_result = await bizhawk.guarded_read(
+                ctx.bizhawk_ctx,
+                [(data.ram_addresses["wMapGroup"], 2, "WRAM")],  # Current Map
+                [overworld_guard]
+            )
+
+            if read_result is not None:
+                current_map = [int(x) for x in read_result[0]]
+                if self.current_map != current_map:
+                    self.current_map = current_map
+                    message = [{"cmd": "Bounce", "slots": [ctx.slot],
+                                "data": {"mapGroup": current_map[0], "mapNumber": current_map[1]}}]
+                    await ctx.send_msgs(message)
 
         except bizhawk.RequestFailedError:
             # Exit handler and return to main loop to reconnect

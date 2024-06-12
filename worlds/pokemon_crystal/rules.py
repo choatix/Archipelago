@@ -1,12 +1,19 @@
 from typing import TYPE_CHECKING
-from worlds.generic.Rules import add_rule, set_rule, CollectionRule
+
 from BaseClasses import CollectionState
+from worlds.generic.Rules import add_rule, set_rule
 from .data import data
 
 if TYPE_CHECKING:
     from . import PokemonCrystalWorld
 else:
     PokemonCrystalWorld = object
+
+
+def can_map_card_fly(state: CollectionState, world: PokemonCrystalWorld):
+    if world.options.randomize_pokegear:
+        return state.has("Map Card", world.player) and state.has("Pokegear", world.player)
+    return state.has("EVENT_GOT_MAP_CARD", world.player) and state.has("EVENT_GOT_POKEGEAR", world.player)
 
 
 def set_rules(world: PokemonCrystalWorld) -> None:
@@ -18,8 +25,14 @@ def set_rules(world: PokemonCrystalWorld) -> None:
         else:
             return state.has("HM01 Cut", world.player) and (has_badge(state, "hive") or has_badge(state, "cascade"))
 
-    # def can_fly(state: CollectionState):
-    #     return state.has("HM02 Fly", world.player) and state.has("Storm Badge", world.player)
+    def can_fly(state: CollectionState):
+        if world.options.hm_badge_requirements == 0:
+            return state.has("HM02 Fly", world.player) and has_badge(state, "storm")
+        elif world.options.hm_badge_requirements == 1:
+            return state.has("HM02 Fly", world.player)
+        else:
+            return state.has("HM02 Fly", world.player) and (
+                    has_badge(state, "storm") or has_badge(state, "thunder"))
 
     def can_surf(state: CollectionState):
         if world.options.hm_badge_requirements == 0:
@@ -159,7 +172,7 @@ def set_rules(world: PokemonCrystalWorld) -> None:
         return world.options.randomize_pokegear
 
     def johto_only():
-        return world.options.johto_only
+        return world.options.johto_only.value
 
     def trainersanity():
         return world.options.trainersanity
@@ -170,7 +183,12 @@ def set_rules(world: PokemonCrystalWorld) -> None:
                     and state.has("Radio Card", world.player)
                     and state.has("EXPN Card", world.player))
         else:
-            return state.has("EVENT_GOT_EXPN_CARD", world.player)
+            return (state.has("EVENT_GOT_POKEGEAR", world.player)
+                    and state.has("EVENT_GOT_RADIO_CARD", world.player)
+                    and state.has("EVENT_GOT_EXPN_CARD", world.player))
+
+    # Free Fly
+    set_rule(get_entrance("Fly"), can_fly)
 
     # Goal
     if world.options.goal == 1:
@@ -249,21 +267,19 @@ def set_rules(world: PokemonCrystalWorld) -> None:
     set_rule(get_entrance("REGION_RUINS_OF_ALPH_OMANYTE_CHAMBER -> REGION_RUINS_OF_ALPH_OMANYTE_ITEM_ROOM"),
              lambda state: can_surf(state) and can_strength(state))
 
-    set_rule(get_entrance("REGION_UNION_CAVE_B1F -> REGION_RUINS_OF_ALPH_OUTSIDE:TRAINER"), can_surf)
-
     # Route 32
     set_rule(get_location("Route 32 - Miracle Seed from Man in North"), lambda state: has_badge(state, "zephyr"))
 
     set_rule(get_location("Route 32 - TM05 from Roar Guy"), can_cut)
 
     # Union Cave
-
-    set_rule(get_entrance("REGION_UNION_CAVE_B1F -> REGION_UNION_CAVE_B2F"), can_surf)
+    set_rule(get_entrance("REGION_UNION_CAVE_1F -> REGION_UNION_CAVE_B1F:SOUTH"), can_surf)
+    set_rule(get_entrance("REGION_UNION_CAVE_B1F -> REGION_UNION_CAVE_B1F:NORTH"), can_surf)
+    set_rule(get_entrance("REGION_UNION_CAVE_B1F:SOUTH -> REGION_UNION_CAVE_B2F"), can_surf)
 
     # Azalea Town
-    set_rule(get_location("Slowpoke Well B2F - Kings Rock from Man"),
+    set_rule(get_entrance("REGION_SLOWPOKE_WELL_B1F -> REGION_SLOWPOKE_WELL_B2F"),
              lambda state: can_strength(state) and can_surf(state))
-    set_rule(get_location("Slowpoke Well B2F - Item 1"), lambda state: can_strength(state) and can_surf(state))
 
     set_rule(get_entrance("REGION_AZALEA_TOWN -> REGION_AZALEA_GYM"),
              lambda state: state.has("EVENT_CLEARED_SLOWPOKE_WELL", world.player))
@@ -317,6 +333,8 @@ def set_rules(world: PokemonCrystalWorld) -> None:
     set_rule(get_location("Route 35 - HP Up After Delivering Kenya"),
              lambda state: state.has("EVENT_GAVE_KENYA", world.player))
 
+    set_rule(get_entrance("REGION_ROUTE_35 -> REGION_ROUTE_35:FRUITTREE"), can_surf)
+
     # Sudowoodo
     set_rule(get_entrance("REGION_ROUTE_36 -> REGION_ROUTE_37"), lambda state: state.has("Squirtbottle", world.player))
 
@@ -344,7 +362,7 @@ def set_rules(world: PokemonCrystalWorld) -> None:
                  lambda state: state.has("S.S. Ticket", world.player))
 
         if hidden():
-            set_rule(get_location("Olivine Port - Hidden Item in Southeast Buoy"),
+            set_rule(get_location("Olivine Port - Hidden Item in Southwest Buoy"),
                      lambda state: state.has("S.S. Ticket", world.player) and can_surf(state))
 
     set_rule(get_entrance("REGION_OLIVINE_CITY -> REGION_OLIVINE_GYM"),
@@ -372,7 +390,7 @@ def set_rules(world: PokemonCrystalWorld) -> None:
              lambda state: can_whirlpool(state) and can_flash(state))
 
     # Cianwood
-
+    set_rule(get_entrance("REGION_CIANWOOD_CITY -> REGION_ROUTE_41"), can_surf)
     if hidden():
         set_rule(get_location("Cianwood City - Hidden Item in West Rock"), can_rocksmash)
 
@@ -381,7 +399,7 @@ def set_rules(world: PokemonCrystalWorld) -> None:
     set_rule(get_location("Cianwood City - HM02 from Chuck's Wife"),
              lambda state: state.has("EVENT_BEAT_CHUCK", world.player))
 
-    set_rule(get_entrance("REGION_CIANWOOD_CITY -> REGION_CIANWOOD_GYM"), can_strength)
+    set_rule(get_entrance("REGION_CIANWOOD_GYM -> REGION_CIANWOOD_GYM:STRENGTH"), can_strength)
 
     set_rule(get_location("Cianwood Pharmacy - Secretpotion"),
              lambda state: state.has("EVENT_JASMINE_EXPLAINED_AMPHYS_SICKNESS", world.player))
@@ -394,6 +412,8 @@ def set_rules(world: PokemonCrystalWorld) -> None:
     set_rule(get_entrance("REGION_ROUTE_42:EAST -> REGION_ROUTE_42:CENTER"), can_surf)
     set_rule(get_entrance("REGION_ROUTE_42:CENTER -> REGION_ROUTE_42:EAST"), can_surf)
 
+    set_rule(get_entrance("REGION_ROUTE_42:CENTER -> REGION_ROUTE_42:CENTERFRUIT"), can_cut)
+
     if hidden():
         set_rule(get_location("Route 42 - Hidden Item in Pond Rock"), can_surf)
 
@@ -402,12 +422,10 @@ def set_rules(world: PokemonCrystalWorld) -> None:
              lambda state: can_surf(state) and can_waterfall(state))
 
     # 1F Inside Front
-    set_rule(get_location("Mount Mortar 1F Inside - Item 1"), can_strength)
-    set_rule(get_location("Mount Mortar 1F Inside - Item 2"), can_strength)
-    set_rule(get_location("Mount Mortar 1F Inside - Item 6"), can_strength)
-    set_rule(get_location("Mount Mortar 1F Inside - Item 7"), can_strength)
-    if trainersanity():
-        set_rule(get_location("Mount Mortar 1F Inside - Super Nerd Markus"), can_strength)
+    set_rule(get_entrance("REGION_MOUNT_MORTAR_1F_INSIDE:FRONT -> REGION_MOUNT_MORTAR_1F_INSIDE:STRENGTH"),
+             can_strength)
+    set_rule(get_entrance("REGION_MOUNT_MORTAR_1F_INSIDE:STRENGTH -> REGION_MOUNT_MORTAR_1F_INSIDE:FRONT"),
+             can_strength)
 
     # 1F C -> B1F Everything needs surf so im being lazy
 
@@ -430,6 +448,9 @@ def set_rules(world: PokemonCrystalWorld) -> None:
 
     # Route 43
 
+    set_rule(get_entrance("REGION_ROUTE_43 -> REGION_ROUTE_43:FRUITTREE"),
+             lambda state: can_cut(state) and can_surf(state))
+
     set_rule(get_location("Route 43 - Sludge Bomb from Guard in Gate"),
              lambda state: state.has("EVENT_CLEARED_ROCKET_HIDEOUT", world.player))
 
@@ -447,9 +468,8 @@ def set_rules(world: PokemonCrystalWorld) -> None:
     set_rule(get_location("Route 44 - Item 2"), can_surf)
 
     # Ice Path
-    set_rule(get_entrance("REGION_ICE_PATH_B2F_MAHOGANY_SIDE -> REGION_ICE_PATH_B3F"), can_strength)
-
-    set_rule(get_location("Ice Path B2F - Item 2"), can_strength)
+    set_rule(get_entrance("REGION_ICE_PATH_B2F_MAHOGANY_SIDE -> REGION_ICE_PATH_B2F_MAHOGANY_SIDE:MIDDLE"),
+             can_strength)
 
     # Blackthorn
 
@@ -462,11 +482,8 @@ def set_rules(world: PokemonCrystalWorld) -> None:
              lambda state: state.has("EVENT_BEAT_CLAIR", world.player) and can_surf(state))
 
     # Dragons Den
-    set_rule(get_location("Dragon's Den B1F - Item 2"), can_whirlpool)
-
-    if hidden():
-        set_rule(get_location("Dragon's Den B1F - Hidden Item in Water 1"), can_whirlpool)
-        set_rule(get_location("Dragon's Den B1F - Hidden Item in SE Corner"), can_whirlpool)
+    set_rule(get_entrance("REGION_DRAGONS_DEN_B1F -> REGION_DRAGONS_DEN_B1F:WATER"), can_surf)
+    set_rule(get_entrance("REGION_DRAGONS_DEN_B1F:WATER -> REGION_DRAGONS_DEN_B1F:WHIRLPOOL"), can_whirlpool)
 
     # Route 45
 
@@ -477,9 +494,13 @@ def set_rules(world: PokemonCrystalWorld) -> None:
 
     set_rule(get_entrance("REGION_ROUTE_27:WEST -> REGION_NEW_BARK_TOWN"), can_surf)
 
+    set_rule(get_entrance("REGION_ROUTE_27:WEST -> REGION_ROUTE_27:WESTWATER"), can_surf)
+
     set_rule(get_entrance("REGION_ROUTE_27:CENTER -> REGION_ROUTE_27:EAST"), can_surf)
 
     set_rule(get_entrance("REGION_ROUTE_27:EAST -> REGION_ROUTE_27:CENTER"), can_surf)
+
+    set_rule(get_entrance("REGION_ROUTE_27:EAST -> REGION_ROUTE_27:EASTWHIRLPOOL"), can_whirlpool)
 
     set_rule(get_location("Route 27 - Item 1"), can_surf)
 
@@ -494,19 +515,13 @@ def set_rules(world: PokemonCrystalWorld) -> None:
     set_rule(get_entrance("REGION_TOHJO_FALLS:EAST -> REGION_TOHJO_FALLS:WEST"),
              lambda state: can_surf(state) and can_waterfall(state))
 
-    # Victory Road
-
     set_rule(get_entrance("REGION_VICTORY_ROAD_GATE -> REGION_VICTORY_ROAD"), has_elite_four_badges)
 
-    set_rule(get_entrance("REGION_VICTORY_ROAD_GATE -> REGION_ROUTE_26"), has_elite_four_badges)
+    # set_rule(get_entrance("REGION_VICTORY_ROAD_GATE -> REGION_ROUTE_26"), has_elite_four_badges)
 
-    if not johto_only():
-        set_rule(get_entrance("REGION_ROUTE_22 -> REGION_VICTORY_ROAD_GATE"),
-                 lambda state: state.has("EVENT_FOUGHT_SNORLAX", world.player))
+    # Victory Road
 
-        set_rule(get_entrance("REGION_VICTORY_ROAD_GATE -> REGION_ROUTE_22"),
-                 lambda state: state.has("EVENT_FOUGHT_SNORLAX", world.player))
-
+    if johto_only() != 1:
         set_rule(get_entrance("REGION_ROUTE_28 -> REGION_VICTORY_ROAD_GATE"),
                  lambda state: state.has("EVENT_OPENED_MT_SILVER", world.player))
 
@@ -530,6 +545,15 @@ def set_rules(world: PokemonCrystalWorld) -> None:
 
         set_rule(get_entrance("REGION_SILVER_CAVE_ROOM_2 -> REGION_SILVER_CAVE_ITEM_ROOMS"),
                  lambda state: can_surf(state) and can_waterfall(state))
+
+        set_rule(get_location("EVENT_OPENED_MT_SILVER"), has_red_badges)
+
+    if not johto_only():
+        set_rule(get_entrance("REGION_ROUTE_22 -> REGION_VICTORY_ROAD_GATE"),
+                 lambda state: state.has("EVENT_FOUGHT_SNORLAX", world.player))
+
+        set_rule(get_entrance("REGION_VICTORY_ROAD_GATE -> REGION_ROUTE_22"),
+                 lambda state: state.has("EVENT_FOUGHT_SNORLAX", world.player))
 
         # Viridian
         set_rule(get_location("Viridian City - TM42 from Sleepy Guy"), lambda state: can_surf(state) or can_cut(state))
@@ -594,7 +618,7 @@ def set_rules(world: PokemonCrystalWorld) -> None:
         set_rule(get_entrance("REGION_VERMILION_CITY -> REGION_VERMILION_GYM"),
                  lambda state: can_cut(state) or can_surf(state))
 
-        set_rule(get_location("Vermilion City - HP Up from Man by PokeCenter"), has_red_badges)
+        set_rule(get_location("Vermilion City - HP Up from Man by PokeCenter"), lambda state: has_n_badges(state, 16))
 
         set_rule(get_location("Vermilion City - Lost Item from Guy in Fan Club"),
                  lambda state: state.has("EVENT_RESTORED_POWER_TO_KANTO", world.player) and state.has(
@@ -643,6 +667,10 @@ def set_rules(world: PokemonCrystalWorld) -> None:
         # Route 15
         set_rule(get_location("Route 15 - Item"), can_cut)
 
+        # Fuchsia City
+        if world.options.randomize_berry_trees:
+            set_rule(get_location("Fuchsia City - Berry Tree"), can_cut)
+
         set_rule(get_entrance("REGION_ROUTE_19_FUCHSIA_GATE -> REGION_ROUTE_19"),
                  lambda state: state.has("EVENT_CINNABAR_ROCKS_CLEARED", world.player) and can_surf(state))
 
@@ -651,10 +679,6 @@ def set_rules(world: PokemonCrystalWorld) -> None:
         set_rule(get_entrance("REGION_CINNABAR_ISLAND -> REGION_ROUTE_21"), can_surf)
 
         set_rule(get_entrance("REGION_PALLET_TOWN -> REGION_ROUTE_21"), can_surf)
-
-        # Pallet
-
-        set_rule(get_location("EVENT_OPENED_MT_SILVER"), has_red_badges)
 
     if world.options.require_itemfinder:
         for location in world.multiworld.get_locations(world.player):
