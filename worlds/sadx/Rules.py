@@ -9,4 +9,4 @@ def create_rules(self, location_table):
 
     for loc in location_table:
         if loc["needItem"] and loc["needItem"] >= 0:
-            add_rule(multiworld.get_location(loc["name"], player), lambda state: state.has(get_item_name(loc["id"]), player))
+            add_rule(multiworld.get_location(loc["name"], player), lambda state: state.has(get_item_name(loc["needItem"]), player))

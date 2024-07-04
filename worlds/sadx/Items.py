@@ -17,23 +17,23 @@ item_table: List[ItemDict] = [
     {"id": 6, "name": "Story unlock (Big)", "count": 1, "classification": ItemClassification.progression},
 
     {"id": 10, "name": "Light shoes (Sonic)", "count": 1, "classification": ItemClassification.progression},
-    {"id": 11, "name": "Crystal ring (Sonic)", "count": 1, "classification": ItemClassification.progression},
+    {"id": 11, "name": "Crystal ring (Sonic)", "count": 1, "classification": ItemClassification.useful},
     {"id": 12, "name": "Ancient light (Sonic)", "count": 1, "classification": ItemClassification.progression},
 
     {"id": 20, "name": "Jet Ankle (Tails)", "count": 1, "classification": ItemClassification.progression},
-    {"id": 21, "name": "Rhythm Badge (Tails)", "count": 1, "classification": ItemClassification.progression},
+    {"id": 21, "name": "Rhythm Badge (Tails)", "count": 1, "classification": ItemClassification.useful},
 
     {"id": 30, "name": "Shovel claw (Knuckles)", "count": 1, "classification": ItemClassification.progression},
-    {"id": 31, "name": "Fighting gloves (Knuckles)", "count": 1, "classification": ItemClassification.progression},
+    {"id": 31, "name": "Fighting gloves (Knuckles)", "count": 1, "classification": ItemClassification.useful},
 
-    {"id": 40, "name": "Long Hammer (Amy)", "count": 1, "classification": ItemClassification.progression},
-    {"id": 41, "name": "Warrior feather (Amy)", "count": 1, "classification": ItemClassification.progression},
+    {"id": 40, "name": "Long Hammer (Amy)", "count": 1, "classification": ItemClassification.useful},
+    {"id": 41, "name": "Warrior feather (Amy)", "count": 1, "classification": ItemClassification.useful},
 
-    {"id": 50, "name": "Laser Blaster (Gamma)", "count": 1, "classification": ItemClassification.progression},
+    {"id": 50, "name": "Laser Blaster (Gamma)", "count": 1, "classification": ItemClassification.useful},
     {"id": 51, "name": "Jet booster (Gamma)", "count": 1, "classification": ItemClassification.progression},
 
     {"id": 60, "name": "Life belt (Big)", "count": 1, "classification": ItemClassification.progression},
-    {"id": 61, "name": "Power rod (Big)", "count": 1, "classification": ItemClassification.progression},
+    {"id": 61, "name": "Power rod (Big)", "count": 1, "classification": ItemClassification.useful},
 
 ]
 
