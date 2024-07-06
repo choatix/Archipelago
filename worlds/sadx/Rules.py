@@ -8,7 +8,7 @@ def create_rules(self, location_table):
             location = self.multiworld.get_location(loc["name"], self.player)
             for itemNeeded in loc["needItems"]:
                 item_name = get_item_name(itemNeeded)
-                add_rule(location, lambda state: state.has(item_name, self.player))
+                add_rule(location, lambda state, item=item_name: state.has(item, self.player))
 
     self.multiworld.get_location("Perfect Chaos Fight", self.player).place_locked_item(
         self.create_item("Chaos' Peace"))
