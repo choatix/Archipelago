@@ -3,10 +3,15 @@ from worlds.sadx.Items import get_item_name
 
 
 def create_rules(self, location_table):
-    multiworld = self.multiworld
-    player = self.player
-    options = self.options
-
     for loc in location_table:
-        if loc["needItem"] and loc["needItem"] >= 0:
-            add_rule(multiworld.get_location(loc["name"], player), lambda state: state.has(get_item_name(loc["needItem"]), player))
+        if "needItems" in loc and len(loc["needItems"]) > 0:
+            location = self.multiworld.get_location(loc["name"], self.player)
+            for itemNeeded in loc["needItems"]:
+                item_name = get_item_name(itemNeeded)
+                add_rule(location, lambda state: state.has(item_name, self.player))
+
+    self.multiworld.get_location("Perfect Chaos Fight", self.player).place_locked_item(
+        self.create_item("Chaos' Peace"))
+    add_rule(self.multiworld.get_location("Perfect Chaos Fight", self.player),
+             lambda state: state.has("Emblem", self.player, 32))
+    self.multiworld.completion_condition[self.player] = lambda state: state.has("Chaos' Peace", self.player)

@@ -35,6 +35,10 @@ item_table: List[ItemDict] = [
     {"id": 60, "name": "Life belt (Big)", "count": 1, "classification": ItemClassification.progression},
     {"id": 61, "name": "Power rod (Big)", "count": 1, "classification": ItemClassification.useful},
 
+    {"id": 90, "name": "Emblem", "count": 32, "classification": ItemClassification.progression},
+
+    {"id": 91, "name": "Chaos' Peace", "count": 0, "classification": ItemClassification.progression},
+
 ]
 
 
