@@ -6,11 +6,10 @@ from .Names import LocationName
 
 def create_rules(self, location_table):
     for loc in location_table:
-        if "needItems" in loc and len(loc["needItems"]) > 0:
+        if "needs" in loc and len(loc["needs"]) > 0:
             location = self.multiworld.get_location(loc["name"], self.player)
-            for itemNeeded in loc["needItems"]:
-                item_name = get_item_name(itemNeeded)
-                add_rule(location, lambda state, item=item_name: state.has(item, self.player))
+            for itemNeeded in loc["needs"]:
+                add_rule(location, lambda state, item=itemNeeded: state.has(item, self.player))
 
     self.multiworld.get_location(LocationName.Story.Fight.PerfectChaos, self.player).place_locked_item(
         self.create_item(ItemName.Progression.ChaosPeace))

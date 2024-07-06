@@ -1,6 +1,6 @@
 class Progression:
-    Emblem: "Emblem"
-    ChaosPeace: "Chaos' Peace"
+    Emblem = "Emblem"
+    ChaosPeace = "Chaos' Peace"
 
 
 class Sonic:
