@@ -1,11 +1,12 @@
-from worlds.AutoWorld import WebWorld, World
+from typing import ClassVar, Dict, Any, Type
+
 from BaseClasses import Region, Location, Item, Tutorial
+from Options import PerGameCommonOptions
+from worlds.AutoWorld import WebWorld, World
 from .Items import item_table, get_item
 from .Locations import location_table
 from .Options import SonicAdventureDXOptions
 from .Rules import create_rules
-from Options import PerGameCommonOptions
-from typing import ClassVar, Dict, Any, Type
 
 base_id = 5438000
 
