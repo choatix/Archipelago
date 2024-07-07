@@ -5,7 +5,7 @@ from Options import PerGameCommonOptions
 from worlds.AutoWorld import WebWorld, World
 from .Items import item_table, get_item
 from .Locations import location_table
-from .Options import SonicAdventureDXOptions
+from .Options import SonicAdventureDXOptions, sadx_option_groups
 from .Rules import create_rules
 
 base_id = 5438000
@@ -21,7 +21,7 @@ class SonicAdventureDXWeb(WebWorld):
         "setup/en",
         ["ClassicSpeed"]
     )]
-    # option_groups = sadx_option_groups
+    option_groups = sadx_option_groups
 
 
 class SonicAdventureDXWorld(World):
