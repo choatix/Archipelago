@@ -73,6 +73,9 @@ class SonicAdventureDXWorld(World):
         emblem_count += len(self.get_character_level_locations("Big", self.options.big_missions))
         return emblem_count
 
+    def get_emblems_needed(self):
+        return int(round(self.get_emblem_count() * self.options.emblems_percentage / 100))
+
     def create_regions(self) -> None:
         menu_region = Region("Menu", self.player, self.multiworld)
         self.multiworld.regions.append(menu_region)
@@ -157,17 +160,16 @@ class SonicAdventureDXWorld(World):
         create_rules(self)
 
     def fill_slot_data(self) -> Dict[str, Any]:
-        options = self.options
-
-        settings = {
-            "storyRandomized": int(options.story_unlock_randomized),
+        return {
+            "ModVersion": "0.0.5",
+            "EmblemsForPerfectChaos": self.get_emblems_needed(),
+            "SonicMissions": self.options.sonic_missions,
+            "TailsMissions": self.options.tails_missions,
+            "KnucklesMissions": self.options.knuckles_missions,
+            "AmyMissions": self.options.amy_missions,
+            "GammaMissions": self.options.gamma_missions,
+            "BigMissions": self.options.big_missions,
         }
-
-        slot_data = {
-            "settings": settings,
-        }
-
-        return slot_data
 
 
 class SonicAdventureDXItem(Item):

@@ -32,7 +32,7 @@ def create_rules(self):
     self.multiworld.get_location(LocationName.Story.Fight.PerfectChaos, self.player).place_locked_item(
         self.create_item(ItemName.Progression.ChaosPeace))
 
-    emblem_count = int(round(self.get_emblem_count() * self.options.emblems_percentage / 100))
+    emblem_count = self.get_emblems_needed()
 
     add_rule(self.multiworld.get_location(LocationName.Story.Fight.PerfectChaos, self.player),
              lambda state: state.has(ItemName.Progression.Emblem, self.player, max(emblem_count, 1)))
