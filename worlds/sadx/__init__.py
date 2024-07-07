@@ -44,9 +44,10 @@ class SonicAdventureDXWorld(World):
 
         return SonicAdventureDXItem(name, classification, item_id, player=self.player)
 
-    def create_items(self) -> None:
+    def create_items(self):
         itempool = []
 
+        self.add_character_item(itempool, "Sonic", self.options.sonic_missions)
         self.add_character_item(itempool, "Tails", self.options.tails_missions)
         self.add_character_item(itempool, "Knuckles", self.options.knuckles_missions)
         self.add_character_item(itempool, "Amy", self.options.amy_missions)
@@ -59,7 +60,7 @@ class SonicAdventureDXWorld(World):
         for _ in emblem_count:
             itempool.append(self.create_item(ItemName.Progression.Emblem))
 
-        itempool.append(self.create_item(ItemName.Progression.ChaosPeace))
+        # itempool.append(self.create_item(ItemName.Progression.ChaosPeace))
         self.multiworld.itempool += itempool
 
     def get_emblem_count(self):
@@ -79,17 +80,16 @@ class SonicAdventureDXWorld(World):
         sonic_story = Region("Sonic's Story", self.player, self.multiworld)
         self.add_character_location(sonic_story, "Sonic", self.options.sonic_missions)
 
-        if self.options.tails_missions > 0:
-            self.add_character_region("Tails", "Tails' Story", self.options.tails_missions,
-                                      LocationName.Story.Meet.Tails, sonic_story, menu_region)
-            self.add_character_region("Knuckles", "Knuckles' Story", self.options.knuckles_missions,
-                                      LocationName.Story.Meet.Knuckles, sonic_story, menu_region)
-            self.add_character_region("Amy", "Amy's Story", self.options.amy_missions,
-                                      LocationName.Story.Meet.Amy, sonic_story, menu_region)
-            self.add_character_region("Gamma", "Gamma's Story", self.options.gamma_missions,
-                                      LocationName.Story.Meet.Gamma, sonic_story, menu_region)
-            self.add_character_region("Big", "Big's Story", self.options.big_missions,
-                                      LocationName.Story.Meet.Big, sonic_story, menu_region)
+        self.add_character_region("Tails", "Tails' Story", self.options.tails_missions,
+                                  LocationName.Story.Meet.Tails, sonic_story, menu_region)
+        self.add_character_region("Knuckles", "Knuckles' Story", self.options.knuckles_missions,
+                                  LocationName.Story.Meet.Knuckles, sonic_story, menu_region)
+        self.add_character_region("Amy", "Amy's Story", self.options.amy_missions,
+                                  LocationName.Story.Meet.Amy, sonic_story, menu_region)
+        self.add_character_region("Gamma", "Gamma's Story", self.options.gamma_missions,
+                                  LocationName.Story.Meet.Gamma, sonic_story, menu_region)
+        self.add_character_region("Big", "Big's Story", self.options.big_missions,
+                                  LocationName.Story.Meet.Big, sonic_story, menu_region)
 
         perfect_chaos = SonicAdventureDXLocation(self.player, LocationName.Story.Fight.PerfectChaos,
                                                  self.location_name_to_id[LocationName.Story.Fight.PerfectChaos],
@@ -140,7 +140,7 @@ class SonicAdventureDXWorld(World):
 
     def add_character_item(self, itempool: [], character_name: str, missions: Choice):
 
-        if missions == 0:
+        if missions < 1:
             return
         # We add all the upgrades and the story unlock
         for item in item_table:

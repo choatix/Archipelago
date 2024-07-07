@@ -6,7 +6,7 @@ from .Names import LocationName
 
 def create_rules(self):
     for ap_location in self.multiworld.get_locations(self.player):
-        loc = get_location_by_name(str(ap_location))
+        loc = get_location_by_name(ap_location.name)
         if loc is not None and "needs" in loc and len(loc["needs"]) > 0:
             location = self.multiworld.get_location(loc["name"], self.player)
             for itemNeeded in loc["needs"]:
