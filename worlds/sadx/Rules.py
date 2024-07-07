@@ -12,6 +12,23 @@ def create_rules(self):
             for itemNeeded in loc["needs"]:
                 add_rule(location, lambda state, item=itemNeeded: state.has(item, self.player))
 
+    if not self.options.story_unlock_randomized:
+        if self.options.tails_missions > 0:
+            self.multiworld.get_location(LocationName.Story.Meet.Tails, self.player).place_locked_item(
+                self.create_item(ItemName.Tails.StoryUnlock))
+        if self.options.knuckles_missions > 0:
+            self.multiworld.get_location(LocationName.Story.Meet.Knuckles, self.player).place_locked_item(
+                self.create_item(ItemName.Knuckles.StoryUnlock))
+        if self.options.amy_missions > 0:
+            self.multiworld.get_location(LocationName.Story.Meet.Amy, self.player).place_locked_item(
+                self.create_item(ItemName.Amy.StoryUnlock))
+        if self.options.gamma_missions > 0:
+            self.multiworld.get_location(LocationName.Story.Meet.Gamma, self.player).place_locked_item(
+                self.create_item(ItemName.Gamma.StoryUnlock))
+        if self.options.big_missions > 0:
+            self.multiworld.get_location(LocationName.Story.Meet.Big, self.player).place_locked_item(
+                self.create_item(ItemName.Big.StoryUnlock))
+
     self.multiworld.get_location(LocationName.Story.Fight.PerfectChaos, self.player).place_locked_item(
         self.create_item(ItemName.Progression.ChaosPeace))
 

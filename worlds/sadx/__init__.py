@@ -146,6 +146,8 @@ class SonicAdventureDXWorld(World):
         for item in item_table:
             if ("(" + character_name + ")") not in item["name"]:
                 continue
+            if not self.options.story_unlock_randomized and item["name"] == "Story unlock (" + character_name + ")":
+                continue
             if item["count"] <= 0:
                 continue
             for i in range(item["count"]):
