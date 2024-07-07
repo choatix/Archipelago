@@ -163,12 +163,12 @@ class SonicAdventureDXWorld(World):
         return {
             "ModVersion": "0.0.5",
             "EmblemsForPerfectChaos": self.get_emblems_needed(),
-            "SonicMissions": self.options.sonic_missions,
-            "TailsMissions": self.options.tails_missions,
-            "KnucklesMissions": self.options.knuckles_missions,
-            "AmyMissions": self.options.amy_missions,
-            "GammaMissions": self.options.gamma_missions,
-            "BigMissions": self.options.big_missions,
+            "SonicMissions": self.options.sonic_missions.value,
+            "TailsMissions": self.options.tails_missions.value,
+            "KnucklesMissions": self.options.knuckles_missions.value,
+            "AmyMissions": self.options.amy_missions.value,
+            "GammaMissions": self.options.gamma_missions.value,
+            "BigMissions": self.options.big_missions.value
         }
 
 
