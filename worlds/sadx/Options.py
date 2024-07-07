@@ -11,7 +11,7 @@ class StoryUnlockRandomized(DefaultOnToggle):
 
 class EmblemPercentage(Range):
     """What percentage of the available emblems do you need to unlock the final story"""
-    display_name = "Junk Fill Percentage"
+    display_name = "Emblem Requirement Percentage"
     range_start = 0
     range_end = 100
     default = 50
@@ -26,7 +26,7 @@ class BaseMissionChoice(Choice):
     default = 1
 
 
-class SonicMissions(BaseMissionChoice):
+class SonicMissions(Choice):
     """Choose what missions will be a location check for Sonic. You need at least the Sonic C's mission activated"""
     display_name = "Sonic's Missions"
     option_c = 1

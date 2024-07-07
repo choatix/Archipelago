@@ -175,3 +175,9 @@ location_table: List[LocationInfo] = [
     {"id": 9999, "name": LocationName.Story.Fight.PerfectChaos},
 
 ]
+
+
+def get_location_by_name(location_name: str) -> LocationInfo:
+    for location in location_table:
+        if location["name"] == location_name:
+            return location

@@ -1,10 +1,11 @@
 from typing import ClassVar, Dict, Any, Type
 
 from BaseClasses import Region, Location, Item, Tutorial
-from Options import PerGameCommonOptions
+from Options import PerGameCommonOptions, Choice
 from worlds.AutoWorld import WebWorld, World
-from .Items import item_table, get_item
+from .Items import item_table, get_item, ItemDict
 from .Locations import location_table
+from .Names import LocationName, ItemName
 from .Options import SonicAdventureDXOptions, sadx_option_groups
 from .Rules import create_rules
 
@@ -45,33 +46,113 @@ class SonicAdventureDXWorld(World):
 
     def create_items(self) -> None:
         itempool = []
-        for item in item_table:
-            count = item["count"]
 
-            if count <= 0:
-                continue
-            else:
-                for i in range(count):
-                    itempool.append(self.create_item(item["name"]))
+        self.add_character_item(itempool, "Tails", self.options.tails_missions)
+        self.add_character_item(itempool, "Knuckles", self.options.knuckles_missions)
+        self.add_character_item(itempool, "Amy", self.options.amy_missions)
+        self.add_character_item(itempool, "Gamma", self.options.gamma_missions)
+        self.add_character_item(itempool, "Big", self.options.big_missions)
 
+        emblem_count = self.get_emblem_count()
+
+        emblem_count = range(emblem_count)
+        for _ in emblem_count:
+            itempool.append(self.create_item(ItemName.Progression.Emblem))
+
+        itempool.append(self.create_item(ItemName.Progression.ChaosPeace))
         self.multiworld.itempool += itempool
+
+    def get_emblem_count(self):
+        emblem_count = 0
+        emblem_count += len(self.get_character_level_locations("Sonic", self.options.sonic_missions))
+        emblem_count += len(self.get_character_level_locations("Tails", self.options.tails_missions))
+        emblem_count += len(self.get_character_level_locations("Knuckles", self.options.knuckles_missions))
+        emblem_count += len(self.get_character_level_locations("Amy", self.options.amy_missions))
+        emblem_count += len(self.get_character_level_locations("Gamma", self.options.gamma_missions))
+        emblem_count += len(self.get_character_level_locations("Big", self.options.big_missions))
+        return emblem_count
 
     def create_regions(self) -> None:
         menu_region = Region("Menu", self.player, self.multiworld)
         self.multiworld.regions.append(menu_region)
 
-        main_region = Region("Sonic Adventure World", self.player, self.multiworld)
+        sonic_story = Region("Sonic's Story", self.player, self.multiworld)
+        self.add_character_location(sonic_story, "Sonic", self.options.sonic_missions)
 
+        if self.options.tails_missions > 0:
+            self.add_character_region("Tails", "Tails' Story", self.options.tails_missions,
+                                      LocationName.Story.Meet.Tails, sonic_story, menu_region)
+            self.add_character_region("Knuckles", "Knuckles' Story", self.options.knuckles_missions,
+                                      LocationName.Story.Meet.Knuckles, sonic_story, menu_region)
+            self.add_character_region("Amy", "Amy's Story", self.options.amy_missions,
+                                      LocationName.Story.Meet.Amy, sonic_story, menu_region)
+            self.add_character_region("Gamma", "Gamma's Story", self.options.gamma_missions,
+                                      LocationName.Story.Meet.Gamma, sonic_story, menu_region)
+            self.add_character_region("Big", "Big's Story", self.options.big_missions,
+                                      LocationName.Story.Meet.Big, sonic_story, menu_region)
+
+        perfect_chaos = SonicAdventureDXLocation(self.player, LocationName.Story.Fight.PerfectChaos,
+                                                 self.location_name_to_id[LocationName.Story.Fight.PerfectChaos],
+                                                 sonic_story)
+        sonic_story.locations.append(perfect_chaos)
+
+        self.multiworld.regions.append(sonic_story)
+        menu_region.connect(sonic_story)
+
+    def add_character_region(self, character_name: str, story_name: str, mission_choice: Choice, meet_loc: str,
+                             sonic_story: Region, menu_region: Region):
+        if mission_choice > 0:
+            # We add meeting the character as a location check
+            game_loc = SonicAdventureDXLocation(self.player, meet_loc, self.location_name_to_id[meet_loc], sonic_story)
+            sonic_story.locations.append(game_loc)
+            # We create a character's story as a region
+            character_story = Region(story_name, self.player, self.multiworld)
+            # We add its levels and upgrades as checks
+            self.add_character_location(character_story, character_name, mission_choice)
+            self.multiworld.regions.append(character_story)
+            menu_region.connect(character_story)
+
+    def add_character_location(self, region: Region, character: str, missions: Choice):
+        level_locations = self.get_character_level_locations(character, missions)
+        upgrade_locations = self.get_character_upgrade_location(character, missions)
+
+        character_locations = level_locations + upgrade_locations
+
+        for location in character_locations:
+            level_location = SonicAdventureDXLocation(self.player, location, self.location_name_to_id[location], region)
+            region.locations.append(level_location)
+
+    def get_character_level_locations(self, character_name: str, missions):
+        level_location = []
         for loc in self.location_name_to_id.keys():
-            main_region.locations.append(
-                SonicAdventureDXLocation(self.player, loc, self.location_name_to_id[loc], main_region))
+            if (missions > 0 and (character_name + " - Mission C") in loc
+                    or missions > 1 and (character_name + " - Mission B") in loc
+                    or missions > 2 and (character_name + " - Mission A") in loc):
+                level_location.append(loc)
+        return level_location
 
-        self.multiworld.regions.append(main_region)
+    def get_character_upgrade_location(self, character_name: str, missions):
+        upgrade_location = []
+        for loc in self.location_name_to_id.keys():
+            if missions > 0 and "upgrade (" + character_name in loc:
+                upgrade_location.append(loc)
+        return upgrade_location
 
-        menu_region.connect(main_region)
+    def add_character_item(self, itempool: [], character_name: str, missions: Choice):
+
+        if missions == 0:
+            return
+        # We add all the upgrades and the story unlock
+        for item in item_table:
+            if ("(" + character_name + ")") not in item["name"]:
+                continue
+            if item["count"] <= 0:
+                continue
+            for i in range(item["count"]):
+                itempool.append(self.create_item(item["name"]))
 
     def set_rules(self):
-        create_rules(self, location_table)
+        create_rules(self)
 
     def fill_slot_data(self) -> Dict[str, Any]:
         options = self.options
