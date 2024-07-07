@@ -134,9 +134,9 @@ location_table: List[LocationInfo] = [
     {"id": 4201, "name": LocationName.Amy.FinalEgg.B, "needs": [ItemName.Amy.StoryUnlock]},
     {"id": 4202, "name": LocationName.Amy.FinalEgg.C, "needs": [ItemName.Amy.StoryUnlock]},
 
-    {"id": 5000, "name": LocationName.Gamma.FinalEgg.A, "needs": [ItemName.Amy.StoryUnlock]},
-    {"id": 5001, "name": LocationName.Gamma.FinalEgg.B, "needs": [ItemName.Amy.StoryUnlock]},
-    {"id": 5002, "name": LocationName.Gamma.FinalEgg.C, "needs": [ItemName.Amy.StoryUnlock]},
+    {"id": 5000, "name": LocationName.Gamma.FinalEgg.A, "needs": [ItemName.Gamma.StoryUnlock]},
+    {"id": 5001, "name": LocationName.Gamma.FinalEgg.B, "needs": [ItemName.Gamma.StoryUnlock]},
+    {"id": 5002, "name": LocationName.Gamma.FinalEgg.C, "needs": [ItemName.Gamma.StoryUnlock]},
     {"id": 5100, "name": LocationName.Gamma.EmeraldCoast.A, "needs": [ItemName.Gamma.StoryUnlock]},
     {"id": 5101, "name": LocationName.Gamma.EmeraldCoast.B, "needs": [ItemName.Gamma.StoryUnlock]},
     {"id": 5102, "name": LocationName.Gamma.EmeraldCoast.C, "needs": [ItemName.Gamma.StoryUnlock]},
