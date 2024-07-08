@@ -165,12 +165,12 @@ location_table: List[LocationInfo] = [
     {"id": 6100, "name": LocationName.Big.IceCap.A, "needs": [ItemName.Big.StoryUnlock, ItemName.Big.LifeBelt]},
     {"id": 6101, "name": LocationName.Big.IceCap.B, "needs": [ItemName.Big.StoryUnlock, ItemName.Big.LifeBelt]},
     {"id": 6102, "name": LocationName.Big.IceCap.C, "needs": [ItemName.Big.StoryUnlock]},
-    {"id": 6200, "name": LocationName.Big.HotShelter.A, "needs": [ItemName.Big.StoryUnlock, ItemName.Big.LifeBelt]},
-    {"id": 6201, "name": LocationName.Big.HotShelter.B, "needs": [ItemName.Big.StoryUnlock, ItemName.Big.LifeBelt]},
-    {"id": 6202, "name": LocationName.Big.HotShelter.C, "needs": [ItemName.Big.StoryUnlock, ItemName.Big.LifeBelt]},
-    {"id": 6300, "name": LocationName.Big.EmeraldCoast.A, "needs": [ItemName.Big.StoryUnlock, ItemName.Big.LifeBelt]},
-    {"id": 6301, "name": LocationName.Big.EmeraldCoast.B, "needs": [ItemName.Big.StoryUnlock, ItemName.Big.LifeBelt]},
-    {"id": 6302, "name": LocationName.Big.EmeraldCoast.C, "needs": [ItemName.Big.StoryUnlock, ItemName.Big.LifeBelt]},
+    {"id": 6200, "name": LocationName.Big.EmeraldCoast.A, "needs": [ItemName.Big.StoryUnlock, ItemName.Big.LifeBelt]},
+    {"id": 6201, "name": LocationName.Big.EmeraldCoast.B, "needs": [ItemName.Big.StoryUnlock, ItemName.Big.LifeBelt]},
+    {"id": 6202, "name": LocationName.Big.EmeraldCoast.C, "needs": [ItemName.Big.StoryUnlock, ItemName.Big.LifeBelt]},
+    {"id": 6300, "name": LocationName.Big.HotShelter.A, "needs": [ItemName.Big.StoryUnlock, ItemName.Big.LifeBelt]},
+    {"id": 6301, "name": LocationName.Big.HotShelter.B, "needs": [ItemName.Big.StoryUnlock, ItemName.Big.LifeBelt]},
+    {"id": 6302, "name": LocationName.Big.HotShelter.C, "needs": [ItemName.Big.StoryUnlock, ItemName.Big.LifeBelt]},
 
     {"id": 9999, "name": LocationName.Story.Fight.PerfectChaos},
 
