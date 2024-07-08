@@ -4,6 +4,26 @@ from worlds.sadx.test import SonicAdventureDXWorldTest
 
 
 class TestLevelAccess(SonicAdventureDXWorldTest):
+    options = {
+        "sonic_missions": 3,
+    }
+
+    def test_sonic_levels(self) -> None:
+        self.collect_all_but([ItemName.Sonic.LightShoes])
+        self.assertFalse(self.can_reach_location(LocationName.Sonic.Casinopolis.C))
+        self.assertFalse(self.can_reach_location(LocationName.Story.Meet.Knuckles))
+
+        self.assertFalse(self.can_reach_location(LocationName.Sonic.WindyValley.A))
+        self.assertFalse(self.can_reach_location(LocationName.Sonic.WindyValley.B))
+        self.assertTrue(self.can_reach_location(LocationName.Sonic.WindyValley.C))
+
+        self.collect_by_name(ItemName.Sonic.LightShoes)
+        self.assertTrue(self.can_reach_location(LocationName.Sonic.Casinopolis.C))
+        self.assertTrue(self.can_reach_location(LocationName.Story.Meet.Knuckles))
+
+        self.assertTrue(self.can_reach_location(LocationName.Sonic.WindyValley.A))
+        self.assertTrue(self.can_reach_location(LocationName.Sonic.WindyValley.B))
+
     def test_tails_levels(self) -> None:
         self.collect_all_but([ItemName.Tails.StoryUnlock])
         self.assertFalse(self.can_reach_location(LocationName.Tails.WindyValley.C))
