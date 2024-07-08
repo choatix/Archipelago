@@ -161,7 +161,7 @@ class SonicAdventureDXWorld(World):
 
     def fill_slot_data(self) -> Dict[str, Any]:
         return {
-            "ModVersion": "0.0.5",
+            "ModVersion": "0.1.0",
             "EmblemsForPerfectChaos": self.get_emblems_needed(),
             "SonicMissions": self.options.sonic_missions.value,
             "TailsMissions": self.options.tails_missions.value,
