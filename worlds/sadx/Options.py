@@ -1,12 +1,24 @@
 from dataclasses import dataclass
 
 from Options import OptionGroup, Choice, Range, DefaultOnToggle
-from Options import PerGameCommonOptions, Toggle
+from Options import PerGameCommonOptions
 
 
-class StoryUnlockRandomized(DefaultOnToggle):
-    """Are the story unlock randomized?"""
-    display_name = "Story unlocks are randomized"
+class FieldEmblemsChecks(DefaultOnToggle):
+    """Determines whether collecting field emblems grants checks
+    (12 Locations)"""
+    display_name = "Field Emblems Checks"
+
+
+class SubLevelChecks(DefaultOnToggle):
+    """Determines whether beating a sublevel grants checks
+    (4 Locations)"""
+    display_name = "Sub-Level Checks"
+
+
+class RandomizeUpgrades(DefaultOnToggle):
+    """Determines whether the upgrades are randomized and sent to the item pool"""
+    display_name = "Randomize Upgrades"
 
 
 class EmblemPercentage(Range):
@@ -26,13 +38,9 @@ class BaseMissionChoice(Choice):
     default = 1
 
 
-class SonicMissions(Choice):
-    """Choose what missions will be a location check for Sonic. You need at least the Sonic C's mission activated"""
+class SonicMissions(BaseMissionChoice):
+    """Choose what missions will be a location check for Sonic."""
     display_name = "Sonic's Missions"
-    option_c = 1
-    option_c_b = 2
-    option_c_b_a = 3
-    default = 1
 
 
 class TailsMissions(BaseMissionChoice):
@@ -62,7 +70,9 @@ class BigMissions(BaseMissionChoice):
 
 @dataclass
 class SonicAdventureDXOptions(PerGameCommonOptions):
-    story_unlock_randomized: StoryUnlockRandomized
+    field_emblems_checks: FieldEmblemsChecks
+    sub_level_checks: SubLevelChecks
+    randomized_upgrades: RandomizeUpgrades
     sonic_missions: SonicMissions
     tails_missions: TailsMissions
     knuckles_missions: KnucklesMissions
@@ -73,9 +83,11 @@ class SonicAdventureDXOptions(PerGameCommonOptions):
 
 
 sadx_option_groups = [
-    OptionGroup("Story Options", [
-        StoryUnlockRandomized,
-        EmblemPercentage
+    OptionGroup("Main Options", [
+        EmblemPercentage,
+        FieldEmblemsChecks,
+        SubLevelChecks,
+        RandomizeUpgrades,
     ]),
     OptionGroup("Missions Options", [
         SonicMissions,
