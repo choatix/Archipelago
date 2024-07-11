@@ -32,6 +32,7 @@ class SonicAdventureDXWeb(WebWorld):
 class SonicAdventureDXWorld(World):
     game = "Sonic Adventure DX"
     web = SonicAdventureDXWeb()
+    starter_character = None
 
     item_name_to_id = {item["name"]: (item["id"] + base_id) for item in all_item_table}
     location_name_to_id = {loc["name"]: (loc["id"] + base_id) for loc in all_location_table}
@@ -44,29 +45,9 @@ class SonicAdventureDXWorld(World):
         item: ItemInfo = get_item_by_name(name)
         return SonicAdventureDXItem(item, self.player)
 
-    def create_items(self):
-        itempool = []
-
-        # Keys and Characters Items
-        starter_character = self.get_starter_character()
-        item_names = self.get_items_for_options(self.options, starter_character)
-        for itemName in item_names:
-            itempool.append(self.create_item(itemName))
-
-        emblem_count = self.calculate_emblem_count(self.options)
-        for _ in range(emblem_count):
-            itempool.append(self.create_item(ItemName.Progression.Emblem))
-
-        starter_character_name = self.get_character_item_from_enum(starter_character)
-        self.multiworld.push_precollected(self.create_item(starter_character_name))
-
-        self.multiworld.itempool += itempool
-
     def create_regions(self) -> None:
         menu_region = Region("Menu", self.player, self.multiworld)
         self.multiworld.regions.append(menu_region)
-        # for location in all_location_table:
-        #     menu_region.locations.append(SonicAdventureDXLocation(self.player, location, menu_region))
 
         station_square_area = Region("Station Square", self.player, self.multiworld)
         self.multiworld.regions.append(station_square_area)
@@ -77,25 +58,31 @@ class SonicAdventureDXWorld(World):
         hotel_area = Region("Hotel Area", self.player, self.multiworld)
         self.multiworld.regions.append(hotel_area)
         self.add_locations_to_region(hotel_area, Area.Hotel)
-        station_square_area.connect(hotel_area, None, lambda state: state.has(ItemName.KeyItem.HotelKeys, self.player))
+        # We don't add regions that aren't used for the randomizer
+        if len(hotel_area.locations) > 0:
+            station_square_area.connect(hotel_area, None,
+                                        lambda state: state.has(ItemName.KeyItem.HotelKeys, self.player))
 
         casino_area = Region("Casino Area", self.player, self.multiworld)
         self.multiworld.regions.append(casino_area)
         self.add_locations_to_region(casino_area, Area.Casino)
-        station_square_area.connect(casino_area, None,
-                                    lambda state: state.has(ItemName.KeyItem.CasinoKeys, self.player))
+        if len(casino_area.locations) > 0:
+            station_square_area.connect(casino_area, None,
+                                        lambda state: state.has(ItemName.KeyItem.CasinoKeys, self.player))
 
         twinkle_park_area = Region("Twinkle Park Area", self.player, self.multiworld)
         self.multiworld.regions.append(twinkle_park_area)
         self.add_locations_to_region(twinkle_park_area, Area.TwinklePark)
-        station_square_area.connect(twinkle_park_area, None,
-                                    lambda state: state.has(ItemName.KeyItem.TwinkleParkTicket, self.player))
+        if len(twinkle_park_area.locations) > 0:
+            station_square_area.connect(twinkle_park_area, None,
+                                        lambda state: state.has(ItemName.KeyItem.TwinkleParkTicket, self.player))
 
         speed_highway_area = Region("Speed Highway Area", self.player, self.multiworld)
         self.multiworld.regions.append(speed_highway_area)
         self.add_locations_to_region(speed_highway_area, Area.SpeedHighway)
-        station_square_area.connect(speed_highway_area, None,
-                                    lambda state: state.has(ItemName.KeyItem.EmployeeCard, self.player))
+        if len(speed_highway_area.locations) > 0:
+            station_square_area.connect(speed_highway_area, None,
+                                        lambda state: state.has(ItemName.KeyItem.EmployeeCard, self.player))
 
         mystic_ruins_area = Region("Mystic Ruins", self.player, self.multiworld)
         self.multiworld.regions.append(mystic_ruins_area)
@@ -108,13 +95,16 @@ class SonicAdventureDXWorld(World):
         angel_island_area = Region("Angel Island", self.player, self.multiworld)
         self.multiworld.regions.append(angel_island_area)
         self.add_locations_to_region(angel_island_area, Area.AngelIsland)
-        mystic_ruins_area.connect(angel_island_area, None,
-                                  lambda state: state.has(ItemName.KeyItem.Dynamite, self.player))
+        if len(angel_island_area.locations) > 0:
+            mystic_ruins_area.connect(angel_island_area, None,
+                                      lambda state: state.has(ItemName.KeyItem.Dynamite, self.player))
 
         jungle_area = Region("Jungle", self.player, self.multiworld)
         self.multiworld.regions.append(jungle_area)
         self.add_locations_to_region(jungle_area, Area.Jungle)
-        mystic_ruins_area.connect(jungle_area, None, lambda state: state.has(ItemName.KeyItem.JungleKart, self.player))
+        if len(jungle_area.locations) > 0:
+            mystic_ruins_area.connect(jungle_area, None,
+                                      lambda state: state.has(ItemName.KeyItem.JungleKart, self.player))
 
         egg_carrier_area = Region("Egg Carrier", self.player, self.multiworld)
         self.multiworld.regions.append(egg_carrier_area)
@@ -127,11 +117,36 @@ class SonicAdventureDXWorld(World):
         perfect_chaos = SonicAdventureDXLocation(self.player, 9, menu_region)
         menu_region.locations.append(perfect_chaos)
 
+    def create_items(self):
+        itempool = []
+
+        # Keys and Characters Items
+        self.starter_character = self.get_starter_character()
+        item_names = self.get_items_for_options(self.options, self.starter_character)
+        for itemName in item_names:
+            itempool.append(self.create_item(itemName))
+
+        # One less for the Perfect Chaos location
+        location_count = sum(1 for _ in self.multiworld.get_locations(self.player)) - 1
+        emblem_count = max(1, location_count - len(item_names))
+
+        for _ in range(emblem_count):
+            itempool.append(self.create_item(ItemName.Progression.Emblem))
+
+        starter_character_name = self.get_character_item_from_enum(self.starter_character)
+        self.multiworld.push_precollected(self.create_item(starter_character_name))
+
+        self.multiworld.itempool += itempool
+
     def set_rules(self):
         create_rules(self)
 
     def get_emblems_needed(self):
-        return int(round(self.calculate_emblem_count(self.options) * self.options.emblems_percentage / 100))
+
+        item_names = self.get_items_for_options(self.options, self.starter_character)
+        location_count = sum(1 for _ in self.multiworld.get_locations(self.player)) - 1
+        emblem_count = max(1, location_count - len(item_names))
+        return int(round(emblem_count * self.options.emblems_percentage / 100))
 
     def fill_slot_data(self) -> Dict[str, Any]:
         return {
@@ -181,8 +196,27 @@ class SonicAdventureDXWorld(World):
         item_names += self.get_item_for_options_per_character(Character.Big, starter_character, options.big_missions)
         item_names += self.get_item_for_options_per_character(Character.Gamma, starter_character,
                                                               options.gamma_missions)
-        for key in key_item_table:
-            item_names += [key.name]
+        # We don't add key items that aren't used for the randomizer
+
+        item_names.append(ItemName.KeyItem.Train)
+        item_names.append(ItemName.KeyItem.Boat)
+        item_names.append(ItemName.KeyItem.Raft)
+        if len(self.get_location_ids_for_area(Area.Hotel)) > 0:
+            item_names.append(ItemName.KeyItem.HotelKeys)
+        if len(self.get_location_ids_for_area(Area.Casino)) > 0:
+            item_names.append(ItemName.KeyItem.CasinoKeys)
+        if len(self.get_location_ids_for_area(Area.TwinklePark)) > 0:
+            item_names.append(ItemName.KeyItem.TwinkleParkTicket)
+        if len(self.get_location_ids_for_area(Area.SpeedHighway)) > 0:
+            item_names.append(ItemName.KeyItem.EmployeeCard)
+        if len(self.get_location_ids_for_area(Area.AngelIsland)) > 0:
+            item_names.append(ItemName.KeyItem.Dynamite)
+        if len(self.get_location_ids_for_area(Area.Jungle)) > 0:
+            item_names.append(ItemName.KeyItem.JungleKart)
+        # Don't include the ice stone for characters that aren't sonic/tails/big
+        if self.is_character_playable(Character.Sonic) or self.is_character_playable(
+                Character.Tails) or self.is_character_playable(Character.Big):
+            item_names.append(ItemName.KeyItem.IceStone)
 
         return item_names
 
@@ -203,63 +237,6 @@ class SonicAdventureDXWorld(World):
                     item_names.append(character_upgrade.name)
 
         return item_names
-
-    def calculate_emblem_count(self, options: SonicAdventureDXOptions) -> int:
-        emblems = 0
-        emblems += self.calculate_character_emblem_count(Character.Sonic, options.sonic_missions)
-        emblems += self.calculate_character_emblem_count(Character.Tails, options.tails_missions)
-        emblems += self.calculate_character_emblem_count(Character.Knuckles, options.knuckles_missions)
-        emblems += self.calculate_character_emblem_count(Character.Amy, options.amy_missions)
-        emblems += self.calculate_character_emblem_count(Character.Gamma, options.gamma_missions)
-        emblems += self.calculate_character_emblem_count(Character.Big, options.big_missions)
-        if options.field_emblems_checks:
-            for field_emblem in field_emblem_location_table:
-                if any(item in field_emblem.characters for item in self.get_playable_characters()):
-                    emblems += 1
-
-        if options.sub_level_checks:
-            for sub_level in sub_level_location_table:
-                if any(item in sub_level.characters for item in self.get_playable_characters()):
-                    emblems += 1
-
-        emblems -= self.get_extra_item_count()
-        if self.options.tails_missions > 0:
-            emblems -= 1  # Tails' Rhythm Badge is in the past, so we have one less location
-        emblems += 1  # We give the player one random character, so we have an extra location
-        return max(emblems, 1)
-
-    @staticmethod
-    def calculate_character_emblem_count(character: Character, mission: BaseMissionChoice) -> int:
-        emblems = 0
-        if mission == 0:
-            return emblems
-
-        for level in level_location_table:
-            if level.character == character:
-                if ((mission > 0 and level.levelMission == LevelMission.C)
-                        or (mission > 1 and level.levelMission == LevelMission.B)
-                        or (mission > 2 and level.levelMission == LevelMission.A)):
-                    emblems += 1
-        return emblems
-
-    # Counts how many "extra" items are added to the pool (character unlocks, key items, etc.)
-    def get_extra_item_count(self) -> int:
-        extra_item_count = 0
-        if self.options.sonic_missions > 0:
-            extra_item_count += 1
-        if self.options.tails_missions > 0:
-            extra_item_count += 1
-        if self.options.knuckles_missions > 0:
-            extra_item_count += 1
-        if self.options.amy_missions > 0:
-            extra_item_count += 1
-        if self.options.gamma_missions > 0:
-            extra_item_count += 1
-        if self.options.big_missions > 0:
-            extra_item_count += 1
-
-        extra_item_count += len(key_item_table)
-        return extra_item_count
 
     def get_character_missions(self, character: Character) -> BaseMissionChoice:
         character_missions = {
@@ -309,7 +286,7 @@ class SonicAdventureDXWorld(World):
                 return True
         return False
 
-    def add_locations_to_region(self, region: Region, area: Area):
+    def get_location_ids_for_area(self, area: Area):
         location_ids = []
         for level in level_location_table:
             if level.area == area:
@@ -331,7 +308,11 @@ class SonicAdventureDXWorld(World):
                 if field_emblem.area == area:
                     if self.is_any_character_playable(field_emblem.characters):
                         location_ids.append(field_emblem.locationId)
+        return location_ids
 
+    def add_locations_to_region(self, region: Region, area: Area):
+
+        location_ids = self.get_location_ids_for_area(area)
         for location_id in location_ids:
             location = SonicAdventureDXLocation(self.player, location_id, region)
             region.locations.append(location)
