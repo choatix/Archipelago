@@ -60,4 +60,6 @@ class Big:
     Lure4 = "Lure 4 (Big)"
 
 
-EVERY_LURE: List[str] = [Big.Lure1, Big.Lure2, Big.Lure3, Big.Lure4]
+# TODO: Add lures
+EVERY_LURE: List[str] = []
+# EVERY_LURE: List[str] = [Big.Lure1, Big.Lure2, Big.Lure3, Big.Lure4]

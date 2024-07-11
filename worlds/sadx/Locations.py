@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import List, TypedDict
 
 from BaseClasses import Location, Region
-from .Enums import Area, Level, SubLevel, Character, KeyItem, LevelMission, Upgrade, EVERYONE, FLYERS, \
+from .Enums import Area, Level, SubLevel, Character, LevelMission, Upgrade, EVERYONE, FLYERS, \
     SubLevelMission, pascal_to_space
 from .Names import ItemName
 from .Names.ItemName import EVERY_LURE
@@ -16,7 +16,6 @@ class LevelLocation:
     level: Level
     levelMission: LevelMission
     extraItems: List[str]
-
 
 
 @dataclass
@@ -181,22 +180,23 @@ upgrade_location_table: List[UpgradeLocation] = [
     # Station Square
     UpgradeLocation(100, Area.StationSquareMain, Character.Sonic, Upgrade.LightShoes, [ItemName.Sonic.LightShoes]),
     UpgradeLocation(200, Area.StationSquareMain, Character.Tails, Upgrade.JetAnkle, []),
-    UpgradeLocation(602, Area.StationSquareMain, Character.Big, Upgrade.Lure1, []),
+    # UpgradeLocation(602, Area.StationSquareMain, Character.Big, Upgrade.Lure1, []),
     UpgradeLocation(101, Area.Hotel, Character.Sonic, Upgrade.CrystalRing, [ItemName.Sonic.LightShoes]),
     # Mystic Ruins
     UpgradeLocation(300, Area.MysticRuinsMain, Character.Knuckles, Upgrade.ShovelClaw, [ItemName.Knuckles.ShovelClaw]),
-    UpgradeLocation(604, Area.AngelIsland, Character.Big, Upgrade.Lure3, [ItemName.KeyItem.IceStone, ItemName.KeyItem.Train]),
-    UpgradeLocation(600, Area.AngelIsland, Character.Big, Upgrade.LifeBelt, [ItemName.KeyItem.IceStone, ItemName.KeyItem.Train]),
+    # UpgradeLocation(604, Area.AngelIsland, Character.Big, Upgrade.Lure3, [ItemName.KeyItem.IceStone, ItemName.KeyItem.Train]),
+    UpgradeLocation(600, Area.AngelIsland, Character.Big, Upgrade.LifeBelt,
+                    [ItemName.KeyItem.IceStone, ItemName.KeyItem.Train]),
     UpgradeLocation(102, Area.AngelIsland, Character.Sonic, Upgrade.AncientLight, []),
     UpgradeLocation(301, Area.Jungle, Character.Knuckles, Upgrade.FightingGloves, []),
-    UpgradeLocation(603, Area.Jungle, Character.Big, Upgrade.Lure2, []),
+    # UpgradeLocation(603, Area.Jungle, Character.Big, Upgrade.Lure2, []),
     UpgradeLocation(601, Area.Jungle, Character.Big, Upgrade.PowerRod, []),
     # Egg Carrier
     UpgradeLocation(400, Area.EggCarrierMain, Character.Amy, Upgrade.WarriorFeather, []),
     UpgradeLocation(401, Area.EggCarrierMain, Character.Amy, Upgrade.LongHammer, []),
     UpgradeLocation(500, Area.EggCarrierMain, Character.Gamma, Upgrade.JetBooster, []),
     UpgradeLocation(501, Area.EggCarrierMain, Character.Gamma, Upgrade.LaserBlaster, []),
-    UpgradeLocation(605, Area.EggCarrierMain, Character.Big, Upgrade.Lure4, []),
+    # UpgradeLocation(605, Area.EggCarrierMain, Character.Big, Upgrade.Lure4, []),
 
 ]
 
@@ -285,6 +285,6 @@ def get_location_by_name(location_name: str) -> LocationInfo:
 class SonicAdventureDXLocation(Location):
     game: str = "Sonic Adventure DX"
 
-    def __init__(self, player, location_id: int, parent: Region):
+    def __init__(self, player, location_id: int, base_id: int, parent: Region):
         location = get_location_by_id(location_id)
-        super().__init__(player, location["name"], location["id"], parent)
+        super().__init__(player, location["name"], location["id"] + base_id, parent)

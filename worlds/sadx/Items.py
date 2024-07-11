@@ -64,10 +64,10 @@ character_upgrade_item_table: List[CharacterUpgradeItem] = [
 
     CharacterUpgradeItem(60, Character.Big, ItemName.Big.LifeBelt, ItemClassification.progression),
     CharacterUpgradeItem(61, Character.Big, ItemName.Big.PowerRod, ItemClassification.useful),
-    CharacterUpgradeItem(62, Character.Big, ItemName.Big.Lure1, ItemClassification.progression),
-    CharacterUpgradeItem(63, Character.Big, ItemName.Big.Lure2, ItemClassification.progression),
-    CharacterUpgradeItem(64, Character.Big, ItemName.Big.Lure3, ItemClassification.progression),
-    CharacterUpgradeItem(65, Character.Big, ItemName.Big.Lure4, ItemClassification.progression),
+    # CharacterUpgradeItem(62, Character.Big, ItemName.Big.Lure1, ItemClassification.progression),
+    # CharacterUpgradeItem(63, Character.Big, ItemName.Big.Lure2, ItemClassification.progression),
+    # CharacterUpgradeItem(64, Character.Big, ItemName.Big.Lure3, ItemClassification.progression),
+    # CharacterUpgradeItem(65, Character.Big, ItemName.Big.Lure4, ItemClassification.progression),
 
 ]
 
@@ -111,8 +111,8 @@ def get_items_from_keys() -> List[ItemInfo]:
 class SonicAdventureDXItem(Item):
     game: str = "Sonic Adventure DX"
 
-    def __init__(self, item: ItemInfo, player):
-        super().__init__(item["name"], item["classification"], item["id"], player)
+    def __init__(self, item: ItemInfo, base_id: int, player):
+        super().__init__(item["name"], item["classification"], item["id"] + base_id, player)
 
 
 all_item_table: List[ItemInfo] = get_items_from_unlock() + get_items_from_upgrades() + get_items_from_keys() + [

@@ -43,7 +43,7 @@ class SonicAdventureDXWorld(World):
 
     def create_item(self, name: str) -> "SonicAdventureDXItem":
         item: ItemInfo = get_item_by_name(name)
-        return SonicAdventureDXItem(item, self.player)
+        return SonicAdventureDXItem(item, base_id, self.player)
 
     def create_regions(self) -> None:
         menu_region = Region("Menu", self.player, self.multiworld)
@@ -114,7 +114,7 @@ class SonicAdventureDXWorld(World):
                     state.has(ItemName.KeyItem.Train, self.player) and state.has(ItemName.KeyItem.Raft,
                                                                                  self.player)), self.player))
 
-        perfect_chaos = SonicAdventureDXLocation(self.player, 9, menu_region)
+        perfect_chaos = SonicAdventureDXLocation(self.player, 9, base_id, menu_region)
         menu_region.locations.append(perfect_chaos)
 
     def create_items(self):
@@ -314,5 +314,5 @@ class SonicAdventureDXWorld(World):
 
         location_ids = self.get_location_ids_for_area(area)
         for location_id in location_ids:
-            location = SonicAdventureDXLocation(self.player, location_id, region)
+            location = SonicAdventureDXLocation(self.player, location_id, base_id, region)
             region.locations.append(location)
