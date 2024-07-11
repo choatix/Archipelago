@@ -35,7 +35,7 @@ def add_field_emblem_rules(self, location_name: str, field_emblem: EmblemLocatio
 
 def calculate_rules(self, location: LocationInfo):
     for level in level_location_table:
-        if location["id"] == level.get_id():
+        if location["id"] == level.locationId:
             add_level_rules(self, location["name"], level)
     for upgrade in upgrade_location_table:
         if location["id"] == upgrade.locationId:
@@ -64,11 +64,3 @@ def create_rules(self):
 
     self.multiworld.completion_condition[self.player] = lambda state: state.has(ItemName.Progression.ChaosPeace,
                                                                                 self.player)
-    for ap_location in self.multiworld.get_locations(self.player):
-        print(f"{ap_location.address} - {ap_location.name}")
-
-    print(" ---- test ----")
-
-    for ap_item in self.multiworld.get_items():
-        print(f"{ap_item.code} - {ap_item.name}")
-

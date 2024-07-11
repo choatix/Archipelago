@@ -291,7 +291,7 @@ class SonicAdventureDXWorld(World):
         for level in level_location_table:
             if level.area == area:
                 if self.is_level_playable(level):
-                    location_ids.append(level.get_id())
+                    location_ids.append(level.locationId)
         if self.options.randomized_upgrades:
             for upgrade in upgrade_location_table:
                 if upgrade.area == area:
