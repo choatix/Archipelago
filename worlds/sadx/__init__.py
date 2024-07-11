@@ -226,7 +226,7 @@ class SonicAdventureDXWorld(World):
         if self.options.tails_missions > 0:
             emblems -= 1  # Tails' Rhythm Badge is in the past, so we have one less location
         emblems += 1  # We give the player one random character, so we have an extra location
-        return emblems
+        return max(emblems, 1)
 
     @staticmethod
     def calculate_character_emblem_count(character: Character, mission: BaseMissionChoice) -> int:

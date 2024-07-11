@@ -183,10 +183,8 @@ upgrade_location_table: List[UpgradeLocation] = [
     UpgradeLocation(101, Area.Hotel, Character.Sonic, Upgrade.CrystalRing, [ItemName.Sonic.LightShoes]),
     # Mystic Ruins
     UpgradeLocation(300, Area.MysticRuinsMain, Character.Knuckles, Upgrade.ShovelClaw, [ItemName.Knuckles.ShovelClaw]),
-    UpgradeLocation(604, Area.AngelIsland, Character.Big, Upgrade.Lure3,
-                    [KeyItem.IceStone, KeyItem.Train] + EVERY_LURE),
-    UpgradeLocation(600, Area.AngelIsland, Character.Big, Upgrade.LifeBelt,
-                    [KeyItem.IceStone, KeyItem.Train] + EVERY_LURE),
+    UpgradeLocation(604, Area.AngelIsland, Character.Big, Upgrade.Lure3, [ItemName.KeyItem.IceStone, ItemName.KeyItem.Train]),
+    UpgradeLocation(600, Area.AngelIsland, Character.Big, Upgrade.LifeBelt, [ItemName.KeyItem.IceStone, ItemName.KeyItem.Train]),
     UpgradeLocation(102, Area.AngelIsland, Character.Sonic, Upgrade.AncientLight, []),
     UpgradeLocation(301, Area.Jungle, Character.Knuckles, Upgrade.FightingGloves, []),
     UpgradeLocation(603, Area.Jungle, Character.Big, Upgrade.Lure2, []),
