@@ -181,7 +181,7 @@ level_location_table: List[LevelLocation] = [
 
 upgrade_location_table: List[UpgradeLocation] = [
     # Station Square
-    UpgradeLocation(100, Area.StationSquareMain, Character.Sonic, Upgrade.LightShoes, []),
+    # UpgradeLocation(100, Area.StationSquareMain, Character.Sonic, Upgrade.LightShoes, []),
     UpgradeLocation(200, Area.StationSquareMain, Character.Tails, Upgrade.JetAnkle, []),
     # UpgradeLocation(602, Area.StationSquareMain, Character.Big, Upgrade.Lure1, []),
     UpgradeLocation(101, Area.Hotel, Character.Sonic, Upgrade.CrystalRing, [ItemName.Sonic.LightShoes]),
