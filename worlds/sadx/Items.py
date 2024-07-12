@@ -40,8 +40,8 @@ character_unlock_item_table: List[CharacterUnlockItem] = [
     CharacterUnlockItem(2, Character.Tails, ItemName.Tails.Playable),
     CharacterUnlockItem(3, Character.Knuckles, ItemName.Knuckles.Playable),
     CharacterUnlockItem(4, Character.Amy, ItemName.Amy.Playable),
-    CharacterUnlockItem(5, Character.Big, ItemName.Big.Playable),
-    CharacterUnlockItem(6, Character.Gamma, ItemName.Gamma.Playable),
+    CharacterUnlockItem(5, Character.Gamma, ItemName.Gamma.Playable),
+    CharacterUnlockItem(6, Character.Big, ItemName.Big.Playable),
 
 ]
 character_upgrade_item_table: List[CharacterUpgradeItem] = [
