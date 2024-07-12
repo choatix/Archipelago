@@ -26,3 +26,11 @@
 4. For the `Password` field under `AP Settings`, enter the server password if one exists, otherwise leave blank.
 5. Click The `Save` button then hit `Save & Play` to launch the game.
 6. Create a new save file to start playing! Use the same savefile to continuing playing.
+
+## Troubleshooting 
+- You get the SADX_Archipelago: DLL error - The specified module could not be found.
+  - Make sure that the antivirus didn't delete the `/mods/SADX_Archipelago/sadx-classic-randomizer.dll`/
+  - Also make sure that you ran CopyAPCppDLL.bat (and that APCpp.dll exists now on your SADX folder)
+- The game closes when you press start.
+  - This is a steam input issue. Either run the game from steam or adjust the "Desktop controller configuration" to just be a controller. 
+  - You can also just simple close steam
