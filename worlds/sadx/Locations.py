@@ -97,7 +97,7 @@ level_location_table: List[LevelLocation] = [
     LevelLocation(5200, Area.MysticRuinsMain, Character.Gamma, Level.WindyValley, LevelMission.A,
                   [ItemName.Gamma.JetBooster]),
 
-    # TODO: Check if is okay to requiere Train or something more complex like "Station Square access"
+    # TODO: Check if is okay to require Train or something more complex like "Station Square access"
     LevelLocation(1302, Area.AngelIsland, Character.Sonic, Level.IceCap, LevelMission.C,
                   [ItemName.KeyItem.IceStone, ItemName.KeyItem.CasinoKeys, ItemName.KeyItem.Train]),
     LevelLocation(1301, Area.AngelIsland, Character.Sonic, Level.IceCap, LevelMission.B,
@@ -174,9 +174,9 @@ level_location_table: List[LevelLocation] = [
                   EVERY_LURE + [ItemName.Big.LifeBelt]),
     LevelLocation(6300, Area.EggCarrierMain, Character.Big, Level.HotShelter, LevelMission.A,
                   EVERY_LURE + [ItemName.Big.LifeBelt]),
-    LevelLocation(5402, Area.EggCarrierMain, Character.Gamma, Level.HotShelter, LevelMission.C, []),
-    LevelLocation(5401, Area.EggCarrierMain, Character.Gamma, Level.HotShelter, LevelMission.B, []),
-    LevelLocation(5400, Area.EggCarrierMain, Character.Gamma, Level.HotShelter, LevelMission.A, []),
+    LevelLocation(5402, Area.EggCarrierMain, Character.Gamma, Level.HotShelter, LevelMission.C, [ItemName.Gamma.JetBooster]),
+    LevelLocation(5401, Area.EggCarrierMain, Character.Gamma, Level.HotShelter, LevelMission.B, [ItemName.Gamma.JetBooster]),
+    LevelLocation(5400, Area.EggCarrierMain, Character.Gamma, Level.HotShelter, LevelMission.A, [ItemName.Gamma.JetBooster]),
 ]
 
 upgrade_location_table: List[UpgradeLocation] = [
