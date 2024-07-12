@@ -219,15 +219,14 @@ field_emblem_location_table: List[EmblemLocation] = [
     EmblemLocation(13, Area.Casino, [Character.Tails], "Casino Emblem"),
     # Mystic Ruins
     EmblemLocation(20, Area.MysticRuinsMain, FLYERS, "Tails' Workshop Emblem"),
-    EmblemLocation(21, Area.AngelIsland, FLYERS, "Shrine Emblem"),
+    EmblemLocation(21, Area.AngelIsland, [Character.Knuckles], "Shrine Emblem"),
     EmblemLocation(22, Area.Jungle, EVERYONE, "Jungle Path Emblem"),
     EmblemLocation(23, Area.Jungle, FLYERS, "Tree Stump Emblem"),
     # Egg Carrier
     EmblemLocation(30, Area.EggCarrierMain, FLYERS, "Pool Emblem"),
-    EmblemLocation(31, Area.EggCarrierMain, FLYERS, "Spinning Platform Emblem"),
-    EmblemLocation(32, Area.EggCarrierMain, [Character.Sonic, Character.Tails, Character.Knuckles],
-                   "Hidden Bed Emblem"),
-    EmblemLocation(33, Area.EggCarrierMain, [Character.Sonic, Character.Tails], "Main Platform Emblem"),
+    EmblemLocation(31, Area.EggCarrierMain, [Character.Tails], "Spinning Platform Emblem"),
+    EmblemLocation(32, Area.EggCarrierMain, [Character.Tails], "Hidden Bed Emblem"),
+    EmblemLocation(33, Area.EggCarrierMain, [Character.Sonic], "Main Platform Emblem"),
 
 ]
 
