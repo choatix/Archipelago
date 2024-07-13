@@ -37,3 +37,6 @@
   - You can also just simple close steam
 - Some of the emblems don't give me checks
   - Disable the "Steam Achievements Mod" if enabled
+- Failed to generate the world
+  - Try updating your Archipelago mod to the latest version (at least 0.5.0)
+  - Try enabling more options in the yaml, being too restrictive will prevent the world from generation
