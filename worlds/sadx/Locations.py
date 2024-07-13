@@ -96,8 +96,6 @@ level_location_table: List[LevelLocation] = [
                   [ItemName.Gamma.JetBooster]),
     LevelLocation(5200, Area.MysticRuinsMain, Character.Gamma, Level.WindyValley, LevelMission.A,
                   [ItemName.Gamma.JetBooster]),
-
-    # TODO: Check if is okay to require Train or something more complex like "Station Square access"
     LevelLocation(1302, Area.AngelIsland, Character.Sonic, Level.IceCap, LevelMission.C,
                   [ItemName.KeyItem.IceStone, ItemName.KeyItem.CasinoKeys, ItemName.KeyItem.Train]),
     LevelLocation(1301, Area.AngelIsland, Character.Sonic, Level.IceCap, LevelMission.B,
