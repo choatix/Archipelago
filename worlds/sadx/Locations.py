@@ -174,9 +174,12 @@ level_location_table: List[LevelLocation] = [
                   EVERY_LURE + [ItemName.Big.LifeBelt]),
     LevelLocation(6300, Area.EggCarrierMain, Character.Big, Level.HotShelter, LevelMission.A,
                   EVERY_LURE + [ItemName.Big.LifeBelt]),
-    LevelLocation(5402, Area.EggCarrierMain, Character.Gamma, Level.HotShelter, LevelMission.C, [ItemName.Gamma.JetBooster]),
-    LevelLocation(5401, Area.EggCarrierMain, Character.Gamma, Level.HotShelter, LevelMission.B, [ItemName.Gamma.JetBooster]),
-    LevelLocation(5400, Area.EggCarrierMain, Character.Gamma, Level.HotShelter, LevelMission.A, [ItemName.Gamma.JetBooster]),
+    LevelLocation(5402, Area.EggCarrierMain, Character.Gamma, Level.HotShelter, LevelMission.C,
+                  [ItemName.Gamma.JetBooster]),
+    LevelLocation(5401, Area.EggCarrierMain, Character.Gamma, Level.HotShelter, LevelMission.B,
+                  [ItemName.Gamma.JetBooster]),
+    LevelLocation(5400, Area.EggCarrierMain, Character.Gamma, Level.HotShelter, LevelMission.A,
+                  [ItemName.Gamma.JetBooster]),
 ]
 
 upgrade_location_table: List[UpgradeLocation] = [
@@ -197,8 +200,8 @@ upgrade_location_table: List[UpgradeLocation] = [
     # Egg Carrier
     UpgradeLocation(400, Area.EggCarrierMain, Character.Amy, Upgrade.WarriorFeather, []),
     UpgradeLocation(401, Area.EggCarrierMain, Character.Amy, Upgrade.LongHammer, []),
-    UpgradeLocation(500, Area.EggCarrierMain, Character.Gamma, Upgrade.JetBooster, []),
-    UpgradeLocation(501, Area.EggCarrierMain, Character.Gamma, Upgrade.LaserBlaster, []),
+    # UpgradeLocation(500, Area.EggCarrierMain, Character.Gamma, Upgrade.JetBooster, []),
+    # UpgradeLocation(501, Area.EggCarrierMain, Character.Gamma, Upgrade.LaserBlaster, []),
     # UpgradeLocation(605, Area.EggCarrierMain, Character.Big, Upgrade.Lure4, []),
 
 ]
@@ -212,7 +215,8 @@ sub_level_location_table: List[SubLevelLocation] = [
 
 field_emblem_location_table: List[EmblemLocation] = [
     # Station Square
-    EmblemLocation(10, Area.StationSquareMain, EVERYONE, "Station Emblem"),
+    EmblemLocation(10, Area.StationSquareMain, [Character.Sonic, Character.Knuckles, Character.Tails,
+                                                Character.Amy, Character.Big], "Station Emblem"),
     EmblemLocation(11, Area.StationSquareMain, EVERYONE, "Burger Shop Emblem"),
     EmblemLocation(12, Area.StationSquareMain, [Character.Knuckles, Character.Tails, Character.Amy],
                    "City Hall Emblem"),
