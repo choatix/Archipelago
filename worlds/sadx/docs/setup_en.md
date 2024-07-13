@@ -15,6 +15,7 @@
    that `/mods/SADX_Archipelago` is a valid path.
 4. In the SADX_Archipelago folder, run the `CopyAPCppDLL.bat` script (a window will very quickly pop up and go away).
 5. Launch the `SAModManager.exe` and make sure the SADX_Archipelago mod is listed and enabled.
+6. Disable the "Steam Achievements Mod" if enabled
 
 ## Joining a MultiWorld Game
 
@@ -34,3 +35,5 @@
 - The game closes when you press start.
   - This is a steam input issue. Either run the game from steam or adjust the "Desktop controller configuration" to just be a controller. 
   - You can also just simple close steam
+- Some of the emblems don't give me checks
+  - Disable the "Steam Achievements Mod" if enabled
