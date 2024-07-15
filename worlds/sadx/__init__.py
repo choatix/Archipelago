@@ -150,7 +150,7 @@ class SonicAdventureDXWorld(World):
 
     def fill_slot_data(self) -> Dict[str, Any]:
         return {
-            "ModVersion": "0.2.0",
+            "ModVersion": "0.2.2",
             "EmblemsForPerfectChaos": self.get_emblems_needed(),
             "FieldEmblemChecks": self.options.field_emblems_checks.value,
             "SubLevelChecks": self.options.sub_level_checks.value,

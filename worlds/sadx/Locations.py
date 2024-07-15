@@ -120,12 +120,12 @@ level_location_table: List[LevelLocation] = [
                   [ItemName.Sonic.LightShoes, ItemName.Sonic.AncientLight]),
     LevelLocation(1600, Area.AngelIsland, Character.Sonic, Level.RedMountain, LevelMission.A,
                   [ItemName.Sonic.LightShoes, ItemName.Sonic.AncientLight]),
-    # LevelLocation(3202, Area.AngelIsland, Character.Knuckles, Level.RedMountain, LevelMission.C,
-    #               [ItemName.Knuckles.ShovelClaw]),
-    # LevelLocation(3201, Area.AngelIsland, Character.Knuckles, Level.RedMountain, LevelMission.B,
-    #               [ItemName.Knuckles.ShovelClaw]),
-    # LevelLocation(3200, Area.AngelIsland, Character.Knuckles, Level.RedMountain, LevelMission.A,
-    #               [ItemName.Knuckles.ShovelClaw]),
+    LevelLocation(3202, Area.AngelIsland, Character.Knuckles, Level.RedMountain, LevelMission.C,
+                  [ItemName.Knuckles.ShovelClaw]),
+    LevelLocation(3201, Area.AngelIsland, Character.Knuckles, Level.RedMountain, LevelMission.B,
+                  [ItemName.Knuckles.ShovelClaw]),
+    LevelLocation(3200, Area.AngelIsland, Character.Knuckles, Level.RedMountain, LevelMission.A,
+                  [ItemName.Knuckles.ShovelClaw]),
     LevelLocation(5302, Area.AngelIsland, Character.Gamma, Level.RedMountain, LevelMission.C, []),
     LevelLocation(5301, Area.AngelIsland, Character.Gamma, Level.RedMountain, LevelMission.B, []),
     LevelLocation(5300, Area.AngelIsland, Character.Gamma, Level.RedMountain, LevelMission.A, []),
@@ -182,7 +182,7 @@ level_location_table: List[LevelLocation] = [
 
 upgrade_location_table: List[UpgradeLocation] = [
     # Station Square
-    # UpgradeLocation(100, Area.StationSquareMain, Character.Sonic, Upgrade.LightShoes, []),
+    UpgradeLocation(100, Area.StationSquareMain, Character.Sonic, Upgrade.LightShoes, []),
     UpgradeLocation(200, Area.StationSquareMain, Character.Tails, Upgrade.JetAnkle, []),
     # UpgradeLocation(602, Area.StationSquareMain, Character.Big, Upgrade.Lure1, []),
     UpgradeLocation(101, Area.Hotel, Character.Sonic, Upgrade.CrystalRing, [ItemName.Sonic.LightShoes]),
@@ -198,8 +198,8 @@ upgrade_location_table: List[UpgradeLocation] = [
     # Egg Carrier
     # UpgradeLocation(400, Area.EggCarrierMain, Character.Amy, Upgrade.WarriorFeather, []),
     UpgradeLocation(401, Area.EggCarrierMain, Character.Amy, Upgrade.LongHammer, []),
-    # UpgradeLocation(500, Area.EggCarrierMain, Character.Gamma, Upgrade.JetBooster, []),
-    # UpgradeLocation(501, Area.EggCarrierMain, Character.Gamma, Upgrade.LaserBlaster, []),
+    UpgradeLocation(500, Area.EggCarrierMain, Character.Gamma, Upgrade.JetBooster, []),
+    UpgradeLocation(501, Area.EggCarrierMain, Character.Gamma, Upgrade.LaserBlaster, []),
     # UpgradeLocation(605, Area.EggCarrierMain, Character.Big, Upgrade.Lure4, []),
 
 ]
