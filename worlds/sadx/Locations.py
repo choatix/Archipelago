@@ -196,7 +196,7 @@ upgrade_location_table: List[UpgradeLocation] = [
     # UpgradeLocation(603, Area.Jungle, Character.Big, Upgrade.Lure2, []),
     UpgradeLocation(601, Area.Jungle, Character.Big, Upgrade.PowerRod, []),
     # Egg Carrier
-    # UpgradeLocation(400, Area.EggCarrierMain, Character.Amy, Upgrade.WarriorFeather, []),
+    UpgradeLocation(400, Area.EggCarrierMain, Character.Amy, Upgrade.WarriorFeather, []),
     UpgradeLocation(401, Area.EggCarrierMain, Character.Amy, Upgrade.LongHammer, []),
     UpgradeLocation(500, Area.EggCarrierMain, Character.Gamma, Upgrade.JetBooster, []),
     UpgradeLocation(501, Area.EggCarrierMain, Character.Gamma, Upgrade.LaserBlaster, []),
