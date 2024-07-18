@@ -3,12 +3,10 @@ from typing import TYPE_CHECKING, Dict, Set, List
 import worlds._bizhawk as bizhawk
 from NetUtils import ClientStatus
 from worlds._bizhawk.client import BizHawkClient
-from .data import BASE_OFFSET, data
+from .data import data
 
 if TYPE_CHECKING:
     from worlds._bizhawk.context import BizHawkClientContext
-else:
-    BizHawkClientContext = object
 
 TRACKER_EVENT_FLAGS = [
     "EVENT_GOT_KENYA",
@@ -73,16 +71,18 @@ class PokemonCrystalClient(BizHawkClient):
         self.phone_trap_locations = []
         self.current_map = [0, 0]
 
-    async def validate_rom(self, ctx: BizHawkClientContext) -> bool:
+    async def validate_rom(self, ctx: "BizHawkClientContext") -> bool:
         from CommonClient import logger
 
         try:
             # Check ROM name/patch version
             rom_info = ((await bizhawk.read(ctx.bizhawk_ctx, [(data.rom_addresses["AP_ROM_Header"], 11, "ROM"),
-                                                              (data.rom_addresses["AP_ROM_Version"], 2, "ROM")])))
+                                                              (data.rom_addresses["AP_ROM_Version"], 2, "ROM"),
+                                                              (data.rom_addresses["AP_ROM_Revision"], 1, "ROM")])))
 
             rom_name = bytes([byte for byte in rom_info[0] if byte != 0]).decode("ascii")
             rom_version = int.from_bytes(rom_info[1], "little")
+            rom_revision = int.from_bytes(rom_info[2], "little")
 
             if rom_name == "PM_CRYSTAL":
                 logger.info("ERROR: You appear to be running an unpatched version of Pokemon Crystal. "
@@ -90,13 +90,16 @@ class PokemonCrystalClient(BizHawkClient):
                 return False
             if rom_name != "AP_CRYSTAL":
                 return False
-            if rom_version != data.rom_version:
+
+            required_rom_version = data.rom_version if rom_revision == 0 else data.rom_version_11
+            if rom_version != required_rom_version:
                 generator_version = "{0:x}".format(rom_version)
-                client_version = "{0:x}".format(data.rom_version)
+                client_version = "{0:x}".format(required_rom_version)
                 logger.info("ERROR: The patch file used to create this ROM is not compatible with "
                             "this client. Double check your version of pokemon_crystal.apworld "
                             "against the version used to generate this game.")
-                logger.info(f"Client checksum: {client_version}, Generator checksum: {generator_version}")
+                logger.info(f"ROM Revision: V1.{rom_revision}, Client checksum: {client_version}, "
+                            f"Generator checksum: {generator_version}")
                 return False
         except UnicodeDecodeError:
             return False
@@ -109,12 +112,11 @@ class PokemonCrystalClient(BizHawkClient):
         ctx.watcher_timeout = 0.125
         return True
 
-    async def set_auth(self, ctx: BizHawkClientContext) -> None:
+    async def set_auth(self, ctx: "BizHawkClientContext") -> None:
         slot_name_bytes = (await bizhawk.read(ctx.bizhawk_ctx, [(data.rom_addresses["AP_Seed_Name"], 64, "ROM")]))[0]
-        print(bytes([byte for byte in slot_name_bytes if byte != 0]).decode("utf-8"))
         ctx.auth = bytes([byte for byte in slot_name_bytes if byte != 0]).decode("utf-8")
 
-    async def game_watcher(self, ctx: BizHawkClientContext) -> None:
+    async def game_watcher(self, ctx: "BizHawkClientContext") -> None:
         if ctx.slot_data is not None:
             if ctx.slot_data["goal"] == 0:
                 self.goal_flag = data.event_flags["EVENT_BEAT_ELITE_FOUR"]
@@ -134,7 +136,8 @@ class PokemonCrystalClient(BizHawkClient):
             phone_trap_index = read_result[0][4]
 
             if num_received_items < len(ctx.items_received) and received_item_is_empty:
-                next_item = ctx.items_received[num_received_items].item - BASE_OFFSET
+                next_item = ctx.items_received[num_received_items].item
+                # Randomized TMs are offset by 256
                 next_item = next_item if next_item < 256 else next_item - 256
                 await bizhawk.write(ctx.bizhawk_ctx, [
                     (data.ram_addresses["wArchipelagoItemReceived"],
@@ -158,38 +161,29 @@ class PokemonCrystalClient(BizHawkClient):
             flag_bytes = read_result[0]
             for byte_i, byte in enumerate(flag_bytes):
                 for i in range(8):
-                    flag_id = byte_i * 8 + i
-                    location_id = flag_id + BASE_OFFSET
+                    location_id = byte_i * 8 + i
                     if byte & (1 << i) != 0:
                         if location_id in ctx.server_locations:
                             local_checked_locations.add(location_id)
 
-                        if self.goal_flag is not None and flag_id == self.goal_flag:
+                        if self.goal_flag is not None and location_id == self.goal_flag:
                             game_clear = True
 
-                        if flag_id in EVENT_FLAG_MAP:
-                            local_set_events[EVENT_FLAG_MAP[flag_id]] = True
+                        if location_id in EVENT_FLAG_MAP:
+                            local_set_events[EVENT_FLAG_MAP[location_id]] = True
 
-                        if flag_id in KEY_ITEM_FLAG_MAP:
-                            local_found_key_items[KEY_ITEM_FLAG_MAP[flag_id]] = True
-                    # else: # TODO: check if item is an overworld itemball
-                    #     if location_id in ctx.checked_locations:
-                    #         write_byte = byte & (1 << i)
-                    #         await bizhawk.write(ctx.bizhawk_ctx, [
-                    #             (data.ram_addresses["wEventFlags"],
-                    #              write_byte.to_bytes(1, "little"), "WRAM")
-                    #         ])
+                        if location_id in KEY_ITEM_FLAG_MAP:
+                            local_found_key_items[KEY_ITEM_FLAG_MAP[location_id]] = True
 
             if local_checked_locations != self.local_checked_locations:
                 self.local_checked_locations = local_checked_locations
 
-                if local_checked_locations is not None:
-                    await ctx.send_msgs([{
-                        "cmd": "LocationChecks",
-                        "locations": list(local_checked_locations)
-                    }])
+                await ctx.send_msgs([{
+                    "cmd": "LocationChecks",
+                    "locations": list(local_checked_locations)
+                }])
 
-                # Send game clear
+            # Send game clear
             if not ctx.finished_game and game_clear:
                 await ctx.send_msgs([{
                     "cmd": "StatusUpdate",
@@ -199,7 +193,7 @@ class PokemonCrystalClient(BizHawkClient):
             if not len(self.phone_trap_locations):
                 phone_result = await bizhawk.guarded_read(
                     ctx.bizhawk_ctx,
-                    [(data.rom_addresses["AP_Setting_Phone_Trap_Locations"], 0x40, "ROM")],  # Flags
+                    [(data.rom_addresses["AP_Setting_Phone_Trap_Locations"], 0x40, "ROM")],
                     [overworld_guard]
                 )
                 if phone_result is not None:

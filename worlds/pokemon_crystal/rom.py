@@ -2,16 +2,31 @@ import copy
 import os
 from typing import TYPE_CHECKING
 
+import bsdiff4
+
 from settings import get_settings
-from worlds.Files import APProcedurePatch, APTokenMixin, APTokenTypes
-from .data import data, BASE_OFFSET
-from .items import reverse_offset_item_value, item_const_name_to_id
+from worlds.Files import APProcedurePatch, APTokenMixin, APTokenTypes, APPatchExtension
+from .data import data
+from .items import item_const_name_to_id
 from .utils import convert_to_ingame_text
 
 if TYPE_CHECKING:
     from . import PokemonCrystalWorld
-else:
-    PokemonCrystalWorld = object
+
+
+class PokemonCrystalAPPatchExtension(APPatchExtension):
+    game = "Pokemon Crystal"
+
+    @staticmethod
+    def apply_bsdiff4(caller: APProcedurePatch, rom: bytes, patch: str):
+        revision_address = data.rom_addresses["AP_ROM_Revision"]
+        rom_bytes = bytearray(rom)
+        if rom_bytes[revision_address] == 1:
+            if "basepatch11.bsdiff4" not in caller.files:
+                raise Exception("This patch was generated without support for Pokemon Crystal V1.1 ROM. "
+                                "Please regenerate with a newer APWorld version or use a V1.0 ROM")
+            return bsdiff4.patch(rom, caller.get_file("basepatch11.bsdiff4"))
+        return bsdiff4.patch(rom, caller.get_file(patch))
 
 
 class PokemonCrystalProcedurePatch(APProcedurePatch, APTokenMixin):
@@ -30,22 +45,23 @@ class PokemonCrystalProcedurePatch(APProcedurePatch, APTokenMixin):
         return get_base_rom_as_bytes()
 
 
-def generate_output(world: PokemonCrystalWorld, output_directory: str, patch: PokemonCrystalProcedurePatch) -> None:
+def generate_output(world: "PokemonCrystalWorld", output_directory: str, patch: PokemonCrystalProcedurePatch) -> None:
     item_texts = []
     for location in world.multiworld.get_locations(world.player):
         if location.address is None:
             continue
 
         if location.item and location.item.player == world.player:
-            item_id = reverse_offset_item_value(location.item.code)
+            item_id = location.item.code
             item_id = item_id - 256 if item_id > 256 else item_id
             write_bytes(patch, [item_id], location.rom_address)
         else:
             # for in game text
-            item_flag = location.address - BASE_OFFSET
+            item_flag = location.address
             player_name = world.multiworld.player_name[location.item.player].upper()
             item_name = location.item.name.upper()
             item_texts.append([player_name, item_name, item_flag])
+
             write_bytes(patch, [item_const_name_to_id("AP_ITEM")], location.rom_address)
 
     # table has format: location id (2 bytes), string address (2 bytes), string bank (1 byte),
@@ -78,6 +94,7 @@ def generate_output(world: PokemonCrystalWorld, output_directory: str, patch: Po
             # if we somehow run out of capacity in both banks, just finish the table and break,
             # there is a fallback string in the ROM, so it should handle this gracefully.
             write_bytes(patch, [0xFF], item_name_table_adr + table_offset_adr)
+            print("oopsie")
             break
         if i + 1 < item_name_bank1_capacity:
             text_offset = i * 34
@@ -295,29 +312,17 @@ def generate_output(world: PokemonCrystalWorld, output_directory: str, patch: Po
         write_bytes(patch, [world.options.minimum_catch_rate], address)
 
     if world.options.randomize_music:
-        for i, music in enumerate(data.music.maps):
-            music_address = data.rom_addresses["AP_Music_" + music]
-            if music.startswith("MAP_"):  # map music uses a single byte
-                write_bytes(patch, [world.generated_music[i]], music_address)
-            else:  # script music is 2 bytes, offset by 1
-                write_bytes(patch, world.generated_music[i].to_bytes(2, "little"), music_address + 1)
-
-    # if world.options.randomize_sfx:
-    #     out_bytes = b''
-    #     for bank_address in world.generated_sfx:
-    #         out_bytes += bank_address.bank.to_bytes(1, "little") + bank_address.address.to_bytes(2, "little")
-    #     sfx_address = data.rom_addresses["AP_Setting_SFX_Pointers"]
-    #     write_bytes(patch, out_bytes, sfx_address)
-    #     cries_pool = [cry for cry_name, cry in data.sfx.cries.items()]
-    #     cries_address = data.rom_addresses["AP_Setting_Cries"]
-    #     for i in range(251):
-    #         cry = world.random.choice(cries_pool)
-    #         pitch = random.randint(-768, 4096)
-    #         length = random.randint(64, 512)
-    #         cry_bytes = cry.to_bytes(2, "little") + \
-    #                     pitch.to_bytes(2, "little", signed=True) + \
-    #                     length.to_bytes(2, "little")
-    #         write_bytes(patch, cry_bytes, cries_address + i * 6)
+        for map_name, map_music in world.generated_music.maps.items():
+            music_address = data.rom_addresses["AP_Music_" + map_name]
+            # map music uses a single byte
+            write_bytes(patch, [world.generated_music.consts[map_music].id], music_address)
+        for i, music_name in enumerate(world.generated_music.encounters):
+            music_address = data.rom_addresses["AP_EncounterMusic"] + i
+            write_bytes(patch, [world.generated_music.consts[music_name].id], music_address)
+        for script_name, script_music in world.generated_music.scripts.items():
+            music_address = data.rom_addresses["AP_Music_" + script_name] + 1
+            # script music is 2 bytes LE
+            write_bytes(patch, world.generated_music.consts[script_music].id.to_bytes(2, "little"), music_address)
 
     if world.options.better_marts:
         mart_address = data.rom_addresses["Marts"]
@@ -372,7 +377,7 @@ def generate_output(world: PokemonCrystalWorld, output_directory: str, patch: Po
         if quantity == 0:
             quantity = 1
         while quantity:
-            item_code = reverse_offset_item_value(world.item_name_to_id[item])
+            item_code = world.item_name_to_id[item]
             if item_code > 511:
                 continue
             elif item_code > 255:
@@ -396,7 +401,7 @@ def generate_output(world: PokemonCrystalWorld, output_directory: str, patch: Po
             write_bytes(patch, map_fly_offset, data.rom_addresses["AP_Setting_MapCardFreeFly_Offset"] + 1)
 
     # Set slot name
-    for i, byte in enumerate(world.multiworld.player_name[world.player].encode("utf-8")):
+    for i, byte in enumerate(world.player_name.encode("utf-8")):
         write_bytes(patch, [byte], data.rom_addresses["AP_Seed_Name"] + i)
 
     patch.write_file("token_data.bin", patch.get_token_binary())

@@ -8,13 +8,14 @@ from BaseClasses import Tutorial, ItemClassification
 from Fill import fill_restrictive
 from worlds.AutoWorld import World, WebWorld
 from .client import PokemonCrystalClient
-from .data import PokemonData, TrainerData, BASE_OFFSET, MiscData, TMHMData, BankAddress, data as crystal_data, \
-    WildData, StaticPokemon
+from .data import PokemonData, TrainerData, MiscData, TMHMData, data as crystal_data, \
+    WildData, StaticPokemon, MusicData
 from .items import PokemonCrystalItem, create_item_label_to_code_map, get_item_classification, \
-    reverse_offset_item_value, ITEM_GROUPS, item_const_name_to_id, item_const_name_to_label
+    ITEM_GROUPS, item_const_name_to_id, item_const_name_to_label
 from .locations import create_locations, PokemonCrystalLocation, create_location_label_to_id_map
 from .misc import misc_activities, get_misc_spoiler_log
 from .moves import randomize_tms
+from .music import randomize_music
 from .options import PokemonCrystalOptions, JohtoOnly, RandomizeBadges, Goal, HMBadgeRequirements
 from .phone import generate_phone_traps
 from .phone_data import PhoneScript
@@ -29,19 +30,11 @@ from .wild import randomize_wild_pokemon, randomize_static_pokemon
 
 class PokemonCrystalSettings(settings.Group):
     class RomFile(settings.UserFilePath):
-        description = "Pokemon Crystal (UE) (V1.0) ROM File"
-        copy_to = "Pokemon - Crystal Version (UE) (V1.0) [C][!].gbc"
-        md5s = ["9f2922b235a5eeb78d65594e82ef5dde"]
-
-    class RomStart(str):
-        """
-        Set this to false to never autostart a rom (such as after patching)
-        True for operating system default program
-        Alternatively, a path to a program to open the .gb file with
-        """
+        description = "Pokemon Crystal (UE) (V1.0 or V1.1) ROM File"
+        copy_to = "Pokemon - Crystal Version (UE) [C][!].gbc"
+        md5s = ["9f2922b235a5eeb78d65594e82ef5dde", "301899b8087289a6436b0a241fbbb474"]
 
     rom_file: RomFile = RomFile(RomFile.copy_to)
-    rom_start: Union[RomStart, bool] = True
 
 
 class PokemonCrystalWebWorld(WebWorld):
@@ -70,8 +63,7 @@ class PokemonCrystalWorld(World):
     options_dataclass = PokemonCrystalOptions
     options: PokemonCrystalOptions
 
-    data_version = 0
-    required_client_version = (0, 4, 4)
+    required_client_version = (0, 5, 0)
 
     item_name_to_id = create_item_label_to_code_map()
     location_name_to_id = create_location_label_to_id_map()
@@ -89,8 +81,7 @@ class PokemonCrystalWorld(World):
     generated_misc: MiscData
     generated_tms: Dict[str, TMHMData]
     generated_wild: WildData
-    # generated_sfx: List[BankAddress]
-    generated_music: List[int]
+    generated_music: MusicData
     generated_wooper: str
     generated_static: Dict[str, StaticPokemon]
 
@@ -144,29 +135,30 @@ class PokemonCrystalWorld(World):
         add_badges = []
         # Extra badges to add to the pool in johto only
         if self.options.johto_only and total_badges > 8:
-            kanto_badges = [item_id + BASE_OFFSET for item_id, item_data in crystal_data.items.items() if
+            kanto_badges = [item_id for item_id, item_data in crystal_data.items.items() if
                             "KantoBadge" in item_data.tags]
             self.random.shuffle(kanto_badges)
             add_badges = kanto_badges[:total_badges - 8]
 
-        traps_pool = []
-        traps_pool += ["Phone Trap"] * self.options.phone_trap_weight.value
-        traps_pool += ["Sleep Trap"] * self.options.sleep_trap_weight.value
-        traps_pool += ["Poison Trap"] * self.options.poison_trap_weight.value
-        traps_pool += ["Burn Trap"] * self.options.burn_trap_weight.value
-        traps_pool += ["Freeze Trap"] * self.options.freeze_trap_weight.value
-        traps_pool += ["Paralysis Trap"] * self.options.paralysis_trap_weight.value
-
-        total_trap_weight = len(traps_pool)
+        trap_names, trap_weights = zip(
+            ("Phone Trap", self.options.phone_trap_weight.value),
+            ("Sleep Trap", self.options.sleep_trap_weight.value),
+            ("Poison Trap", self.options.poison_trap_weight.value),
+            ("Burn Trap", self.options.burn_trap_weight.value),
+            ("Freeze Trap", self.options.freeze_trap_weight.value),
+            ("Paralysis Trap", self.options.paralysis_trap_weight.value),
+        )
+        total_trap_weight = sum(trap_weights)
 
         def get_random_trap():
-            return self.create_item(self.random.choice(traps_pool))
+            return self.create_item(self.random.choices(trap_names, trap_weights)[0])
 
         default_itempool = []
 
         for location in item_locations:
             item_code = location.default_item_code
-            if item_code > BASE_OFFSET and get_item_classification(item_code) != ItemClassification.filler:
+            if item_code > 0 and get_item_classification(item_code) != ItemClassification.filler:
+                # If TMs are randomized, TM items without move names are added to the pool
                 if item_code in crystal_data.tm_replace_map and self.options.randomize_tm_moves:
                     default_itempool += [self.create_item_by_code(item_code + 256)]
                 else:
@@ -175,7 +167,7 @@ class PokemonCrystalWorld(World):
                 default_itempool += [self.create_item_by_code(add_badges.pop())]
             elif self.random.randint(0, 100) < total_trap_weight:
                 default_itempool += [get_random_trap()]
-            elif item_code == BASE_OFFSET:  # item is NO_ITEM, trainersanity checks
+            elif item_code == 0:  # item is NO_ITEM, trainersanity checks
                 default_itempool += [self.create_item_by_const_name(get_random_filler_item(self.random))]
             else:
                 default_itempool += [self.create_item_by_code(item_code)]
@@ -192,7 +184,7 @@ class PokemonCrystalWorld(World):
             if self.options.early_fly:
                 # take one of the 3 early badge locations, set it to storm badge
                 storm_loc = self.random.choice([loc for loc in badge_locs if "EarlyBadge" in loc.tags])
-                storm_badge = [item for item in badge_items if item.name == "Storm Badge"][0]
+                storm_badge = next(item for item in badge_items if item.name == "Storm Badge")
                 storm_loc.place_locked_item(storm_badge)
                 badge_locs.remove(storm_loc)
                 badge_items.remove(storm_badge)
@@ -216,12 +208,11 @@ class PokemonCrystalWorld(World):
         self.generated_tms = copy.deepcopy(crystal_data.tmhm)
         self.generated_wild = copy.deepcopy(crystal_data.wild)
         self.generated_static = copy.deepcopy(crystal_data.static)
+        self.generated_music = copy.deepcopy(crystal_data.music)
         self.generated_palettes = {}
         self.generated_phone_traps = []
         self.generated_phone_indices = []
-        self.generated_music = []
         self.generated_wooper = "WOOPER"
-        # self.generated_sfx = copy.deepcopy(crystal_data.sfx.pointers)
 
         randomize_pokemon(self)
 
@@ -243,23 +234,17 @@ class PokemonCrystalWorld(World):
             randomize_static_pokemon(self)
 
         if self.options.randomize_music.value:
-            music_pool = [music_id for music_name, music_id in crystal_data.music.consts.items() if
-                          music_name != "MUSIC_NONE"]
-            for _music in crystal_data.music.maps:
-                new_music = self.random.choice(music_pool)
-                self.generated_music.append(new_music)
-
-        # if self.options.randomize_sfx:
-        #     self.random.shuffle(self.generated_sfx)
+            randomize_music(self)
 
         if self.options.enable_mischief.value:
             misc_activities(self)
 
-        generate_phone_traps(self)
+        if self.options.phone_trap_weight.value:
+            generate_phone_traps(self)
 
-        player_name = self.multiworld.get_player_name(self.player)
-        patch = PokemonCrystalProcedurePatch(player=self.player, player_name=player_name)
+        patch = PokemonCrystalProcedurePatch(player=self.player, player_name=self.player_name)
         patch.write_file("basepatch.bsdiff4", pkgutil.get_data(__name__, "data/basepatch.bsdiff4"))
+        patch.write_file("basepatch11.bsdiff4", pkgutil.get_data(__name__, "data/basepatch11.bsdiff4"))
         generate_output(self, output_directory, patch)
 
     def fill_slot_data(self) -> Dict[str, Any]:
@@ -326,7 +311,7 @@ class PokemonCrystalWorld(World):
         return item_const_name_to_label(item)
 
     def create_item_by_const_name(self, item_const: str) -> PokemonCrystalItem:
-        item_code = item_const_name_to_id(item_const) + BASE_OFFSET
+        item_code = item_const_name_to_id(item_const)
         return self.create_item_by_code(item_code)
 
     def create_item_by_code(self, item_code: int) -> PokemonCrystalItem:
