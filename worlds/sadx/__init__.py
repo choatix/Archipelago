@@ -153,6 +153,7 @@ class SonicAdventureDXWorld(World):
             "ModVersion": "0.2.2",
             "EmblemsForPerfectChaos": self.get_emblems_needed(),
             "FieldEmblemChecks": self.options.field_emblems_checks.value,
+            "LifeSanity": self.options.life_sanity.value,
             "SubLevelChecks": self.options.sub_level_checks.value,
             "RandomizeUpgrades": self.options.randomized_upgrades.value,
             "SonicMissions": self.options.sonic_missions.value,
@@ -309,7 +310,7 @@ class SonicAdventureDXWorld(World):
                     if self.is_any_character_playable(field_emblem.characters):
                         location_ids.append(field_emblem.locationId)
 
-        if self.options.life_capsule_checks:
+        if self.options.life_sanity:
             for life_capsule in life_capsule_location_table:
                 if life_capsule.area == area:
                     if self.is_character_playable(life_capsule.character):

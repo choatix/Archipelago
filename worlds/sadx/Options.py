@@ -11,7 +11,7 @@ class FieldEmblemsChecks(DefaultOnToggle):
     display_name = "Field Emblems Checks"
 
 
-class LifeCapsulesChecks(DefaultOffToggle):
+class LifeSanity(DefaultOffToggle):
     """Determines whether collecting life capsules grants checks
     (100 Locations)"""
     display_name = "Life Capsule Checks"
@@ -78,7 +78,7 @@ class BigMissions(BaseMissionChoice):
 @dataclass
 class SonicAdventureDXOptions(PerGameCommonOptions):
     field_emblems_checks: FieldEmblemsChecks
-    life_capsule_checks: LifeCapsulesChecks
+    life_sanity: LifeSanity
     sub_level_checks: SubLevelChecks
     randomized_upgrades: RandomizeUpgrades
     sonic_missions: SonicMissions
@@ -94,7 +94,7 @@ sadx_option_groups = [
     OptionGroup("Main Options", [
         EmblemPercentage,
         FieldEmblemsChecks,
-        LifeCapsulesChecks,
+        LifeSanity,
         SubLevelChecks,
         RandomizeUpgrades,
     ]),
