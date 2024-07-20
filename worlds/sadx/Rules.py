@@ -1,4 +1,5 @@
 from worlds.generic.Rules import add_rule
+from worlds.sadx import Character
 from worlds.sadx.Locations import get_location_by_name, LocationInfo, level_location_table, LevelLocation, \
     upgrade_location_table, UpgradeLocation, sub_level_location_table, SubLevelLocation, field_emblem_location_table, \
     EmblemLocation, life_capsule_location_table, LifeCapsuleLocation
@@ -29,8 +30,12 @@ def add_sub_level_rules(self, location_name: str, sub_level: SubLevelLocation):
 
 def add_field_emblem_rules(self, location_name: str, field_emblem: EmblemLocation):
     location = self.multiworld.get_location(location_name, self.player)
+    # For the City Hall Emblem, Knuckles needs the Shovel Claw
     add_rule(location, lambda state: any(
-        state.has(self.get_character_item_from_enum(character), self.player) for character in field_emblem.characters))
+        state.has(self.get_character_item_from_enum(character), self.player) and
+        (state.has(ItemName.Knuckles.ShovelClaw,
+                   self.player) if character == Character.Knuckles and field_emblem.emblemName == "City Hall Emblem" else True)
+        for character in field_emblem.characters))
 
 
 def add_life_capsule_rules(self, location_name: str, life_capsule: LifeCapsuleLocation):
