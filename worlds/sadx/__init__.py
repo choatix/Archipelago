@@ -8,7 +8,7 @@ from .Items import all_item_table, get_item, get_item_by_name, SonicAdventureDXI
     key_item_table, character_unlock_item_table, character_upgrade_item_table
 from .Locations import all_location_table, SonicAdventureDXLocation, \
     field_emblem_location_table, sub_level_location_table, level_location_table, LevelLocation, \
-    upgrade_location_table
+    upgrade_location_table, life_capsule_location_table
 from .Names import ItemName
 from .Options import sadx_option_groups, SonicAdventureDXOptions, BaseMissionChoice
 from .Rules import create_rules
@@ -308,6 +308,12 @@ class SonicAdventureDXWorld(World):
                 if field_emblem.area == area:
                     if self.is_any_character_playable(field_emblem.characters):
                         location_ids.append(field_emblem.locationId)
+
+        if self.options.life_capsule_checks:
+            for life_capsule in life_capsule_location_table:
+                if life_capsule.area == area:
+                    if self.is_character_playable(life_capsule.character):
+                        location_ids.append(life_capsule.locationId)
         return location_ids
 
     def add_locations_to_region(self, region: Region, area: Area):
