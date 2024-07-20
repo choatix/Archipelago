@@ -1,8 +1,7 @@
 from dataclasses import dataclass
 
-from Options import OptionGroup, Choice, Range, DefaultOnToggle
+from Options import OptionGroup, Choice, Range, DefaultOnToggle, Toggle
 from Options import PerGameCommonOptions
-from worlds.ladx.Options import DefaultOffToggle
 
 
 class FieldEmblemsChecks(DefaultOnToggle):
@@ -11,9 +10,10 @@ class FieldEmblemsChecks(DefaultOnToggle):
     display_name = "Field Emblems Checks"
 
 
-class LifeSanity(DefaultOffToggle):
+class LifeSanity(Toggle):
     """Determines whether collecting life capsules grants checks
     (100 Locations)"""
+    default = 0
     display_name = "Life Capsule Checks"
 
 
