@@ -398,6 +398,26 @@ class StartingLifeCount(Range):
     default = 5
 
 
+class CastleShuffle(Toggle):
+    """
+    Whether level shuffle allows castles in the main pool
+    """
+    display_name = "Castle Shuffle"
+
+class StartWithEasy(Toggle):
+    """
+    Whether to only allow levels to be easy for the first 2 worlds
+    """
+    display_name = "Start with Easy"
+    default = True
+
+class PalaceShuffle(Toggle):
+    """
+    Whether to shuffle switch palaces among themselves
+    """
+    display_name = "Palace Shuffle"
+
+
 smw_option_groups = [
     OptionGroup("Goal Options", [
         Goal,
@@ -419,6 +439,9 @@ smw_option_groups = [
         BowserCastleRooms,
         BossShuffle,
         SwapDonutGhostHouseExits,
+        CastleShuffle,
+        PalaceShuffle,
+        StartWithEasy
     ]),
     OptionGroup("Junk and Traps", [
         JunkFillPercentage,
@@ -480,3 +503,6 @@ class SMWOptions(PerGameCommonOptions):
     level_palette_shuffle: LevelPaletteShuffle
     overworld_palette_shuffle: OverworldPaletteShuffle
     starting_life_count: StartingLifeCount
+    start_with_easy: StartWithEasy
+    castle_shuffle: CastleShuffle
+    palace_shuffle: PalaceShuffle

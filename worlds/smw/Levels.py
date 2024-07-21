@@ -1232,41 +1232,83 @@ def generate_level_list(world: World):
     hard_double_levels_copy = hard_double_levels.copy()
     world.random.shuffle(hard_double_levels_copy)
     switch_palace_levels_copy = switch_palace_levels.copy()
-    world.random.shuffle(switch_palace_levels_copy)
+
+    castle_shuffle = world.options.castle_shuffle
+    palace_shuffle = world.options.palace_shuffle
+    start_easy = world.options.start_with_easy
+
+    if not start_easy:
+        easy_single_levels_copy = (easy_single_levels_copy.copy() + hard_single_levels_copy.copy())
+        if not world.options.exclude_special_zone:
+            easy_single_levels_copy.extend(special_zone_levels_copy)
+        world.random.shuffle(easy_single_levels_copy)
+        hard_single_levels_copy = []
+
+        easy_double_levels_copy = (easy_double_levels_copy.copy() + hard_double_levels_copy.copy())
+        world.random.shuffle(easy_double_levels_copy)
+        hard_double_levels_copy = []
+
+        easy_castle_fortress_levels_copy = (
+                    easy_castle_fortress_levels_copy.copy() + hard_castle_fortress_levels_copy.copy())
+        world.random.shuffle(easy_castle_fortress_levels_copy)
+        hard_castle_fortress_levels_copy = []
+
+    if castle_shuffle:
+        easy_single_levels_copy = (easy_single_levels_copy.copy()) + easy_castle_fortress_levels_copy.copy()
+        world.random.shuffle(easy_single_levels_copy)
+        easy_castle_fortress_levels_copy = []
+
+    palace_levels = switch_palace_levels_copy
+    palace_levels_copy = palace_levels.copy()
+    if palace_shuffle:
+        world.random.shuffle(palace_levels_copy)
 
     # Yoshi's Island
     shuffled_level_list.append(0x03)
     shuffled_level_list.append(easy_single_levels_copy.pop(0))
-    shuffled_level_list.append(0x14)
+    shuffled_level_list.append(palace_levels_copy.pop(0))
     shuffled_level_list.append(easy_single_levels_copy.pop(0))
     shuffled_level_list.append(easy_single_levels_copy.pop(0))
     shuffled_level_list.append(easy_single_levels_copy.pop(0))
-    shuffled_level_list.append(easy_castle_fortress_levels_copy.pop(0))
+    if not castle_shuffle:
+        shuffled_level_list.append(easy_castle_fortress_levels_copy.pop(0))
+    else:
+        shuffled_level_list.append(easy_single_levels_copy.pop(0))
 
     # Donut Plains
     shuffled_level_list.append(easy_double_levels_copy.pop(0))
     shuffled_level_list.append(easy_double_levels_copy.pop(0))
     shuffled_level_list.append(easy_double_levels_copy.pop(0))
-    shuffled_level_list.append(0x08)
+    shuffled_level_list.append(palace_levels_copy.pop(0))
     shuffled_level_list.append(easy_double_levels_copy.pop(0))
     shuffled_level_list.append(easy_double_levels_copy.pop(0))
     shuffled_level_list.append(easy_single_levels_copy.pop(0))
     shuffled_level_list.append(easy_single_levels_copy.pop(0))
     shuffled_level_list.append(easy_single_levels_copy.pop(0))
-    shuffled_level_list.append(easy_castle_fortress_levels_copy.pop(0))
+    if not castle_shuffle:
+        shuffled_level_list.append(easy_castle_fortress_levels_copy.pop(0))
+    else:
+        shuffled_level_list.append(easy_single_levels_copy.pop(0))
     shuffled_level_list.append(0x28)
     shuffled_level_list.append(0x16)
 
     single_levels_copy = (easy_single_levels_copy.copy() + hard_single_levels_copy.copy())
-    if not world.options.exclude_special_zone:
+    if start_easy and not world.options.exclude_special_zone:
         single_levels_copy.extend(special_zone_levels_copy)
-    world.random.shuffle(single_levels_copy)
+
+    if start_easy:
+        world.random.shuffle(single_levels_copy)
 
     castle_fortress_levels_copy = (easy_castle_fortress_levels_copy.copy() + hard_castle_fortress_levels_copy.copy())
     world.random.shuffle(castle_fortress_levels_copy)
 
     double_levels_copy = (easy_double_levels_copy.copy() + hard_double_levels_copy.copy())
     world.random.shuffle(double_levels_copy)
+
+    if castle_shuffle:
+        single_levels_copy = (single_levels_copy.copy()) + castle_fortress_levels_copy.copy()
+        world.random.shuffle(single_levels_copy)
+        castle_fortress_levels_copy = []
 
     # Vanilla Dome
     shuffled_level_list.append(double_levels_copy.pop(0))
@@ -1275,11 +1317,15 @@ def generate_level_list(world: World):
     shuffled_level_list.append(single_levels_copy.pop(0))
     shuffled_level_list.append(single_levels_copy.pop(0))
     shuffled_level_list.append(single_levels_copy.pop(0))
-    shuffled_level_list.append(0x3F)
+    shuffled_level_list.append(palace_levels_copy.pop(0))
     shuffled_level_list.append(single_levels_copy.pop(0))
     shuffled_level_list.append(single_levels_copy.pop(0))
-    shuffled_level_list.append(castle_fortress_levels_copy.pop(0))
-    shuffled_level_list.append(castle_fortress_levels_copy.pop(0))
+    if not castle_shuffle:
+        shuffled_level_list.append(castle_fortress_levels_copy.pop(0))
+        shuffled_level_list.append(castle_fortress_levels_copy.pop(0))
+    else:
+        shuffled_level_list.append(single_levels_copy.pop(0))
+        shuffled_level_list.append(single_levels_copy.pop(0))
     shuffled_level_list.append(0x2C)
 
     # Twin Bridges
@@ -1288,7 +1334,10 @@ def generate_level_list(world: World):
     shuffled_level_list.append(double_levels_copy.pop(0))
     shuffled_level_list.append(single_levels_copy.pop(0))
     shuffled_level_list.append(single_levels_copy.pop(0))
-    shuffled_level_list.append(castle_fortress_levels_copy.pop(0))
+    if not castle_shuffle:
+        shuffled_level_list.append(castle_fortress_levels_copy.pop(0))
+    else:
+        shuffled_level_list.append(single_levels_copy.pop(0))
     shuffled_level_list.append(0x12)
 
     # Forest of Illusion
@@ -1298,9 +1347,13 @@ def generate_level_list(world: World):
     shuffled_level_list.append(double_levels_copy.pop(0))
     shuffled_level_list.append(double_levels_copy.pop(0))
     shuffled_level_list.append(single_levels_copy.pop(0))
-    shuffled_level_list.append(0x45)
-    shuffled_level_list.append(castle_fortress_levels_copy.pop(0))
-    shuffled_level_list.append(castle_fortress_levels_copy.pop(0))
+    shuffled_level_list.append(palace_levels_copy.pop(0))
+    if not castle_shuffle:
+        shuffled_level_list.append(castle_fortress_levels_copy.pop(0))
+        shuffled_level_list.append(castle_fortress_levels_copy.pop(0))
+    else:
+        shuffled_level_list.append(single_levels_copy.pop(0))
+        shuffled_level_list.append(single_levels_copy.pop(0))
     shuffled_level_list.append(0x1E)
 
     # Chocolate Island
@@ -1310,9 +1363,15 @@ def generate_level_list(world: World):
     shuffled_level_list.append(single_levels_copy.pop(0))
     shuffled_level_list.append(single_levels_copy.pop(0))
     shuffled_level_list.append(single_levels_copy.pop(0))
-    shuffled_level_list.append(castle_fortress_levels_copy.pop(0))
+    if not castle_shuffle:
+        shuffled_level_list.append(castle_fortress_levels_copy.pop(0))
+    else:
+        shuffled_level_list.append(single_levels_copy.pop(0))
     shuffled_level_list.append(single_levels_copy.pop(0))
-    shuffled_level_list.append(castle_fortress_levels_copy.pop(0))
+    if not castle_shuffle:
+        shuffled_level_list.append(castle_fortress_levels_copy.pop(0))
+    else:
+        shuffled_level_list.append(single_levels_copy.pop(0))
 
     # Valley of Bowser
     shuffled_level_list.append(0x18)
@@ -1321,8 +1380,12 @@ def generate_level_list(world: World):
     shuffled_level_list.append(single_levels_copy.pop(0))
     shuffled_level_list.append(double_levels_copy.pop(0))
     shuffled_level_list.append(double_levels_copy.pop(0))
-    shuffled_level_list.append(castle_fortress_levels_copy.pop(0))
-    shuffled_level_list.append(castle_fortress_levels_copy.pop(0))
+    if not castle_shuffle:
+        shuffled_level_list.append(castle_fortress_levels_copy.pop(0))
+        shuffled_level_list.append(castle_fortress_levels_copy.pop(0))
+    else:
+        shuffled_level_list.append(single_levels_copy.pop(0))
+        shuffled_level_list.append(single_levels_copy.pop(0))
 
     # Front/Back Door
     if world.options.bowser_castle_doors == "fast":

@@ -2116,6 +2116,7 @@ def connect_regions(world: World, level_to_tile_dict):
             current_exit_name = (current_level_data.levelName + " - Secret Exit")
             connect(world, current_exit_name, next_tile_name)
 
+
     connect(world, LocationName.donut_plains_star_road, LocationName.star_road_donut)
     connect(world, LocationName.star_road_donut, LocationName.donut_plains_star_road)
     connect(world, LocationName.star_road_donut, LocationName.star_road_1_tile)

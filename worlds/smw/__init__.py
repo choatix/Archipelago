@@ -109,12 +109,14 @@ class SMWWorld(World):
 
         connect_regions(self, self.active_level_dict)
 
-        # Add Boss Token amount requirements for Worlds
-        add_rule(self.multiworld.get_region(LocationName.donut_plains_1_tile, self.player).entrances[0], lambda state: state.has(ItemName.koopaling, self.player, 1))
-        add_rule(self.multiworld.get_region(LocationName.vanilla_dome_1_tile, self.player).entrances[0], lambda state: state.has(ItemName.koopaling, self.player, 2))
-        add_rule(self.multiworld.get_region(LocationName.forest_of_illusion_1_tile, self.player).entrances[0], lambda state: state.has(ItemName.koopaling, self.player, 4))
-        add_rule(self.multiworld.get_region(LocationName.chocolate_island_1_tile, self.player).entrances[0], lambda state: state.has(ItemName.koopaling, self.player, 5))
-        add_rule(self.multiworld.get_region(LocationName.valley_of_bowser_1_tile, self.player).entrances[0], lambda state: state.has(ItemName.koopaling, self.player, 6))
+        castle_shuffle = self.options.castle_shuffle
+        if not castle_shuffle:
+            # Add Boss Token amount requirements for Worlds
+            add_rule(self.multiworld.get_region(LocationName.donut_plains_1_tile, self.player).entrances[0], lambda state: state.has(ItemName.koopaling, self.player, 1))
+            add_rule(self.multiworld.get_region(LocationName.vanilla_dome_1_tile, self.player).entrances[0], lambda state: state.has(ItemName.koopaling, self.player, 2))
+            add_rule(self.multiworld.get_region(LocationName.forest_of_illusion_1_tile, self.player).entrances[0], lambda state: state.has(ItemName.koopaling, self.player, 4))
+            add_rule(self.multiworld.get_region(LocationName.chocolate_island_1_tile, self.player).entrances[0], lambda state: state.has(ItemName.koopaling, self.player, 5))
+            add_rule(self.multiworld.get_region(LocationName.valley_of_bowser_1_tile, self.player).entrances[0], lambda state: state.has(ItemName.koopaling, self.player, 6))
 
         exclusion_pool = set()
         if self.options.exclude_special_zone:
@@ -322,3 +324,24 @@ class SMWWorld(World):
 
     def set_rules(self):
         set_rules(self)
+
+    def write_spoiler(self, spoiler_handle: typing.TextIO):
+        lid = Levels.level_info_dict
+        if self.options.level_shuffle.value >= 0:
+            spoiler_handle.write("\n")
+            header_text = "SMW Level Shuffle for {}:\n"
+            header_text = header_text.format(self.multiworld.player_name[self.player])
+            spoiler_handle.write(header_text)
+
+            for x in self.active_level_dict.items():
+                replaced_level = x[0]
+                base_level = x[1]
+
+                level_id = lid[base_level]
+                base_level_name = level_id.levelName
+
+                level_id = lid[replaced_level]
+                replaced_level_name = level_id.levelName
+
+                text = "Level {n} is now level {n1}\n".format(n=base_level_name, n1=replaced_level_name)
+                spoiler_handle.writelines(text)
