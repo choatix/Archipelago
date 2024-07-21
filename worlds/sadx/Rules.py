@@ -1,7 +1,8 @@
 from worlds.generic.Rules import add_rule
+from worlds.sadx import Character
 from worlds.sadx.Locations import get_location_by_name, LocationInfo, level_location_table, LevelLocation, \
     upgrade_location_table, UpgradeLocation, sub_level_location_table, SubLevelLocation, field_emblem_location_table, \
-    EmblemLocation
+    EmblemLocation, life_capsule_location_table, LifeCapsuleLocation
 from worlds.sadx.Names import ItemName
 
 
@@ -29,8 +30,20 @@ def add_sub_level_rules(self, location_name: str, sub_level: SubLevelLocation):
 
 def add_field_emblem_rules(self, location_name: str, field_emblem: EmblemLocation):
     location = self.multiworld.get_location(location_name, self.player)
+    # For the City Hall Emblem, Knuckles needs the Shovel Claw
     add_rule(location, lambda state: any(
-        state.has(self.get_character_item_from_enum(character), self.player) for character in field_emblem.characters))
+        state.has(self.get_character_item_from_enum(character), self.player) and
+        (state.has(ItemName.Knuckles.ShovelClaw,
+                   self.player) if character == Character.Knuckles and field_emblem.emblemName == "City Hall Emblem" else True)
+        for character in field_emblem.characters))
+
+
+def add_life_capsule_rules(self, location_name: str, life_capsule: LifeCapsuleLocation):
+    location = self.multiworld.get_location(location_name, self.player)
+    add_rule(location,
+             lambda state, item=self.get_character_item_from_enum(life_capsule.character): state.has(item, self.player))
+    for need in life_capsule.extraItems:
+        add_rule(location, lambda state, item=need: state.has(item, self.player))
 
 
 def calculate_rules(self, location: LocationInfo):
@@ -43,6 +56,9 @@ def calculate_rules(self, location: LocationInfo):
     for sub_level in sub_level_location_table:
         if location["id"] == sub_level.locationId:
             add_sub_level_rules(self, location["name"], sub_level)
+    for life_capsule in life_capsule_location_table:
+        if location["id"] == life_capsule.locationId:
+            add_life_capsule_rules(self, location["name"], life_capsule)
     for field_emblem in field_emblem_location_table:
         if location["id"] == field_emblem.locationId:
             add_field_emblem_rules(self, location["name"], field_emblem)

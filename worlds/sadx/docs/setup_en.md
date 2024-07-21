@@ -14,7 +14,7 @@
 3. Unpack the Archipelago Mod into the `/mods` directory in the folder into which you installed Sonic Adventure DX so
    that `/mods/SADX_Archipelago` is a valid path.
 4. In the SADX_Archipelago folder, run the `CopyAPCppDLL.bat` script (a window will very quickly pop up and go away).
-5. Launch the `SAModManager.exe` and make sure the SADX_Archipelago mod is listed and enabled.
+5. Launch the `SAModManager.exe` and make sure the SADX_Archipelago mod is listed and enabled. Make sure the mod is at the bottom of the list.
 6. Disable the "Steam Achievements Mod" if enabled
 
 ## Joining a MultiWorld Game

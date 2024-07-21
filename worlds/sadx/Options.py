@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from Options import OptionGroup, Choice, Range, DefaultOnToggle
+from Options import OptionGroup, Choice, Range, DefaultOnToggle, Toggle
 from Options import PerGameCommonOptions
 
 
@@ -8,6 +8,13 @@ class FieldEmblemsChecks(DefaultOnToggle):
     """Determines whether collecting field emblems grants checks
     (12 Locations)"""
     display_name = "Field Emblems Checks"
+
+
+class LifeSanity(Toggle):
+    """Determines whether collecting life capsules grants checks
+    (100 Locations)"""
+    default = 0
+    display_name = "Life Capsule Checks"
 
 
 class SubLevelChecks(DefaultOnToggle):
@@ -71,6 +78,7 @@ class BigMissions(BaseMissionChoice):
 @dataclass
 class SonicAdventureDXOptions(PerGameCommonOptions):
     field_emblems_checks: FieldEmblemsChecks
+    life_sanity: LifeSanity
     sub_level_checks: SubLevelChecks
     randomized_upgrades: RandomizeUpgrades
     sonic_missions: SonicMissions
@@ -86,6 +94,7 @@ sadx_option_groups = [
     OptionGroup("Main Options", [
         EmblemPercentage,
         FieldEmblemsChecks,
+        LifeSanity,
         SubLevelChecks,
         RandomizeUpgrades,
     ]),

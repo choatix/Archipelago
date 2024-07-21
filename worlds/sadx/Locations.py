@@ -44,6 +44,16 @@ class EmblemLocation:
     emblemName: str
 
 
+@dataclass
+class LifeCapsuleLocation:
+    locationId: int
+    area: Area
+    character: Character
+    level: Level
+    lifeCapsuleNumber: int
+    extraItems: List[str]
+
+
 level_location_table: List[LevelLocation] = [
     # Station Square
     LevelLocation(6002, Area.StationSquareMain, Character.Big, Level.TwinklePark, LevelMission.C, []),
@@ -167,7 +177,7 @@ level_location_table: List[LevelLocation] = [
     LevelLocation(4102, Area.EggCarrierMain, Character.Amy, Level.HotShelter, LevelMission.C, []),
     LevelLocation(4101, Area.EggCarrierMain, Character.Amy, Level.HotShelter, LevelMission.B, []),
     LevelLocation(4100, Area.EggCarrierMain, Character.Amy, Level.HotShelter, LevelMission.A, []),
-    LevelLocation(6302, Area.EggCarrierMain, Character.Big, Level.HotShelter, LevelMission.C, []),
+    LevelLocation(6302, Area.EggCarrierMain, Character.Big, Level.HotShelter, LevelMission.C, [ItemName.Big.LifeBelt]),
     LevelLocation(6301, Area.EggCarrierMain, Character.Big, Level.HotShelter, LevelMission.B,
                   EVERY_LURE + [ItemName.Big.LifeBelt]),
     LevelLocation(6300, Area.EggCarrierMain, Character.Big, Level.HotShelter, LevelMission.A,
@@ -232,6 +242,132 @@ field_emblem_location_table: List[EmblemLocation] = [
 
 ]
 
+life_capsule_location_table: List[LifeCapsuleLocation] = [
+    LifeCapsuleLocation(1010, Area.Hotel, Character.Sonic, Level.EmeraldCoast, 1, []),
+    LifeCapsuleLocation(1011, Area.Hotel, Character.Sonic, Level.EmeraldCoast, 2, []),
+    LifeCapsuleLocation(1012, Area.Hotel, Character.Sonic, Level.EmeraldCoast, 3, []),
+    LifeCapsuleLocation(1013, Area.Hotel, Character.Sonic, Level.EmeraldCoast, 4, []),
+    LifeCapsuleLocation(1110, Area.MysticRuinsMain, Character.Sonic, Level.WindyValley, 1, [ItemName.Sonic.LightShoes]),
+    LifeCapsuleLocation(1111, Area.MysticRuinsMain, Character.Sonic, Level.WindyValley, 2, []),
+    LifeCapsuleLocation(1112, Area.MysticRuinsMain, Character.Sonic, Level.WindyValley, 3, []),
+    LifeCapsuleLocation(1113, Area.MysticRuinsMain, Character.Sonic, Level.WindyValley, 4, [ItemName.Sonic.LightShoes]),
+    LifeCapsuleLocation(1114, Area.MysticRuinsMain, Character.Sonic, Level.WindyValley, 5, []),
+    LifeCapsuleLocation(1210, Area.Casino, Character.Sonic, Level.Casinopolis, 1, [ItemName.Sonic.LightShoes]),
+    LifeCapsuleLocation(1211, Area.Casino, Character.Sonic, Level.Casinopolis, 2, [ItemName.Sonic.LightShoes]),
+    LifeCapsuleLocation(1212, Area.Casino, Character.Sonic, Level.Casinopolis, 3, [ItemName.Sonic.LightShoes]),
+    LifeCapsuleLocation(1213, Area.Casino, Character.Sonic, Level.Casinopolis, 4, [ItemName.Sonic.LightShoes]),
+    LifeCapsuleLocation(1310, Area.AngelIsland, Character.Sonic, Level.IceCap, 1,
+                        [ItemName.KeyItem.IceStone, ItemName.KeyItem.CasinoKeys, ItemName.KeyItem.Train]),
+    LifeCapsuleLocation(1410, Area.TwinklePark, Character.Sonic, Level.TwinklePark, 1, []),
+    LifeCapsuleLocation(1411, Area.TwinklePark, Character.Sonic, Level.TwinklePark, 2, []),
+    LifeCapsuleLocation(1412, Area.TwinklePark, Character.Sonic, Level.TwinklePark, 3, []),
+    LifeCapsuleLocation(1413, Area.TwinklePark, Character.Sonic, Level.TwinklePark, 4, []),
+    LifeCapsuleLocation(1510, Area.SpeedHighway, Character.Sonic, Level.SpeedHighway, 1, []),
+    LifeCapsuleLocation(1511, Area.SpeedHighway, Character.Sonic, Level.SpeedHighway, 2, []),
+    LifeCapsuleLocation(1512, Area.SpeedHighway, Character.Sonic, Level.SpeedHighway, 3, []),
+    LifeCapsuleLocation(1513, Area.SpeedHighway, Character.Sonic, Level.SpeedHighway, 4, []),
+    LifeCapsuleLocation(1514, Area.SpeedHighway, Character.Sonic, Level.SpeedHighway, 5, []),
+    LifeCapsuleLocation(1515, Area.SpeedHighway, Character.Sonic, Level.SpeedHighway, 6, []),
+    LifeCapsuleLocation(1516, Area.SpeedHighway, Character.Sonic, Level.SpeedHighway, 7, []),
+    LifeCapsuleLocation(1517, Area.SpeedHighway, Character.Sonic, Level.SpeedHighway, 8, []),
+    LifeCapsuleLocation(1518, Area.SpeedHighway, Character.Sonic, Level.SpeedHighway, 9, []),
+
+    LifeCapsuleLocation(1610, Area.AngelIsland, Character.Sonic, Level.RedMountain, 1,
+                        [ItemName.Sonic.LightShoes, ItemName.Sonic.AncientLight]),
+    LifeCapsuleLocation(1611, Area.AngelIsland, Character.Sonic, Level.RedMountain, 2,
+                        [ItemName.Sonic.LightShoes, ItemName.Sonic.AncientLight]),
+    LifeCapsuleLocation(1612, Area.AngelIsland, Character.Sonic, Level.RedMountain, 3,
+                        [ItemName.Sonic.LightShoes, ItemName.Sonic.AncientLight]),
+    LifeCapsuleLocation(1613, Area.AngelIsland, Character.Sonic, Level.RedMountain, 4,
+                        [ItemName.Sonic.LightShoes, ItemName.Sonic.AncientLight]),
+    LifeCapsuleLocation(1614, Area.AngelIsland, Character.Sonic, Level.RedMountain, 5,
+                        [ItemName.Sonic.LightShoes, ItemName.Sonic.AncientLight]),
+    LifeCapsuleLocation(1615, Area.AngelIsland, Character.Sonic, Level.RedMountain, 6,
+                        [ItemName.Sonic.LightShoes, ItemName.Sonic.AncientLight]),
+    LifeCapsuleLocation(1616, Area.AngelIsland, Character.Sonic, Level.RedMountain, 7,
+                        [ItemName.Sonic.LightShoes, ItemName.Sonic.AncientLight]),
+    LifeCapsuleLocation(1617, Area.AngelIsland, Character.Sonic, Level.RedMountain, 8,
+                        [ItemName.Sonic.LightShoes, ItemName.Sonic.AncientLight]),
+
+    LifeCapsuleLocation(1710, Area.EggCarrierMain, Character.Sonic, Level.SkyDeck, 1, [ItemName.Sonic.LightShoes]),
+    LifeCapsuleLocation(1711, Area.EggCarrierMain, Character.Sonic, Level.SkyDeck, 2, [ItemName.Sonic.LightShoes]),
+    LifeCapsuleLocation(1712, Area.EggCarrierMain, Character.Sonic, Level.SkyDeck, 3, [ItemName.Sonic.LightShoes]),
+    LifeCapsuleLocation(1713, Area.EggCarrierMain, Character.Sonic, Level.SkyDeck, 4, [ItemName.Sonic.LightShoes]),
+    LifeCapsuleLocation(1714, Area.EggCarrierMain, Character.Sonic, Level.SkyDeck, 5, [ItemName.Sonic.LightShoes]),
+    LifeCapsuleLocation(1715, Area.EggCarrierMain, Character.Sonic, Level.SkyDeck, 6, [ItemName.Sonic.LightShoes]),
+    LifeCapsuleLocation(1716, Area.EggCarrierMain, Character.Sonic, Level.SkyDeck, 7, [ItemName.Sonic.LightShoes]),
+    LifeCapsuleLocation(1717, Area.EggCarrierMain, Character.Sonic, Level.SkyDeck, 8, [ItemName.Sonic.LightShoes]),
+    LifeCapsuleLocation(1718, Area.EggCarrierMain, Character.Sonic, Level.SkyDeck, 9, [ItemName.Sonic.LightShoes]),
+    LifeCapsuleLocation(1719, Area.EggCarrierMain, Character.Sonic, Level.SkyDeck, 10, [ItemName.Sonic.LightShoes]),
+    LifeCapsuleLocation(1720, Area.EggCarrierMain, Character.Sonic, Level.SkyDeck, 11, [ItemName.Sonic.LightShoes]),
+    LifeCapsuleLocation(1721, Area.EggCarrierMain, Character.Sonic, Level.SkyDeck, 12, [ItemName.Sonic.LightShoes]),
+    LifeCapsuleLocation(1810, Area.Jungle, Character.Sonic, Level.LostWorld, 1, [ItemName.Sonic.LightShoes]),
+    LifeCapsuleLocation(1811, Area.Jungle, Character.Sonic, Level.LostWorld, 2, [ItemName.Sonic.LightShoes]),
+    LifeCapsuleLocation(1910, Area.Jungle, Character.Sonic, Level.FinalEgg, 1, [ItemName.Sonic.LightShoes]),
+    LifeCapsuleLocation(1911, Area.Jungle, Character.Sonic, Level.FinalEgg, 2, [ItemName.Sonic.LightShoes]),
+    LifeCapsuleLocation(1912, Area.Jungle, Character.Sonic, Level.FinalEgg, 3, [ItemName.Sonic.LightShoes]),
+    LifeCapsuleLocation(1913, Area.Jungle, Character.Sonic, Level.FinalEgg, 4, [ItemName.Sonic.LightShoes]),
+    LifeCapsuleLocation(1914, Area.Jungle, Character.Sonic, Level.FinalEgg, 5, [ItemName.Sonic.LightShoes]),
+    LifeCapsuleLocation(1915, Area.Jungle, Character.Sonic, Level.FinalEgg, 6, [ItemName.Sonic.LightShoes]),
+    LifeCapsuleLocation(1916, Area.Jungle, Character.Sonic, Level.FinalEgg, 7, [ItemName.Sonic.LightShoes]),
+    LifeCapsuleLocation(1917, Area.Jungle, Character.Sonic, Level.FinalEgg, 8, [ItemName.Sonic.LightShoes]),
+    LifeCapsuleLocation(1918, Area.Jungle, Character.Sonic, Level.FinalEgg, 9, [ItemName.Sonic.LightShoes]),
+    LifeCapsuleLocation(1919, Area.Jungle, Character.Sonic, Level.FinalEgg, 10, [ItemName.Sonic.LightShoes]),
+    LifeCapsuleLocation(1920, Area.Jungle, Character.Sonic, Level.FinalEgg, 11, [ItemName.Sonic.LightShoes]),
+    LifeCapsuleLocation(1921, Area.Jungle, Character.Sonic, Level.FinalEgg, 12, [ItemName.Sonic.LightShoes]),
+    LifeCapsuleLocation(1922, Area.Jungle, Character.Sonic, Level.FinalEgg, 13, [ItemName.Sonic.LightShoes]),
+    LifeCapsuleLocation(1923, Area.Jungle, Character.Sonic, Level.FinalEgg, 14, [ItemName.Sonic.LightShoes]),
+    LifeCapsuleLocation(1924, Area.Jungle, Character.Sonic, Level.FinalEgg, 15, [ItemName.Sonic.LightShoes]),
+    LifeCapsuleLocation(1925, Area.Jungle, Character.Sonic, Level.FinalEgg, 16, [ItemName.Sonic.LightShoes]),
+
+    LifeCapsuleLocation(2010, Area.MysticRuinsMain, Character.Tails, Level.WindyValley, 1, []),
+    LifeCapsuleLocation(2110, Area.Casino, Character.Tails, Level.Casinopolis, 1, []),
+    LifeCapsuleLocation(2111, Area.Casino, Character.Tails, Level.Casinopolis, 2, []),
+    LifeCapsuleLocation(2310, Area.EggCarrierMain, Character.Tails, Level.SkyDeck, 1, []),
+    LifeCapsuleLocation(2311, Area.EggCarrierMain, Character.Tails, Level.SkyDeck, 2, []),
+    LifeCapsuleLocation(2312, Area.EggCarrierMain, Character.Tails, Level.SkyDeck, 3, []),
+    LifeCapsuleLocation(2410, Area.SpeedHighway, Character.Tails, Level.SpeedHighway, 1, []),
+    LifeCapsuleLocation(2411, Area.SpeedHighway, Character.Tails, Level.SpeedHighway, 2, []),
+    LifeCapsuleLocation(2412, Area.SpeedHighway, Character.Tails, Level.SpeedHighway, 3, []),
+    LifeCapsuleLocation(2413, Area.SpeedHighway, Character.Tails, Level.SpeedHighway, 4, []),
+
+    LifeCapsuleLocation(3010, Area.StationSquareMain, Character.Knuckles, Level.SpeedHighway, 1, []),
+    LifeCapsuleLocation(3011, Area.StationSquareMain, Character.Knuckles, Level.SpeedHighway, 2, []),
+    LifeCapsuleLocation(3012, Area.StationSquareMain, Character.Knuckles, Level.SpeedHighway, 3, []),
+    LifeCapsuleLocation(3110, Area.Casino, Character.Knuckles, Level.Casinopolis, 1, []),
+    LifeCapsuleLocation(3111, Area.Casino, Character.Knuckles, Level.Casinopolis, 2, []),
+    LifeCapsuleLocation(3210, Area.AngelIsland, Character.Knuckles, Level.RedMountain, 1,
+                        [ItemName.Knuckles.ShovelClaw]),
+    LifeCapsuleLocation(3211, Area.AngelIsland, Character.Knuckles, Level.RedMountain, 2,
+                        [ItemName.Knuckles.ShovelClaw]),
+    LifeCapsuleLocation(3212, Area.AngelIsland, Character.Knuckles, Level.RedMountain, 3,
+                        [ItemName.Knuckles.ShovelClaw]),
+    LifeCapsuleLocation(3213, Area.AngelIsland, Character.Knuckles, Level.RedMountain, 4,
+                        [ItemName.Knuckles.ShovelClaw]),
+    LifeCapsuleLocation(3410, Area.EggCarrierMain, Character.Knuckles, Level.SkyDeck, 1,
+                        [ItemName.Knuckles.ShovelClaw]),
+
+    LifeCapsuleLocation(4010, Area.TwinklePark, Character.Amy, Level.TwinklePark, 1, []),
+    LifeCapsuleLocation(4110, Area.EggCarrierMain, Character.Amy, Level.HotShelter, 1, []),
+    LifeCapsuleLocation(4111, Area.EggCarrierMain, Character.Amy, Level.HotShelter, 2, []),
+    LifeCapsuleLocation(4112, Area.EggCarrierMain, Character.Amy, Level.HotShelter, 3, []),
+    LifeCapsuleLocation(4113, Area.EggCarrierMain, Character.Amy, Level.HotShelter, 4, []),
+    LifeCapsuleLocation(4210, Area.Jungle, Character.Amy, Level.FinalEgg, 1, []),
+    LifeCapsuleLocation(4211, Area.Jungle, Character.Amy, Level.FinalEgg, 2, []),
+
+    LifeCapsuleLocation(5110, Area.Hotel, Character.Gamma, Level.EmeraldCoast, 1, []),
+    LifeCapsuleLocation(5210, Area.MysticRuinsMain, Character.Gamma, Level.WindyValley, 1, [ItemName.Gamma.JetBooster]),
+    LifeCapsuleLocation(5211, Area.MysticRuinsMain, Character.Gamma, Level.WindyValley, 2, [ItemName.Gamma.JetBooster]),
+    LifeCapsuleLocation(5310, Area.AngelIsland, Character.Gamma, Level.RedMountain, 1, []),
+    LifeCapsuleLocation(5410, Area.EggCarrierMain, Character.Gamma, Level.HotShelter, 1, [ItemName.Gamma.JetBooster]),
+    LifeCapsuleLocation(5411, Area.EggCarrierMain, Character.Gamma, Level.HotShelter, 2, [ItemName.Gamma.JetBooster]),
+    LifeCapsuleLocation(5412, Area.EggCarrierMain, Character.Gamma, Level.HotShelter, 3, [ItemName.Gamma.JetBooster]),
+
+    LifeCapsuleLocation(6110, Area.AngelIsland, Character.Big, Level.IceCap, 1,
+                        [ItemName.KeyItem.IceStone, ItemName.KeyItem.Train, ItemName.Big.LifeBelt]),
+    LifeCapsuleLocation(6302, Area.EggCarrierMain, Character.Big, Level.HotShelter, 1, [ItemName.Big.LifeBelt]),
+]
+
 
 class LocationInfo(TypedDict):
     id: int
@@ -269,9 +405,18 @@ def get_location_from_emblem() -> List[LocationInfo]:
     return locations
 
 
-all_location_table: List[LocationInfo] = (get_location_from_level() + get_location_from_upgrade()
-                                          + get_location_from_sub_level() + get_location_from_emblem()) + [
-                                             {"id": 9, "name": "Perfect Chaos Fight"}]
+def get_location_from_life_capsule() -> List[LocationInfo]:
+    locations: List[LocationInfo] = []
+    for life_capsule in life_capsule_location_table:
+        level_name: str = f"{pascal_to_space(life_capsule.level.name)} ({life_capsule.character.name} - Life Capsule {life_capsule.lifeCapsuleNumber})"
+        locations += [{"id": life_capsule.locationId, "name": level_name}]
+    return locations
+
+
+all_location_table: List[LocationInfo] = ((get_location_from_level() + get_location_from_upgrade()
+                                           + get_location_from_sub_level() + get_location_from_emblem()
+                                           + get_location_from_life_capsule()) +
+                                          [{"id": 9, "name": "Perfect Chaos Fight"}])
 
 
 def get_location_by_id(location_id: int) -> LocationInfo:
