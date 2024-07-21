@@ -8,6 +8,9 @@ from BaseClasses import MultiWorld
 from worlds.AutoWorld import World
 from worlds.sa2b.Options import BaseLevelCount
 
+def get_mission_orders():
+    return mission_orders
+
 mission_orders: typing.List[typing.List[int]] = [
     [1, 2, 3, 4, 5],
     [1, 2, 3, 5, 4],
@@ -122,46 +125,55 @@ mission_orders: typing.List[typing.List[int]] = [
     [4, 5, 3, 2, 1],
 ]
 
+SPEED_LEVEL_STYLE = 0
+MECH_LEVEL_STYLE = 1
+HUNT_LEVEL_STYLE = 2
+KART_LEVEL_STYLE = 3
+CANNONS_CORE_LEVEL_STYLE = 4
+
 ### 0: Speed
 ### 1: Mech
 ### 2: Hunt
 ### 3: Kart
 ### 4: Cannon's Core
 level_styles: typing.List[int] = [
-    0,
-    2,
-    1,
-    0,
-    0,
-    2,
-    1,
-    2,
-    3,
-    1,
-    0,
-    2,
-    1,
-    2,
-    0,
-    0,
+    SPEED_LEVEL_STYLE,
+    HUNT_LEVEL_STYLE,
+    MECH_LEVEL_STYLE,
+    SPEED_LEVEL_STYLE,
+    SPEED_LEVEL_STYLE,
+    HUNT_LEVEL_STYLE,
+    MECH_LEVEL_STYLE,
+    HUNT_LEVEL_STYLE,
+    KART_LEVEL_STYLE,
+    MECH_LEVEL_STYLE,
+    SPEED_LEVEL_STYLE,
+    HUNT_LEVEL_STYLE,
+    MECH_LEVEL_STYLE,
+    HUNT_LEVEL_STYLE,
+    SPEED_LEVEL_STYLE,
+    SPEED_LEVEL_STYLE,
 
-    1,
-    2,
-    1,
-    0,
-    2,
-    1,
-    1,
-    2,
-    0,
-    3,
-    0,
-    2,
-    1,
-    0,
+    MECH_LEVEL_STYLE,
+    HUNT_LEVEL_STYLE,
+    MECH_LEVEL_STYLE,
+    SPEED_LEVEL_STYLE,
+    HUNT_LEVEL_STYLE,
+    MECH_LEVEL_STYLE,
+    MECH_LEVEL_STYLE,
+    HUNT_LEVEL_STYLE,
+    SPEED_LEVEL_STYLE,
+    KART_LEVEL_STYLE,
+    SPEED_LEVEL_STYLE,
+    HUNT_LEVEL_STYLE,
+    MECH_LEVEL_STYLE,
+    SPEED_LEVEL_STYLE,
 
-    4,
+    CANNONS_CORE_LEVEL_STYLE
 ]
+
+def get_stage_name_prefixes():
+    return stage_name_prefixes
 
 stage_name_prefixes: typing.List[str] = [
     "City Escape - ",
@@ -200,6 +212,19 @@ stage_name_prefixes: typing.List[str] = [
 def get_mission_count_table(multiworld: MultiWorld, world: World, player: int):
     mission_count_table: typing.Dict[int, int] = {}
 
+    excluded_set = multiworld.exclude_locations[player].value
+    excluded = {}
+    if excluded_set is not None:
+        for stage_name in stage_name_prefixes:
+            for i in range(1, 6):
+                if stage_name + str(i) in excluded_set:
+                    level_name = stage_name.replace(" - ", "")
+                    if level_name not in excluded:
+                        excluded[level_name] = []
+                    excluded[level_name].append(i)
+
+    excluded_styles = []
+
     if world.options.goal == 3:
         for level in range(31):
             mission_count_table[level] = 0
@@ -213,18 +238,28 @@ def get_mission_count_table(multiworld: MultiWorld, world: World, player: int):
         for i in range(2,6):
             if getattr(world.options, "speed_mission_" + str(i), None):
                 speed_active_missions += 1
+            else:
+                excluded_styles.append(str(SPEED_LEVEL_STYLE) + " - " + str(i))
 
             if getattr(world.options, "mech_mission_" + str(i), None):
                 mech_active_missions += 1
+            else:
+                excluded_styles.append(str(MECH_LEVEL_STYLE) + " - " + str(i))
 
             if getattr(world.options, "hunt_mission_" + str(i), None):
                 hunt_active_missions += 1
+            else:
+                excluded_styles.append(str(HUNT_LEVEL_STYLE) + " - " + str(i))
 
             if getattr(world.options, "kart_mission_" + str(i), None):
                 kart_active_missions += 1
+            else:
+                excluded_styles.append(str(KART_LEVEL_STYLE) + " - " + str(i))
 
             if getattr(world.options, "cannons_core_mission_" + str(i), None):
                 cannons_core_active_missions += 1
+            else:
+                excluded_styles.append(str(CANNONS_CORE_LEVEL_STYLE) + " - " + str(i))
 
         speed_active_missions        = min(speed_active_missions, world.options.speed_mission_count.value)
         mech_active_missions         = min(mech_active_missions, world.options.mech_mission_count.value)
@@ -250,29 +285,46 @@ def get_mission_count_table(multiworld: MultiWorld, world: World, player: int):
             level_mission_count = active_missions[level_style]
 
             level_name = stage_name_prefixes[level].replace(" - ", "")
-
-            # TODO: Count excluded levels in settings and remove
             max_non_excluded = 5
-
-
 
             level_name_variable = level_name.lower().replace(" ","_")+"_levels"
             if hasattr(world.options, level_name_variable) and use_level_weights:
+
+                if level_name in excluded:
+                    disabled_styles = 0
+                    excluded_for_level = excluded[level_name]
+                    for i in range(1, 6):
+                        if str(level_style) + " - " + str(i) in excluded_styles:
+                            disabled_styles += 1
+                        elif i in excluded_for_level:
+                            disabled_styles += 1
+
+                    max_missions_with_excluded = 5 - disabled_styles
+                    if level_mission_count > max_missions_with_excluded:
+                        level_mission_count = max_missions_with_excluded
+
                 count = getattr(world.options, level_name_variable)
                 if not isinstance(count,BaseLevelCount):
                     print("Count unknown for::", level_name_variable, type(count))
                 if count == 0:
                     count = level_mission_count
+
                 if count > level_mission_count:
                     count = level_mission_count
                 if count > max_non_excluded:
                     count = max_non_excluded
+
+                # Levels CANNOT be disabled, always set to 1
+                if count == 0:
+                    count = 1
 
                 if type(count) == int:
                     print("Issue with processing field:", level_name_variable)
                     mission_count_table[level] = count
                 else:
                     mission_count_table[level] = count.value
+
+
 
             else:
                 mission_count_table[level] = level_mission_count
@@ -383,6 +435,7 @@ def get_mission_table(multiworld: MultiWorld, world: World, player: int, mission
                                                           and mission not in excluded_missions and
                                                          (mission in required_missions if use_required else True)]
                 if len(valid_options) == 0:
+                    valid_options = [1]
                     print("Error, invalid pick for:", mission_count, required_missions, use_required, level_name)
                 first_mission = multiworld.random.choice(valid_options)
                 if first_mission in required_missions:
