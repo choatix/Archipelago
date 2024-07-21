@@ -12,7 +12,8 @@ from .GateBosses import get_gate_bosses, get_boss_rush_bosses, get_boss_name
 from .Items import SA2BItem, ItemData, item_table, upgrades_table, emeralds_table, junk_table, trap_table, item_groups, \
                    eggs_table, fruits_table, seeds_table, hats_table, animals_table, chaos_drives_table
 from .Locations import SA2BLocation, all_locations, setup_locations, chao_animal_event_location_table, black_market_location_table
-from .Missions import get_mission_table, get_mission_count_table, get_first_and_last_cannons_core_missions
+from .Missions import get_mission_table, get_mission_count_table, get_first_and_last_cannons_core_missions, \
+    get_mission_orders
 from .Names import ItemName, LocationName
 from .Options import SA2BOptions, sa2b_option_groups
 from .Regions import create_regions, shuffleable_regions, connect_regions, LevelGate, gate_0_whitelist_regions, \
@@ -407,12 +408,14 @@ class SA2BWorld(World):
         header_text = header_text.format(self.multiworld.player_name[self.player])
         spoiler_handle.write(header_text)
 
+        stage_names = Missions.get_stage_name_prefixes()
+
         for i in self.gates:
             index = self.gates.index(i)
             emblem_count = i.gate_emblem_count
             levels = i.gate_levels
 
-            levels_list = [ Missions.stage_name_prefixes[level].replace(" - ", "") for level in levels ]
+            levels_list = [ stage_names[level].replace(" - ", "") for level in levels ]
 
             text = "Gate: {0}, Unlock: {1}\n Levels {2}\n"
             text = text.format(index, emblem_count, levels_list)
@@ -430,11 +433,12 @@ class SA2BWorld(World):
             counter = self.mission_count_map
             missions = self.mission_map
 
+            mission_orders = get_mission_orders()
             for missionKey in missions.keys():
-                level_name = Missions.stage_name_prefixes[missionKey].replace(" - ", "")
+                level_name = stage_names[missionKey].replace(" - ", "")
                 count = counter[missionKey]
                 missionOrder = missions[missionKey]
-                missionOrderIndex = Missions.mission_orders[missionOrder]
+                missionOrderIndex = mission_orders[missionOrder]
 
                 possibleMissions = missionOrderIndex[0:count]
                 text = "Level: {0} Missions: {1}\n"

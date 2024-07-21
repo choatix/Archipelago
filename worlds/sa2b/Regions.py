@@ -1806,7 +1806,8 @@ def create_regions(multiworld: MultiWorld, world: World, player: int, active_loc
 
     multiworld.regions += conditional_regions
 
-def handle_level_gate_regions(multiworld, player, names, gate_region, gates, gate_index, level):
+def handle_level_gate_regions(multiworld: MultiWorld, player: int, names: dict[str, int], gate_region: str,
+                              gates: typing.List[LevelGate], gate_index: int, level: int):
 
     conditions = lambda x: True
 
@@ -1827,7 +1828,8 @@ def handle_level_gate_regions(multiworld, player, names, gate_region, gates, gat
     connect(multiworld, player, names, gate_region, shuffleable_regions[gates[gate_index].gate_levels[level]],
             conditions)
 
-def handle_boss_gate(multiworld, player, names, gates, gate_bosses, prior_region, gate_region, gate_boss_region, gate_index):
+def handle_boss_gate(multiworld: MultiWorld, player: int, names: dict[str, int], gates: typing.List[LevelGate],
+                     gate_bosses: dict, prior_region: str, gate_region: str, gate_boss_region: str, gate_index: int):
     connect(multiworld, player, names, prior_region, gate_boss_region,
             lambda state: (state.has(ItemName.emblem, player, gates[gate_index].gate_emblem_count)))
 
@@ -1846,7 +1848,7 @@ def handle_boss_gate(multiworld, player, names, gates, gate_bosses, prior_region
     for i in range(len(gates[gate_index].gate_levels)):
         handle_level_gate_regions(multiworld, player, names, gate_region, gates, gate_index, i)
 
-def handle_gates(multiworld, player, names, gates, gate_bosses):
+def handle_gates(multiworld: MultiWorld, player: int, names: dict, gates: typing.List[LevelGate], gate_bosses: dict):
     gates_len = len(gates)
 
     for i in range(len(gates[0].gate_levels)):

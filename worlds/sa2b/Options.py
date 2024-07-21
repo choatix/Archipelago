@@ -550,9 +550,9 @@ class BaseLevelCount(BaseMissionCount):
     """
     Base class for mission count options
     """
-    range_start = 0
+    range_start = 1
     range_end = 5
-    default = 0
+    default = 1
 
 
 class SpeedMissionCount(BaseMissionCount):
@@ -864,102 +864,201 @@ class LogicDifficulty(Choice):
     default = 0
 
 class LevelWeights(DefaultOnToggle):
+    """
+        Whether to use level weights as an option
+    """
     exists = True
 
 class CityEscapeLevels(BaseLevelCount):
+    """
+        Maximum number of City Escape levels
+    """
     display_name = "City Escape Levels"
 
 class WildCanyonLevels(BaseLevelCount):
+    """
+        Maximum number of Wild Canyon levels
+    """
     display_name = "Wild Canyon Levels"
 
 class PrisonLaneLevels(BaseLevelCount):
+    """
+        Maximum number of Prison Lane levels
+    """
     display_name = "Prison Lane Levels"
 
 class MetalHarborLevels(BaseLevelCount):
+    """
+        Maximum number of Metal Harbor levels
+    """
     display_name = "Metal Harbor Levels"
 
 class PumpkinHillLevels(BaseLevelCount):
+    """
+        Maximum number of Pumpkin Hill levels
+    """
     display_name = "Pumpkin Hill Levels"
 
 class GreenForestLevels(BaseLevelCount):
+    """
+        Maximum number of Green Forest levels
+    """
     display_name = "Green Forest Levels"
 
 class MissionStreetLevels(BaseLevelCount):
+    """
+        Maximum number of Mission Street levels
+    """
     display_name = "Mission Street Levels"
 
 class AquaticMineLevels(BaseLevelCount):
+    """
+        Maximum number of Aquatic Mine levels
+    """
     display_name = "Aquatic Mine Levels"
 
 class Route101Levels(BaseLevelCount):
+    """
+        Maximum number of Route 101 levels
+    """
     display_name = "Route 101 Levels"
 
 class HiddenBaseLevels(BaseLevelCount):
+    """
+        Maximum number of Hidden Base levels
+    """
     display_name = "Hidden Base Levels"
 
 class PyramidCaveLevels(BaseLevelCount):
+    """
+        Maximum number of Pyramid Cave levels
+    """
     display_name = "Pyramid Cave Levels"
 
 class DeathChamberLevels(BaseLevelCount):
+    """
+        Maximum number of Death Chamber levels
+    """
     display_name = "Death ChamberLevels"
 
 class EternalEngineLevels(BaseLevelCount):
+    """
+        Maximum number of Eternal Engine levels
+    """
     display_name = "Eternal Engine Levels"
 
 class MeteorHerdLevels(BaseLevelCount):
+    """
+        Maximum number of Meteor Herd levels
+    """
     display_name = "Meteor Herd Levels"
 
 class CrazyGadgetLevels(BaseLevelCount):
+    """
+        Maximum number of Crazy Gadget levels
+    """
     display_name = "Crazy Gadget Levels"
 
 class FinalRushLevels(BaseLevelCount):
+    """
+        Maximum number of Final Rush levels
+    """
     display_name = "Final Rush Levels"
 
 class IronGateLevels(BaseLevelCount):
+    """
+        Maximum number of Iron Gate levels
+    """
     display_name = "Iron Gate Levels"
 class DryLagoonLevels(BaseLevelCount):
+    """
+        Maximum number of Dry Lagoon levels
+    """
     display_name = "Dry Lagoon Levels"
 
 class SandOceanLevels(BaseLevelCount):
+    """
+        Maximum number of Sand Ocean levels
+    """
     display_name = "Sand Ocean Levels"
 
 class RadicalHighwayLevels(BaseLevelCount):
+    """
+        Maximum number of Radical Highway levels
+    """
     display_name = "Radical Highway Levels"
 
 class EggQuartersLevels(BaseLevelCount):
+    """
+        Maximum number of Egg Quarters levels
+    """
     display_name = "Egg Quarters Levels"
 
 class LostColonyLevels(BaseLevelCount):
+    """
+        Maximum number of Lost Colony levels
+    """
     display_name = "Lost Colony Levels"
 
 class WeaponsBedLevels(BaseLevelCount):
+    """
+        Maximum number of Weapons Bed levels
+    """
     display_name = "Weapons Bed Levels"
 
 class SecurityHallLevels(BaseLevelCount):
+    """
+        Maximum number of Security Hall levels
+    """
     display_name = "Security Hall Levels"
 
 class WhiteJungleLevels(BaseLevelCount):
+    """
+        Maximum number of White Jungle levels
+    """
     display_name = "White Jungle Levels"
 
 class Route280Levels(BaseLevelCount):
+    """
+        Maximum number of Route 280 levels
+    """
     display_name = "Route 280 Levels"
 
 class SkyRailLevels(BaseLevelCount):
+    """
+        Maximum number of Sky Rail evels
+    """
     display_name = "Sky Rail Levels"
 
 class MadSpaceLevels(BaseLevelCount):
+    """
+        Maximum number of Mad Space levels
+    """
     display_name = "Mad Space Levels"
 
 class CosmicWallLevels(BaseLevelCount):
+    """
+        Maximum number of Cosmic Wall levels
+    """
     display_name = "Cosmic Wall Levels"
 
 class FinalChaseLevels(BaseLevelCount):
+    """
+        Maximum number of Final Chase levels
+    """
     display_name = "Final Chase Levels"
 
 class AdditionalChaoNames(OptionSet):
+    """
+        List of additional chao names to use
+    """
     display_name = "Additional Chao Names"
     default = []
 
 class AdditionalTrapNames(OptionSet):
+    """
+        List of additional trap names to use
+    """
     display_name = "Additional Trap Names"
     default = []
 
