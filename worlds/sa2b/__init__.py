@@ -13,7 +13,7 @@ from .Items import SA2BItem, ItemData, item_table, upgrades_table, emeralds_tabl
                    eggs_table, fruits_table, seeds_table, hats_table, animals_table, chaos_drives_table
 from .Locations import SA2BLocation, all_locations, setup_locations, chao_animal_event_location_table, black_market_location_table
 from .Missions import get_mission_table, get_mission_count_table, get_first_and_last_cannons_core_missions, \
-    get_mission_orders
+    get_mission_orders, get_stage_name_prefixes
 from .Names import ItemName, LocationName
 from .Options import SA2BOptions, sa2b_option_groups
 from .Regions import create_regions, shuffleable_regions, connect_regions, LevelGate, gate_0_whitelist_regions, \
@@ -408,7 +408,7 @@ class SA2BWorld(World):
         header_text = header_text.format(self.multiworld.player_name[self.player])
         spoiler_handle.write(header_text)
 
-        stage_names = Missions.get_stage_name_prefixes()
+        stage_names = get_stage_name_prefixes()
 
         for i in self.gates:
             index = self.gates.index(i)

@@ -204,6 +204,8 @@ class SMWLevel():
         self.exit1Path   = exit1Path
         self.exit2Path   = exit2Path
 
+def get_level_info_dict():
+    return level_info_dict
 
 level_info_dict = {
     0x28: SMWLevel(LocationName.yoshis_house, 0x37A76, 0x00),

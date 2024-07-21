@@ -11,7 +11,7 @@ from worlds.generic.Rules import add_rule, exclusion_rules
 
 from .Client import SMWSNIClient
 from .Items import SMWItem, ItemData, item_table, junk_table
-from .Levels import full_level_list, generate_level_list, location_id_to_level_id
+from .Levels import full_level_list, generate_level_list, location_id_to_level_id, get_level_info_dict
 from .Locations import SMWLocation, all_locations, setup_locations, special_zone_level_names, special_zone_dragon_coin_names, special_zone_hidden_1up_names, special_zone_blocksanity_names
 from .Names import ItemName, LocationName
 from .Options import SMWOptions, smw_option_groups
@@ -326,7 +326,7 @@ class SMWWorld(World):
         set_rules(self)
 
     def write_spoiler(self, spoiler_handle: typing.TextIO):
-        lid = Levels.level_info_dict
+        level_info = get_level_info_dict()
         if self.options.level_shuffle.value >= 0:
             spoiler_handle.write("\n")
             header_text = "SMW Level Shuffle for {}:\n"
@@ -337,10 +337,10 @@ class SMWWorld(World):
                 replaced_level = x[0]
                 base_level = x[1]
 
-                level_id = lid[base_level]
+                level_id = level_info[base_level]
                 base_level_name = level_id.levelName
 
-                level_id = lid[replaced_level]
+                level_id = level_info[replaced_level]
                 replaced_level_name = level_id.levelName
 
                 text = "Level {n} is now level {n1}\n".format(n=base_level_name, n1=replaced_level_name)
