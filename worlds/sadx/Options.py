@@ -33,7 +33,7 @@ class EmblemPercentage(Range):
     display_name = "Emblem Requirement Percentage"
     range_start = 0
     range_end = 100
-    default = 50
+    default = 80
 
 
 class BaseMissionChoice(Choice):
