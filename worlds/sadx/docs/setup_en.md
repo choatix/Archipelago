@@ -15,7 +15,8 @@
    that `/mods/SADX_Archipelago` is a valid path.
 4. In the SADX_Archipelago folder, run the `CopyAPCppDLL.bat` script (a window will very quickly pop up and go away).
 5. Launch the `SAModManager.exe` and make sure the SADX_Archipelago mod is listed and enabled. Make sure the mod is at the bottom of the list.
-6. Disable the "Steam Achievements Mod" if enabled
+6. Disable the "Steam Achievements Mod" if enabled.
+7. Disable the "Fixes, Adds, and Beta Restores" if enabled
 
 ## Joining a MultiWorld Game
 
@@ -37,6 +38,8 @@
   - You can also just simple close steam
 - Some of the emblems don't give me checks
   - Disable the "Steam Achievements Mod" if enabled
+- Some checks or elements of the randomizer are missing
+  - Disable the "Fixes, Adds, and Beta Restores" if enabled
 - Failed to generate the world
   - Try updating your Archipelago mod to the latest version (at least 0.5.0)
   - Try enabling more options in the yaml, being too restrictive will prevent the world from generation
