@@ -365,7 +365,7 @@ life_capsule_location_table: List[LifeCapsuleLocation] = [
 
     LifeCapsuleLocation(6110, Area.AngelIsland, Character.Big, Level.IceCap, 1,
                         [ItemName.KeyItem.IceStone, ItemName.KeyItem.Train, ItemName.Big.LifeBelt]),
-    LifeCapsuleLocation(6302, Area.EggCarrierMain, Character.Big, Level.HotShelter, 1, [ItemName.Big.LifeBelt]),
+    LifeCapsuleLocation(6310, Area.EggCarrierMain, Character.Big, Level.HotShelter, 1, [ItemName.Big.LifeBelt]),
 ]
 
 
