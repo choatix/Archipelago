@@ -12,9 +12,16 @@ class FieldEmblemsChecks(DefaultOnToggle):
 
 class LifeSanity(Toggle):
     """Determines whether collecting life capsules grants checks
-    (100 Locations)"""
+    (102 Locations)"""
     default = 0
-    display_name = "Life Capsule Checks"
+    display_name = "Life Sanity"
+
+
+class PinballLifeCapsules(Toggle):
+    """Determines whether casinopolis life capsules grant checks
+    (2 Locations)"""
+    default = 0
+    display_name = "Include Casinopolis Life Capsules"
 
 
 class SubLevelChecks(DefaultOnToggle):
@@ -79,6 +86,7 @@ class BigMissions(BaseMissionChoice):
 class SonicAdventureDXOptions(PerGameCommonOptions):
     field_emblems_checks: FieldEmblemsChecks
     life_sanity: LifeSanity
+    pinball_life_capsules: PinballLifeCapsules
     sub_level_checks: SubLevelChecks
     randomized_upgrades: RandomizeUpgrades
     sonic_missions: SonicMissions

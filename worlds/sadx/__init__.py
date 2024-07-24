@@ -154,6 +154,7 @@ class SonicAdventureDXWorld(World):
             "EmblemsForPerfectChaos": self.get_emblems_needed(),
             "FieldEmblemChecks": self.options.field_emblems_checks.value,
             "LifeSanity": self.options.life_sanity.value,
+            "PinballLifeCapsules": self.options.pinball_life_capsules.value,
             "SubLevelChecks": self.options.sub_level_checks.value,
             "RandomizeUpgrades": self.options.randomized_upgrades.value,
             "SonicMissions": self.options.sonic_missions.value,
@@ -314,7 +315,11 @@ class SonicAdventureDXWorld(World):
             for life_capsule in life_capsule_location_table:
                 if life_capsule.area == area:
                     if self.is_character_playable(life_capsule.character):
-                        location_ids.append(life_capsule.locationId)
+                        if life_capsule.character == Character.Sonic and life_capsule.area == Area.Casino:
+                            if self.options.pinball_life_capsules:
+                                location_ids.append(life_capsule.locationId)
+                        else:
+                            location_ids.append(life_capsule.locationId)
         return location_ids
 
     def add_locations_to_region(self, region: Region, area: Area):
