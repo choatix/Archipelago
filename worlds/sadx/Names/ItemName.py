@@ -21,43 +21,43 @@ class KeyItem:
 
 class Sonic:
     Playable = "Playable Sonic"
-    LightShoes = "Light shoes (Sonic)"
-    CrystalRing = "Crystal ring (Sonic)"
-    AncientLight = "Ancient light (Sonic)"
+    LightShoes = "Light shoes"
+    CrystalRing = "Crystal ring"
+    AncientLight = "Ancient light"
 
 
 class Tails:
     Playable = "Playable Tails"
-    JetAnklet = "Jet Anklet (Tails)"
-    RhythmBadge = "Rhythm Badge (Tails)"
+    JetAnklet = "Jet Anklet"
+    RhythmBadge = "Rhythm Badge"
 
 
 class Knuckles:
     Playable = "Playable Knuckles"
-    ShovelClaw = "Shovel claw (Knuckles)"
-    FightingGloves = "Fighting gloves (Knuckles)"
+    ShovelClaw = "Shovel claw"
+    FightingGloves = "Fighting gloves"
 
 
 class Amy:
     Playable = "Playable Amy"
-    LongHammer = "Long Hammer (Amy)"
-    WarriorFeather = "Warrior feather (Amy)"
+    LongHammer = "Long Hammer"
+    WarriorFeather = "Warrior feather"
 
 
 class Gamma:
     Playable = "Playable Gamma"
-    LaserBlaster = "Laser Blaster (Gamma)"
-    JetBooster = "Jet booster (Gamma)"
+    LaserBlaster = "Laser Blaster"
+    JetBooster = "Jet booster"
 
 
 class Big:
     Playable = "Playable Big"
-    LifeBelt = "Life belt (Big)"
-    PowerRod = "Power rod (Big)"
-    Lure1 = "Lure 1 (Big)"
-    Lure2 = "Lure 2 (Big)"
-    Lure3 = "Lure 3 (Big)"
-    Lure4 = "Lure 4 (Big)"
+    LifeBelt = "Life belt"
+    PowerRod = "Power rod"
+    Lure1 = "Lure 1"
+    Lure2 = "Lure 2"
+    Lure3 = "Lure 3"
+    Lure4 = "Lure 4"
 
 
 # TODO: Add lures

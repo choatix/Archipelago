@@ -30,11 +30,6 @@ class SubLevelChecks(DefaultOnToggle):
     display_name = "Sub-Level Checks"
 
 
-class RandomizeUpgrades(DefaultOnToggle):
-    """Determines whether the upgrades are randomized and sent to the item pool"""
-    display_name = "Randomize Upgrades"
-
-
 class EmblemPercentage(Range):
     """What percentage of the available emblems do you need to unlock the final story"""
     display_name = "Emblem Requirement Percentage"
@@ -50,6 +45,37 @@ class BaseMissionChoice(Choice):
     option_c_b = 2
     option_c_b_a = 3
     default = 1
+
+
+class RandomizedSonicUpgrades(DefaultOnToggle):
+    """Determines whether Sonic's upgrades are randomized and sent to the item pool"""
+    display_name = "Randomize Sonic's Upgrades"
+
+
+class RandomizedTailsUpgrades(DefaultOnToggle):
+    """Determines whether Tails' upgrades are randomized and sent to the item pool
+    If you turn this off, Tails will never get the Rhythm Badge"""
+    display_name = "Randomize Tails' Upgrades"
+
+
+class RandomizedKnucklesUpgrades(DefaultOnToggle):
+    """Determines whether Knuckles' upgrades are randomized and sent to the item pool"""
+    display_name = "Randomize Knuckles' Upgrades"
+
+
+class RandomizedAmyUpgrades(DefaultOnToggle):
+    """Determines whether Amy's upgrades are randomized and sent to the item pool"""
+    display_name = "Randomize Amy's Upgrades"
+
+
+class RandomizedBigUpgrades(DefaultOnToggle):
+    """Determines whether Big's upgrades are randomized and sent to the item pool"""
+    display_name = "Randomize Big's Upgrades"
+
+
+class RandomizedGammaUpgrades(DefaultOnToggle):
+    """Determines whether Gamma's upgrades are randomized and sent to the item pool"""
+    display_name = "Randomize Gamma's Upgrades"
 
 
 class SonicMissions(BaseMissionChoice):
@@ -88,7 +114,12 @@ class SonicAdventureDXOptions(PerGameCommonOptions):
     life_sanity: LifeSanity
     pinball_life_capsules: PinballLifeCapsules
     sub_level_checks: SubLevelChecks
-    randomized_upgrades: RandomizeUpgrades
+    randomized_sonic_upgrades: RandomizedSonicUpgrades
+    randomized_tails_upgrades: RandomizedTailsUpgrades
+    randomized_knuckles_upgrades: RandomizedKnucklesUpgrades
+    randomized_amy_upgrades: RandomizedAmyUpgrades
+    randomized_big_upgrades: RandomizedBigUpgrades
+    randomized_gamma_upgrades: RandomizedGammaUpgrades
     sonic_missions: SonicMissions
     tails_missions: TailsMissions
     knuckles_missions: KnucklesMissions
@@ -104,7 +135,12 @@ sadx_option_groups = [
         FieldEmblemsChecks,
         LifeSanity,
         SubLevelChecks,
-        RandomizeUpgrades,
+        RandomizedSonicUpgrades,
+        RandomizedTailsUpgrades,
+        RandomizedKnucklesUpgrades,
+        RandomizedAmyUpgrades,
+        RandomizedBigUpgrades,
+        RandomizedGammaUpgrades,
     ]),
     OptionGroup("Missions Options", [
         SonicMissions,

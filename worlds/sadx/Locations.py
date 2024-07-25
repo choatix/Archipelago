@@ -2,9 +2,9 @@ from dataclasses import dataclass
 from typing import List, TypedDict
 
 from BaseClasses import Location, Region
-from .Enums import Area, Level, SubLevel, Character, LevelMission, Upgrade, EVERYONE, FLYERS, \
+from .Enums import Area, Level, SubLevel, Character, LevelMission, EVERYONE, FLYERS, \
     SubLevelMission, pascal_to_space
-from .Names import ItemName
+from .Names import ItemName, LocationName
 from .Names.ItemName import EVERY_LURE
 
 
@@ -30,9 +30,9 @@ class SubLevelLocation:
 @dataclass
 class UpgradeLocation:
     locationId: int
+    locationName: str
     area: Area
     character: Character
-    originalUpgrade: Upgrade
     extraItems: List[str]
 
 
@@ -187,26 +187,30 @@ level_location_table: List[LevelLocation] = [
 
 upgrade_location_table: List[UpgradeLocation] = [
     # Station Square
-    UpgradeLocation(100, Area.StationSquareMain, Character.Sonic, Upgrade.LightShoes, []),
-    UpgradeLocation(200, Area.StationSquareMain, Character.Tails, Upgrade.JetAnkle, []),
-    # UpgradeLocation(602, Area.StationSquareMain, Character.Big, Upgrade.Lure1, []),
-    UpgradeLocation(101, Area.Hotel, Character.Sonic, Upgrade.CrystalRing, [ItemName.Sonic.LightShoes]),
+    UpgradeLocation(100, LocationName.Sonic.LightShoes, Area.StationSquareMain, Character.Sonic, []),
+    UpgradeLocation(200, LocationName.Tails.JetAnklet, Area.StationSquareMain, Character.Tails, []),
+    # UpgradeLocation(602, LocationName.Big.Lure1, Area.StationSquareMain, Character.Big, []),
+    UpgradeLocation(101, LocationName.Sonic.CrystalRing, Area.Hotel, Character.Sonic, [ItemName.Sonic.LightShoes]),
     # Mystic Ruins
-    UpgradeLocation(300, Area.MysticRuinsMain, Character.Knuckles, Upgrade.ShovelClaw, [ItemName.Knuckles.ShovelClaw]),
-    # UpgradeLocation(604, Area.AngelIsland, Character.Big, Upgrade.Lure3, [ItemName.KeyItem.IceStone, ItemName.KeyItem.Train]),
-    UpgradeLocation(600, Area.AngelIsland, Character.Big, Upgrade.LifeBelt,
+    UpgradeLocation(300, LocationName.Knuckles.ShovelClaw, Area.MysticRuinsMain, Character.Knuckles, []),
+    # UpgradeLocation(604, LocationName.Big.Lure3, Area.AngelIsland, Character.Big,
+    #                 [ItemName.KeyItem.IceStone, ItemName.KeyItem.Train]),
+    UpgradeLocation(600, LocationName.Big.LifeBelt, Area.AngelIsland, Character.Big,
                     [ItemName.KeyItem.IceStone, ItemName.KeyItem.Train]),
-    UpgradeLocation(102, Area.AngelIsland, Character.Sonic, Upgrade.AncientLight, []),
-    UpgradeLocation(301, Area.Jungle, Character.Knuckles, Upgrade.FightingGloves, []),
-    # UpgradeLocation(603, Area.Jungle, Character.Big, Upgrade.Lure2, []),
-    UpgradeLocation(601, Area.Jungle, Character.Big, Upgrade.PowerRod, []),
-    # Egg Carrier
-    UpgradeLocation(400, Area.EggCarrierMain, Character.Amy, Upgrade.WarriorFeather, []),
-    UpgradeLocation(401, Area.EggCarrierMain, Character.Amy, Upgrade.LongHammer, []),
-    UpgradeLocation(500, Area.EggCarrierMain, Character.Gamma, Upgrade.JetBooster, []),
-    UpgradeLocation(501, Area.EggCarrierMain, Character.Gamma, Upgrade.LaserBlaster, []),
-    # UpgradeLocation(605, Area.EggCarrierMain, Character.Big, Upgrade.Lure4, []),
+    UpgradeLocation(102, LocationName.Sonic.AncientLight, Area.AngelIsland, Character.Sonic, []),
+    UpgradeLocation(301, LocationName.Knuckles.FightingGloves, Area.Jungle, Character.Knuckles, []),
+    # UpgradeLocation(603, LocationName.Big.Lure2, Area.Jungle, Character.Big, []),
+    UpgradeLocation(601, LocationName.Big.PowerRod, Area.Jungle, Character.Big, []),
 
+    # Egg Carrier
+    UpgradeLocation(400, LocationName.Amy.WarriorFeather, Area.EggCarrierMain, Character.Amy, []),
+    UpgradeLocation(401, LocationName.Amy.LongHammer, Area.EggCarrierMain, Character.Amy, []),
+    UpgradeLocation(500, LocationName.Gamma.JetBooster, Area.EggCarrierMain, Character.Gamma, []),
+    UpgradeLocation(501, LocationName.Gamma.LaserBlaster, Area.EggCarrierMain, Character.Gamma, []),
+    # UpgradeLocation(605, LocationName.Big.Lure4, Area.EggCarrierMain, Character.Big, []),
+
+    # Past
+    # UpgradeLocation(201, LocationName.Tails.RhythmBadge, Area.???, Character.Tails, []),
 ]
 
 sub_level_location_table: List[SubLevelLocation] = [
@@ -378,8 +382,7 @@ def get_location_from_level() -> List[LocationInfo]:
 def get_location_from_upgrade() -> List[LocationInfo]:
     locations: List[LocationInfo] = []
     for upgrade in upgrade_location_table:
-        upgrade_name = f"{pascal_to_space(upgrade.originalUpgrade.name)} Upgrade Point ({upgrade.character.name})"
-        locations += [{"id": upgrade.locationId, "name": upgrade_name}]
+        locations += [{"id": upgrade.locationId, "name": upgrade.locationName}]
     return locations
 
 

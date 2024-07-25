@@ -111,8 +111,9 @@ def get_items_from_keys() -> List[ItemInfo]:
 class SonicAdventureDXItem(Item):
     game: str = "Sonic Adventure DX"
 
-    def __init__(self, item: ItemInfo, base_id: int, player):
-        super().__init__(item["name"], item["classification"], item["id"] + base_id, player)
+    def __init__(self, item: ItemInfo, base_id: int, player, classification: ItemClassification = None):
+        super().__init__(item["name"], classification if classification is not None else item["classification"],
+                         item["id"] + base_id, player)
 
 
 all_item_table: List[ItemInfo] = get_items_from_unlock() + get_items_from_upgrades() + get_items_from_keys() + [

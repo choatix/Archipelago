@@ -1,7 +1,7 @@
 from typing import ClassVar, Type, Dict, Any, List
 
-from BaseClasses import Tutorial, Region
-from Options import PerGameCommonOptions
+from BaseClasses import Tutorial, Region, ItemClassification
+from Options import PerGameCommonOptions, Toggle
 from worlds.AutoWorld import WebWorld, World
 from .Enums import Character, LevelMission, Area
 from .Items import all_item_table, get_item, get_item_by_name, SonicAdventureDXItem, ItemInfo, \
@@ -9,7 +9,7 @@ from .Items import all_item_table, get_item, get_item_by_name, SonicAdventureDXI
 from .Locations import all_location_table, SonicAdventureDXLocation, \
     field_emblem_location_table, sub_level_location_table, level_location_table, LevelLocation, \
     upgrade_location_table, life_capsule_location_table
-from .Names import ItemName
+from .Names import ItemName, LocationName
 from .Options import sadx_option_groups, SonicAdventureDXOptions, BaseMissionChoice
 from .Rules import create_rules
 
@@ -41,8 +41,10 @@ class SonicAdventureDXWorld(World):
 
     options: SonicAdventureDXOptions
 
-    def create_item(self, name: str) -> "SonicAdventureDXItem":
+    def create_item(self, name: str, force_non_progression=False) -> SonicAdventureDXItem:
         item: ItemInfo = get_item_by_name(name)
+        if force_non_progression:
+            return SonicAdventureDXItem(item, base_id, self.player, ItemClassification.filler)
         return SonicAdventureDXItem(item, base_id, self.player)
 
     def create_regions(self) -> None:
@@ -126,17 +128,65 @@ class SonicAdventureDXWorld(World):
         for itemName in item_names:
             itempool.append(self.create_item(itemName))
 
+        self.place_not_randomized_upgrades()
+
         # One less for the Perfect Chaos location
-        location_count = sum(1 for _ in self.multiworld.get_locations(self.player)) - 1
+        location_count = sum(1 for location in self.multiworld.get_locations(self.player) if not location.locked) - 1
         emblem_count = max(1, location_count - len(item_names))
 
-        for _ in range(emblem_count):
+        needed_emblems = self.get_emblems_needed()
+        filler_emblems = emblem_count - needed_emblems
+
+        for _ in range(needed_emblems):
             itempool.append(self.create_item(ItemName.Progression.Emblem))
+
+        for _ in range(filler_emblems):
+            itempool.append(self.create_item(ItemName.Progression.Emblem, True))
 
         starter_character_name = self.get_character_item_from_enum(self.starter_character)
         self.multiworld.push_precollected(self.create_item(starter_character_name))
 
         self.multiworld.itempool += itempool
+
+    def place_not_randomized_upgrades(self):
+        if self.is_character_playable(Character.Sonic) and not self.options.randomized_sonic_upgrades:
+            self.multiworld.get_location(LocationName.Sonic.LightShoes, self.player).place_locked_item(
+                self.create_item(ItemName.Sonic.LightShoes))
+            self.multiworld.get_location(LocationName.Sonic.CrystalRing, self.player).place_locked_item(
+                self.create_item(ItemName.Sonic.CrystalRing))
+            self.multiworld.get_location(LocationName.Sonic.AncientLight, self.player).place_locked_item(
+                self.create_item(ItemName.Sonic.AncientLight))
+        if self.is_character_playable(Character.Tails) and not self.options.randomized_tails_upgrades:
+            self.multiworld.get_location(LocationName.Tails.JetAnklet, self.player).place_locked_item(
+                self.create_item(ItemName.Tails.JetAnklet))
+        if self.is_character_playable(Character.Knuckles) and not self.options.randomized_knuckles_upgrades:
+            self.multiworld.get_location(LocationName.Knuckles.ShovelClaw, self.player).place_locked_item(
+                self.create_item(ItemName.Knuckles.ShovelClaw))
+            self.multiworld.get_location(LocationName.Knuckles.FightingGloves, self.player).place_locked_item(
+                self.create_item(ItemName.Knuckles.FightingGloves))
+        if self.is_character_playable(Character.Amy) and not self.options.randomized_amy_upgrades:
+            self.multiworld.get_location(LocationName.Amy.WarriorFeather, self.player).place_locked_item(
+                self.create_item(ItemName.Amy.WarriorFeather))
+            self.multiworld.get_location(LocationName.Amy.LongHammer, self.player).place_locked_item(
+                self.create_item(ItemName.Amy.LongHammer))
+        if self.is_character_playable(Character.Big) and not self.options.randomized_big_upgrades:
+            self.multiworld.get_location(LocationName.Big.LifeBelt, self.player).place_locked_item(
+                self.create_item(ItemName.Big.LifeBelt))
+            self.multiworld.get_location(LocationName.Big.PowerRod, self.player).place_locked_item(
+                self.create_item(ItemName.Big.PowerRod))
+            # self.multiworld.get_location(LocationName.Big.Lure1, self.player).place_locked_item(
+            #    self.create_item( ItemName.Big.Lure1))
+            # self.multiworld.get_location(LocationName.Big.Lure2, self.player).place_locked_item(
+            #     self.create_item(ItemName.Big.Lure2))
+            # self.multiworld.get_location(LocationName.Big.Lure3, self.player).place_locked_item(
+            #    self.create_item( ItemName.Big.Lure3))
+            # self.multiworld.get_location(LocationName.Big.Lure4, self.player).place_locked_item(
+            #     self.create_item(ItemName.Big.Lure4))
+        if self.is_character_playable(Character.Gamma) and not self.options.randomized_gamma_upgrades:
+            self.multiworld.get_location(LocationName.Gamma.JetBooster, self.player).place_locked_item(
+                self.create_item(ItemName.Gamma.JetBooster))
+            self.multiworld.get_location(LocationName.Gamma.LaserBlaster, self.player).place_locked_item(
+                self.create_item(ItemName.Gamma.LaserBlaster))
 
     def set_rules(self):
         create_rules(self)
@@ -144,19 +194,26 @@ class SonicAdventureDXWorld(World):
     def get_emblems_needed(self):
 
         item_names = self.get_items_for_options(self.options, self.starter_character)
-        location_count = sum(1 for _ in self.multiworld.get_locations(self.player)) - 1
+        location_count = sum(1 for location in self.multiworld.get_locations(self.player) if not location.locked) - 1
         emblem_count = max(1, location_count - len(item_names))
         return int(round(emblem_count * self.options.emblems_percentage / 100))
 
     def fill_slot_data(self) -> Dict[str, Any]:
         return {
-            "ModVersion": "0.3.1",
+            "ModVersion": "0.3.2",
             "EmblemsForPerfectChaos": self.get_emblems_needed(),
             "FieldEmblemChecks": self.options.field_emblems_checks.value,
             "LifeSanity": self.options.life_sanity.value,
             "PinballLifeCapsules": self.options.pinball_life_capsules.value,
             "SubLevelChecks": self.options.sub_level_checks.value,
-            "RandomizeUpgrades": self.options.randomized_upgrades.value,
+
+            "RandomizedSonicUpgrades": self.options.randomized_sonic_upgrades.value,
+            "RandomizedTailsUpgrades": self.options.randomized_tails_upgrades.value,
+            "RandomizedKnucklesUpgrades": self.options.randomized_knuckles_upgrades.value,
+            "RandomizedAmyUpgrades": self.options.randomized_amy_upgrades.value,
+            "RandomizedGammaUpgrades": self.options.randomized_big_upgrades.value,
+            "RandomizedBigUpgrades": self.options.randomized_gamma_upgrades.value,
+
             "SonicMissions": self.options.sonic_missions.value,
             "TailsMissions": self.options.tails_missions.value,
             "KnucklesMissions": self.options.knuckles_missions.value,
@@ -189,15 +246,18 @@ class SonicAdventureDXWorld(World):
     def get_items_for_options(self, options: SonicAdventureDXOptions, starter_character: Character) -> List[str]:
         item_names = []
         item_names += self.get_item_for_options_per_character(Character.Sonic, starter_character,
-                                                              options.sonic_missions)
+                                                              options.sonic_missions, options.randomized_sonic_upgrades)
         item_names += self.get_item_for_options_per_character(Character.Tails, starter_character,
-                                                              options.tails_missions)
+                                                              options.tails_missions, options.randomized_tails_upgrades)
         item_names += self.get_item_for_options_per_character(Character.Knuckles, starter_character,
-                                                              options.knuckles_missions)
-        item_names += self.get_item_for_options_per_character(Character.Amy, starter_character, options.amy_missions, )
-        item_names += self.get_item_for_options_per_character(Character.Big, starter_character, options.big_missions)
+                                                              options.knuckles_missions,
+                                                              options.randomized_knuckles_upgrades)
+        item_names += self.get_item_for_options_per_character(Character.Amy, starter_character, options.amy_missions,
+                                                              options.randomized_amy_upgrades)
+        item_names += self.get_item_for_options_per_character(Character.Big, starter_character, options.big_missions,
+                                                              options.randomized_big_upgrades)
         item_names += self.get_item_for_options_per_character(Character.Gamma, starter_character,
-                                                              options.gamma_missions)
+                                                              options.gamma_missions, options.randomized_gamma_upgrades)
         # We don't add key items that aren't used for the randomizer
 
         item_names.append(ItemName.KeyItem.Train)
@@ -222,8 +282,9 @@ class SonicAdventureDXWorld(World):
 
         return item_names
 
-    def get_item_for_options_per_character(self, character: Character, starter_character: Character,
-                                           missions: BaseMissionChoice) -> []:
+    @staticmethod
+    def get_item_for_options_per_character(character: Character, starter_character: Character,
+                                           missions: BaseMissionChoice, randomized_upgrades: Toggle) -> []:
         item_names = []
         if missions == 0:
             return item_names
@@ -233,7 +294,7 @@ class SonicAdventureDXWorld(World):
                 if unlock_character.character == character:
                     item_names.append(unlock_character.name)
 
-        if self.options.randomized_upgrades:
+        if randomized_upgrades:
             for character_upgrade in character_upgrade_item_table:
                 if character_upgrade.character == character:
                     item_names.append(character_upgrade.name)
@@ -282,6 +343,17 @@ class SonicAdventureDXWorld(World):
     def is_character_playable(self, character: Character) -> bool:
         return self.get_character_missions(character) > 0
 
+    def are_character_upgrades_randomized(self, character: Character) -> Toggle:
+        character_randomized_upgrades = {
+            Character.Sonic: self.options.randomized_sonic_upgrades,
+            Character.Tails: self.options.randomized_tails_upgrades,
+            Character.Knuckles: self.options.randomized_knuckles_upgrades,
+            Character.Amy: self.options.randomized_amy_upgrades,
+            Character.Big: self.options.randomized_big_upgrades,
+            Character.Gamma: self.options.randomized_gamma_upgrades
+        }
+        return character_randomized_upgrades.get(character)
+
     def is_any_character_playable(self, characters: List[Character]) -> bool:
         for character in characters:
             if self.is_character_playable(character):
@@ -294,11 +366,10 @@ class SonicAdventureDXWorld(World):
             if level.area == area:
                 if self.is_level_playable(level):
                     location_ids.append(level.locationId)
-        if self.options.randomized_upgrades:
-            for upgrade in upgrade_location_table:
-                if upgrade.area == area:
-                    if self.is_character_playable(upgrade.character):
-                        location_ids.append(upgrade.locationId)
+        for upgrade in upgrade_location_table:
+            if upgrade.area == area:
+                if self.is_character_playable(upgrade.character):
+                    location_ids.append(upgrade.locationId)
         if self.options.sub_level_checks:
             for sub_level in sub_level_location_table:
                 if sub_level.area == area:
