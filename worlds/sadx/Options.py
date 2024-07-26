@@ -10,6 +10,20 @@ class FieldEmblemsChecks(DefaultOnToggle):
     display_name = "Field Emblems Checks"
 
 
+class RingLoss(Choice):
+    """
+    How taking damage is handled
+    Classic: You lose all of your rings when hit
+    Modern: You lose 20 rings when hit
+    One Hit K.O.: You die immediately when hit
+    """
+    display_name = "Ring Loss"
+    option_classic = 0
+    option_modern = 1
+    option_one_hit_k_o = 2
+    default = 0
+
+
 class LifeSanity(Toggle):
     """Determines whether collecting life capsules grants checks
     (102 Locations)"""
@@ -111,6 +125,7 @@ class BigMissions(BaseMissionChoice):
 @dataclass
 class SonicAdventureDXOptions(PerGameCommonOptions):
     field_emblems_checks: FieldEmblemsChecks
+    ring_loss: RingLoss
     life_sanity: LifeSanity
     pinball_life_capsules: PinballLifeCapsules
     sub_level_checks: SubLevelChecks
@@ -132,6 +147,7 @@ class SonicAdventureDXOptions(PerGameCommonOptions):
 sadx_option_groups = [
     OptionGroup("Main Options", [
         EmblemPercentage,
+        RingLoss,
         FieldEmblemsChecks,
         LifeSanity,
         SubLevelChecks,
