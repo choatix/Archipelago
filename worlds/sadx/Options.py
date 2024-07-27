@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from Options import OptionGroup, Choice, Range, DefaultOnToggle, Toggle
+from Options import OptionGroup, Choice, Range, DefaultOnToggle, Toggle, DeathLink
 from Options import PerGameCommonOptions
 
 
@@ -125,6 +125,7 @@ class BigMissions(BaseMissionChoice):
 @dataclass
 class SonicAdventureDXOptions(PerGameCommonOptions):
     field_emblems_checks: FieldEmblemsChecks
+    death_link: DeathLink
     ring_loss: RingLoss
     life_sanity: LifeSanity
     pinball_life_capsules: PinballLifeCapsules
