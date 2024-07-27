@@ -64,10 +64,10 @@ character_upgrade_item_table: List[CharacterUpgradeItem] = [
 
     CharacterUpgradeItem(60, Character.Big, ItemName.Big.LifeBelt, ItemClassification.progression),
     CharacterUpgradeItem(61, Character.Big, ItemName.Big.PowerRod, ItemClassification.useful),
-    # CharacterUpgradeItem(62, Character.Big, ItemName.Big.Lure1, ItemClassification.progression),
-    # CharacterUpgradeItem(63, Character.Big, ItemName.Big.Lure2, ItemClassification.progression),
-    # CharacterUpgradeItem(64, Character.Big, ItemName.Big.Lure3, ItemClassification.progression),
-    # CharacterUpgradeItem(65, Character.Big, ItemName.Big.Lure4, ItemClassification.progression),
+    CharacterUpgradeItem(62, Character.Big, ItemName.Big.Lure1, ItemClassification.progression),
+    CharacterUpgradeItem(63, Character.Big, ItemName.Big.Lure2, ItemClassification.progression),
+    CharacterUpgradeItem(64, Character.Big, ItemName.Big.Lure3, ItemClassification.progression),
+    CharacterUpgradeItem(65, Character.Big, ItemName.Big.Lure4, ItemClassification.progression),
 
 ]
 

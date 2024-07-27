@@ -189,17 +189,17 @@ upgrade_location_table: List[UpgradeLocation] = [
     # Station Square
     UpgradeLocation(100, LocationName.Sonic.LightShoes, Area.StationSquareMain, Character.Sonic, []),
     UpgradeLocation(200, LocationName.Tails.JetAnklet, Area.StationSquareMain, Character.Tails, []),
-    # UpgradeLocation(602, LocationName.Big.Lure1, Area.StationSquareMain, Character.Big, []),
+    UpgradeLocation(602, LocationName.Big.Lure1, Area.StationSquareMain, Character.Big, []),
     UpgradeLocation(101, LocationName.Sonic.CrystalRing, Area.Hotel, Character.Sonic, [ItemName.Sonic.LightShoes]),
     # Mystic Ruins
     UpgradeLocation(300, LocationName.Knuckles.ShovelClaw, Area.MysticRuinsMain, Character.Knuckles, []),
-    # UpgradeLocation(604, LocationName.Big.Lure3, Area.AngelIsland, Character.Big,
-    #                 [ItemName.KeyItem.IceStone, ItemName.KeyItem.Train]),
+    UpgradeLocation(604, LocationName.Big.Lure3, Area.AngelIsland, Character.Big,
+                    [ItemName.KeyItem.IceStone, ItemName.KeyItem.Train]),
     UpgradeLocation(600, LocationName.Big.LifeBelt, Area.AngelIsland, Character.Big,
                     [ItemName.KeyItem.IceStone, ItemName.KeyItem.Train]),
     UpgradeLocation(102, LocationName.Sonic.AncientLight, Area.AngelIsland, Character.Sonic, []),
     UpgradeLocation(301, LocationName.Knuckles.FightingGloves, Area.Jungle, Character.Knuckles, []),
-    # UpgradeLocation(603, LocationName.Big.Lure2, Area.Jungle, Character.Big, []),
+    UpgradeLocation(603, LocationName.Big.Lure2, Area.Jungle, Character.Big, []),
     UpgradeLocation(601, LocationName.Big.PowerRod, Area.Jungle, Character.Big, []),
 
     # Egg Carrier
@@ -207,7 +207,7 @@ upgrade_location_table: List[UpgradeLocation] = [
     UpgradeLocation(401, LocationName.Amy.LongHammer, Area.EggCarrierMain, Character.Amy, []),
     UpgradeLocation(500, LocationName.Gamma.JetBooster, Area.EggCarrierMain, Character.Gamma, []),
     UpgradeLocation(501, LocationName.Gamma.LaserBlaster, Area.EggCarrierMain, Character.Gamma, []),
-    # UpgradeLocation(605, LocationName.Big.Lure4, Area.EggCarrierMain, Character.Big, []),
+    UpgradeLocation(605, LocationName.Big.Lure4, Area.EggCarrierMain, Character.Big, []),
 
     # Past
     # UpgradeLocation(201, LocationName.Tails.RhythmBadge, Area.???, Character.Tails, []),
