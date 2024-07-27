@@ -174,14 +174,14 @@ class SonicAdventureDXWorld(World):
                 self.create_item(ItemName.Big.LifeBelt))
             self.multiworld.get_location(LocationName.Big.PowerRod, self.player).place_locked_item(
                 self.create_item(ItemName.Big.PowerRod))
-            # self.multiworld.get_location(LocationName.Big.Lure1, self.player).place_locked_item(
-            #    self.create_item( ItemName.Big.Lure1))
-            # self.multiworld.get_location(LocationName.Big.Lure2, self.player).place_locked_item(
-            #     self.create_item(ItemName.Big.Lure2))
-            # self.multiworld.get_location(LocationName.Big.Lure3, self.player).place_locked_item(
-            #    self.create_item( ItemName.Big.Lure3))
-            # self.multiworld.get_location(LocationName.Big.Lure4, self.player).place_locked_item(
-            #     self.create_item(ItemName.Big.Lure4))
+            self.multiworld.get_location(LocationName.Big.Lure1, self.player).place_locked_item(
+                self.create_item(ItemName.Big.Lure1))
+            self.multiworld.get_location(LocationName.Big.Lure2, self.player).place_locked_item(
+                self.create_item(ItemName.Big.Lure2))
+            self.multiworld.get_location(LocationName.Big.Lure3, self.player).place_locked_item(
+                self.create_item(ItemName.Big.Lure3))
+            self.multiworld.get_location(LocationName.Big.Lure4, self.player).place_locked_item(
+                self.create_item(ItemName.Big.Lure4))
         if self.is_character_playable(Character.Gamma) and not self.options.randomized_gamma_upgrades:
             self.multiworld.get_location(LocationName.Gamma.JetBooster, self.player).place_locked_item(
                 self.create_item(ItemName.Gamma.JetBooster))
