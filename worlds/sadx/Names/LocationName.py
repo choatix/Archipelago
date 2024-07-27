@@ -5,8 +5,8 @@ class Sonic:
 
 
 class Tails:
-    JetAnklet = "Jet Anklet Upgrade Point"
-    RhythmBadge = "Rhythm Badge Upgrade Point"
+    JetAnklet = "Jet anklet Upgrade Point"
+    RhythmBadge = "Rhythm badge Upgrade Point"
 
 
 class Knuckles:
@@ -15,12 +15,12 @@ class Knuckles:
 
 
 class Amy:
-    LongHammer = "Long Hammer Upgrade Point"
+    LongHammer = "Long hammer Upgrade Point"
     WarriorFeather = "Warrior feather Upgrade Point"
 
 
 class Gamma:
-    LaserBlaster = "Laser Blaster Upgrade Point"
+    LaserBlaster = "Laser blaster Upgrade Point"
     JetBooster = "Jet booster Upgrade Point"
 
 
