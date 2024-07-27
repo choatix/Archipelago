@@ -24,6 +24,13 @@ class RingLoss(Choice):
     default = 0
 
 
+class RingLink(Toggle):
+    """
+    Whether your in-level ring gain/loss is linked to other players
+    """
+    display_name = "Ring Link"
+
+
 class LifeSanity(Toggle):
     """Determines whether collecting life capsules grants checks
     (102 Locations)"""
@@ -126,6 +133,7 @@ class BigMissions(BaseMissionChoice):
 class SonicAdventureDXOptions(PerGameCommonOptions):
     field_emblems_checks: FieldEmblemsChecks
     death_link: DeathLink
+    ring_link: RingLink
     ring_loss: RingLoss
     life_sanity: LifeSanity
     pinball_life_capsules: PinballLifeCapsules

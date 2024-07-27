@@ -205,6 +205,7 @@ class SonicAdventureDXWorld(World):
             "FieldEmblemChecks": self.options.field_emblems_checks.value,
             "LifeSanity": self.options.life_sanity.value,
             "DeathLink": self.options.death_link.value,
+            "RingLink": self.options.ring_link.value,
             "RingLoss": self.options.ring_loss.value,
             "PinballLifeCapsules": self.options.pinball_life_capsules.value,
             "SubLevelChecks": self.options.sub_level_checks.value,
