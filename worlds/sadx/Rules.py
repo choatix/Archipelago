@@ -1,5 +1,5 @@
 from worlds.generic.Rules import add_rule
-from worlds.sadx import Character
+from worlds.sadx import Character, StartingArea
 from worlds.sadx.Locations import get_location_by_name, LocationInfo, level_location_table, LevelLocation, \
     upgrade_location_table, UpgradeLocation, sub_level_location_table, SubLevelLocation, field_emblem_location_table, \
     EmblemLocation, life_capsule_location_table, LifeCapsuleLocation
@@ -80,3 +80,39 @@ def create_rules(self):
 
     self.multiworld.completion_condition[self.player] = lambda state: state.has(ItemName.Progression.ChaosPeace,
                                                                                 self.player)
+
+
+starting_area_items = {
+    Character.Sonic: {
+        StartingArea.StationSquareMain: [ItemName.KeyItem.TwinkleParkTicket,
+                                         ItemName.KeyItem.EmployeeCard],
+        StartingArea.HotelArea: [],
+        StartingArea.MysticRuinsMain: [],
+        StartingArea.EggCarrier: []
+    },
+    Character.Tails: {
+        StartingArea.StationSquareMain: [ItemName.KeyItem.EmployeeCard],
+        StartingArea.CasinoArea: [],
+        StartingArea.MysticRuinsMain: [],
+        StartingArea.EggCarrier: []
+    },
+    Character.Knuckles: {
+        StartingArea.StationSquareMain: [],
+        StartingArea.CasinoArea: [],
+    },
+    Character.Amy: {
+        StartingArea.StationSquareMain: [ItemName.KeyItem.TwinkleParkTicket],
+        StartingArea.Jungle: [],
+        StartingArea.EggCarrier: []
+    },
+    Character.Gamma: {
+        StartingArea.HotelArea: [],
+        StartingArea.MysticRuinsMain: [ItemName.KeyItem.Dynamite],
+        StartingArea.Jungle: [],
+    },
+    Character.Big: {
+        StartingArea.HotelArea: [],
+        StartingArea.StationSquareMain: [],
+        StartingArea.EggCarrier: []
+    }
+}
