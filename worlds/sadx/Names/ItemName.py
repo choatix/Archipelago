@@ -28,8 +28,8 @@ class Sonic:
 
 class Tails:
     Playable = "Playable Tails"
-    JetAnklet = "Jet Anklet"
-    RhythmBadge = "Rhythm Badge"
+    JetAnklet = "Jet anklet"
+    RhythmBadge = "Rhythm badge"
 
 
 class Knuckles:
@@ -40,13 +40,13 @@ class Knuckles:
 
 class Amy:
     Playable = "Playable Amy"
-    LongHammer = "Long Hammer"
+    LongHammer = "Long hammer"
     WarriorFeather = "Warrior feather"
 
 
 class Gamma:
     Playable = "Playable Gamma"
-    LaserBlaster = "Laser Blaster"
+    LaserBlaster = "Laser blaster"
     JetBooster = "Jet booster"
 
 
