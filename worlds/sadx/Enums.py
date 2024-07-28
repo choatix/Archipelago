@@ -94,10 +94,10 @@ class KeyItem(Enum):
 
 
 class StartingArea(Enum):
-    StationSquareMain = 0
-    HotelArea = auto()
-    CasinoArea = auto()
-    MysticRuinsMain = auto()
+    StationSquare = 0
+    Hotel = auto()
+    Casino = auto()
+    MysticRuins = auto()
     Jungle = auto()
     EggCarrier = auto()
 

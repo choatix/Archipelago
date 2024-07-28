@@ -1,3 +1,5 @@
+import re
+import typing
 from typing import ClassVar, Type, Dict, Any, List
 
 from BaseClasses import Tutorial, Region, ItemClassification
@@ -54,9 +56,19 @@ class SonicAdventureDXWorld(World):
         if len(possible_starting_items) > 0:
             self.starter_item = self.random.choice(possible_starting_items)
 
-        print(f"Starter Character: {self.starter_character}")
-        print(f"Starter Area: {self.starter_area.name}")
-        print(f"Starter Item: {self.starter_item}")
+        # Universal tracker stuff, shouldn't do anything in standard gen
+        if hasattr(self.multiworld, "re_gen_passthrough"):
+            if "Sonic Adventure DX" in self.multiworld.re_gen_passthrough:
+                passthrough = self.multiworld.re_gen_passthrough["Sonic Adventure DX"]
+                self.starter_character = Character(passthrough["StartingCharacter"])
+                self.starter_area = StartingArea(passthrough["StartingArea"])
+                self.starter_item = passthrough["StartingItem"]
+
+    # for the universal tracker, doesn't get called in standard gen
+    @staticmethod
+    def interpret_slot_data(slot_data: Dict[str, Any]) -> Dict[str, Any]:
+        # returning slot_data so it regens, giving it back in multiworld.re_gen_passthrough
+        return slot_data
 
     def create_item(self, name: str, force_non_progression=False) -> SonicAdventureDXItem:
         item: ItemInfo = get_item_by_name(name)
@@ -147,13 +159,13 @@ class SonicAdventureDXWorld(World):
         egg_carrier_area.connect(mystic_ruins_area, None, lambda state: state.has(
             ItemName.KeyItem.Raft, self.player))
 
-        if self.starter_area == StartingArea.StationSquareMain:
+        if self.starter_area == StartingArea.StationSquare:
             menu_region.connect(station_square_area)
-        elif self.starter_area == StartingArea.HotelArea:
+        elif self.starter_area == StartingArea.Hotel:
             menu_region.connect(hotel_area)
-        elif self.starter_area == StartingArea.CasinoArea:
+        elif self.starter_area == StartingArea.Casino:
             menu_region.connect(casino_area)
-        elif self.starter_area == StartingArea.MysticRuinsMain:
+        elif self.starter_area == StartingArea.MysticRuins:
             menu_region.connect(mystic_ruins_area)
         elif self.starter_area == StartingArea.Jungle:
             menu_region.connect(jungle_area)
@@ -241,6 +253,21 @@ class SonicAdventureDXWorld(World):
     def set_rules(self):
         create_rules(self)
 
+    def write_spoiler(self, spoiler_handle: typing.TextIO):
+        spoiler_handle.write("\n")
+        header_text = "Sonic Adventure starting setup for {}:\n"
+        header_text = header_text.format(self.multiworld.player_name[self.player])
+        spoiler_handle.write(header_text)
+
+        starting_area_name = re.sub(r'(?<=[a-z])(?=[A-Z])', ' ', self.starter_area.name)
+        if self.starter_item is not None:
+            text = "Will start as {0} in the {1} area with {2}.\n"
+            text = text.format(self.starter_character.name, starting_area_name, self.starter_item)
+        else:
+            text = "Will start as {0} in the {1} area.\n"
+            text = text.format(self.starter_character.name, starting_area_name)
+        spoiler_handle.writelines(text)
+
     def get_emblems_needed(self):
 
         item_names = self.get_item_names()
@@ -252,7 +279,9 @@ class SonicAdventureDXWorld(World):
         return {
             "ModVersion": "0.3.2",
             "EmblemsForPerfectChaos": self.get_emblems_needed(),
+            "StartingCharacter": self.starter_character.value,
             "StartingArea": self.starter_area.value,
+            "StartingItem": self.starter_item,
             "FieldEmblemChecks": self.options.field_emblems_checks.value,
             "LifeSanity": self.options.life_sanity.value,
             "DeathLink": self.options.death_link.value,

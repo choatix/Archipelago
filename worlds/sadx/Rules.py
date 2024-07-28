@@ -84,35 +84,35 @@ def create_rules(self):
 
 starting_area_items = {
     Character.Sonic: {
-        StartingArea.StationSquareMain: [ItemName.KeyItem.TwinkleParkTicket,
-                                         ItemName.KeyItem.EmployeeCard],
-        StartingArea.HotelArea: [],
-        StartingArea.MysticRuinsMain: [],
+        StartingArea.StationSquare: [ItemName.KeyItem.TwinkleParkTicket,
+                                     ItemName.KeyItem.EmployeeCard],
+        StartingArea.Hotel: [],
+        StartingArea.MysticRuins: [],
         StartingArea.EggCarrier: []
     },
     Character.Tails: {
-        StartingArea.StationSquareMain: [ItemName.KeyItem.EmployeeCard],
-        StartingArea.CasinoArea: [],
-        StartingArea.MysticRuinsMain: [],
+        StartingArea.StationSquare: [ItemName.KeyItem.EmployeeCard],
+        StartingArea.Casino: [],
+        StartingArea.MysticRuins: [],
         StartingArea.EggCarrier: []
     },
     Character.Knuckles: {
-        StartingArea.StationSquareMain: [],
-        StartingArea.CasinoArea: [],
+        StartingArea.StationSquare: [],
+        StartingArea.Casino: [],
     },
     Character.Amy: {
-        StartingArea.StationSquareMain: [ItemName.KeyItem.TwinkleParkTicket],
+        StartingArea.StationSquare: [ItemName.KeyItem.TwinkleParkTicket],
         StartingArea.Jungle: [],
         StartingArea.EggCarrier: []
     },
     Character.Gamma: {
-        StartingArea.HotelArea: [],
-        StartingArea.MysticRuinsMain: [ItemName.KeyItem.Dynamite],
+        StartingArea.Hotel: [],
+        StartingArea.MysticRuins: [ItemName.KeyItem.Dynamite],
         StartingArea.Jungle: [],
     },
     Character.Big: {
-        StartingArea.HotelArea: [],
-        StartingArea.StationSquareMain: [],
+        StartingArea.Hotel: [],
+        StartingArea.StationSquare: [],
         StartingArea.EggCarrier: []
     }
 }
