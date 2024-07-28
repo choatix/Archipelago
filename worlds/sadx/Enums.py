@@ -42,8 +42,6 @@ class Upgrade(Enum):
     Lure4 = auto()
 
 
-
-
 class Level(Enum):
     EmeraldCoast = 0
     WindyValley = auto()
@@ -93,6 +91,15 @@ class KeyItem(Enum):
     Boat = auto()
     Raft = auto()
     NONE = auto()
+
+
+class StartingArea(Enum):
+    StationSquare = 0
+    Hotel = auto()
+    Casino = auto()
+    MysticRuins = auto()
+    Jungle = auto()
+    EggCarrier = auto()
 
 
 @dataclass
