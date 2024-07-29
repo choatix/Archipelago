@@ -50,7 +50,7 @@ character_upgrade_item_table: List[CharacterUpgradeItem] = [
     CharacterUpgradeItem(11, Character.Sonic, ItemName.Sonic.CrystalRing, ItemClassification.useful),
     CharacterUpgradeItem(12, Character.Sonic, ItemName.Sonic.AncientLight, ItemClassification.progression),
 
-    CharacterUpgradeItem(20, Character.Tails, ItemName.Tails.JetAnklet, ItemClassification.useful),
+    CharacterUpgradeItem(20, Character.Tails, ItemName.Tails.JetAnklet, ItemClassification.progression),
     CharacterUpgradeItem(21, Character.Tails, ItemName.Tails.RhythmBadge, ItemClassification.useful),
 
     CharacterUpgradeItem(30, Character.Knuckles, ItemName.Knuckles.ShovelClaw, ItemClassification.progression),
