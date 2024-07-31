@@ -21,39 +21,39 @@ class KeyItem:
 
 class Sonic:
     Playable = "Playable Sonic"
-    LightShoes = "Light shoes"
-    CrystalRing = "Crystal ring"
-    AncientLight = "Ancient light"
+    LightShoes = "Light Shoes"
+    CrystalRing = "Crystal Ring"
+    AncientLight = "Ancient Light"
 
 
 class Tails:
     Playable = "Playable Tails"
-    JetAnklet = "Jet anklet"
-    RhythmBadge = "Rhythm badge"
+    JetAnklet = "Jet Anklet"
+    RhythmBadge = "Rhythm Badge"
 
 
 class Knuckles:
     Playable = "Playable Knuckles"
-    ShovelClaw = "Shovel claw"
-    FightingGloves = "Fighting gloves"
+    ShovelClaw = "Shovel Claw"
+    FightingGloves = "Fighting Gloves"
 
 
 class Amy:
     Playable = "Playable Amy"
-    LongHammer = "Long hammer"
-    WarriorFeather = "Warrior feather"
+    LongHammer = "Long Hammer"
+    WarriorFeather = "Warrior Feather"
 
 
 class Gamma:
     Playable = "Playable Gamma"
-    LaserBlaster = "Laser blaster"
-    JetBooster = "Jet booster"
+    LaserBlaster = "Laser Blaster"
+    JetBooster = "Jet Booster"
 
 
 class Big:
     Playable = "Playable Big"
-    LifeBelt = "Life belt"
-    PowerRod = "Power rod"
+    LifeBelt = "Life Belt"
+    PowerRod = "Power Rod"
     Lure1 = "Lure 1"
     Lure2 = "Lure 2"
     Lure3 = "Lure 3"
