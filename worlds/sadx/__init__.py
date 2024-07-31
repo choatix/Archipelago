@@ -10,7 +10,7 @@ from .Items import all_item_table, get_item, get_item_by_name, SonicAdventureDXI
     key_item_table, character_unlock_item_table, character_upgrade_item_table
 from .Locations import all_location_table, SonicAdventureDXLocation, \
     field_emblem_location_table, sub_level_location_table, level_location_table, LevelLocation, \
-    upgrade_location_table, life_capsule_location_table
+    upgrade_location_table, life_capsule_location_table, boss_location_table
 from .Names import ItemName, LocationName
 from .Options import sadx_option_groups, SonicAdventureDXOptions, BaseMissionChoice
 from .Rules import create_rules, starting_area_items
@@ -290,6 +290,11 @@ class SonicAdventureDXWorld(World):
             "PinballLifeCapsules": self.options.pinball_life_capsules.value,
             "SubLevelChecks": self.options.sub_level_checks.value,
 
+            "BossChecks": self.options.boss_checks.value,
+            "UnifyChaos4": self.options.unify_chaos4.value,
+            "UnifyChaos6": self.options.unify_chaos6.value,
+            "UnifyEggHornet": self.options.unify_egg_hornet.value,
+
             "RandomizedSonicUpgrades": self.options.randomized_sonic_upgrades.value,
             "RandomizedTailsUpgrades": self.options.randomized_tails_upgrades.value,
             "RandomizedKnucklesUpgrades": self.options.randomized_knuckles_upgrades.value,
@@ -466,6 +471,25 @@ class SonicAdventureDXWorld(World):
                                 location_ids.append(life_capsule.locationId)
                         else:
                             location_ids.append(life_capsule.locationId)
+        if self.options.boss_checks:
+            for boss_fight in boss_location_table:
+                if boss_fight.area == area:
+                    if self.options.unify_chaos4 and boss_fight.boss == LocationName.Boss.Chaos4 and not boss_fight.unified:
+                        continue
+                    if not self.options.unify_chaos4 and boss_fight.boss == LocationName.Boss.Chaos4 and boss_fight.unified:
+                        continue
+                    if self.options.unify_chaos6 and boss_fight.boss == LocationName.Boss.Chaos6 and not boss_fight.unified:
+                        continue
+                    if not self.options.unify_chaos6 and boss_fight.boss == LocationName.Boss.Chaos6 and boss_fight.unified:
+                        continue
+                    if self.options.unify_egg_hornet and boss_fight.boss == LocationName.Boss.EggHornet and not boss_fight.unified:
+                        continue
+                    if not self.options.unify_egg_hornet and boss_fight.boss == LocationName.Boss.EggHornet and boss_fight.unified:
+                        continue
+
+                    if self.is_any_character_playable(boss_fight.characters):
+                        location_ids.append(boss_fight.locationId)
+
         return location_ids
 
     def add_locations_to_region(self, region: Region, area: Area):

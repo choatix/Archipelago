@@ -6,6 +6,7 @@ from .Enums import Area, Level, SubLevel, Character, LevelMission, EVERYONE, FLY
     SubLevelMission, pascal_to_space
 from .Names import ItemName, LocationName
 from .Names.ItemName import EVERY_LURE
+from .Names.LocationName import Boss
 
 
 @dataclass
@@ -52,6 +53,15 @@ class LifeCapsuleLocation:
     level: Level
     lifeCapsuleNumber: int
     extraItems: List[str]
+
+
+@dataclass
+class BossFightLocation:
+    locationId: int
+    area: Area
+    characters: List[Character]
+    boss: Boss
+    unified: bool = False
 
 
 level_location_table: List[LevelLocation] = [
@@ -363,6 +373,37 @@ life_capsule_location_table: List[LifeCapsuleLocation] = [
     LifeCapsuleLocation(6310, Area.EggCarrierMain, Character.Big, Level.HotShelter, 1, []),
 ]
 
+boss_location_table: List[BossFightLocation] = [
+    # Station Square
+    BossFightLocation(700, Area.StationSquareMain, [Character.Sonic], LocationName.Boss.Chaos0),
+    BossFightLocation(710, Area.Hotel, [Character.Knuckles], LocationName.Boss.Chaos2),
+    BossFightLocation(720, Area.Casino, [Character.Tails], LocationName.Boss.EggWalker),
+    # Mystic Ruins
+    BossFightLocation(730, Area.MysticRuinsMain, [Character.Sonic], LocationName.Boss.EggHornet),
+    BossFightLocation(731, Area.MysticRuinsMain, [Character.Tails], LocationName.Boss.EggHornet),
+    BossFightLocation(739, Area.MysticRuinsMain, [Character.Sonic, Character.Tails], LocationName.Boss.EggHornet, True),
+
+    BossFightLocation(740, Area.MysticRuinsMain, [Character.Sonic], LocationName.Boss.Chaos4),
+    BossFightLocation(741, Area.MysticRuinsMain, [Character.Tails], LocationName.Boss.Chaos4),
+    BossFightLocation(742, Area.MysticRuinsMain, [Character.Knuckles], LocationName.Boss.Chaos4),
+    BossFightLocation(749, Area.MysticRuinsMain, [Character.Sonic, Character.Tails, Character.Knuckles],
+                      LocationName.Boss.Chaos4, True),
+
+    BossFightLocation(750, Area.Jungle, [Character.Sonic], LocationName.Boss.EggViper),
+    BossFightLocation(760, Area.Jungle, [Character.Gamma], LocationName.Boss.E101Beta),
+
+    # Egg Carrier
+    BossFightLocation(770, Area.EggCarrierMain, [Character.Sonic], LocationName.Boss.Chaos6),
+    BossFightLocation(771, Area.EggCarrierMain, [Character.Knuckles], LocationName.Boss.Chaos6),
+    BossFightLocation(772, Area.EggCarrierMain, [Character.Big], LocationName.Boss.Chaos6),
+    BossFightLocation(779, Area.EggCarrierMain, [Character.Sonic, Character.Big, Character.Big],
+                      LocationName.Boss.Chaos6, True),
+
+    BossFightLocation(780, Area.EggCarrierMain, [Character.Gamma], LocationName.Boss.E101mkII),
+    BossFightLocation(790, Area.EggCarrierMain, [Character.Amy], LocationName.Boss.Zero),
+
+]
+
 
 class LocationInfo(TypedDict):
     id: int
@@ -407,9 +448,21 @@ def get_location_from_life_capsule() -> List[LocationInfo]:
     return locations
 
 
+def get_location_from_boss() -> List[LocationInfo]:
+    locations: List[LocationInfo] = []
+    for boss_fight in boss_location_table:
+        if boss_fight.unified:
+            location_name: str = f"{boss_fight.boss} Boss Fight"
+        else:
+            location_name: str = f"{boss_fight.boss} Boss Fight ({boss_fight.characters[0].name})"
+
+        locations += [{"id": boss_fight.locationId, "name": location_name}]
+    return locations
+
+
 all_location_table: List[LocationInfo] = ((get_location_from_level() + get_location_from_upgrade()
                                            + get_location_from_sub_level() + get_location_from_emblem()
-                                           + get_location_from_life_capsule()) +
+                                           + get_location_from_life_capsule() + get_location_from_boss()) +
                                           [{"id": 9, "name": "Perfect Chaos Fight"}])
 
 

@@ -31,3 +31,16 @@ class Big:
     Lure2 = "Lure 2 Upgrade Point"
     Lure3 = "Lure 3 Upgrade Point"
     Lure4 = "Lure 4 Upgrade Point"
+
+
+class Boss:
+    Chaos0 = "Chaos 0"
+    Chaos2 = "Chaos 2"
+    Chaos4 = "Chaos 4"
+    Chaos6 = "Chaos 6"
+    EggHornet = "Egg Hornet"
+    EggWalker = "Egg Walker"
+    EggViper = "Egg Viper"
+    Zero = "E-100 Zero"
+    E101Beta = "E-101 Beta"
+    E101mkII = "E-101 mkII"

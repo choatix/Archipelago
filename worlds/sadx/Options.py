@@ -34,14 +34,12 @@ class RingLink(Toggle):
 class LifeSanity(Toggle):
     """Determines whether collecting life capsules grants checks
     (102 Locations)"""
-    default = 0
     display_name = "Life Sanity"
 
 
 class PinballLifeCapsules(Toggle):
     """Determines whether casinopolis life capsules grant checks
     (2 Locations)"""
-    default = 0
     display_name = "Include Casinopolis Life Capsules"
 
 
@@ -49,6 +47,27 @@ class SubLevelChecks(DefaultOnToggle):
     """Determines whether beating a sublevel grants checks
     (4 Locations)"""
     display_name = "Sub-Level Checks"
+
+
+class BossChecks(DefaultOnToggle):
+    """Determines whether beating a boss grants a check
+    (15 Locations)"""
+    display_name = "Boss Checks"
+
+
+class UnifyChaos4(DefaultOnToggle):
+    """Determines whatever the Chaos 4 fight counts as a single location or three (Sonic, Tails and Knuckles)"""
+    display_name = "Unify Chaos 4"
+
+
+class UnifyChaos6(Toggle):
+    """Determines whatever the Chaos 6 fight counts as a single location or three (Sonic, Big and Knuckles)"""
+    display_name = "Unify Chaos 6"
+
+
+class UnifyEggHornet(Toggle):
+    """Determines whatever the Egg Hornet fight counts as a single location or three (Sonic, Big and Knuckles)"""
+    display_name = "Unify Egg Hornet"
 
 
 class EmblemPercentage(Range):
@@ -138,6 +157,10 @@ class SonicAdventureDXOptions(PerGameCommonOptions):
     life_sanity: LifeSanity
     pinball_life_capsules: PinballLifeCapsules
     sub_level_checks: SubLevelChecks
+    boss_checks: BossChecks
+    unify_chaos4: UnifyChaos4
+    unify_chaos6: UnifyChaos6
+    unify_egg_hornet: UnifyEggHornet
     randomized_sonic_upgrades: RandomizedSonicUpgrades
     randomized_tails_upgrades: RandomizedTailsUpgrades
     randomized_knuckles_upgrades: RandomizedKnucklesUpgrades
@@ -160,6 +183,10 @@ sadx_option_groups = [
         FieldEmblemsChecks,
         LifeSanity,
         SubLevelChecks,
+        BossChecks,
+        UnifyChaos4,
+        UnifyChaos6,
+        UnifyEggHornet,
         RandomizedSonicUpgrades,
         RandomizedTailsUpgrades,
         RandomizedKnucklesUpgrades,
