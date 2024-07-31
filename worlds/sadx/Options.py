@@ -66,7 +66,7 @@ class UnifyChaos6(Toggle):
 
 
 class UnifyEggHornet(Toggle):
-    """Determines whatever the Egg Hornet fight counts as a single location or three (Sonic, Big and Knuckles)"""
+    """Determines whatever the Egg Hornet fight counts as a single location or three (Sonic, Tails)"""
     display_name = "Unify Egg Hornet"
 
 
