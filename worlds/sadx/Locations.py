@@ -238,7 +238,7 @@ field_emblem_location_table: List[EmblemLocation] = [
     EmblemLocation(10, Area.StationSquareMain, [Character.Sonic, Character.Knuckles, Character.Tails,
                                                 Character.Amy, Character.Big], "Station Emblem"),
     EmblemLocation(11, Area.StationSquareMain, EVERYONE, "Burger Shop Emblem"),
-    EmblemLocation(12, Area.StationSquareMain, [Character.Knuckles, Character.Tails, Character.Amy],
+    EmblemLocation(12, Area.StationSquareMain, [Character.Knuckles, Character.Tails],
                    "City Hall Emblem"),
     EmblemLocation(13, Area.Casino, [Character.Tails], "Casino Emblem"),
     # Mystic Ruins
@@ -369,7 +369,7 @@ life_capsule_location_table: List[LifeCapsuleLocation] = [
     LifeCapsuleLocation(5412, Area.EggCarrierMain, Character.Gamma, Level.HotShelter, 3, [ItemName.Gamma.JetBooster]),
 
     LifeCapsuleLocation(6110, Area.AngelIsland, Character.Big, Level.IceCap, 1,
-                        [ItemName.KeyItem.IceStone, ItemName.KeyItem.Train, ItemName.Big.LifeBelt]),
+                        [ItemName.KeyItem.IceStone, ItemName.KeyItem.Train]),
     LifeCapsuleLocation(6210, Area.Hotel, Character.Big, Level.EmeraldCoast, 1, []),
     LifeCapsuleLocation(6310, Area.EggCarrierMain, Character.Big, Level.HotShelter, 1, []),
 ]
