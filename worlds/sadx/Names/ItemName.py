@@ -16,7 +16,7 @@ class KeyItem:
     EmployeeCard = "Employee Card"
     IceStone = "Ice Stone"
     Dynamite = "Dynamite"
-    JungleKart = "Jungle Kart"
+    JungleCart = "Jungle Cart"
 
 
 class Sonic:

@@ -135,9 +135,9 @@ class SonicAdventureDXWorld(World):
         self.add_locations_to_region(jungle_area, Area.Jungle)
         if len(jungle_area.locations) > 0:
             mystic_ruins_area.connect(jungle_area, None,
-                                      lambda state: state.has(ItemName.KeyItem.JungleKart, self.player))
+                                      lambda state: state.has(ItemName.KeyItem.JungleCart, self.player))
             jungle_area.connect(mystic_ruins_area, None,
-                                lambda state: state.has(ItemName.KeyItem.JungleKart, self.player))
+                                lambda state: state.has(ItemName.KeyItem.JungleCart, self.player))
 
         egg_carrier_area = Region("Egg Carrier", self.player, self.multiworld)
         self.multiworld.regions.append(egg_carrier_area)
@@ -350,7 +350,7 @@ class SonicAdventureDXWorld(World):
         if len(self.get_location_ids_for_area(Area.AngelIsland)) > 0:
             item_names.append(ItemName.KeyItem.Dynamite)
         if len(self.get_location_ids_for_area(Area.Jungle)) > 0:
-            item_names.append(ItemName.KeyItem.JungleKart)
+            item_names.append(ItemName.KeyItem.JungleCart)
         # Don't include the ice stone for characters that aren't sonic/tails/big
         if self.is_character_playable(Character.Sonic) or self.is_character_playable(
                 Character.Tails) or self.is_character_playable(Character.Big):
