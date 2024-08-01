@@ -466,7 +466,7 @@ class SonicAdventureDXWorld(World):
             for life_capsule in life_capsule_location_table:
                 if life_capsule.area == area:
                     if self.is_character_playable(life_capsule.character):
-                        if life_capsule.character == Character.Sonic and life_capsule.area == Area.Casino:
+                        if life_capsule.locationId == 1211 or life_capsule.locationId == 1212:
                             if self.options.pinball_life_capsules:
                                 location_ids.append(life_capsule.locationId)
                         else:
