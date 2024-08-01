@@ -337,6 +337,7 @@ life_capsule_location_table: List[LifeCapsuleLocation] = [
     LifeCapsuleLocation(2310, Area.EggCarrierMain, Character.Tails, Level.SkyDeck, 1, []),
     LifeCapsuleLocation(2311, Area.EggCarrierMain, Character.Tails, Level.SkyDeck, 2, []),
     LifeCapsuleLocation(2312, Area.EggCarrierMain, Character.Tails, Level.SkyDeck, 3, []),
+    LifeCapsuleLocation(2313, Area.EggCarrierMain, Character.Tails, Level.SkyDeck, 4, []),
     LifeCapsuleLocation(2410, Area.SpeedHighway, Character.Tails, Level.SpeedHighway, 1, []),
     LifeCapsuleLocation(2411, Area.SpeedHighway, Character.Tails, Level.SpeedHighway, 2, []),
     LifeCapsuleLocation(2412, Area.SpeedHighway, Character.Tails, Level.SpeedHighway, 3, []),
