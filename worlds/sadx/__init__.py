@@ -10,10 +10,10 @@ from .Items import all_item_table, get_item, get_item_by_name, SonicAdventureDXI
     key_item_table, character_unlock_item_table, character_upgrade_item_table
 from .Locations import all_location_table, SonicAdventureDXLocation, \
     field_emblem_location_table, sub_level_location_table, level_location_table, LevelLocation, \
-    upgrade_location_table, life_capsule_location_table
+    upgrade_location_table, life_capsule_location_table, boss_location_table
 from .Names import ItemName, LocationName
 from .Options import sadx_option_groups, SonicAdventureDXOptions, BaseMissionChoice
-from .Rules import create_rules, starting_area_items
+from .Rules import create_rules, starting_area_items, starting_area_no_items
 
 base_id = 543800000
 
@@ -48,13 +48,27 @@ class SonicAdventureDXWorld(World):
     def generate_early(self):
         possible_characters = self.get_playable_characters()
         assert len(possible_characters) > 0, "You need at least one playable character"
+
         self.starter_character = self.random.choice(possible_characters)
 
-        self.starter_area = self.random.choice(list(starting_area_items[self.starter_character].keys()))
-
-        possible_starting_items = starting_area_items[self.starter_character][self.starter_area]
-        if len(possible_starting_items) > 0:
-            self.starter_item = self.random.choice(possible_starting_items)
+        # Random starting location
+        if self.options.random_starting_location == 0:
+            self.starter_area = self.random.choice(list(starting_area_items[self.starter_character].keys()))
+            possible_starting_items = starting_area_items[self.starter_character][self.starter_area]
+            if len(possible_starting_items) > 0:
+                self.starter_item = self.random.choice(possible_starting_items)
+        # Random starting location no items
+        elif self.options.random_starting_location == 1:
+            self.starter_area = self.random.choice(list(starting_area_no_items[self.starter_character].keys()))
+        # Station Square
+        elif self.options.random_starting_location == 2:
+            self.starter_area = StartingArea.StationSquare
+            possible_starting_items = starting_area_items[self.starter_character][self.starter_area]
+            if len(possible_starting_items) > 0:
+                self.starter_item = self.random.choice(possible_starting_items)
+        # Station Square no items
+        elif self.options.random_starting_location == 3:
+            self.starter_area = StartingArea.StationSquare
 
         # Universal tracker stuff, shouldn't do anything in standard gen
         if hasattr(self.multiworld, "re_gen_passthrough"):
@@ -135,9 +149,9 @@ class SonicAdventureDXWorld(World):
         self.add_locations_to_region(jungle_area, Area.Jungle)
         if len(jungle_area.locations) > 0:
             mystic_ruins_area.connect(jungle_area, None,
-                                      lambda state: state.has(ItemName.KeyItem.JungleKart, self.player))
+                                      lambda state: state.has(ItemName.KeyItem.JungleCart, self.player))
             jungle_area.connect(mystic_ruins_area, None,
-                                lambda state: state.has(ItemName.KeyItem.JungleKart, self.player))
+                                lambda state: state.has(ItemName.KeyItem.JungleCart, self.player))
 
         egg_carrier_area = Region("Egg Carrier", self.player, self.multiworld)
         self.multiworld.regions.append(egg_carrier_area)
@@ -282,6 +296,7 @@ class SonicAdventureDXWorld(World):
             "StartingCharacter": self.starter_character.value,
             "StartingArea": self.starter_area.value,
             "StartingItem": self.starter_item,
+            "RandomStartingLocation": self.options.random_starting_location.value,
             "FieldEmblemChecks": self.options.field_emblems_checks.value,
             "LifeSanity": self.options.life_sanity.value,
             "DeathLink": self.options.death_link.value,
@@ -289,6 +304,11 @@ class SonicAdventureDXWorld(World):
             "RingLoss": self.options.ring_loss.value,
             "PinballLifeCapsules": self.options.pinball_life_capsules.value,
             "SubLevelChecks": self.options.sub_level_checks.value,
+
+            "BossChecks": self.options.boss_checks.value,
+            "UnifyChaos4": self.options.unify_chaos4.value,
+            "UnifyChaos6": self.options.unify_chaos6.value,
+            "UnifyEggHornet": self.options.unify_egg_hornet.value,
 
             "RandomizedSonicUpgrades": self.options.randomized_sonic_upgrades.value,
             "RandomizedTailsUpgrades": self.options.randomized_tails_upgrades.value,
@@ -345,7 +365,7 @@ class SonicAdventureDXWorld(World):
         if len(self.get_location_ids_for_area(Area.AngelIsland)) > 0:
             item_names.append(ItemName.KeyItem.Dynamite)
         if len(self.get_location_ids_for_area(Area.Jungle)) > 0:
-            item_names.append(ItemName.KeyItem.JungleKart)
+            item_names.append(ItemName.KeyItem.JungleCart)
         # Don't include the ice stone for characters that aren't sonic/tails/big
         if self.is_character_playable(Character.Sonic) or self.is_character_playable(
                 Character.Tails) or self.is_character_playable(Character.Big):
@@ -461,11 +481,30 @@ class SonicAdventureDXWorld(World):
             for life_capsule in life_capsule_location_table:
                 if life_capsule.area == area:
                     if self.is_character_playable(life_capsule.character):
-                        if life_capsule.character == Character.Sonic and life_capsule.area == Area.Casino:
+                        if life_capsule.locationId == 1211 or life_capsule.locationId == 1212:
                             if self.options.pinball_life_capsules:
                                 location_ids.append(life_capsule.locationId)
                         else:
                             location_ids.append(life_capsule.locationId)
+        if self.options.boss_checks:
+            for boss_fight in boss_location_table:
+                if boss_fight.area == area:
+                    if self.options.unify_chaos4 and boss_fight.boss == LocationName.Boss.Chaos4 and not boss_fight.unified:
+                        continue
+                    if not self.options.unify_chaos4 and boss_fight.boss == LocationName.Boss.Chaos4 and boss_fight.unified:
+                        continue
+                    if self.options.unify_chaos6 and boss_fight.boss == LocationName.Boss.Chaos6 and not boss_fight.unified:
+                        continue
+                    if not self.options.unify_chaos6 and boss_fight.boss == LocationName.Boss.Chaos6 and boss_fight.unified:
+                        continue
+                    if self.options.unify_egg_hornet and boss_fight.boss == LocationName.Boss.EggHornet and not boss_fight.unified:
+                        continue
+                    if not self.options.unify_egg_hornet and boss_fight.boss == LocationName.Boss.EggHornet and boss_fight.unified:
+                        continue
+
+                    if self.is_any_character_playable(boss_fight.characters):
+                        location_ids.append(boss_fight.locationId)
+
         return location_ids
 
     def add_locations_to_region(self, region: Region, area: Area):

@@ -4,6 +4,22 @@ from Options import OptionGroup, Choice, Range, DefaultOnToggle, Toggle, DeathLi
 from Options import PerGameCommonOptions
 
 
+class RandomStartingLocation(Choice):
+    """
+    Select starting Location
+    Random location: You'll start at a random location, and you could get an item to ensure access to a level.
+    Random location no items: Same as Random, but locations that need items to access a level them are excluded.
+    Station Square: You'll start at Station Square, and you could get an item to ensure access to a level.
+    Station Square no items: Same as Station Square, but you won't get an item.
+    """
+    display_name = "Ring Loss"
+    option_random_location = 0
+    option_random_location_no_items = 1
+    option_station_square = 2
+    option_station_square_no_items = 3
+    default = 0
+
+
 class FieldEmblemsChecks(DefaultOnToggle):
     """Determines whether collecting field emblems grants checks
     (12 Locations)"""
@@ -34,14 +50,12 @@ class RingLink(Toggle):
 class LifeSanity(Toggle):
     """Determines whether collecting life capsules grants checks
     (102 Locations)"""
-    default = 0
     display_name = "Life Sanity"
 
 
 class PinballLifeCapsules(Toggle):
     """Determines whether casinopolis life capsules grant checks
     (2 Locations)"""
-    default = 0
     display_name = "Include Casinopolis Life Capsules"
 
 
@@ -49,6 +63,27 @@ class SubLevelChecks(DefaultOnToggle):
     """Determines whether beating a sublevel grants checks
     (4 Locations)"""
     display_name = "Sub-Level Checks"
+
+
+class BossChecks(DefaultOnToggle):
+    """Determines whether beating a boss grants a check
+    (15 Locations)"""
+    display_name = "Boss Checks"
+
+
+class UnifyChaos4(DefaultOnToggle):
+    """Determines whatever the Chaos 4 fight counts as a single location or three (Sonic, Tails and Knuckles)"""
+    display_name = "Unify Chaos 4"
+
+
+class UnifyChaos6(Toggle):
+    """Determines whatever the Chaos 6 fight counts as a single location or three (Sonic, Big and Knuckles)"""
+    display_name = "Unify Chaos 6"
+
+
+class UnifyEggHornet(Toggle):
+    """Determines whatever the Egg Hornet fight counts as a single location or three (Sonic, Tails)"""
+    display_name = "Unify Egg Hornet"
 
 
 class EmblemPercentage(Range):
@@ -131,6 +166,7 @@ class BigMissions(BaseMissionChoice):
 
 @dataclass
 class SonicAdventureDXOptions(PerGameCommonOptions):
+    random_starting_location: RandomStartingLocation
     field_emblems_checks: FieldEmblemsChecks
     death_link: DeathLink
     ring_link: RingLink
@@ -138,6 +174,10 @@ class SonicAdventureDXOptions(PerGameCommonOptions):
     life_sanity: LifeSanity
     pinball_life_capsules: PinballLifeCapsules
     sub_level_checks: SubLevelChecks
+    boss_checks: BossChecks
+    unify_chaos4: UnifyChaos4
+    unify_chaos6: UnifyChaos6
+    unify_egg_hornet: UnifyEggHornet
     randomized_sonic_upgrades: RandomizedSonicUpgrades
     randomized_tails_upgrades: RandomizedTailsUpgrades
     randomized_knuckles_upgrades: RandomizedKnucklesUpgrades
@@ -155,11 +195,16 @@ class SonicAdventureDXOptions(PerGameCommonOptions):
 
 sadx_option_groups = [
     OptionGroup("Main Options", [
+        RandomStartingLocation,
         EmblemPercentage,
         RingLoss,
         FieldEmblemsChecks,
         LifeSanity,
         SubLevelChecks,
+        BossChecks,
+        UnifyChaos4,
+        UnifyChaos6,
+        UnifyEggHornet,
         RandomizedSonicUpgrades,
         RandomizedTailsUpgrades,
         RandomizedKnucklesUpgrades,
