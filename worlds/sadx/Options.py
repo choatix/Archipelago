@@ -4,6 +4,22 @@ from Options import OptionGroup, Choice, Range, DefaultOnToggle, Toggle, DeathLi
 from Options import PerGameCommonOptions
 
 
+class RandomStartingLocation(Choice):
+    """
+    Select starting Location
+    Random location: You'll start at a random location, and you could get an item to ensure access to a level.
+    Random location no items: Same as Random, but locations that need items to access a level them are excluded.
+    Station Square: You'll start at Station Square, and you could get an item to ensure access to a level.
+    Station Square no items: Same as Station Square, but you won't get an item.
+    """
+    display_name = "Ring Loss"
+    option_random_location = 0
+    option_random_location_no_items = 1
+    option_station_square = 2
+    option_station_square_no_items = 3
+    default = 0
+
+
 class FieldEmblemsChecks(DefaultOnToggle):
     """Determines whether collecting field emblems grants checks
     (12 Locations)"""
@@ -150,6 +166,7 @@ class BigMissions(BaseMissionChoice):
 
 @dataclass
 class SonicAdventureDXOptions(PerGameCommonOptions):
+    random_starting_location: RandomStartingLocation
     field_emblems_checks: FieldEmblemsChecks
     death_link: DeathLink
     ring_link: RingLink
@@ -178,6 +195,7 @@ class SonicAdventureDXOptions(PerGameCommonOptions):
 
 sadx_option_groups = [
     OptionGroup("Main Options", [
+        RandomStartingLocation,
         EmblemPercentage,
         RingLoss,
         FieldEmblemsChecks,

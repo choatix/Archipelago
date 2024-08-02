@@ -125,3 +125,33 @@ starting_area_items = {
         StartingArea.EggCarrier: []
     }
 }
+
+starting_area_no_items = {
+    Character.Sonic: {
+        StartingArea.Hotel: [],
+        StartingArea.MysticRuins: [],
+        StartingArea.EggCarrier: []
+    },
+    Character.Tails: {
+        StartingArea.Casino: [],
+        StartingArea.MysticRuins: [],
+        StartingArea.EggCarrier: []
+    },
+    Character.Knuckles: {
+        StartingArea.StationSquare: [],
+        StartingArea.Casino: [],
+    },
+    Character.Amy: {
+        StartingArea.Jungle: [],
+        StartingArea.EggCarrier: []
+    },
+    Character.Gamma: {
+        StartingArea.Hotel: [],
+        StartingArea.Jungle: [],
+    },
+    Character.Big: {
+        StartingArea.Hotel: [],
+        StartingArea.StationSquare: [],
+        StartingArea.EggCarrier: []
+    }
+}

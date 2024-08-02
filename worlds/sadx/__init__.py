@@ -13,7 +13,7 @@ from .Locations import all_location_table, SonicAdventureDXLocation, \
     upgrade_location_table, life_capsule_location_table, boss_location_table
 from .Names import ItemName, LocationName
 from .Options import sadx_option_groups, SonicAdventureDXOptions, BaseMissionChoice
-from .Rules import create_rules, starting_area_items
+from .Rules import create_rules, starting_area_items, starting_area_no_items
 
 base_id = 543800000
 
@@ -48,13 +48,27 @@ class SonicAdventureDXWorld(World):
     def generate_early(self):
         possible_characters = self.get_playable_characters()
         assert len(possible_characters) > 0, "You need at least one playable character"
+
         self.starter_character = self.random.choice(possible_characters)
 
-        self.starter_area = self.random.choice(list(starting_area_items[self.starter_character].keys()))
-
-        possible_starting_items = starting_area_items[self.starter_character][self.starter_area]
-        if len(possible_starting_items) > 0:
-            self.starter_item = self.random.choice(possible_starting_items)
+        # Random starting location
+        if self.options.random_starting_location == 0:
+            self.starter_area = self.random.choice(list(starting_area_items[self.starter_character].keys()))
+            possible_starting_items = starting_area_items[self.starter_character][self.starter_area]
+            if len(possible_starting_items) > 0:
+                self.starter_item = self.random.choice(possible_starting_items)
+        # Random starting location no items
+        elif self.options.random_starting_location == 1:
+            self.starter_area = self.random.choice(list(starting_area_no_items[self.starter_character].keys()))
+        # Station Square
+        elif self.options.random_starting_location == 2:
+            self.starter_area = StartingArea.StationSquare
+            possible_starting_items = starting_area_items[self.starter_character][self.starter_area]
+            if len(possible_starting_items) > 0:
+                self.starter_item = self.random.choice(possible_starting_items)
+        # Station Square no items
+        elif self.options.random_starting_location == 3:
+            self.starter_area = StartingArea.StationSquare
 
         # Universal tracker stuff, shouldn't do anything in standard gen
         if hasattr(self.multiworld, "re_gen_passthrough"):
@@ -282,6 +296,7 @@ class SonicAdventureDXWorld(World):
             "StartingCharacter": self.starter_character.value,
             "StartingArea": self.starter_area.value,
             "StartingItem": self.starter_item,
+            "RandomStartingLocation": self.options.random_starting_location.value,
             "FieldEmblemChecks": self.options.field_emblems_checks.value,
             "LifeSanity": self.options.life_sanity.value,
             "DeathLink": self.options.death_link.value,
