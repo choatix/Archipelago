@@ -80,17 +80,17 @@ class BossChecks(DefaultOnToggle):
 
 
 class UnifyChaos4(DefaultOnToggle):
-    """Determines whatever the Chaos 4 fight counts as a single location or three (Sonic, Tails and Knuckles)"""
+    """Determines whether the Chaos 4 fight counts as a single location or three (Sonic, Tails and Knuckles)"""
     display_name = "Unify Chaos 4"
 
 
 class UnifyChaos6(Toggle):
-    """Determines whatever the Chaos 6 fight counts as a single location or three (Sonic, Big and Knuckles)"""
+    """Determines whether the Chaos 6 fight counts as a single location or three (Sonic, Big and Knuckles)"""
     display_name = "Unify Chaos 6"
 
 
 class UnifyEggHornet(Toggle):
-    """Determines whatever the Egg Hornet fight counts as a single location or three (Sonic, Tails)"""
+    """Determines whether the Egg Hornet fight counts as a single location or two (Sonic, Tails)"""
     display_name = "Unify Egg Hornet"
 
 
