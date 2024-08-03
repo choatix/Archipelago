@@ -47,6 +47,14 @@ class RingLink(Toggle):
     display_name = "Ring Link"
 
 
+class HardRingLink(Toggle):
+    """
+    If Ring Link is enabled, sends and receives rings in more situations.
+    Particularly it will subtract rings when finishing a level and during perfect chaos fight.
+    """
+    display_name = "Hard Ring Link"
+
+
 class LifeSanity(Toggle):
     """Determines whether collecting life capsules grants checks
     (102 Locations)"""
@@ -170,6 +178,7 @@ class SonicAdventureDXOptions(PerGameCommonOptions):
     field_emblems_checks: FieldEmblemsChecks
     death_link: DeathLink
     ring_link: RingLink
+    hard_ring_link: HardRingLink
     ring_loss: RingLoss
     life_sanity: LifeSanity
     pinball_life_capsules: PinballLifeCapsules
