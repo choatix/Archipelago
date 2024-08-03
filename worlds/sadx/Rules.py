@@ -115,6 +115,7 @@ starting_area_items = {
         StartingArea.EggCarrier: []
     },
     Character.Gamma: {
+        StartingArea.StationSquare: [ItemName.KeyItem.HotelKeys],
         StartingArea.Hotel: [],
         StartingArea.MysticRuins: [ItemName.KeyItem.Dynamite],
         StartingArea.Jungle: [],
