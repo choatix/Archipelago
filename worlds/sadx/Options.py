@@ -50,7 +50,7 @@ class RingLink(Toggle):
 class HardRingLink(Toggle):
     """
     If Ring Link is enabled, sends and receives rings in more situations.
-    Particularly it will subtract rings when finishing a level and during perfect chaos fight.
+    Particularly it will subtract rings when finishing a level and during the Perfect Chaos fight.
     """
     display_name = "Hard Ring Link"
 
