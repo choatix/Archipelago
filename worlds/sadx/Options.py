@@ -63,38 +63,38 @@ class LifeSanity(Toggle):
 
 class SonicLifeSanity(DefaultOnToggle):
     """If life-sanity is on, determines whether Sonic's life capsules are part of the randomizer"""
-    display_name = "Randomize Sonic's Upgrades"
+    display_name = "Sonic's Life Sanity"
 
 
 class TailsLifeSanity(DefaultOnToggle):
     """If life-sanity is on, determines whether Tails' life capsules are part of the randomizer"""
-    display_name = "Randomize Tails' Upgrades"
+    display_name = "Tails' Life Sanity"
 
 
 class KnucklesLifeSanity(DefaultOnToggle):
     """If life-sanity is on, determines whether Knuckles' life capsules are part of the randomizer"""
-    display_name = "Randomize Knuckles' Upgrades"
+    display_name = "Knuckles' Life Sanity"
 
 
 class AmyLifeSanity(DefaultOnToggle):
     """If life-sanity is on, determines whether Amy's life capsules are part of the randomizer"""
-    display_name = "Randomize Amy's Upgrades"
+    display_name = "Amy's Life Sanity"
 
 
 class BigLifeSanity(DefaultOnToggle):
     """If life-sanity is on, determines whether Big's life capsules are part of the randomizer"""
-    display_name = "Randomize Big's Upgrades"
+    display_name = "Big's Life Sanity"
 
 
 class GammaLifeSanity(DefaultOnToggle):
     """If life-sanity is on, determines whether Gamma's life capsules are part of the randomizer"""
-    display_name = "Randomize Gamma's Upgrades"
+    display_name = "Gamma's Life Sanity"
 
 
 class PinballLifeCapsules(Toggle):
-    """Determines whether casinopolis life capsules grant checks
+    """Determines whether pinball's life capsules grant checks
     (2 Locations)"""
-    display_name = "Include Casinopolis Life Capsules"
+    display_name = "Include pinball's Life Capsules"
 
 
 class SubLevelChecks(DefaultOnToggle):
