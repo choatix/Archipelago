@@ -6,6 +6,15 @@ class Progression:
     ChaosPeace = "Chaos' Peace"
 
 
+class Filler:
+    Invincibility = "Invincibility"
+    Rings5 = "5 Rings"
+    Rings10 = "10 Rings"
+    Shield = "Shield"
+    MagneticShield = "Magnetic Shield"
+    ExtraLife = "Extra Life"
+
+
 class KeyItem:
     Train = "Train"
     Boat = "Boat"

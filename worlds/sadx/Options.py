@@ -97,9 +97,19 @@ class UnifyEggHornet(Toggle):
 class EmblemPercentage(Range):
     """What percentage of the available emblems do you need to unlock the final story"""
     display_name = "Emblem Requirement Percentage"
-    range_start = 0
+    range_start = 1
     range_end = 100
     default = 80
+
+
+class JunkFillPercentage(Range):
+    """
+    Replace a percentage of non-required emblems in the item pool with random junk items
+    """
+    display_name = "Junk Fill Percentage"
+    range_start = 0
+    range_end = 100
+    default = 50
 
 
 class BaseMissionChoice(Choice):
@@ -174,46 +184,57 @@ class BigMissions(BaseMissionChoice):
 
 @dataclass
 class SonicAdventureDXOptions(PerGameCommonOptions):
+    emblems_percentage: EmblemPercentage
     random_starting_location: RandomStartingLocation
-    field_emblems_checks: FieldEmblemsChecks
     death_link: DeathLink
     ring_link: RingLink
     hard_ring_link: HardRingLink
     ring_loss: RingLoss
-    life_sanity: LifeSanity
-    pinball_life_capsules: PinballLifeCapsules
-    sub_level_checks: SubLevelChecks
-    boss_checks: BossChecks
-    unify_chaos4: UnifyChaos4
-    unify_chaos6: UnifyChaos6
-    unify_egg_hornet: UnifyEggHornet
-    randomized_sonic_upgrades: RandomizedSonicUpgrades
-    randomized_tails_upgrades: RandomizedTailsUpgrades
-    randomized_knuckles_upgrades: RandomizedKnucklesUpgrades
-    randomized_amy_upgrades: RandomizedAmyUpgrades
-    randomized_big_upgrades: RandomizedBigUpgrades
-    randomized_gamma_upgrades: RandomizedGammaUpgrades
+
     sonic_missions: SonicMissions
     tails_missions: TailsMissions
     knuckles_missions: KnucklesMissions
     amy_missions: AmyMissions
     gamma_missions: GammaMissions
     big_missions: BigMissions
-    emblems_percentage: EmblemPercentage
+
+    randomized_sonic_upgrades: RandomizedSonicUpgrades
+    randomized_tails_upgrades: RandomizedTailsUpgrades
+    randomized_knuckles_upgrades: RandomizedKnucklesUpgrades
+    randomized_amy_upgrades: RandomizedAmyUpgrades
+    randomized_big_upgrades: RandomizedBigUpgrades
+    randomized_gamma_upgrades: RandomizedGammaUpgrades
+
+    boss_checks: BossChecks
+    unify_chaos4: UnifyChaos4
+    unify_chaos6: UnifyChaos6
+    unify_egg_hornet: UnifyEggHornet
+
+    field_emblems_checks: FieldEmblemsChecks
+    life_sanity: LifeSanity
+    pinball_life_capsules: PinballLifeCapsules
+    sub_level_checks: SubLevelChecks
+
+    junk_fill_percentage: JunkFillPercentage
 
 
 sadx_option_groups = [
-    OptionGroup("Main Options", [
-        RandomStartingLocation,
+    OptionGroup("General Options", [
         EmblemPercentage,
+        RandomStartingLocation,
+        RingLink,
+        HardRingLink,
         RingLoss,
-        FieldEmblemsChecks,
-        LifeSanity,
-        SubLevelChecks,
-        BossChecks,
-        UnifyChaos4,
-        UnifyChaos6,
-        UnifyEggHornet,
+    ]),
+    OptionGroup("Stage Options", [
+        SonicMissions,
+        TailsMissions,
+        KnucklesMissions,
+        AmyMissions,
+        GammaMissions,
+        BigMissions
+    ]),
+    OptionGroup("Upgrade Options", [
         RandomizedSonicUpgrades,
         RandomizedTailsUpgrades,
         RandomizedKnucklesUpgrades,
@@ -221,13 +242,20 @@ sadx_option_groups = [
         RandomizedBigUpgrades,
         RandomizedGammaUpgrades,
     ]),
-    OptionGroup("Missions Options", [
-        SonicMissions,
-        TailsMissions,
-        KnucklesMissions,
-        AmyMissions,
-        GammaMissions,
-        BigMissions
-    ])
+    OptionGroup("Bosses Options", [
+        BossChecks,
+        UnifyChaos4,
+        UnifyChaos6,
+        UnifyEggHornet,
+    ]),
+    OptionGroup("Extra locations", [
+        FieldEmblemsChecks,
+        LifeSanity,
+        PinballLifeCapsules,
+        SubLevelChecks,
+    ]),
+    OptionGroup("Junk Options", [
+        JunkFillPercentage,
+    ]),
 
 ]
