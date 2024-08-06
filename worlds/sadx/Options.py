@@ -61,6 +61,36 @@ class LifeSanity(Toggle):
     display_name = "Life Sanity"
 
 
+class SonicLifeSanity(DefaultOnToggle):
+    """If life-sanity is on, determines whether Sonic's life capsules are part of the randomizer"""
+    display_name = "Randomize Sonic's Upgrades"
+
+
+class TailsLifeSanity(DefaultOnToggle):
+    """If life-sanity is on, determines whether Tails' life capsules are part of the randomizer"""
+    display_name = "Randomize Tails' Upgrades"
+
+
+class KnucklesLifeSanity(DefaultOnToggle):
+    """If life-sanity is on, determines whether Knuckles' life capsules are part of the randomizer"""
+    display_name = "Randomize Knuckles' Upgrades"
+
+
+class AmyLifeSanity(DefaultOnToggle):
+    """If life-sanity is on, determines whether Amy's life capsules are part of the randomizer"""
+    display_name = "Randomize Amy's Upgrades"
+
+
+class BigLifeSanity(DefaultOnToggle):
+    """If life-sanity is on, determines whether Big's life capsules are part of the randomizer"""
+    display_name = "Randomize Big's Upgrades"
+
+
+class GammaLifeSanity(DefaultOnToggle):
+    """If life-sanity is on, determines whether Gamma's life capsules are part of the randomizer"""
+    display_name = "Randomize Gamma's Upgrades"
+
+
 class PinballLifeCapsules(Toggle):
     """Determines whether casinopolis life capsules grant checks
     (2 Locations)"""
@@ -211,9 +241,15 @@ class SonicAdventureDXOptions(PerGameCommonOptions):
     unify_egg_hornet: UnifyEggHornet
 
     field_emblems_checks: FieldEmblemsChecks
+    sub_level_checks: SubLevelChecks
     life_sanity: LifeSanity
     pinball_life_capsules: PinballLifeCapsules
-    sub_level_checks: SubLevelChecks
+    sonic_life_sanity: SonicLifeSanity
+    tails_life_sanity: TailsLifeSanity
+    knuckles_life_sanity: KnucklesLifeSanity
+    amy_life_sanity: AmyLifeSanity
+    big_life_sanity: BigLifeSanity
+    gamma_life_sanity: GammaLifeSanity
 
     junk_fill_percentage: JunkFillPercentage
 
@@ -250,9 +286,15 @@ sadx_option_groups = [
     ]),
     OptionGroup("Extra locations", [
         FieldEmblemsChecks,
+        SubLevelChecks,
         LifeSanity,
         PinballLifeCapsules,
-        SubLevelChecks,
+        SonicLifeSanity,
+        TailsLifeSanity,
+        KnucklesLifeSanity,
+        AmyLifeSanity,
+        BigLifeSanity,
+        GammaLifeSanity,
     ]),
     OptionGroup("Junk Options", [
         JunkFillPercentage,

@@ -306,7 +306,15 @@ class SonicAdventureDXWorld(World):
             "StartingItem": self.starter_item,
             "RandomStartingLocation": self.options.random_starting_location.value,
             "FieldEmblemChecks": self.options.field_emblems_checks.value,
+
             "LifeSanity": self.options.life_sanity.value,
+            "SonicLifeSanity": self.options.sonic_life_sanity.value,
+            "TailsLifeSanity": self.options.tails_life_sanity.value,
+            "KnucklesLifeSanity": self.options.knuckles_life_sanity.value,
+            "AmyLifeSanity": self.options.amy_life_sanity.value,
+            "BigLifeSanity": self.options.big_life_sanity.value,
+            "GammaLifeSanity": self.options.gamma_life_sanity.value,
+
             "DeathLink": self.options.death_link.value,
             "RingLink": self.options.ring_link.value,
             "HardRingLink": self.options.hard_ring_link.value,
@@ -449,6 +457,17 @@ class SonicAdventureDXWorld(World):
     def is_character_playable(self, character: Character) -> bool:
         return self.get_character_missions(character) > 0
 
+    def character_has_life_sanity(self, character: Character) -> Toggle:
+        character_life_sanity = {
+            Character.Sonic: self.options.sonic_life_sanity,
+            Character.Tails: self.options.tails_life_sanity,
+            Character.Knuckles: self.options.knuckles_life_sanity,
+            Character.Amy: self.options.amy_life_sanity,
+            Character.Big: self.options.big_life_sanity,
+            Character.Gamma: self.options.gamma_life_sanity
+        }
+        return character_life_sanity.get(character)
+
     def are_character_upgrades_randomized(self, character: Character) -> Toggle:
         character_randomized_upgrades = {
             Character.Sonic: self.options.randomized_sonic_upgrades,
@@ -492,11 +511,12 @@ class SonicAdventureDXWorld(World):
             for life_capsule in life_capsule_location_table:
                 if life_capsule.area == area:
                     if self.is_character_playable(life_capsule.character):
-                        if life_capsule.locationId == 1211 or life_capsule.locationId == 1212:
-                            if self.options.pinball_life_capsules:
+                        if self.character_has_life_sanity(life_capsule.character):
+                            if life_capsule.locationId == 1211 or life_capsule.locationId == 1212:
+                                if self.options.pinball_life_capsules:
+                                    location_ids.append(life_capsule.locationId)
+                            else:
                                 location_ids.append(life_capsule.locationId)
-                        else:
-                            location_ids.append(life_capsule.locationId)
         if self.options.boss_checks:
             for boss_fight in boss_location_table:
                 if boss_fight.area == area:
