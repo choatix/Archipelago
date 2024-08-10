@@ -13,10 +13,9 @@
 2. Install SA Mod Manager as per [its instructions in GameBanana](https://gamebanana.com/tools/15436)
 3. Unpack the Archipelago Mod into the `/mods` directory in the folder into which you installed Sonic Adventure DX so
    that `/mods/SADX_Archipelago` is a valid path.
-4. In the SADX_Archipelago folder, run the `CopyAPCppDLL.bat` script (a window will very quickly pop up and go away).
-5. Launch the `SAModManager.exe` and make sure the SADX_Archipelago mod is listed and enabled. Make sure the mod is at the bottom of the list.
-6. Disable the "Steam Achievements Mod" if enabled.
-7. Disable the "Fixes, Adds, and Beta Restores" if enabled
+4. Launch the `SAModManager.exe` and make sure the SADX_Archipelago mod is listed and enabled. Make sure the mod is at the bottom of the list.
+5. Disable the "Steam Achievements Mod" if enabled.
+6. Disable the "Fixes, Adds, and Beta Restores" if enabled
 
 ## Joining a MultiWorld Game
 
@@ -31,8 +30,7 @@
 
 ## Troubleshooting 
 - You get the SADX_Archipelago: DLL error - The specified module could not be found.
-  - Make sure that the antivirus didn't delete the `/mods/SADX_Archipelago/sadx-classic-randomizer.dll`/
-  - Also make sure that you ran CopyAPCppDLL.bat (and that APCpp.dll exists now on your SADX folder)
+  - Make sure that the antivirus didn't delete the `/mods/SADX_Archipelago/sadx-classic-randomizer.dll` file.
 - The game closes when you press start.
   - This is a steam input issue. Either run the game from steam or adjust the "Desktop controller configuration" to just be a controller. 
   - You can also just simple close steam

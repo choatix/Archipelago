@@ -369,6 +369,7 @@ life_capsule_location_table: List[LifeCapsuleLocation] = [
     LifeCapsuleLocation(5410, Area.EggCarrierMain, Character.Gamma, Level.HotShelter, 1, [ItemName.Gamma.JetBooster]),
     LifeCapsuleLocation(5411, Area.EggCarrierMain, Character.Gamma, Level.HotShelter, 2, [ItemName.Gamma.JetBooster]),
     LifeCapsuleLocation(5412, Area.EggCarrierMain, Character.Gamma, Level.HotShelter, 3, [ItemName.Gamma.JetBooster]),
+    LifeCapsuleLocation(5413, Area.EggCarrierMain, Character.Gamma, Level.HotShelter, 4, [ItemName.Gamma.JetBooster]),
 
     LifeCapsuleLocation(6110, Area.AngelIsland, Character.Big, Level.IceCap, 1,
                         [ItemName.KeyItem.IceStone, ItemName.KeyItem.Train]),

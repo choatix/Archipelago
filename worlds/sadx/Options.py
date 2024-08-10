@@ -47,16 +47,54 @@ class RingLink(Toggle):
     display_name = "Ring Link"
 
 
+class HardRingLink(Toggle):
+    """
+    If Ring Link is enabled, sends and receives rings in more situations.
+    Particularly it will subtract rings when finishing a level and during the Perfect Chaos fight.
+    """
+    display_name = "Hard Ring Link"
+
+
 class LifeSanity(Toggle):
     """Determines whether collecting life capsules grants checks
     (102 Locations)"""
     display_name = "Life Sanity"
 
 
+class SonicLifeSanity(DefaultOnToggle):
+    """If life-sanity is on, determines whether Sonic's life capsules are part of the randomizer"""
+    display_name = "Sonic's Life Sanity"
+
+
+class TailsLifeSanity(DefaultOnToggle):
+    """If life-sanity is on, determines whether Tails' life capsules are part of the randomizer"""
+    display_name = "Tails' Life Sanity"
+
+
+class KnucklesLifeSanity(DefaultOnToggle):
+    """If life-sanity is on, determines whether Knuckles' life capsules are part of the randomizer"""
+    display_name = "Knuckles' Life Sanity"
+
+
+class AmyLifeSanity(DefaultOnToggle):
+    """If life-sanity is on, determines whether Amy's life capsules are part of the randomizer"""
+    display_name = "Amy's Life Sanity"
+
+
+class BigLifeSanity(DefaultOnToggle):
+    """If life-sanity is on, determines whether Big's life capsules are part of the randomizer"""
+    display_name = "Big's Life Sanity"
+
+
+class GammaLifeSanity(DefaultOnToggle):
+    """If life-sanity is on, determines whether Gamma's life capsules are part of the randomizer"""
+    display_name = "Gamma's Life Sanity"
+
+
 class PinballLifeCapsules(Toggle):
-    """Determines whether casinopolis life capsules grant checks
+    """Determines whether pinball's life capsules grant checks
     (2 Locations)"""
-    display_name = "Include Casinopolis Life Capsules"
+    display_name = "Include pinball's Life Capsules"
 
 
 class SubLevelChecks(DefaultOnToggle):
@@ -72,26 +110,36 @@ class BossChecks(DefaultOnToggle):
 
 
 class UnifyChaos4(DefaultOnToggle):
-    """Determines whatever the Chaos 4 fight counts as a single location or three (Sonic, Tails and Knuckles)"""
+    """Determines whether the Chaos 4 fight counts as a single location or three (Sonic, Tails and Knuckles)"""
     display_name = "Unify Chaos 4"
 
 
 class UnifyChaos6(Toggle):
-    """Determines whatever the Chaos 6 fight counts as a single location or three (Sonic, Big and Knuckles)"""
+    """Determines whether the Chaos 6 fight counts as a single location or three (Sonic, Big and Knuckles)"""
     display_name = "Unify Chaos 6"
 
 
 class UnifyEggHornet(Toggle):
-    """Determines whatever the Egg Hornet fight counts as a single location or three (Sonic, Tails)"""
+    """Determines whether the Egg Hornet fight counts as a single location or two (Sonic, Tails)"""
     display_name = "Unify Egg Hornet"
 
 
 class EmblemPercentage(Range):
     """What percentage of the available emblems do you need to unlock the final story"""
     display_name = "Emblem Requirement Percentage"
-    range_start = 0
+    range_start = 1
     range_end = 100
     default = 80
+
+
+class JunkFillPercentage(Range):
+    """
+    Replace a percentage of non-required emblems in the item pool with random junk items
+    """
+    display_name = "Junk Fill Percentage"
+    range_start = 0
+    range_end = 100
+    default = 50
 
 
 class BaseMissionChoice(Choice):
@@ -166,45 +214,63 @@ class BigMissions(BaseMissionChoice):
 
 @dataclass
 class SonicAdventureDXOptions(PerGameCommonOptions):
+    emblems_percentage: EmblemPercentage
     random_starting_location: RandomStartingLocation
-    field_emblems_checks: FieldEmblemsChecks
     death_link: DeathLink
     ring_link: RingLink
+    hard_ring_link: HardRingLink
     ring_loss: RingLoss
-    life_sanity: LifeSanity
-    pinball_life_capsules: PinballLifeCapsules
-    sub_level_checks: SubLevelChecks
-    boss_checks: BossChecks
-    unify_chaos4: UnifyChaos4
-    unify_chaos6: UnifyChaos6
-    unify_egg_hornet: UnifyEggHornet
-    randomized_sonic_upgrades: RandomizedSonicUpgrades
-    randomized_tails_upgrades: RandomizedTailsUpgrades
-    randomized_knuckles_upgrades: RandomizedKnucklesUpgrades
-    randomized_amy_upgrades: RandomizedAmyUpgrades
-    randomized_big_upgrades: RandomizedBigUpgrades
-    randomized_gamma_upgrades: RandomizedGammaUpgrades
+
     sonic_missions: SonicMissions
     tails_missions: TailsMissions
     knuckles_missions: KnucklesMissions
     amy_missions: AmyMissions
     gamma_missions: GammaMissions
     big_missions: BigMissions
-    emblems_percentage: EmblemPercentage
+
+    randomized_sonic_upgrades: RandomizedSonicUpgrades
+    randomized_tails_upgrades: RandomizedTailsUpgrades
+    randomized_knuckles_upgrades: RandomizedKnucklesUpgrades
+    randomized_amy_upgrades: RandomizedAmyUpgrades
+    randomized_big_upgrades: RandomizedBigUpgrades
+    randomized_gamma_upgrades: RandomizedGammaUpgrades
+
+    boss_checks: BossChecks
+    unify_chaos4: UnifyChaos4
+    unify_chaos6: UnifyChaos6
+    unify_egg_hornet: UnifyEggHornet
+
+    field_emblems_checks: FieldEmblemsChecks
+    sub_level_checks: SubLevelChecks
+    life_sanity: LifeSanity
+    pinball_life_capsules: PinballLifeCapsules
+    sonic_life_sanity: SonicLifeSanity
+    tails_life_sanity: TailsLifeSanity
+    knuckles_life_sanity: KnucklesLifeSanity
+    amy_life_sanity: AmyLifeSanity
+    big_life_sanity: BigLifeSanity
+    gamma_life_sanity: GammaLifeSanity
+
+    junk_fill_percentage: JunkFillPercentage
 
 
 sadx_option_groups = [
-    OptionGroup("Main Options", [
-        RandomStartingLocation,
+    OptionGroup("General Options", [
         EmblemPercentage,
+        RandomStartingLocation,
+        RingLink,
+        HardRingLink,
         RingLoss,
-        FieldEmblemsChecks,
-        LifeSanity,
-        SubLevelChecks,
-        BossChecks,
-        UnifyChaos4,
-        UnifyChaos6,
-        UnifyEggHornet,
+    ]),
+    OptionGroup("Stage Options", [
+        SonicMissions,
+        TailsMissions,
+        KnucklesMissions,
+        AmyMissions,
+        GammaMissions,
+        BigMissions
+    ]),
+    OptionGroup("Upgrade Options", [
         RandomizedSonicUpgrades,
         RandomizedTailsUpgrades,
         RandomizedKnucklesUpgrades,
@@ -212,13 +278,26 @@ sadx_option_groups = [
         RandomizedBigUpgrades,
         RandomizedGammaUpgrades,
     ]),
-    OptionGroup("Missions Options", [
-        SonicMissions,
-        TailsMissions,
-        KnucklesMissions,
-        AmyMissions,
-        GammaMissions,
-        BigMissions
-    ])
+    OptionGroup("Bosses Options", [
+        BossChecks,
+        UnifyChaos4,
+        UnifyChaos6,
+        UnifyEggHornet,
+    ]),
+    OptionGroup("Extra locations", [
+        FieldEmblemsChecks,
+        SubLevelChecks,
+        LifeSanity,
+        PinballLifeCapsules,
+        SonicLifeSanity,
+        TailsLifeSanity,
+        KnucklesLifeSanity,
+        AmyLifeSanity,
+        BigLifeSanity,
+        GammaLifeSanity,
+    ]),
+    OptionGroup("Junk Options", [
+        JunkFillPercentage,
+    ]),
 
 ]

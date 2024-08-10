@@ -27,6 +27,12 @@ class KeyItem:
     name: str
 
 
+@dataclass
+class FillerItem:
+    itemId: int
+    name: str
+
+
 class ItemInfo(TypedDict):
     id: int
     name: str
@@ -71,6 +77,15 @@ character_upgrade_item_table: List[CharacterUpgradeItem] = [
 
 ]
 
+filler_item_table: List[FillerItem] = [
+    FillerItem(71, ItemName.Filler.Invincibility),
+    FillerItem(72, ItemName.Filler.Rings5),
+    FillerItem(73, ItemName.Filler.Rings10),
+    FillerItem(74, ItemName.Filler.Shield),
+    FillerItem(75, ItemName.Filler.MagneticShield),
+    FillerItem(76, ItemName.Filler.ExtraLife),
+]
+
 key_item_table: List[KeyItem] = [
     KeyItem(80, ItemName.KeyItem.Train),
     KeyItem(81, ItemName.KeyItem.Boat),
@@ -108,6 +123,13 @@ def get_items_from_keys() -> List[ItemInfo]:
     return items
 
 
+def get_items_from_filler() -> List[ItemInfo]:
+    items: List[ItemInfo] = []
+    for key in filler_item_table:
+        items += [{"id": key.itemId, "name": key.name, "count": 0, "classification": ItemClassification.filler}]
+    return items
+
+
 class SonicAdventureDXItem(Item):
     game: str = "Sonic Adventure DX"
 
@@ -116,11 +138,12 @@ class SonicAdventureDXItem(Item):
                          item["id"] + base_id, player)
 
 
-all_item_table: List[ItemInfo] = get_items_from_unlock() + get_items_from_upgrades() + get_items_from_keys() + [
+all_item_table: List[ItemInfo] = (
+        get_items_from_unlock() + get_items_from_upgrades() + get_items_from_keys() + get_items_from_filler() + [
     {"id": 90, "name": ItemName.Progression.Emblem, "count": 0, "classification": ItemClassification.progression},
     {"id": 91, "name": ItemName.Progression.ChaosPeace, "count": 0, "classification": ItemClassification.progression},
 
-]
+])
 
 
 def get_item_by_name(name: str) -> ItemInfo:

@@ -1,13 +1,14 @@
+import math
 import re
 import typing
 from typing import ClassVar, Type, Dict, Any, List
 
 from BaseClasses import Tutorial, Region, ItemClassification
-from Options import PerGameCommonOptions, Toggle
+from Options import PerGameCommonOptions, Toggle, OptionError
 from worlds.AutoWorld import WebWorld, World
 from .Enums import Character, LevelMission, Area, StartingArea, AdventureField, KeyItem
 from .Items import all_item_table, get_item, get_item_by_name, SonicAdventureDXItem, ItemInfo, \
-    key_item_table, character_unlock_item_table, character_upgrade_item_table
+    key_item_table, character_unlock_item_table, character_upgrade_item_table, filler_item_table
 from .Locations import all_location_table, SonicAdventureDXLocation, \
     field_emblem_location_table, sub_level_location_table, level_location_table, LevelLocation, \
     upgrade_location_table, life_capsule_location_table, boss_location_table
@@ -47,7 +48,8 @@ class SonicAdventureDXWorld(World):
 
     def generate_early(self):
         possible_characters = self.get_playable_characters()
-        assert len(possible_characters) > 0, "You need at least one playable character"
+        if len(possible_characters) == 0:
+            raise OptionError("You need at least one playable character")
 
         self.starter_character = self.random.choice(possible_characters)
 
@@ -209,12 +211,18 @@ class SonicAdventureDXWorld(World):
         emblem_count = max(1, location_count - len(item_names))
 
         needed_emblems = self.get_emblems_needed()
-        filler_emblems = emblem_count - needed_emblems
+        filler_items = emblem_count - needed_emblems
 
         for _ in range(needed_emblems):
             itempool.append(self.create_item(ItemName.Progression.Emblem))
 
-        for _ in range(filler_emblems):
+        junk_count = math.floor(filler_items * (self.options.junk_fill_percentage.value / 100.0))
+
+        for _ in range(junk_count):
+            filler_item = self.random.choice(filler_item_table)
+            itempool.append(self.create_item(filler_item.name, True))
+
+        for _ in range(filler_items - junk_count):
             itempool.append(self.create_item(ItemName.Progression.Emblem, True))
 
         starter_character_name = self.get_character_item_from_enum(self.starter_character)
@@ -291,18 +299,27 @@ class SonicAdventureDXWorld(World):
 
     def fill_slot_data(self) -> Dict[str, Any]:
         return {
-            "ModVersion": "0.3.2",
+            "ModVersion": "0.4.3",
             "EmblemsForPerfectChaos": self.get_emblems_needed(),
             "StartingCharacter": self.starter_character.value,
             "StartingArea": self.starter_area.value,
             "StartingItem": self.starter_item,
             "RandomStartingLocation": self.options.random_starting_location.value,
             "FieldEmblemChecks": self.options.field_emblems_checks.value,
+
             "LifeSanity": self.options.life_sanity.value,
+            "PinballLifeCapsules": self.options.pinball_life_capsules.value,
+            "SonicLifeSanity": self.options.sonic_life_sanity.value,
+            "TailsLifeSanity": self.options.tails_life_sanity.value,
+            "KnucklesLifeSanity": self.options.knuckles_life_sanity.value,
+            "AmyLifeSanity": self.options.amy_life_sanity.value,
+            "BigLifeSanity": self.options.big_life_sanity.value,
+            "GammaLifeSanity": self.options.gamma_life_sanity.value,
+
             "DeathLink": self.options.death_link.value,
             "RingLink": self.options.ring_link.value,
+            "HardRingLink": self.options.hard_ring_link.value,
             "RingLoss": self.options.ring_loss.value,
-            "PinballLifeCapsules": self.options.pinball_life_capsules.value,
             "SubLevelChecks": self.options.sub_level_checks.value,
 
             "BossChecks": self.options.boss_checks.value,
@@ -323,6 +340,8 @@ class SonicAdventureDXWorld(World):
             "AmyMissions": self.options.amy_missions.value,
             "GammaMissions": self.options.gamma_missions.value,
             "BigMissions": self.options.big_missions.value,
+
+            "JunkFillPercentage": self.options.junk_fill_percentage.value
         }
 
     @staticmethod
@@ -438,6 +457,17 @@ class SonicAdventureDXWorld(World):
     def is_character_playable(self, character: Character) -> bool:
         return self.get_character_missions(character) > 0
 
+    def character_has_life_sanity(self, character: Character) -> Toggle:
+        character_life_sanity = {
+            Character.Sonic: self.options.sonic_life_sanity,
+            Character.Tails: self.options.tails_life_sanity,
+            Character.Knuckles: self.options.knuckles_life_sanity,
+            Character.Amy: self.options.amy_life_sanity,
+            Character.Big: self.options.big_life_sanity,
+            Character.Gamma: self.options.gamma_life_sanity
+        }
+        return character_life_sanity.get(character)
+
     def are_character_upgrades_randomized(self, character: Character) -> Toggle:
         character_randomized_upgrades = {
             Character.Sonic: self.options.randomized_sonic_upgrades,
@@ -481,11 +511,12 @@ class SonicAdventureDXWorld(World):
             for life_capsule in life_capsule_location_table:
                 if life_capsule.area == area:
                     if self.is_character_playable(life_capsule.character):
-                        if life_capsule.locationId == 1211 or life_capsule.locationId == 1212:
-                            if self.options.pinball_life_capsules:
+                        if self.character_has_life_sanity(life_capsule.character):
+                            if life_capsule.locationId == 1211 or life_capsule.locationId == 1212:
+                                if self.options.pinball_life_capsules:
+                                    location_ids.append(life_capsule.locationId)
+                            else:
                                 location_ids.append(life_capsule.locationId)
-                        else:
-                            location_ids.append(life_capsule.locationId)
         if self.options.boss_checks:
             for boss_fight in boss_location_table:
                 if boss_fight.area == area:
