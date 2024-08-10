@@ -133,7 +133,13 @@ class EmblemPercentage(Range):
 
 
 class BaseMissionChoice(Choice):
-    """Base class for mission options"""
+    """
+        For missions, the options go from 3 to 0
+        3 means Missions A, B and C
+        2 means Missions B and C
+        1 means Missions C
+        0 means the character is not played at all on the randomizer
+    """
     option_none = 0
     option_c = 1
     option_c_b = 2
