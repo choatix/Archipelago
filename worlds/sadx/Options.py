@@ -132,16 +132,6 @@ class EmblemPercentage(Range):
     default = 80
 
 
-class JunkFillPercentage(Range):
-    """
-    Replace a percentage of non-required emblems in the item pool with random junk items
-    """
-    display_name = "Junk Fill Percentage"
-    range_start = 0
-    range_end = 100
-    default = 50
-
-
 class BaseMissionChoice(Choice):
     """Base class for mission options"""
     option_none = 0
@@ -212,6 +202,65 @@ class BigMissions(BaseMissionChoice):
     display_name = "Big's Missions"
 
 
+class JunkFillPercentage(Range):
+    """
+    Replace a percentage of non-required emblems in the item pool with random junk items
+    """
+    display_name = "Junk Fill Percentage"
+    range_start = 0
+    range_end = 100
+    default = 50
+
+
+class TrapFillPercentage(Range):
+    """
+    Replace a percentage of junk items in the item pool with random traps
+    """
+    display_name = "Trap Fill Percentage"
+    range_start = 0
+    range_end = 100
+    default = 0
+
+
+class BaseTrapWeight(Choice):
+    """
+    Base Class for Trap Weights
+    """
+    option_none = 0
+    option_low = 1
+    option_medium = 2
+    option_high = 4
+    default = 2
+
+
+class IceTrapWeight(BaseTrapWeight):
+    """
+    Likelihood of receiving a trap which freeze the player in place
+    """
+    display_name = "Ice Trap Weight"
+
+
+class SpringTrapWeight(BaseTrapWeight):
+    """
+    Likelihood of receiving a trap which spawns a spring that sends the player flying to the opposite direction
+    """
+    display_name = "Spring Trap Weight"
+
+
+class PoliceTrapWeight(BaseTrapWeight):
+    """
+    Likelihood of receiving a trap which spawns a lot of Cop Speeder enemies
+    """
+    display_name = "Police Trap Weight"
+
+
+class BuyonTrapWeight(BaseTrapWeight):
+    """
+    Likelihood of receiving a trap which spawns a lot of Buyon enemies
+    """
+    display_name = "Buyon Trap Weight"
+
+
 @dataclass
 class SonicAdventureDXOptions(PerGameCommonOptions):
     emblems_percentage: EmblemPercentage
@@ -252,6 +301,11 @@ class SonicAdventureDXOptions(PerGameCommonOptions):
     gamma_life_sanity: GammaLifeSanity
 
     junk_fill_percentage: JunkFillPercentage
+    trap_fill_percentage: TrapFillPercentage
+    ice_trap_weight: IceTrapWeight
+    spring_trap_weight: SpringTrapWeight
+    police_trap_weight: PoliceTrapWeight
+    buyon_trap_weight: BuyonTrapWeight
 
 
 sadx_option_groups = [
@@ -298,6 +352,11 @@ sadx_option_groups = [
     ]),
     OptionGroup("Junk Options", [
         JunkFillPercentage,
+        TrapFillPercentage,
+        IceTrapWeight,
+        SpringTrapWeight,
+        PoliceTrapWeight,
+        BuyonTrapWeight
     ]),
 
 ]

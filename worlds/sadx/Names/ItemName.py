@@ -15,6 +15,13 @@ class Filler:
     ExtraLife = "Extra Life"
 
 
+class Traps:
+    IceTrap = "Ice Trap"
+    SpringTrap = "Spring Trap"
+    PoliceTrap = "Police Trap"
+    BuyonTrap = "Buyon Trap"
+
+
 class KeyItem:
     Train = "Train"
     Boat = "Boat"
