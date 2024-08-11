@@ -33,6 +33,12 @@ class FillerItem:
     name: str
 
 
+@dataclass
+class TrapItem:
+    itemId: int
+    name: str
+
+
 class ItemInfo(TypedDict):
     id: int
     name: str
@@ -100,6 +106,13 @@ key_item_table: List[KeyItem] = [
 
 ]
 
+trap_item_table: List[TrapItem] = [
+    TrapItem(100, ItemName.Traps.IceTrap),
+    TrapItem(101, ItemName.Traps.SpringTrap),
+    TrapItem(102, ItemName.Traps.PoliceTrap),
+    TrapItem(103, ItemName.Traps.BuyonTrap),
+]
+
 
 def get_items_from_unlock() -> List[ItemInfo]:
     items: List[ItemInfo] = []
@@ -130,6 +143,13 @@ def get_items_from_filler() -> List[ItemInfo]:
     return items
 
 
+def get_items_from_traps() -> List[ItemInfo]:
+    items: List[ItemInfo] = []
+    for key in trap_item_table:
+        items += [{"id": key.itemId, "name": key.name, "count": 0, "classification": ItemClassification.trap}]
+    return items
+
+
 class SonicAdventureDXItem(Item):
     game: str = "Sonic Adventure DX"
 
@@ -139,11 +159,13 @@ class SonicAdventureDXItem(Item):
 
 
 all_item_table: List[ItemInfo] = (
-        get_items_from_unlock() + get_items_from_upgrades() + get_items_from_keys() + get_items_from_filler() + [
-    {"id": 90, "name": ItemName.Progression.Emblem, "count": 0, "classification": ItemClassification.progression},
-    {"id": 91, "name": ItemName.Progression.ChaosPeace, "count": 0, "classification": ItemClassification.progression},
-
-])
+        get_items_from_unlock() + get_items_from_upgrades() + get_items_from_keys()
+        + get_items_from_filler() + get_items_from_traps()
+        + [{"id": 90, "name": ItemName.Progression.Emblem, "count": 0,
+            "classification": ItemClassification.progression},
+           {"id": 91, "name": ItemName.Progression.ChaosPeace, "count": 0,
+            "classification": ItemClassification.progression},
+           ])
 
 
 def get_item_by_name(name: str) -> ItemInfo:

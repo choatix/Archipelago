@@ -8,7 +8,7 @@ from Options import PerGameCommonOptions, Toggle, OptionError
 from worlds.AutoWorld import WebWorld, World
 from .Enums import Character, LevelMission, Area, StartingArea, AdventureField, KeyItem
 from .Items import all_item_table, get_item, get_item_by_name, SonicAdventureDXItem, ItemInfo, \
-    key_item_table, character_unlock_item_table, character_upgrade_item_table, filler_item_table
+    key_item_table, character_unlock_item_table, character_upgrade_item_table, filler_item_table, trap_item_table
 from .Locations import all_location_table, SonicAdventureDXLocation, \
     field_emblem_location_table, sub_level_location_table, level_location_table, LevelLocation, \
     upgrade_location_table, life_capsule_location_table, boss_location_table
@@ -218,7 +218,19 @@ class SonicAdventureDXWorld(World):
 
         junk_count = math.floor(filler_items * (self.options.junk_fill_percentage.value / 100.0))
 
-        for _ in range(junk_count):
+        trap_count = math.floor(junk_count * (self.options.trap_fill_percentage.value / 100.0))
+
+        if trap_count > 0:
+            trap_weights = []
+            trap_weights += [ItemName.Traps.IceTrap] * self.options.ice_trap_weight.value
+            trap_weights += [ItemName.Traps.SpringTrap] * self.options.spring_trap_weight.value
+            trap_weights += [ItemName.Traps.PoliceTrap] * self.options.police_trap_weight.value
+            trap_weights += [ItemName.Traps.BuyonTrap] * self.options.buyon_trap_weight.value
+            for _ in range(trap_count):
+                trap_item_name = self.random.choice(trap_weights)
+                itempool.append(self.create_item(trap_item_name, True))
+
+        for _ in range(junk_count - trap_count):
             filler_item = self.random.choice(filler_item_table)
             itempool.append(self.create_item(filler_item.name, True))
 
