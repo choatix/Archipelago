@@ -31,6 +31,7 @@ class KeyItem:
     TwinkleParkTicket = "Twinkle Park Ticket"
     EmployeeCard = "Employee Card"
     IceStone = "Ice Stone"
+    WindStone = "Wind Stone"
     Dynamite = "Dynamite"
     JungleCart = "Jungle Cart"
 

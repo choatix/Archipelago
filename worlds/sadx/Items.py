@@ -103,6 +103,7 @@ key_item_table: List[KeyItem] = [
     KeyItem(87, ItemName.KeyItem.IceStone),
     KeyItem(88, ItemName.KeyItem.Dynamite),
     KeyItem(89, ItemName.KeyItem.JungleCart),
+    KeyItem(120, ItemName.KeyItem.WindStone),
 
 ]
 

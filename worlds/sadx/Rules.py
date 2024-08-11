@@ -96,13 +96,13 @@ starting_area_items = {
         StartingArea.StationSquare: [ItemName.KeyItem.TwinkleParkTicket,
                                      ItemName.KeyItem.EmployeeCard],
         StartingArea.Hotel: [],
-        StartingArea.MysticRuins: [],
+        StartingArea.MysticRuins: [ItemName.KeyItem.WindStone],
         StartingArea.EggCarrier: []
     },
     Character.Tails: {
         StartingArea.StationSquare: [ItemName.KeyItem.EmployeeCard],
         StartingArea.Casino: [],
-        StartingArea.MysticRuins: [],
+        StartingArea.MysticRuins: [ItemName.KeyItem.WindStone],
         StartingArea.EggCarrier: []
     },
     Character.Knuckles: {
@@ -117,7 +117,7 @@ starting_area_items = {
     Character.Gamma: {
         StartingArea.StationSquare: [ItemName.KeyItem.HotelKeys],
         StartingArea.Hotel: [],
-        StartingArea.MysticRuins: [ItemName.KeyItem.Dynamite],
+        StartingArea.MysticRuins: [ItemName.KeyItem.Dynamite, ItemName.KeyItem.WindStone],
         StartingArea.Jungle: [],
     },
     Character.Big: {
