@@ -73,6 +73,8 @@ def get_item_names(options: SonicAdventureDXOptions, starter_item: str, starter_
     item_names.append(ItemName.KeyItem.Train)
     item_names.append(ItemName.KeyItem.Boat)
     item_names.append(ItemName.KeyItem.Raft)
+    item_names.append(ItemName.KeyItem.StationKeys)
+
     if len(get_location_ids_for_area(Area.Hotel, options)) > 0:
         item_names.append(ItemName.KeyItem.HotelKeys)
     if len(get_location_ids_for_area(Area.Casino, options)) > 0:

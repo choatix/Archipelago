@@ -9,81 +9,48 @@ from .Options import SonicAdventureDXOptions
 from ..AutoWorld import World
 
 
-def create_region(world: World, options: SonicAdventureDXOptions, name: str, area: Area) -> Region:
-    region = Region(name, world.player, world.multiworld)
-    world.multiworld.regions.append(region)
-    add_locations_to_region(region, area, world.player, options)
-    return region
+def create_sadx_regions(world: World, starter_area: StartingArea, emblems_needed: int,
+                        options: SonicAdventureDXOptions):
+    def create_region(name: str, area: Area) -> Region:
+        region = Region(name, world.player, world.multiworld)
+        world.multiworld.regions.append(region)
+        add_locations_to_region(region, area, world.player, options)
+        return region
 
+    def connect_two_way(area1: Region, area2: Region, key_item: str):
+        area1.connect(area2, None, lambda state: state.has(key_item, world.player))
+        area2.connect(area1, None, lambda state: state.has(key_item, world.player))
 
-def create_sadx_regions(world: World, starter_area: StartingArea,
-                        emblems_needed: int, options: SonicAdventureDXOptions):
     menu_region = Region("Menu", world.player, world.multiworld)
     world.multiworld.regions.append(menu_region)
 
-    station_square_area = create_region(world, options, "Station Square", Area.StationSquareMain)
-    hotel_area = create_region(world, options, "Hotel Area", Area.Hotel)
-    casino_area = create_region(world, options, "Casino Area", Area.Casino)
-    twinkle_park_area = create_region(world, options, "Twinkle Park Area", Area.TwinklePark)
-    speed_highway_area = create_region(world, options, "Speed Highway Area", Area.SpeedHighway)
+    station_square_main_area = create_region("Station Square", Area.StationSquareMain)
+    station_area = create_region("Station", Area.Station)
+    hotel_area = create_region("Hotel Area", Area.Hotel)
+    casino_area = create_region("Casino Area", Area.Casino)
+    twinkle_park_area = create_region("Twinkle Park Area", Area.TwinklePark)
+    speed_highway_area = create_region("Speed Highway Area", Area.SpeedHighway)
+    mystic_ruins_area = create_region("Mystic Ruins", Area.MysticRuinsMain)
+    angel_island_area = create_region("Angel Island", Area.AngelIsland)
+    jungle_area = create_region("Jungle", Area.Jungle)
+    egg_carrier_area = create_region("Egg Carrier", Area.EggCarrierMain)
 
-    mystic_ruins_area = create_region(world, options, "Mystic Ruins", Area.MysticRuinsMain)
-    angel_island_area = create_region(world, options, "Angel Island", Area.AngelIsland)
-    jungle_area = create_region(world, options, "Jungle", Area.Jungle)
+    connect_two_way(station_square_main_area, station_area, ItemName.KeyItem.StationKeys)
+    connect_two_way(station_square_main_area, hotel_area, ItemName.KeyItem.HotelKeys)
+    connect_two_way(station_area, casino_area, ItemName.KeyItem.CasinoKeys)
+    connect_two_way(hotel_area, casino_area, ItemName.KeyItem.CasinoKeys)
+    connect_two_way(station_square_main_area, twinkle_park_area, ItemName.KeyItem.TwinkleParkTicket)
+    connect_two_way(station_square_main_area, speed_highway_area, ItemName.KeyItem.EmployeeCard)
+    connect_two_way(mystic_ruins_area, angel_island_area, ItemName.KeyItem.Dynamite)
+    connect_two_way(mystic_ruins_area, jungle_area, ItemName.KeyItem.JungleCart)
+    connect_two_way(station_area, mystic_ruins_area, ItemName.KeyItem.Train)
+    connect_two_way(station_square_main_area, egg_carrier_area, ItemName.KeyItem.Boat)
+    connect_two_way(mystic_ruins_area, egg_carrier_area, ItemName.KeyItem.Raft)
 
-    egg_carrier_area = create_region(world, options, "Egg Carrier", Area.EggCarrierMain)
-
-    # We don't add regions that aren't used for the randomizer
-    if len(hotel_area.locations) > 0:
-        station_square_area.connect(hotel_area, None,
-                                    lambda state: state.has(ItemName.KeyItem.HotelKeys, world.player))
-
-        hotel_area.connect(station_square_area, None,
-                           lambda state: state.has(ItemName.KeyItem.HotelKeys, world.player))
-
-    if len(casino_area.locations) > 0:
-        station_square_area.connect(casino_area, None,
-                                    lambda state: state.has(ItemName.KeyItem.CasinoKeys, world.player))
-
-        casino_area.connect(station_square_area, None,
-                            lambda state: state.has(ItemName.KeyItem.CasinoKeys, world.player))
-
-    if len(twinkle_park_area.locations) > 0:
-        station_square_area.connect(twinkle_park_area, None,
-                                    lambda state: state.has(ItemName.KeyItem.TwinkleParkTicket, world.player))
-
-    if len(speed_highway_area.locations) > 0:
-        station_square_area.connect(speed_highway_area, None,
-                                    lambda state: state.has(ItemName.KeyItem.EmployeeCard, world.player))
-
-    if len(angel_island_area.locations) > 0:
-        mystic_ruins_area.connect(angel_island_area, None,
-                                  lambda state: state.has(ItemName.KeyItem.Dynamite, world.player))
-
-    if len(jungle_area.locations) > 0:
-        mystic_ruins_area.connect(jungle_area, None,
-                                  lambda state: state.has(ItemName.KeyItem.JungleCart, world.player))
-        jungle_area.connect(mystic_ruins_area, None,
-                            lambda state: state.has(ItemName.KeyItem.JungleCart, world.player))
-
-    # We connect the main regions
-    station_square_area.connect(mystic_ruins_area, None, lambda state: state.has(
-        ItemName.KeyItem.Train, world.player))
-    mystic_ruins_area.connect(station_square_area, None, lambda state: state.has(
-        ItemName.KeyItem.Train, world.player))
-
-    station_square_area.connect(egg_carrier_area, None, lambda state: state.has(
-        ItemName.KeyItem.Boat, world.player))
-    egg_carrier_area.connect(station_square_area, None, lambda state: state.has(
-        ItemName.KeyItem.Boat, world.player))
-
-    mystic_ruins_area.connect(egg_carrier_area, None, lambda state: state.has(
-        ItemName.KeyItem.Raft, world.player))
-    egg_carrier_area.connect(mystic_ruins_area, None, lambda state: state.has(
-        ItemName.KeyItem.Raft, world.player))
-
-    if starter_area == StartingArea.StationSquare:
-        menu_region.connect(station_square_area)
+    if starter_area == StartingArea.StationSquareMain:
+        menu_region.connect(station_square_main_area)
+    if starter_area == StartingArea.Station:
+        menu_region.connect(station_area)
     elif starter_area == StartingArea.Hotel:
         menu_region.connect(hotel_area)
     elif starter_area == StartingArea.Casino:

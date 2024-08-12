@@ -37,13 +37,13 @@ def generate_early_sadx(world: World, options: SonicAdventureDXOptions) -> Start
         starter_area = world.random.choice(list(starting_area_no_items[starter_character].keys()))
     # Station Square
     elif options.random_starting_location == 2:
-        starter_area = StartingArea.StationSquare
+        starter_area = StartingArea.StationSquareMain
         possible_starting_items = starting_area_items[starter_character][starter_area]
         if len(possible_starting_items) > 0:
             starter_item = world.random.choice(possible_starting_items)
     # Station Square no items
     elif options.random_starting_location == 3:
-        starter_area = StartingArea.StationSquare
+        starter_area = StartingArea.StationSquareMain
 
     return StarterSetup(starter_character, starter_area, starter_item)
 
@@ -66,36 +66,36 @@ def write_sadx_spoiler(world: World, spoiler_handle: typing.TextIO, starter_setu
 
 starting_area_items = {
     Character.Sonic: {
-        StartingArea.StationSquare: [ItemName.KeyItem.TwinkleParkTicket,
-                                     ItemName.KeyItem.EmployeeCard],
+        StartingArea.StationSquareMain: [ItemName.KeyItem.TwinkleParkTicket,
+                                         ItemName.KeyItem.EmployeeCard],
         StartingArea.Hotel: [],
         StartingArea.MysticRuins: [ItemName.KeyItem.WindStone],
         StartingArea.EggCarrier: []
     },
     Character.Tails: {
-        StartingArea.StationSquare: [ItemName.KeyItem.EmployeeCard],
+        StartingArea.StationSquareMain: [ItemName.KeyItem.EmployeeCard],
         StartingArea.Casino: [],
         StartingArea.MysticRuins: [ItemName.KeyItem.WindStone],
         StartingArea.EggCarrier: []
     },
     Character.Knuckles: {
-        StartingArea.StationSquare: [],
+        StartingArea.StationSquareMain: [],
         StartingArea.Casino: [],
     },
     Character.Amy: {
-        StartingArea.StationSquare: [ItemName.KeyItem.TwinkleParkTicket],
+        StartingArea.StationSquareMain: [ItemName.KeyItem.TwinkleParkTicket],
         StartingArea.Jungle: [],
         StartingArea.EggCarrier: []
     },
     Character.Gamma: {
-        StartingArea.StationSquare: [ItemName.KeyItem.HotelKeys],
+        StartingArea.StationSquareMain: [ItemName.KeyItem.HotelKeys],
         StartingArea.Hotel: [],
         StartingArea.MysticRuins: [ItemName.KeyItem.Dynamite, ItemName.KeyItem.WindStone],
         StartingArea.Jungle: [],
     },
     Character.Big: {
         StartingArea.Hotel: [],
-        StartingArea.StationSquare: [],
+        StartingArea.StationSquareMain: [],
         StartingArea.EggCarrier: []
     }
 }
@@ -112,7 +112,7 @@ starting_area_no_items = {
         StartingArea.EggCarrier: []
     },
     Character.Knuckles: {
-        StartingArea.StationSquare: [],
+        StartingArea.StationSquareMain: [],
         StartingArea.Casino: [],
     },
     Character.Amy: {
@@ -125,7 +125,7 @@ starting_area_no_items = {
     },
     Character.Big: {
         StartingArea.Hotel: [],
-        StartingArea.StationSquare: [],
+        StartingArea.StationSquareMain: [],
         StartingArea.EggCarrier: []
     }
 }

@@ -26,6 +26,7 @@ class KeyItem:
     Train = "Train"
     Boat = "Boat"
     Raft = "Raft"
+    StationKeys = "Station Keys"
     HotelKeys = "Hotel Keys"
     CasinoKeys = "Casino District Keys"
     TwinkleParkTicket = "Twinkle Park Ticket"

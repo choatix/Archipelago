@@ -240,7 +240,7 @@ sub_level_location_table: List[SubLevelLocation] = [
 
 field_emblem_location_table: List[EmblemLocation] = [
     # Station Square
-    EmblemLocation(10, Area.StationSquareMain, [Character.Sonic, Character.Knuckles, Character.Tails,
+    EmblemLocation(10, Area.Station, [Character.Sonic, Character.Knuckles, Character.Tails,
                                                 Character.Amy, Character.Big], "Station Emblem"),
     EmblemLocation(11, Area.StationSquareMain, EVERYONE, "Burger Shop Emblem"),
     EmblemLocation(12, Area.StationSquareMain, [Character.Knuckles, Character.Tails],

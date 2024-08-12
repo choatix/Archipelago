@@ -95,7 +95,8 @@ class KeyItem(Enum):
 
 
 class StartingArea(Enum):
-    StationSquare = 0
+    StationSquareMain = 0
+    Station = 0
     Hotel = auto()
     Casino = auto()
     MysticRuins = auto()
@@ -105,6 +106,7 @@ class StartingArea(Enum):
 
 class Area(Enum):
     StationSquareMain = 0
+    Station = auto()
     Hotel = auto()
     Casino = auto()
     TwinklePark = auto()

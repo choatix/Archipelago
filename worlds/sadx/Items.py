@@ -104,6 +104,7 @@ key_item_table: List[KeyItem] = [
     KeyItem(88, ItemName.KeyItem.Dynamite),
     KeyItem(89, ItemName.KeyItem.JungleCart),
     KeyItem(120, ItemName.KeyItem.WindStone),
+    KeyItem(121, ItemName.KeyItem.StationKeys),
 
 ]
 
