@@ -9,18 +9,30 @@ from .Options import SonicAdventureDXOptions
 from ..AutoWorld import World
 
 
+def create_region(world: World, options: SonicAdventureDXOptions, name: str, area: Area) -> Region:
+    region = Region(name, world.player, world.multiworld)
+    world.multiworld.regions.append(region)
+    add_locations_to_region(region, area, world.player, options)
+    return region
+
+
 def create_sadx_regions(world: World, starter_area: StartingArea,
                         emblems_needed: int, options: SonicAdventureDXOptions):
     menu_region = Region("Menu", world.player, world.multiworld)
     world.multiworld.regions.append(menu_region)
 
-    station_square_area = Region("Station Square", world.player, world.multiworld)
-    world.multiworld.regions.append(station_square_area)
-    add_locations_to_region(station_square_area, Area.StationSquareMain, world.player, options)
+    station_square_area = create_region(world, options, "Station Square", Area.StationSquareMain)
+    hotel_area = create_region(world, options, "Hotel Area", Area.Hotel)
+    casino_area = create_region(world, options, "Casino Area", Area.Casino)
+    twinkle_park_area = create_region(world, options, "Twinkle Park Area", Area.TwinklePark)
+    speed_highway_area = create_region(world, options, "Speed Highway Area", Area.SpeedHighway)
 
-    hotel_area = Region("Hotel Area", world.player, world.multiworld)
-    world.multiworld.regions.append(hotel_area)
-    add_locations_to_region(hotel_area, Area.Hotel, world.player, options)
+    mystic_ruins_area = create_region(world, options, "Mystic Ruins", Area.MysticRuinsMain)
+    angel_island_area = create_region(world, options, "Angel Island", Area.AngelIsland)
+    jungle_area = create_region(world, options, "Jungle", Area.Jungle)
+
+    egg_carrier_area = create_region(world, options, "Egg Carrier", Area.EggCarrierMain)
+
     # We don't add regions that aren't used for the randomizer
     if len(hotel_area.locations) > 0:
         station_square_area.connect(hotel_area, None,
@@ -29,9 +41,6 @@ def create_sadx_regions(world: World, starter_area: StartingArea,
         hotel_area.connect(station_square_area, None,
                            lambda state: state.has(ItemName.KeyItem.HotelKeys, world.player))
 
-    casino_area = Region("Casino Area", world.player, world.multiworld)
-    world.multiworld.regions.append(casino_area)
-    add_locations_to_region(casino_area, Area.Casino, world.player, options)
     if len(casino_area.locations) > 0:
         station_square_area.connect(casino_area, None,
                                     lambda state: state.has(ItemName.KeyItem.CasinoKeys, world.player))
@@ -39,43 +48,23 @@ def create_sadx_regions(world: World, starter_area: StartingArea,
         casino_area.connect(station_square_area, None,
                             lambda state: state.has(ItemName.KeyItem.CasinoKeys, world.player))
 
-    twinkle_park_area = Region("Twinkle Park Area", world.player, world.multiworld)
-    world.multiworld.regions.append(twinkle_park_area)
-    add_locations_to_region(twinkle_park_area, Area.TwinklePark, world.player, options)
     if len(twinkle_park_area.locations) > 0:
         station_square_area.connect(twinkle_park_area, None,
                                     lambda state: state.has(ItemName.KeyItem.TwinkleParkTicket, world.player))
 
-    speed_highway_area = Region("Speed Highway Area", world.player, world.multiworld)
-    world.multiworld.regions.append(speed_highway_area)
-    add_locations_to_region(speed_highway_area, Area.SpeedHighway, world.player, options)
     if len(speed_highway_area.locations) > 0:
         station_square_area.connect(speed_highway_area, None,
                                     lambda state: state.has(ItemName.KeyItem.EmployeeCard, world.player))
 
-    mystic_ruins_area = Region("Mystic Ruins", world.player, world.multiworld)
-    world.multiworld.regions.append(mystic_ruins_area)
-    add_locations_to_region(mystic_ruins_area, Area.MysticRuinsMain, world.player, options)
-
-    angel_island_area = Region("Angel Island", world.player, world.multiworld)
-    world.multiworld.regions.append(angel_island_area)
-    add_locations_to_region(angel_island_area, Area.AngelIsland, world.player, options)
     if len(angel_island_area.locations) > 0:
         mystic_ruins_area.connect(angel_island_area, None,
                                   lambda state: state.has(ItemName.KeyItem.Dynamite, world.player))
 
-    jungle_area = Region("Jungle", world.player, world.multiworld)
-    world.multiworld.regions.append(jungle_area)
-    add_locations_to_region(jungle_area, Area.Jungle, world.player, options)
     if len(jungle_area.locations) > 0:
         mystic_ruins_area.connect(jungle_area, None,
                                   lambda state: state.has(ItemName.KeyItem.JungleCart, world.player))
         jungle_area.connect(mystic_ruins_area, None,
                             lambda state: state.has(ItemName.KeyItem.JungleCart, world.player))
-
-    egg_carrier_area = Region("Egg Carrier", world.player, world.multiworld)
-    world.multiworld.regions.append(egg_carrier_area)
-    add_locations_to_region(egg_carrier_area, Area.EggCarrierMain, world.player, options)
 
     # We connect the main regions
     station_square_area.connect(mystic_ruins_area, None, lambda state: state.has(
