@@ -4,8 +4,10 @@ import typing
 from typing import ClassVar, Type, Dict, Any, List
 
 from BaseClasses import Tutorial, Region, ItemClassification
-from Options import PerGameCommonOptions, Toggle, OptionError
+from Options import PerGameCommonOptions, OptionError
 from worlds.AutoWorld import WebWorld, World
+from .CharacterUtils import character_has_life_sanity, are_character_upgrades_randomized, get_playable_character_item, \
+    get_character_missions, get_playable_characters, is_level_playable
 from .Enums import Character, LevelMission, Area, StartingArea, AdventureField, KeyItem
 from .Items import all_item_table, get_item, get_item_by_name, SonicAdventureDXItem, ItemInfo, \
     key_item_table, character_unlock_item_table, character_upgrade_item_table, filler_item_table, trap_item_table
@@ -47,7 +49,7 @@ class SonicAdventureDXWorld(World):
     options: SonicAdventureDXOptions
 
     def generate_early(self):
-        possible_characters = self.get_playable_characters()
+        possible_characters = get_playable_characters(self.options)
         if len(possible_characters) == 0:
             raise OptionError("You need at least one playable character")
 
@@ -236,7 +238,7 @@ class SonicAdventureDXWorld(World):
         for _ in range(filler_items - junk_count):
             itempool.append(self.create_item(ItemName.Progression.Emblem, True))
 
-        starter_character_name = self.starter_character.get_playable_character_item()
+        starter_character_name = get_playable_character_item(self.starter_character)
         self.multiworld.push_precollected(self.create_item(starter_character_name))
         if self.starter_item is not None:
             self.multiworld.push_precollected(self.create_item(self.starter_item))
@@ -389,12 +391,8 @@ class SonicAdventureDXWorld(World):
         return item_names
 
     def get_item_for_options_per_character(self, character: Character) -> List[str]:
-
-        missions = self.get_character_missions(character)
-        randomized_upgrades = self.are_character_upgrades_randomized(character)
-
         item_names = []
-        if missions == 0:
+        if not self.is_character_playable(character):
             return item_names
 
         if character != self.starter_character:
@@ -402,87 +400,24 @@ class SonicAdventureDXWorld(World):
                 if unlock_character.character == character:
                     item_names.append(unlock_character.name)
 
-        if randomized_upgrades:
+        if are_character_upgrades_randomized(character, self.options):
             for character_upgrade in character_upgrade_item_table:
                 if character_upgrade.character == character:
                     item_names.append(character_upgrade.name)
 
         return item_names
 
-    def get_character_missions(self, character: Character) -> BaseMissionChoice:
-        character_missions = {
-            Character.Sonic: self.options.sonic_missions,
-            Character.Tails: self.options.tails_missions,
-            Character.Knuckles: self.options.knuckles_missions,
-            Character.Amy: self.options.amy_missions,
-            Character.Big: self.options.big_missions,
-            Character.Gamma: self.options.gamma_missions
-        }
-        return character_missions.get(character)
-
-    def get_playable_characters(self) -> List[Character]:
-        character_list: List[Character] = []
-        if self.options.sonic_missions > 0:
-            character_list.append(Character.Sonic)
-        if self.options.tails_missions > 0:
-            character_list.append(Character.Tails)
-        if self.options.knuckles_missions > 0:
-            character_list.append(Character.Knuckles)
-        if self.options.amy_missions > 0:
-            character_list.append(Character.Amy)
-        if self.options.big_missions > 0:
-            character_list.append(Character.Big)
-        if self.options.gamma_missions > 0:
-            character_list.append(Character.Gamma)
-
-        return character_list
-
-    def is_level_playable(self, level: LevelLocation) -> bool:
-        character_missions = self.get_character_missions(level.character)
-        if character_missions == 3:
-            return level.levelMission in {LevelMission.C, LevelMission.B, LevelMission.A}
-        if character_missions == 2:
-            return level.levelMission in {LevelMission.C, LevelMission.B}
-        if character_missions == 1:
-            return level.levelMission == LevelMission.C
-        return False
-
     def is_character_playable(self, character: Character) -> bool:
-        return self.get_character_missions(character) > 0
-
-    def character_has_life_sanity(self, character: Character) -> Toggle:
-        character_life_sanity = {
-            Character.Sonic: self.options.sonic_life_sanity,
-            Character.Tails: self.options.tails_life_sanity,
-            Character.Knuckles: self.options.knuckles_life_sanity,
-            Character.Amy: self.options.amy_life_sanity,
-            Character.Big: self.options.big_life_sanity,
-            Character.Gamma: self.options.gamma_life_sanity
-        }
-        return character_life_sanity.get(character)
-
-    def are_character_upgrades_randomized(self, character: Character) -> Toggle:
-        character_randomized_upgrades = {
-            Character.Sonic: self.options.randomized_sonic_upgrades,
-            Character.Tails: self.options.randomized_tails_upgrades,
-            Character.Knuckles: self.options.randomized_knuckles_upgrades,
-            Character.Amy: self.options.randomized_amy_upgrades,
-            Character.Big: self.options.randomized_big_upgrades,
-            Character.Gamma: self.options.randomized_gamma_upgrades
-        }
-        return character_randomized_upgrades.get(character)
+        return get_character_missions(character, self.options) > 0
 
     def is_any_character_playable(self, characters: List[Character]) -> bool:
-        for character in characters:
-            if self.is_character_playable(character):
-                return True
-        return False
+        return any(self.is_character_playable(character) for character in characters)
 
     def get_location_ids_for_area(self, area: Area):
         location_ids = []
         for level in level_location_table:
             if level.area == area:
-                if self.is_level_playable(level):
+                if is_level_playable(level, self.options):
                     location_ids.append(level.locationId)
         for upgrade in upgrade_location_table:
             if upgrade.area == area:
@@ -504,7 +439,7 @@ class SonicAdventureDXWorld(World):
             for life_capsule in life_capsule_location_table:
                 if life_capsule.area == area:
                     if self.is_character_playable(life_capsule.character):
-                        if self.character_has_life_sanity(life_capsule.character):
+                        if character_has_life_sanity(life_capsule.character, self.options):
                             if life_capsule.locationId == 1211 or life_capsule.locationId == 1212:
                                 if self.options.pinball_life_capsules:
                                     location_ids.append(life_capsule.locationId)
@@ -532,7 +467,6 @@ class SonicAdventureDXWorld(World):
         return location_ids
 
     def add_locations_to_region(self, region: Region, area: Area):
-
         location_ids = self.get_location_ids_for_area(area)
         for location_id in location_ids:
             location = SonicAdventureDXLocation(self.player, location_id, base_id, region)

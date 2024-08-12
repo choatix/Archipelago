@@ -2,8 +2,6 @@ import re
 from enum import Enum, auto
 from typing import List
 
-from worlds.sadx.Names import ItemName
-
 
 def pascal_to_space(s):
     return re.sub(r'(?<!^)(?=[A-Z])', ' ', s)
@@ -16,21 +14,6 @@ class Character(Enum):
     Amy = auto()
     Big = auto()
     Gamma = auto()
-
-    def get_playable_character_item(self) -> str:
-        match self:
-            case Character.Sonic:
-                return ItemName.Sonic.Playable
-            case Character.Tails:
-                return ItemName.Tails.Playable
-            case Character.Knuckles:
-                return ItemName.Knuckles.Playable
-            case Character.Amy:
-                return ItemName.Amy.Playable
-            case Character.Big:
-                return ItemName.Big.Playable
-            case Character.Gamma:
-                return ItemName.Gamma.Playable
 
 
 EVERYONE: List[Character] = [Character.Sonic, Character.Tails, Character.Knuckles,
