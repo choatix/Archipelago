@@ -228,11 +228,11 @@ class SonicAdventureDXWorld(World):
             trap_weights += [ItemName.Traps.BuyonTrap] * self.options.buyon_trap_weight.value
             for _ in range(trap_count):
                 trap_item_name = self.random.choice(trap_weights)
-                itempool.append(self.create_item(trap_item_name, True))
+                itempool.append(self.create_item(trap_item_name))
 
         for _ in range(junk_count - trap_count):
             filler_item = self.random.choice(filler_item_table)
-            itempool.append(self.create_item(filler_item.name, True))
+            itempool.append(self.create_item(filler_item.name))
 
         for _ in range(filler_items - junk_count):
             itempool.append(self.create_item(ItemName.Progression.Emblem, True))
