@@ -1,9 +1,11 @@
 from BaseClasses import Region, MultiWorld
-from worlds.sadx import Area, SonicAdventureDXLocation, StartingArea, level_location_table, upgrade_location_table, \
-    sub_level_location_table, field_emblem_location_table, life_capsule_location_table, boss_location_table, \
-    SonicAdventureDXOptions, is_level_playable, is_character_playable
-from worlds.sadx.CharacterUtils import is_any_character_playable, character_has_life_sanity
-from worlds.sadx.Names import ItemName, LocationName
+from .CharacterUtils import is_any_character_playable, character_has_life_sanity, is_level_playable
+from .CharacterUtils import is_character_playable
+from .Enums import Area, StartingArea
+from .Locations import SonicAdventureDXLocation, boss_location_table, life_capsule_location_table, \
+    field_emblem_location_table, upgrade_location_table, level_location_table, sub_level_location_table
+from .Names import ItemName, LocationName
+from .Options import SonicAdventureDXOptions
 
 
 def create_sadx_regions(multiworld: MultiWorld, player: int, starter_area: StartingArea,

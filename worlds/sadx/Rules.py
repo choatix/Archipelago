@@ -1,9 +1,10 @@
 from worlds.generic.Rules import add_rule
-from worlds.sadx import Character, StartingArea, get_playable_character_item
-from worlds.sadx.Locations import get_location_by_name, LocationInfo, level_location_table, LevelLocation, \
+from .CharacterUtils import get_playable_character_item
+from .Enums import Character, StartingArea
+from .Locations import get_location_by_name, LocationInfo, level_location_table, LevelLocation, \
     upgrade_location_table, UpgradeLocation, sub_level_location_table, SubLevelLocation, field_emblem_location_table, \
     EmblemLocation, life_capsule_location_table, LifeCapsuleLocation, boss_location_table, BossFightLocation
-from worlds.sadx.Names import ItemName
+from .Names import ItemName
 
 
 def add_level_rules(self, location_name: str, level: LevelLocation):
@@ -73,7 +74,7 @@ def calculate_rules(self, location: LocationInfo):
             add_boss_fight_rules(self, location["name"], boss_fight)
 
 
-def create_rules(self):
+def create_sadx_rules(self, needed_emblems: int):
     for ap_location in self.multiworld.get_locations(self.player):
         loc = get_location_by_name(ap_location.name)
         if loc is not None:
@@ -82,10 +83,8 @@ def create_rules(self):
     self.multiworld.get_location("Perfect Chaos Fight", self.player).place_locked_item(
         self.create_item(ItemName.Progression.ChaosPeace))
 
-    emblem_count = self.get_emblems_needed()
-
     add_rule(self.multiworld.get_location("Perfect Chaos Fight", self.player),
-             lambda state: state.has(ItemName.Progression.Emblem, self.player, max(emblem_count, 1)))
+             lambda state: state.has(ItemName.Progression.Emblem, self.player, max(needed_emblems, 1)))
 
     self.multiworld.completion_condition[self.player] = lambda state: state.has(ItemName.Progression.ChaosPeace,
                                                                                 self.player)
