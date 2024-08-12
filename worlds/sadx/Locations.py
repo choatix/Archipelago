@@ -236,12 +236,20 @@ sub_level_location_table: List[SubLevelLocation] = [
     SubLevelLocation(16, Area.TwinklePark, EVERYONE, SubLevel.TwinkleCircuit, SubLevelMission.A),
     SubLevelLocation(25, Area.Jungle, [Character.Sonic, Character.Tails], SubLevel.SandHill, SubLevelMission.B),
     SubLevelLocation(26, Area.Jungle, [Character.Sonic, Character.Tails], SubLevel.SandHill, SubLevelMission.A),
+    SubLevelLocation(27, Area.MysticRuinsMain, [Character.Sonic, Character.Tails], SubLevel.SkyChaseAct1,
+                     SubLevelMission.B),
+    SubLevelLocation(28, Area.MysticRuinsMain, [Character.Sonic, Character.Tails], SubLevel.SkyChaseAct1,
+                     SubLevelMission.A),
+    SubLevelLocation(35, Area.EggCarrierMain, [Character.Sonic, Character.Tails], SubLevel.SkyChaseAct2,
+                     SubLevelMission.B),
+    SubLevelLocation(36, Area.EggCarrierMain, [Character.Sonic, Character.Tails], SubLevel.SkyChaseAct2,
+                     SubLevelMission.A),
 ]
 
 field_emblem_location_table: List[EmblemLocation] = [
     # Station Square
     EmblemLocation(10, Area.Station, [Character.Sonic, Character.Knuckles, Character.Tails,
-                                                Character.Amy, Character.Big], "Station Emblem"),
+                                      Character.Amy, Character.Big], "Station Emblem"),
     EmblemLocation(11, Area.StationSquareMain, EVERYONE, "Burger Shop Emblem"),
     EmblemLocation(12, Area.StationSquareMain, [Character.Knuckles, Character.Tails],
                    "City Hall Emblem"),
@@ -445,7 +453,7 @@ def get_location_from_upgrade() -> List[LocationInfo]:
 def get_location_from_sub_level() -> List[LocationInfo]:
     locations: List[LocationInfo] = []
     for sub_level in sub_level_location_table:
-        sub_level_name = f"{pascal_to_space(sub_level.subLevel.name)} (Sub-Level) {sub_level.subLevelMission.name}"
+        sub_level_name = f"{pascal_to_space(sub_level.subLevel.name)} (Sub-Level - Mission {sub_level.subLevelMission.name})"
         locations += [{"id": sub_level.locationId, "name": sub_level_name}]
     return locations
 

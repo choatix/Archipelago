@@ -1,7 +1,7 @@
 from BaseClasses import Region
 from .CharacterUtils import is_any_character_playable, character_has_life_sanity, is_level_playable
 from .CharacterUtils import is_character_playable
-from .Enums import Area, StartingArea
+from .Enums import Area, StartingArea, SubLevelMission
 from .Locations import SonicAdventureDXLocation, boss_location_table, life_capsule_location_table, \
     field_emblem_location_table, upgrade_location_table, level_location_table, sub_level_location_table
 from .Names import ItemName, LocationName
@@ -91,7 +91,9 @@ def get_location_ids_for_area(area: Area, options: SonicAdventureDXOptions):
         for sub_level in sub_level_location_table:
             if sub_level.area == area:
                 if is_any_character_playable(sub_level.characters, options):
-                    location_ids.append(sub_level.locationId)
+                    if ((options.sub_level_checks_hard and sub_level.subLevelMission == SubLevelMission.A)
+                            or sub_level.subLevelMission == SubLevelMission.B):
+                        location_ids.append(sub_level.locationId)
 
     if options.field_emblems_checks:
         for field_emblem in field_emblem_location_table:

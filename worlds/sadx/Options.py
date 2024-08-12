@@ -98,8 +98,16 @@ class PinballLifeCapsules(Toggle):
 
 
 class SubLevelChecks(DefaultOnToggle):
-    """Determines whether beating a sublevel grants checks
-    (4 Locations)"""
+    """Determines whether beating the default sublevel mission  grants checks (4 Locations)
+    Current sublevels are: Twinkle Circuit, Sand Hill and Sky Chase Act 1 and 2"""
+    display_name = "Sub-Level Checks"
+
+
+class SubLevelChecksHard(Toggle):
+    """
+    Determines whether beating the harder (points based) sublevel mission grants checks (4 Locations)
+    Only works if sublevel checks are enabled
+    """
     display_name = "Sub-Level Checks"
 
 
@@ -231,6 +239,7 @@ class TrapFillPercentage(Range):
 class BaseTrapWeight(Choice):
     """
     Base Class for Trap Weights
+    The available options are 0 (off), 1 (low), 2 (medium) and 4 (high)
     """
     option_none = 0
     option_low = 1
@@ -297,6 +306,7 @@ class SonicAdventureDXOptions(PerGameCommonOptions):
 
     field_emblems_checks: FieldEmblemsChecks
     sub_level_checks: SubLevelChecks
+    sub_level_checks_hard: SubLevelChecksHard
     life_sanity: LifeSanity
     pinball_life_capsules: PinballLifeCapsules
     sonic_life_sanity: SonicLifeSanity
@@ -347,6 +357,7 @@ sadx_option_groups = [
     OptionGroup("Extra locations", [
         FieldEmblemsChecks,
         SubLevelChecks,
+        SubLevelChecksHard,
         LifeSanity,
         PinballLifeCapsules,
         SonicLifeSanity,

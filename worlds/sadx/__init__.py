@@ -102,6 +102,7 @@ class SonicAdventureDXWorld(World):
             "HardRingLink": self.options.hard_ring_link.value,
             "RingLoss": self.options.ring_loss.value,
             "SubLevelChecks": self.options.sub_level_checks.value,
+            "SubLevelChecksHard": self.options.sub_level_checks_hard.value,
 
             "BossChecks": self.options.boss_checks.value,
             "UnifyChaos4": self.options.unify_chaos4.value,

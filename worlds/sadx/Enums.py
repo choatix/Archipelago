@@ -6,7 +6,7 @@ SADX_BASE_ID = 543800000
 
 
 def pascal_to_space(s):
-    return re.sub(r'(?<!^)(?=[A-Z])', ' ', s)
+    return re.sub(r'(?<!^)(?=[A-Z0-9])', ' ', s)
 
 
 class Character(Enum):
@@ -71,6 +71,8 @@ class LevelMission(Enum):
 class SubLevel(Enum):
     SandHill = auto()
     TwinkleCircuit = auto()
+    SkyChaseAct1 = auto()
+    SkyChaseAct2 = auto()
 
 
 class AdventureField(Enum):
