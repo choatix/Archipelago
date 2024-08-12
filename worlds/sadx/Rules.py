@@ -9,7 +9,7 @@ from worlds.sadx.Names import ItemName
 def add_level_rules(self, location_name: str, level: LevelLocation):
     location = self.multiworld.get_location(location_name, self.player)
     add_rule(location,
-             lambda state, item=self.get_character_item_from_enum(level.character): state.has(item, self.player))
+             lambda state, item=level.character.get_playable_character_item(): state.has(item, self.player))
     for need in level.extraItems:
         add_rule(location, lambda state, item=need: state.has(item, self.player))
 
@@ -17,7 +17,7 @@ def add_level_rules(self, location_name: str, level: LevelLocation):
 def add_upgrade_rules(self, location_name: str, upgrade: UpgradeLocation):
     location = self.multiworld.get_location(location_name, self.player)
     add_rule(location,
-             lambda state, item=self.get_character_item_from_enum(upgrade.character): state.has(item, self.player))
+             lambda state, item=upgrade.character.get_playable_character_item(): state.has(item, self.player))
     for need in upgrade.extraItems:
         add_rule(location, lambda state, item=need: state.has(item, self.player))
 
@@ -25,14 +25,14 @@ def add_upgrade_rules(self, location_name: str, upgrade: UpgradeLocation):
 def add_sub_level_rules(self, location_name: str, sub_level: SubLevelLocation):
     location = self.multiworld.get_location(location_name, self.player)
     add_rule(location, lambda state: any(
-        state.has(self.get_character_item_from_enum(character), self.player) for character in sub_level.characters))
+        state.has(character.get_playable_character_item(), self.player) for character in sub_level.characters))
 
 
 def add_field_emblem_rules(self, location_name: str, field_emblem: EmblemLocation):
     location = self.multiworld.get_location(location_name, self.player)
     # For the City Hall Emblem, Knuckles needs the Shovel Claw
     add_rule(location, lambda state: any(
-        state.has(self.get_character_item_from_enum(character), self.player) and
+        state.has(character.get_playable_character_item(), self.player) and
         (state.has(ItemName.Knuckles.ShovelClaw,
                    self.player) if character == Character.Knuckles and field_emblem.emblemName == "City Hall Emblem" else True)
         for character in field_emblem.characters))
@@ -41,7 +41,7 @@ def add_field_emblem_rules(self, location_name: str, field_emblem: EmblemLocatio
 def add_life_capsule_rules(self, location_name: str, life_capsule: LifeCapsuleLocation):
     location = self.multiworld.get_location(location_name, self.player)
     add_rule(location,
-             lambda state, item=self.get_character_item_from_enum(life_capsule.character): state.has(item, self.player))
+             lambda state, item=life_capsule.character.get_playable_character_item(): state.has(item, self.player))
     for need in life_capsule.extraItems:
         add_rule(location, lambda state, item=need: state.has(item, self.player))
 
@@ -49,7 +49,7 @@ def add_life_capsule_rules(self, location_name: str, life_capsule: LifeCapsuleLo
 def add_boss_fight_rules(self, location_name: str, boss_fight: BossFightLocation):
     location = self.multiworld.get_location(location_name, self.player)
     add_rule(location, lambda state: any(
-        state.has(self.get_character_item_from_enum(character), self.player) for character in boss_fight.characters))
+        state.has(character.get_playable_character_item(), self.player) for character in boss_fight.characters))
 
 
 def calculate_rules(self, location: LocationInfo):

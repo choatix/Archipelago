@@ -87,10 +87,9 @@ class SonicAdventureDXWorld(World):
         return slot_data
 
     def create_item(self, name: str, force_non_progression=False) -> SonicAdventureDXItem:
-        item: ItemInfo = get_item_by_name(name)
-        if force_non_progression:
-            return SonicAdventureDXItem(item, base_id, self.player, ItemClassification.filler)
-        return SonicAdventureDXItem(item, base_id, self.player)
+        item = get_item_by_name(name)
+        classification = ItemClassification.filler if force_non_progression else None
+        return SonicAdventureDXItem(item, base_id, self.player, classification)
 
     def create_regions(self) -> None:
         menu_region = Region("Menu", self.player, self.multiworld)
@@ -237,7 +236,7 @@ class SonicAdventureDXWorld(World):
         for _ in range(filler_items - junk_count):
             itempool.append(self.create_item(ItemName.Progression.Emblem, True))
 
-        starter_character_name = self.get_character_item_from_enum(self.starter_character)
+        starter_character_name = self.starter_character.get_playable_character_item()
         self.multiworld.push_precollected(self.create_item(starter_character_name))
         if self.starter_item is not None:
             self.multiworld.push_precollected(self.create_item(self.starter_item))
@@ -303,7 +302,6 @@ class SonicAdventureDXWorld(World):
         spoiler_handle.writelines(text)
 
     def get_emblems_needed(self):
-
         item_names = self.get_item_names()
         location_count = sum(1 for location in self.multiworld.get_locations(self.player) if not location.locked) - 1
         emblem_count = max(1, location_count - len(item_names))
@@ -356,22 +354,6 @@ class SonicAdventureDXWorld(World):
             "JunkFillPercentage": self.options.junk_fill_percentage.value
         }
 
-    @staticmethod
-    def get_character_item_from_enum(character: Character) -> str:
-        match character:
-            case Character.Sonic:
-                return ItemName.Sonic.Playable
-            case Character.Tails:
-                return ItemName.Tails.Playable
-            case Character.Knuckles:
-                return ItemName.Knuckles.Playable
-            case Character.Amy:
-                return ItemName.Amy.Playable
-            case Character.Big:
-                return ItemName.Big.Playable
-            case Character.Gamma:
-                return ItemName.Gamma.Playable
-
     def get_item_names(self) -> List[str]:
         item_names = []
         item_names += self.get_item_for_options_per_character(Character.Sonic)
@@ -406,7 +388,7 @@ class SonicAdventureDXWorld(World):
             item_names.remove(self.starter_item)
         return item_names
 
-    def get_item_for_options_per_character(self, character: Character) -> []:
+    def get_item_for_options_per_character(self, character: Character) -> List[str]:
 
         missions = self.get_character_missions(character)
         randomized_upgrades = self.are_character_upgrades_randomized(character)
@@ -457,13 +439,12 @@ class SonicAdventureDXWorld(World):
 
     def is_level_playable(self, level: LevelLocation) -> bool:
         character_missions = self.get_character_missions(level.character)
-        if character_missions == 3 and (
-                level.levelMission == LevelMission.C or level.levelMission == LevelMission.B or level.levelMission == LevelMission.A):
-            return True
-        if character_missions == 2 and (level.levelMission == LevelMission.C or level.levelMission == LevelMission.B):
-            return True
-        if character_missions == 1 and level.levelMission == LevelMission.C:
-            return True
+        if character_missions == 3:
+            return level.levelMission in {LevelMission.C, LevelMission.B, LevelMission.A}
+        if character_missions == 2:
+            return level.levelMission in {LevelMission.C, LevelMission.B}
+        if character_missions == 1:
+            return level.levelMission == LevelMission.C
         return False
 
     def is_character_playable(self, character: Character) -> bool:

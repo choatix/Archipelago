@@ -1,7 +1,8 @@
 import re
-from dataclasses import dataclass
 from enum import Enum, auto
 from typing import List
+
+from worlds.sadx.Names import ItemName
 
 
 def pascal_to_space(s):
@@ -15,6 +16,21 @@ class Character(Enum):
     Amy = auto()
     Big = auto()
     Gamma = auto()
+
+    def get_playable_character_item(self) -> str:
+        match self:
+            case Character.Sonic:
+                return ItemName.Sonic.Playable
+            case Character.Tails:
+                return ItemName.Tails.Playable
+            case Character.Knuckles:
+                return ItemName.Knuckles.Playable
+            case Character.Amy:
+                return ItemName.Amy.Playable
+            case Character.Big:
+                return ItemName.Big.Playable
+            case Character.Gamma:
+                return ItemName.Gamma.Playable
 
 
 EVERYONE: List[Character] = [Character.Sonic, Character.Tails, Character.Knuckles,
@@ -102,19 +118,13 @@ class StartingArea(Enum):
     EggCarrier = auto()
 
 
-@dataclass
-class AreaDetails:
-    field: AdventureField
-    keyItem: KeyItem
-
-
 class Area(Enum):
-    StationSquareMain = (AdventureField.StationSquare, KeyItem.NONE)
-    Hotel = (AdventureField.StationSquare, KeyItem.HotelKeys)
-    Casino = (AdventureField.StationSquare, KeyItem.CasinoDistrictKeys)
-    TwinklePark = (AdventureField.StationSquare, KeyItem.TwinkleParkTicket)
-    SpeedHighway = (AdventureField.StationSquare, KeyItem.EmployeeCard)
-    MysticRuinsMain = (AdventureField.MysticRuins, KeyItem.NONE)
-    AngelIsland = (AdventureField.MysticRuins, KeyItem.Dynamite)
-    Jungle = (AdventureField.MysticRuins, KeyItem.JungleKart)
-    EggCarrierMain = (AdventureField.EggCarrier, KeyItem.NONE)
+    StationSquareMain = 0
+    Hotel = auto()
+    Casino = auto()
+    TwinklePark = auto()
+    SpeedHighway = auto()
+    MysticRuinsMain = auto()
+    AngelIsland = auto()
+    Jungle = auto()
+    EggCarrierMain = auto()
