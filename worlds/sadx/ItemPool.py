@@ -2,6 +2,7 @@ import math
 from typing import List
 
 from worlds.AutoWorld import World
+from .StartingSetup import StarterSetup
 from .CharacterUtils import get_playable_character_item, is_character_playable, are_character_upgrades_randomized
 from .Enums import Character, Area
 from .Items import filler_item_table, character_unlock_item_table, character_upgrade_item_table
@@ -10,12 +11,12 @@ from .Options import SonicAdventureDXOptions
 from .Regions import get_location_ids_for_area
 
 
-def create_sadx_items(world: World, starter_character: Character, starter_item: str,
+def create_sadx_items(world: World, starter_setup: StarterSetup,
                       needed_emblems: int, options: SonicAdventureDXOptions):
     itempool = []
 
     # Keys and Characters Items
-    item_names = get_item_names(options, starter_item, starter_character)
+    item_names = get_item_names(options, starter_setup.item, starter_setup.character)
     for itemName in item_names:
         itempool.append(world.create_item(itemName))
 
@@ -51,10 +52,10 @@ def create_sadx_items(world: World, starter_character: Character, starter_item: 
     for _ in range(filler_items - junk_count):
         itempool.append(world.create_item(ItemName.Progression.Emblem, True))
 
-    starter_character_name = get_playable_character_item(starter_character)
+    starter_character_name = get_playable_character_item(starter_setup.character)
     world.multiworld.push_precollected(world.create_item(starter_character_name))
-    if starter_item is not None:
-        world.multiworld.push_precollected(world.create_item(starter_item))
+    if starter_setup.item is not None:
+        world.multiworld.push_precollected(world.create_item(starter_setup.item))
 
     world.multiworld.itempool += itempool
 

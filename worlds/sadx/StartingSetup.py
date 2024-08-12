@@ -1,3 +1,6 @@
+import re
+import typing
+
 from Options import OptionError
 from worlds.AutoWorld import World
 from .CharacterUtils import get_playable_characters
@@ -43,6 +46,22 @@ def generate_early_sadx(world: World, options: SonicAdventureDXOptions) -> Start
         starter_area = StartingArea.StationSquare
 
     return StarterSetup(starter_character, starter_area, starter_item)
+
+
+def write_sadx_spoiler(world: World, spoiler_handle: typing.TextIO, starter_setup: StarterSetup):
+    spoiler_handle.write("\n")
+    header_text = "Sonic Adventure starting setup for {}:\n"
+    header_text = header_text.format(world.multiworld.player_name[world.player])
+    spoiler_handle.write(header_text)
+
+    starting_area_name = re.sub(r'(?<=[a-z])(?=[A-Z])', ' ', starter_setup.area.name)
+    if starter_setup.item is not None:
+        text = "Will start as {0} in the {1} area with {2}.\n"
+        text = text.format(starter_setup.character.name, starting_area_name, starter_setup.item)
+    else:
+        text = "Will start as {0} in the {1} area.\n"
+        text = text.format(starter_setup.character.name, starting_area_name)
+    spoiler_handle.writelines(text)
 
 
 starting_area_items = {

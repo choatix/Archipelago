@@ -1,8 +1,7 @@
-import re
 import typing
 from typing import ClassVar, Type, Dict, Any
 
-from BaseClasses import Tutorial, ItemClassification
+from BaseClasses import Tutorial
 from Options import PerGameCommonOptions
 from worlds.AutoWorld import WebWorld, World
 from .CharacterUtils import get_playable_characters
@@ -14,7 +13,7 @@ from .Names import ItemName, LocationName
 from .Options import sadx_option_groups, SonicAdventureDXOptions, BaseMissionChoice
 from .Regions import create_sadx_regions, get_location_ids_for_area
 from .Rules import create_sadx_rules
-from .StartingSetup import StarterSetup, generate_early_sadx
+from .StartingSetup import StarterSetup, generate_early_sadx, write_sadx_spoiler
 
 
 class SonicAdventureDXWeb(WebWorld):
@@ -52,42 +51,26 @@ class SonicAdventureDXWorld(World):
                 self.starter_setup.area = StartingArea(passthrough["StartingArea"])
                 self.starter_setup.item = passthrough["StartingItem"]
 
-    # for the universal tracker, doesn't get called in standard gen
+    # For the universal tracker, doesn't get called in standard gen
+    # Returning slot_data so it regens, giving it back in multiworld.re_gen_passthrough
     @staticmethod
     def interpret_slot_data(slot_data: Dict[str, Any]) -> Dict[str, Any]:
-        # returning slot_data so it regens, giving it back in multiworld.re_gen_passthrough
         return slot_data
 
     def create_item(self, name: str, force_non_progression=False) -> SonicAdventureDXItem:
-        item = get_item_by_name(name)
-        classification = ItemClassification.filler if force_non_progression else None
-        return SonicAdventureDXItem(item, self.player, classification)
+        return SonicAdventureDXItem(name, self.player, force_non_progression)
 
     def create_regions(self) -> None:
-        create_sadx_regions(self.multiworld, self.player, self.starter_setup.area,
-                            self.get_emblems_needed(), self.options)
+        create_sadx_regions(self, self.starter_setup.area, self.get_emblems_needed(), self.options)
 
     def create_items(self):
-        create_sadx_items(self, self.starter_setup.character, self.starter_setup.item,
-                          self.get_emblems_needed(), self.options)
+        create_sadx_items(self, self.starter_setup, self.get_emblems_needed(), self.options)
 
     def set_rules(self):
         create_sadx_rules(self, self.get_emblems_needed())
 
     def write_spoiler(self, spoiler_handle: typing.TextIO):
-        spoiler_handle.write("\n")
-        header_text = "Sonic Adventure starting setup for {}:\n"
-        header_text = header_text.format(self.multiworld.player_name[self.player])
-        spoiler_handle.write(header_text)
-
-        starting_area_name = re.sub(r'(?<=[a-z])(?=[A-Z])', ' ', self.starter_setup.area.name)
-        if self.starter_setup.item is not None:
-            text = "Will start as {0} in the {1} area with {2}.\n"
-            text = text.format(self.starter_setup.character.name, starting_area_name, self.starter_setup.item)
-        else:
-            text = "Will start as {0} in the {1} area.\n"
-            text = text.format(self.starter_setup.character.name, starting_area_name)
-        spoiler_handle.writelines(text)
+        write_sadx_spoiler(self, spoiler_handle, self.starter_setup)
 
     def get_emblems_needed(self) -> int:
         item_names = get_item_names(self.options, self.starter_setup.item, self.starter_setup.character)
