@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import TypedDict, List
 
 from BaseClasses import ItemClassification, Item
-from .Enums import Character
+from .Enums import Character, SADX_BASE_ID
 from .Names import ItemName
 
 
@@ -154,9 +154,9 @@ def get_items_from_traps() -> List[ItemInfo]:
 class SonicAdventureDXItem(Item):
     game: str = "Sonic Adventure DX"
 
-    def __init__(self, item: ItemInfo, base_id: int, player, classification: ItemClassification = None):
+    def __init__(self, item: ItemInfo, player, classification: ItemClassification = None):
         super().__init__(item["name"], classification if classification is not None else item["classification"],
-                         item["id"] + base_id, player)
+                         item["id"] + SADX_BASE_ID, player)
 
 
 all_item_table: List[ItemInfo] = (

@@ -3,7 +3,7 @@ from typing import List, TypedDict
 
 from BaseClasses import Location, Region
 from .Enums import Area, Level, SubLevel, Character, LevelMission, EVERYONE, FLYERS, \
-    SubLevelMission, pascal_to_space
+    SubLevelMission, pascal_to_space, SADX_BASE_ID
 from .Names import ItemName, LocationName
 from .Names.ItemName import EVERY_LURE
 from .Names.LocationName import Boss
@@ -498,6 +498,6 @@ def get_location_by_name(location_name: str) -> LocationInfo:
 class SonicAdventureDXLocation(Location):
     game: str = "Sonic Adventure DX"
 
-    def __init__(self, player, location_id: int, base_id: int, parent: Region):
+    def __init__(self, player, location_id: int, parent: Region):
         location = get_location_by_id(location_id)
-        super().__init__(player, location["name"], location["id"] + base_id, parent)
+        super().__init__(player, location["name"], location["id"] + SADX_BASE_ID, parent)

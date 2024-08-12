@@ -59,6 +59,14 @@ def get_character_missions(character: Character, options: SonicAdventureDXOption
     return character_missions.get(character)
 
 
+def is_character_playable(character: Character, options: SonicAdventureDXOptions) -> bool:
+    return get_character_missions(character, options) > 0
+
+
+def is_any_character_playable(characters: List[Character], options: SonicAdventureDXOptions) -> bool:
+    return any(is_character_playable(character, options) for character in characters)
+
+
 def get_playable_characters(options: SonicAdventureDXOptions) -> List[Character]:
     character_list: List[Character] = []
     if options.sonic_missions > 0:

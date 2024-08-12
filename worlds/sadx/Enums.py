@@ -2,6 +2,8 @@ import re
 from enum import Enum, auto
 from typing import List
 
+SADX_BASE_ID = 543800000
+
 
 def pascal_to_space(s):
     return re.sub(r'(?<!^)(?=[A-Z])', ' ', s)
