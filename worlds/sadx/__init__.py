@@ -3,7 +3,7 @@ import typing
 from typing import ClassVar, Type, Dict, Any
 
 from BaseClasses import Tutorial, ItemClassification
-from Options import PerGameCommonOptions, OptionError
+from Options import PerGameCommonOptions
 from worlds.AutoWorld import WebWorld, World
 from .CharacterUtils import get_playable_characters
 from .Enums import Character, StartingArea, SADX_BASE_ID
@@ -13,7 +13,8 @@ from .Locations import all_location_table
 from .Names import ItemName, LocationName
 from .Options import sadx_option_groups, SonicAdventureDXOptions, BaseMissionChoice
 from .Regions import create_sadx_regions, get_location_ids_for_area
-from .Rules import create_sadx_rules, starting_area_items, starting_area_no_items
+from .Rules import create_sadx_rules
+from .StartingSetup import StarterSetup, generate_early_sadx
 
 
 class SonicAdventureDXWeb(WebWorld):
@@ -32,9 +33,7 @@ class SonicAdventureDXWeb(WebWorld):
 class SonicAdventureDXWorld(World):
     game = "Sonic Adventure DX"
     web = SonicAdventureDXWeb()
-    starter_character: Character = None
-    starter_area: StartingArea = None
-    starter_item: str = None
+    starter_setup: StarterSetup = StarterSetup()
 
     item_name_to_id = {item["name"]: (item["id"] + SADX_BASE_ID) for item in all_item_table}
     location_name_to_id = {loc["name"]: (loc["id"] + SADX_BASE_ID) for loc in all_location_table}
@@ -44,38 +43,14 @@ class SonicAdventureDXWorld(World):
     options: SonicAdventureDXOptions
 
     def generate_early(self):
-        possible_characters = get_playable_characters(self.options)
-        if len(possible_characters) == 0:
-            raise OptionError("You need at least one playable character")
-
-        self.starter_character = self.random.choice(possible_characters)
-
-        # Random starting location
-        if self.options.random_starting_location == 0:
-            self.starter_area = self.random.choice(list(starting_area_items[self.starter_character].keys()))
-            possible_starting_items = starting_area_items[self.starter_character][self.starter_area]
-            if len(possible_starting_items) > 0:
-                self.starter_item = self.random.choice(possible_starting_items)
-        # Random starting location no items
-        elif self.options.random_starting_location == 1:
-            self.starter_area = self.random.choice(list(starting_area_no_items[self.starter_character].keys()))
-        # Station Square
-        elif self.options.random_starting_location == 2:
-            self.starter_area = StartingArea.StationSquare
-            possible_starting_items = starting_area_items[self.starter_character][self.starter_area]
-            if len(possible_starting_items) > 0:
-                self.starter_item = self.random.choice(possible_starting_items)
-        # Station Square no items
-        elif self.options.random_starting_location == 3:
-            self.starter_area = StartingArea.StationSquare
-
+        self.starter_setup = generate_early_sadx(self, self.options)
         # Universal tracker stuff, shouldn't do anything in standard gen
         if hasattr(self.multiworld, "re_gen_passthrough"):
             if "Sonic Adventure DX" in self.multiworld.re_gen_passthrough:
                 passthrough = self.multiworld.re_gen_passthrough["Sonic Adventure DX"]
-                self.starter_character = Character(passthrough["StartingCharacter"])
-                self.starter_area = StartingArea(passthrough["StartingArea"])
-                self.starter_item = passthrough["StartingItem"]
+                self.starter_setup.character = Character(passthrough["StartingCharacter"])
+                self.starter_setup.area = StartingArea(passthrough["StartingArea"])
+                self.starter_setup.item = passthrough["StartingItem"]
 
     # for the universal tracker, doesn't get called in standard gen
     @staticmethod
@@ -89,12 +64,12 @@ class SonicAdventureDXWorld(World):
         return SonicAdventureDXItem(item, self.player, classification)
 
     def create_regions(self) -> None:
-        create_sadx_regions(self.multiworld, self.player, self.starter_area,
+        create_sadx_regions(self.multiworld, self.player, self.starter_setup.area,
                             self.get_emblems_needed(), self.options)
 
     def create_items(self):
-        self.multiworld.itempool += create_sadx_items(self, self.starter_character, self.starter_item,
-                                                      self.get_emblems_needed(), self.options)
+        create_sadx_items(self, self.starter_setup.character, self.starter_setup.item,
+                          self.get_emblems_needed(), self.options)
 
     def set_rules(self):
         create_sadx_rules(self, self.get_emblems_needed())
@@ -105,17 +80,17 @@ class SonicAdventureDXWorld(World):
         header_text = header_text.format(self.multiworld.player_name[self.player])
         spoiler_handle.write(header_text)
 
-        starting_area_name = re.sub(r'(?<=[a-z])(?=[A-Z])', ' ', self.starter_area.name)
-        if self.starter_item is not None:
+        starting_area_name = re.sub(r'(?<=[a-z])(?=[A-Z])', ' ', self.starter_setup.area.name)
+        if self.starter_setup.item is not None:
             text = "Will start as {0} in the {1} area with {2}.\n"
-            text = text.format(self.starter_character.name, starting_area_name, self.starter_item)
+            text = text.format(self.starter_setup.character.name, starting_area_name, self.starter_setup.item)
         else:
             text = "Will start as {0} in the {1} area.\n"
-            text = text.format(self.starter_character.name, starting_area_name)
+            text = text.format(self.starter_setup.character.name, starting_area_name)
         spoiler_handle.writelines(text)
 
     def get_emblems_needed(self) -> int:
-        item_names = get_item_names(self.options, self.starter_item, self.starter_character)
+        item_names = get_item_names(self.options, self.starter_setup.item, self.starter_setup.character)
         location_count = sum(1 for location in self.multiworld.get_locations(self.player) if not location.locked) - 1
         emblem_count = max(1, location_count - len(item_names))
         return int(round(emblem_count * self.options.emblems_percentage / 100))
@@ -124,9 +99,9 @@ class SonicAdventureDXWorld(World):
         return {
             "ModVersion": "0.4.3",
             "EmblemsForPerfectChaos": self.get_emblems_needed(),
-            "StartingCharacter": self.starter_character.value,
-            "StartingArea": self.starter_area.value,
-            "StartingItem": self.starter_item,
+            "StartingCharacter": self.starter_setup.character.value,
+            "StartingArea": self.starter_setup.area.value,
+            "StartingItem": self.starter_setup.item,
             "RandomStartingLocation": self.options.random_starting_location.value,
             "FieldEmblemChecks": self.options.field_emblems_checks.value,
 
