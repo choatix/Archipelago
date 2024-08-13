@@ -77,7 +77,7 @@ class SonicAdventureDXWorld(World):
             return 0
 
         item_names = get_item_names(self.options, self.starter_setup.item, self.starter_setup.character)
-        location_count = sum(1 for location in self.multiworld.get_locations(self.player) if not location.locked) - 1
+        location_count = sum(1 for location in self.multiworld.get_locations(self.player) if not location.locked)
         emblem_count = max(1, location_count - len(item_names))
         return int(round(emblem_count * self.options.emblems_percentage / 100))
 

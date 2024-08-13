@@ -91,6 +91,10 @@ def get_item_names(options: SonicAdventureDXOptions, starter_item: str, starter_
     if is_character_playable(Character.Sonic, options) or is_character_playable(
             Character.Tails, options) or is_character_playable(Character.Big, options):
         item_names.append(ItemName.KeyItem.IceStone)
+    # Don't include the wind stone for characters that aren't sonic/tails/big
+    if is_character_playable(Character.Sonic, options) or is_character_playable(
+            Character.Tails, options) or is_character_playable(Character.Gamma, options):
+        item_names.append(ItemName.KeyItem.WindStone)
 
     if options.goal == 1 or options.goal == 2:
         item_names.append(ItemName.Progression.WhiteEmerald)

@@ -29,7 +29,7 @@ def generate_early_sadx(world: World, options: SonicAdventureDXOptions) -> Start
     if options.guaranteed_level:
         if options.random_starting_location:
             starter_setup.area = world.random.choice(list(starting_area_items[starter_setup.character].keys()))
-        if options.random_starting_location:
+        else:
             starter_setup.area = StartingArea.StationSquareMain
         possible_starting_items = starting_area_items[starter_setup.character][starter_setup.area]
         if len(possible_starting_items) > 0:
@@ -125,7 +125,7 @@ starting_area_items = {
     Character.Gamma: {
         StartingArea.StationSquareMain: [ItemName.KeyItem.HotelKeys],
         StartingArea.Hotel: [],
-        StartingArea.MysticRuins: [ItemName.KeyItem.Dynamite, ItemName.KeyItem.WindStone],
+        StartingArea.MysticRuins: [ItemName.KeyItem.Dynamite],
         StartingArea.Jungle: [],
     },
     Character.Big: {

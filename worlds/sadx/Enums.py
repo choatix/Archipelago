@@ -82,20 +82,6 @@ class AdventureField(Enum):
     Past = auto()
 
 
-class KeyItem(Enum):
-    HotelKeys = auto()
-    CasinoDistrictKeys = auto()
-    TwinkleParkTicket = auto()
-    EmployeeCard = auto()
-    Dynamite = auto()
-    IceStone = auto()
-    JungleKart = auto()
-    Train = auto()
-    Boat = auto()
-    Raft = auto()
-    NONE = auto()
-
-
 class StartingArea(Enum):
     StationSquareMain = 0
     Station = auto()
