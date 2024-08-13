@@ -4,6 +4,13 @@ from typing import List
 class Progression:
     Emblem = "Emblem"
     ChaosPeace = "Chaos' Peace"
+    WhiteEmerald = "White Chaos Emerald"
+    RedEmerald = "Red Chaos Emerald"
+    CyanEmerald = "Cyan Chaos Emerald"
+    PurpleEmerald = "Purple Chaos Emerald"
+    GreenEmerald = "Green Chaos Emerald"
+    YellowEmerald = "Yellow Chaos Emerald"
+    BlueEmerald = "Blue Chaos Emerald"
 
 
 class Filler:

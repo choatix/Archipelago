@@ -73,6 +73,9 @@ class SonicAdventureDXWorld(World):
         write_sadx_spoiler(self, spoiler_handle, self.starter_setup)
 
     def get_emblems_needed(self) -> int:
+        if self.options.goal == 1:
+            return 0
+
         item_names = get_item_names(self.options, self.starter_setup.item, self.starter_setup.character)
         location_count = sum(1 for location in self.multiworld.get_locations(self.player) if not location.locked) - 1
         emblem_count = max(1, location_count - len(item_names))
@@ -80,7 +83,8 @@ class SonicAdventureDXWorld(World):
 
     def fill_slot_data(self) -> Dict[str, Any]:
         return {
-            "ModVersion": "0.4.3",
+            "ModVersion": "0.5.0",
+            "Goal": self.options.goal.value,
             "EmblemsForPerfectChaos": self.get_emblems_needed(),
             "StartingCharacter": self.starter_setup.character.value,
             "StartingArea": self.starter_setup.area.value,

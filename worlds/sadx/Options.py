@@ -4,6 +4,32 @@ from Options import OptionGroup, Choice, Range, DefaultOnToggle, Toggle, DeathLi
 from Options import PerGameCommonOptions
 
 
+class Goal(Choice):
+    """
+    Determines the goal of the seed
+    Emblems (0): You have to collect a certain number of emblems to unlock the Perfect Chaos Fight.
+    Chaos Emerald Hunt (1): You have to collect all 7 Chaos Emeralds to unlock the Perfect Chaos Fight.
+        There won't be any emblems in the item pool, only filler items and traps depending on your options
+    Emblems and Chaos Emerald Hunt (2): You have to collect both emblems and the emeralds to fight Perfect Chaos.
+
+    Keep in mind select emerald hunt will require enough checks to add the 7 emeralds to the pool,
+        some options will fail to generate a seed if there are not enough checks to add the emeralds.
+    """
+    display_name = "Goal"
+    option_emblems = 0
+    option_emerald_hunt = 1
+    option_emblems_and_emerald_hunt = 2
+    default = 0
+
+
+class EmblemPercentage(Range):
+    """What percentage of the available emblems do you need to unlock the final story"""
+    display_name = "Emblem Requirement Percentage"
+    range_start = 1
+    range_end = 100
+    default = 80
+
+
 class RandomStartingLocation(DefaultOnToggle):
     """Randomize starting location, if false, you will start at Station Square"""
     display_name = "Random Starting location"
@@ -124,14 +150,6 @@ class UnifyChaos6(Toggle):
 class UnifyEggHornet(Toggle):
     """Determines whether the Egg Hornet fight counts as a single location or two (Sonic, Tails)"""
     display_name = "Unify Egg Hornet"
-
-
-class EmblemPercentage(Range):
-    """What percentage of the available emblems do you need to unlock the final story"""
-    display_name = "Emblem Requirement Percentage"
-    range_start = 1
-    range_end = 100
-    default = 80
 
 
 class BaseMissionChoice(Choice):
@@ -271,6 +289,7 @@ class BuyonTrapWeight(BaseTrapWeight):
 
 @dataclass
 class SonicAdventureDXOptions(PerGameCommonOptions):
+    goal: Goal
     emblems_percentage: EmblemPercentage
     random_starting_location: RandomStartingLocation
     guaranteed_level: GuaranteedLevel

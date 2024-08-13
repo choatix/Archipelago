@@ -1,6 +1,6 @@
 from worlds.generic.Rules import add_rule
 from .CharacterUtils import get_playable_character_item
-from .Enums import Character, StartingArea
+from .Enums import Character
 from .Locations import get_location_by_name, LocationInfo, level_location_table, LevelLocation, \
     upgrade_location_table, UpgradeLocation, sub_level_location_table, SubLevelLocation, field_emblem_location_table, \
     EmblemLocation, life_capsule_location_table, LifeCapsuleLocation, boss_location_table, BossFightLocation
@@ -80,13 +80,22 @@ def create_sadx_rules(self, needed_emblems: int):
         if loc is not None:
             calculate_rules(self, loc)
 
-    self.multiworld.get_location("Perfect Chaos Fight", self.player).place_locked_item(
-        self.create_item(ItemName.Progression.ChaosPeace))
+    perfect_chaos_fight = self.multiworld.get_location("Perfect Chaos Fight", self.player);
 
-    add_rule(self.multiworld.get_location("Perfect Chaos Fight", self.player),
-             lambda state: state.has(ItemName.Progression.Emblem, self.player, max(needed_emblems, 1)))
+    perfect_chaos_fight.place_locked_item(self.create_item(ItemName.Progression.ChaosPeace))
+
+    if self.options.goal == 0 or self.options.goal == 2:
+        add_rule(perfect_chaos_fight,
+                 lambda state: state.has(ItemName.Progression.Emblem, self.player, max(needed_emblems, 1)))
+
+    if self.options.goal == 1 or self.options.goal == 2:
+        add_rule(perfect_chaos_fight, lambda state: state.has(ItemName.Progression.WhiteEmerald, self.player))
+        add_rule(perfect_chaos_fight, lambda state: state.has(ItemName.Progression.RedEmerald, self.player))
+        add_rule(perfect_chaos_fight, lambda state: state.has(ItemName.Progression.CyanEmerald, self.player))
+        add_rule(perfect_chaos_fight, lambda state: state.has(ItemName.Progression.PurpleEmerald, self.player))
+        add_rule(perfect_chaos_fight, lambda state: state.has(ItemName.Progression.GreenEmerald, self.player))
+        add_rule(perfect_chaos_fight, lambda state: state.has(ItemName.Progression.YellowEmerald, self.player))
+        add_rule(perfect_chaos_fight, lambda state: state.has(ItemName.Progression.BlueEmerald, self.player))
 
     self.multiworld.completion_condition[self.player] = lambda state: state.has(ItemName.Progression.ChaosPeace,
                                                                                 self.player)
-
-

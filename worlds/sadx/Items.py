@@ -7,11 +7,9 @@ from .Names import ItemName
 
 
 @dataclass
-class CharacterUpgradeItem:
+class StoryProgressionItem:
     itemId: int
-    character: Character
     name: str
-    classification: ItemClassification
 
 
 @dataclass
@@ -19,6 +17,14 @@ class CharacterUnlockItem:
     itemId: int
     character: Character
     name: str
+
+
+@dataclass
+class CharacterUpgradeItem:
+    itemId: int
+    character: Character
+    name: str
+    classification: ItemClassification
 
 
 @dataclass
@@ -45,6 +51,18 @@ class ItemInfo(TypedDict):
     count: int
     classification: ItemClassification
 
+
+story_progression_item_table: List[StoryProgressionItem] = [
+    StoryProgressionItem(90, ItemName.Progression.Emblem),
+    StoryProgressionItem(91, ItemName.Progression.ChaosPeace),
+    StoryProgressionItem(92, ItemName.Progression.WhiteEmerald),
+    StoryProgressionItem(93, ItemName.Progression.RedEmerald),
+    StoryProgressionItem(94, ItemName.Progression.CyanEmerald),
+    StoryProgressionItem(95, ItemName.Progression.PurpleEmerald),
+    StoryProgressionItem(96, ItemName.Progression.GreenEmerald),
+    StoryProgressionItem(97, ItemName.Progression.YellowEmerald),
+    StoryProgressionItem(98, ItemName.Progression.BlueEmerald),
+]
 
 character_unlock_item_table: List[CharacterUnlockItem] = [
 
@@ -116,6 +134,13 @@ trap_item_table: List[TrapItem] = [
 ]
 
 
+def get_progression_items() -> List[ItemInfo]:
+    items: List[ItemInfo] = []
+    for key in story_progression_item_table:
+        items += [{"id": key.itemId, "name": key.name, "count": 0, "classification": ItemClassification.progression}]
+    return items
+
+
 def get_items_from_unlock() -> List[ItemInfo]:
     items: List[ItemInfo] = []
     for unlock in character_unlock_item_table:
@@ -161,14 +186,8 @@ class SonicAdventureDXItem(Item):
         super().__init__(item["name"], classification, item["id"] + SADX_BASE_ID, player)
 
 
-all_item_table: List[ItemInfo] = (
-        get_items_from_unlock() + get_items_from_upgrades() + get_items_from_keys()
-        + get_items_from_filler() + get_items_from_traps()
-        + [{"id": 90, "name": ItemName.Progression.Emblem, "count": 0,
-            "classification": ItemClassification.progression},
-           {"id": 91, "name": ItemName.Progression.ChaosPeace, "count": 0,
-            "classification": ItemClassification.progression},
-           ])
+all_item_table: List[ItemInfo] = (get_progression_items() + get_items_from_unlock() + get_items_from_upgrades()
+                                  + get_items_from_keys() + get_items_from_filler() + get_items_from_traps())
 
 
 def get_item_by_name(name: str) -> ItemInfo:
