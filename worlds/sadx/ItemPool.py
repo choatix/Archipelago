@@ -2,13 +2,13 @@ import math
 from typing import List
 
 from worlds.AutoWorld import World
-from .StartingSetup import StarterSetup
 from .CharacterUtils import get_playable_character_item, is_character_playable, are_character_upgrades_randomized
 from .Enums import Character, Area
 from .Items import filler_item_table, character_unlock_item_table, character_upgrade_item_table
 from .Names import ItemName, LocationName
 from .Options import SonicAdventureDXOptions
 from .Regions import get_location_ids_for_area
+from .StartingSetup import StarterSetup
 
 
 def create_sadx_items(world: World, starter_setup: StarterSetup,
@@ -127,6 +127,8 @@ def place_not_randomized_upgrades(world: World, options: SonicAdventureDXOptions
     if is_character_playable(Character.Tails, options) and not options.randomized_tails_upgrades:
         world.multiworld.get_location(LocationName.Tails.JetAnklet, world.player).place_locked_item(
             world.create_item(ItemName.Tails.JetAnklet))
+        world.multiworld.get_location(LocationName.Tails.RhythmBadge, world.player).place_locked_item(
+            world.create_item(ItemName.Tails.RhythmBadge))
     if is_character_playable(Character.Knuckles, options) and not options.randomized_knuckles_upgrades:
         world.multiworld.get_location(LocationName.Knuckles.ShovelClaw, world.player).place_locked_item(
             world.create_item(ItemName.Knuckles.ShovelClaw))
