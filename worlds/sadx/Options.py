@@ -161,8 +161,7 @@ class RandomizedSonicUpgrades(DefaultOnToggle):
 
 
 class RandomizedTailsUpgrades(DefaultOnToggle):
-    """Determines whether Tails' upgrades are randomized and sent to the item pool
-    If you turn this off, Tails will never get the Rhythm Badge"""
+    """Determines whether Tails' upgrades are randomized and sent to the item pool"""
     display_name = "Randomize Tails' Upgrades"
 
 

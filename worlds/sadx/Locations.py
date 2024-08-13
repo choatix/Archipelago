@@ -228,7 +228,7 @@ upgrade_location_table: List[UpgradeLocation] = [
     UpgradeLocation(605, LocationName.Big.Lure4, Area.EggCarrierMain, Character.Big, []),
 
     # Past
-    # UpgradeLocation(201, LocationName.Tails.RhythmBadge, Area.???, Character.Tails, []),
+    UpgradeLocation(201, LocationName.Tails.RhythmBadge, Area.AngelIsland, Character.Tails, []),
 ]
 
 sub_level_location_table: List[SubLevelLocation] = [
