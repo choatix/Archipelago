@@ -4,20 +4,14 @@ from Options import OptionGroup, Choice, Range, DefaultOnToggle, Toggle, DeathLi
 from Options import PerGameCommonOptions
 
 
-class RandomStartingLocation(Choice):
-    """
-    Select starting Location
-    Random location: You'll start at a random location, and you could get an item to ensure access to a level.
-    Random location no items: Same as Random, but locations that need items to access a level them are excluded.
-    Station Square: You'll start at Station Square, and you could get an item to ensure access to a level.
-    Station Square no items: Same as Station Square, but you won't get an item.
-    """
-    display_name = "Ring Loss"
-    option_random_location = 0
-    option_random_location_no_items = 1
-    option_station_square = 2
-    option_station_square_no_items = 3
-    default = 0
+class RandomStartingLocation(DefaultOnToggle):
+    """Randomize starting location, if false, you will start at Station Square"""
+    display_name = "Random Starting location"
+
+
+class GuaranteedLevel(Toggle):
+    """Ensures access to a level from the start, even if it means giving you an item"""
+    display_name = "Guaranteed Level Access"
 
 
 class FieldEmblemsChecks(DefaultOnToggle):
@@ -279,6 +273,7 @@ class BuyonTrapWeight(BaseTrapWeight):
 class SonicAdventureDXOptions(PerGameCommonOptions):
     emblems_percentage: EmblemPercentage
     random_starting_location: RandomStartingLocation
+    guaranteed_level: GuaranteedLevel
     death_link: DeathLink
     ring_link: RingLink
     hard_ring_link: HardRingLink
@@ -327,6 +322,7 @@ sadx_option_groups = [
     OptionGroup("General Options", [
         EmblemPercentage,
         RandomStartingLocation,
+        GuaranteedLevel,
         RingLink,
         HardRingLink,
         RingLoss,
