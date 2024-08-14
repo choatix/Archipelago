@@ -4,20 +4,40 @@ from Options import OptionGroup, Choice, Range, DefaultOnToggle, Toggle, DeathLi
 from Options import PerGameCommonOptions
 
 
-class RandomStartingLocation(Choice):
+class Goal(Choice):
     """
-    Select starting Location
-    Random location: You'll start at a random location, and you could get an item to ensure access to a level.
-    Random location no items: Same as Random, but locations that need items to access a level them are excluded.
-    Station Square: You'll start at Station Square, and you could get an item to ensure access to a level.
-    Station Square no items: Same as Station Square, but you won't get an item.
+    Determines the goal of the seed
+    Emblems (0): You have to collect a certain number of emblems to unlock the Perfect Chaos Fight.
+    Chaos Emerald Hunt (1): You have to collect all 7 Chaos Emeralds to unlock the Perfect Chaos Fight.
+        There won't be any emblems in the item pool, only filler items and traps depending on your options
+    Emblems and Chaos Emerald Hunt (2): You have to collect both emblems and the emeralds to fight Perfect Chaos.
+
+    Keep in mind select emerald hunt will require enough checks to add the 7 emeralds to the pool,
+        some options will fail to generate a seed if there are not enough checks to add the emeralds.
     """
-    display_name = "Ring Loss"
-    option_random_location = 0
-    option_random_location_no_items = 1
-    option_station_square = 2
-    option_station_square_no_items = 3
+    display_name = "Goal"
+    option_emblems = 0
+    option_emerald_hunt = 1
+    option_emblems_and_emerald_hunt = 2
     default = 0
+
+
+class EmblemPercentage(Range):
+    """What percentage of the available emblems do you need to unlock the final story"""
+    display_name = "Emblem Requirement Percentage"
+    range_start = 1
+    range_end = 100
+    default = 80
+
+
+class RandomStartingLocation(DefaultOnToggle):
+    """Randomize starting location, if false, you will start at Station Square"""
+    display_name = "Random Starting location"
+
+
+class GuaranteedLevel(Toggle):
+    """Ensures access to a level from the start, even if it means giving you an item"""
+    display_name = "Guaranteed Level Access"
 
 
 class FieldEmblemsChecks(DefaultOnToggle):
@@ -98,8 +118,16 @@ class PinballLifeCapsules(Toggle):
 
 
 class SubLevelChecks(DefaultOnToggle):
-    """Determines whether beating a sublevel grants checks
-    (4 Locations)"""
+    """Determines whether beating the default sublevel mission  grants checks (4 Locations)
+    Current sublevels are: Twinkle Circuit, Sand Hill and Sky Chase Act 1 and 2"""
+    display_name = "Sub-Level Checks"
+
+
+class SubLevelChecksHard(Toggle):
+    """
+    Determines whether beating the harder (points based) sublevel mission grants checks (4 Locations)
+    Only works if sublevel checks are enabled
+    """
     display_name = "Sub-Level Checks"
 
 
@@ -124,14 +152,6 @@ class UnifyEggHornet(Toggle):
     display_name = "Unify Egg Hornet"
 
 
-class EmblemPercentage(Range):
-    """What percentage of the available emblems do you need to unlock the final story"""
-    display_name = "Emblem Requirement Percentage"
-    range_start = 1
-    range_end = 100
-    default = 80
-
-
 class BaseMissionChoice(Choice):
     """
         For missions, the options go from 3 to 0
@@ -153,8 +173,7 @@ class RandomizedSonicUpgrades(DefaultOnToggle):
 
 
 class RandomizedTailsUpgrades(DefaultOnToggle):
-    """Determines whether Tails' upgrades are randomized and sent to the item pool
-    If you turn this off, Tails will never get the Rhythm Badge"""
+    """Determines whether Tails' upgrades are randomized and sent to the item pool"""
     display_name = "Randomize Tails' Upgrades"
 
 
@@ -231,6 +250,7 @@ class TrapFillPercentage(Range):
 class BaseTrapWeight(Choice):
     """
     Base Class for Trap Weights
+    The available options are 0 (off), 1 (low), 2 (medium) and 4 (high)
     """
     option_none = 0
     option_low = 1
@@ -269,8 +289,10 @@ class BuyonTrapWeight(BaseTrapWeight):
 
 @dataclass
 class SonicAdventureDXOptions(PerGameCommonOptions):
+    goal: Goal
     emblems_percentage: EmblemPercentage
     random_starting_location: RandomStartingLocation
+    guaranteed_level: GuaranteedLevel
     death_link: DeathLink
     ring_link: RingLink
     hard_ring_link: HardRingLink
@@ -297,6 +319,7 @@ class SonicAdventureDXOptions(PerGameCommonOptions):
 
     field_emblems_checks: FieldEmblemsChecks
     sub_level_checks: SubLevelChecks
+    sub_level_checks_hard: SubLevelChecksHard
     life_sanity: LifeSanity
     pinball_life_capsules: PinballLifeCapsules
     sonic_life_sanity: SonicLifeSanity
@@ -318,6 +341,7 @@ sadx_option_groups = [
     OptionGroup("General Options", [
         EmblemPercentage,
         RandomStartingLocation,
+        GuaranteedLevel,
         RingLink,
         HardRingLink,
         RingLoss,
@@ -347,6 +371,7 @@ sadx_option_groups = [
     OptionGroup("Extra locations", [
         FieldEmblemsChecks,
         SubLevelChecks,
+        SubLevelChecksHard,
         LifeSanity,
         PinballLifeCapsules,
         SonicLifeSanity,

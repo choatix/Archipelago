@@ -1,15 +1,16 @@
 from worlds.generic.Rules import add_rule
-from worlds.sadx import Character, StartingArea
-from worlds.sadx.Locations import get_location_by_name, LocationInfo, level_location_table, LevelLocation, \
+from .CharacterUtils import get_playable_character_item
+from .Enums import Character
+from .Locations import get_location_by_name, LocationInfo, level_location_table, LevelLocation, \
     upgrade_location_table, UpgradeLocation, sub_level_location_table, SubLevelLocation, field_emblem_location_table, \
     EmblemLocation, life_capsule_location_table, LifeCapsuleLocation, boss_location_table, BossFightLocation
-from worlds.sadx.Names import ItemName
+from .Names import ItemName
 
 
 def add_level_rules(self, location_name: str, level: LevelLocation):
     location = self.multiworld.get_location(location_name, self.player)
     add_rule(location,
-             lambda state, item=self.get_character_item_from_enum(level.character): state.has(item, self.player))
+             lambda state, item=get_playable_character_item(level.character): state.has(item, self.player))
     for need in level.extraItems:
         add_rule(location, lambda state, item=need: state.has(item, self.player))
 
@@ -17,7 +18,7 @@ def add_level_rules(self, location_name: str, level: LevelLocation):
 def add_upgrade_rules(self, location_name: str, upgrade: UpgradeLocation):
     location = self.multiworld.get_location(location_name, self.player)
     add_rule(location,
-             lambda state, item=self.get_character_item_from_enum(upgrade.character): state.has(item, self.player))
+             lambda state, item=get_playable_character_item(upgrade.character): state.has(item, self.player))
     for need in upgrade.extraItems:
         add_rule(location, lambda state, item=need: state.has(item, self.player))
 
@@ -25,14 +26,14 @@ def add_upgrade_rules(self, location_name: str, upgrade: UpgradeLocation):
 def add_sub_level_rules(self, location_name: str, sub_level: SubLevelLocation):
     location = self.multiworld.get_location(location_name, self.player)
     add_rule(location, lambda state: any(
-        state.has(self.get_character_item_from_enum(character), self.player) for character in sub_level.characters))
+        state.has(get_playable_character_item(character), self.player) for character in sub_level.characters))
 
 
 def add_field_emblem_rules(self, location_name: str, field_emblem: EmblemLocation):
     location = self.multiworld.get_location(location_name, self.player)
     # For the City Hall Emblem, Knuckles needs the Shovel Claw
     add_rule(location, lambda state: any(
-        state.has(self.get_character_item_from_enum(character), self.player) and
+        state.has(get_playable_character_item(character), self.player) and
         (state.has(ItemName.Knuckles.ShovelClaw,
                    self.player) if character == Character.Knuckles and field_emblem.emblemName == "City Hall Emblem" else True)
         for character in field_emblem.characters))
@@ -41,7 +42,7 @@ def add_field_emblem_rules(self, location_name: str, field_emblem: EmblemLocatio
 def add_life_capsule_rules(self, location_name: str, life_capsule: LifeCapsuleLocation):
     location = self.multiworld.get_location(location_name, self.player)
     add_rule(location,
-             lambda state, item=self.get_character_item_from_enum(life_capsule.character): state.has(item, self.player))
+             lambda state, item=get_playable_character_item(life_capsule.character): state.has(item, self.player))
     for need in life_capsule.extraItems:
         add_rule(location, lambda state, item=need: state.has(item, self.player))
 
@@ -49,7 +50,7 @@ def add_life_capsule_rules(self, location_name: str, life_capsule: LifeCapsuleLo
 def add_boss_fight_rules(self, location_name: str, boss_fight: BossFightLocation):
     location = self.multiworld.get_location(location_name, self.player)
     add_rule(location, lambda state: any(
-        state.has(self.get_character_item_from_enum(character), self.player) for character in boss_fight.characters))
+        state.has(get_playable_character_item(character), self.player) for character in boss_fight.characters))
 
 
 def calculate_rules(self, location: LocationInfo):
@@ -73,86 +74,28 @@ def calculate_rules(self, location: LocationInfo):
             add_boss_fight_rules(self, location["name"], boss_fight)
 
 
-def create_rules(self):
+def create_sadx_rules(self, needed_emblems: int):
     for ap_location in self.multiworld.get_locations(self.player):
         loc = get_location_by_name(ap_location.name)
         if loc is not None:
             calculate_rules(self, loc)
 
-    self.multiworld.get_location("Perfect Chaos Fight", self.player).place_locked_item(
-        self.create_item(ItemName.Progression.ChaosPeace))
+    perfect_chaos_fight = self.multiworld.get_location("Perfect Chaos Fight", self.player);
 
-    emblem_count = self.get_emblems_needed()
+    perfect_chaos_fight.place_locked_item(self.create_item(ItemName.Progression.ChaosPeace))
 
-    add_rule(self.multiworld.get_location("Perfect Chaos Fight", self.player),
-             lambda state: state.has(ItemName.Progression.Emblem, self.player, max(emblem_count, 1)))
+    if self.options.goal == 0 or self.options.goal == 2:
+        add_rule(perfect_chaos_fight,
+                 lambda state: state.has(ItemName.Progression.Emblem, self.player, max(needed_emblems, 1)))
+
+    if self.options.goal == 1 or self.options.goal == 2:
+        add_rule(perfect_chaos_fight, lambda state: state.has(ItemName.Progression.WhiteEmerald, self.player))
+        add_rule(perfect_chaos_fight, lambda state: state.has(ItemName.Progression.RedEmerald, self.player))
+        add_rule(perfect_chaos_fight, lambda state: state.has(ItemName.Progression.CyanEmerald, self.player))
+        add_rule(perfect_chaos_fight, lambda state: state.has(ItemName.Progression.PurpleEmerald, self.player))
+        add_rule(perfect_chaos_fight, lambda state: state.has(ItemName.Progression.GreenEmerald, self.player))
+        add_rule(perfect_chaos_fight, lambda state: state.has(ItemName.Progression.YellowEmerald, self.player))
+        add_rule(perfect_chaos_fight, lambda state: state.has(ItemName.Progression.BlueEmerald, self.player))
 
     self.multiworld.completion_condition[self.player] = lambda state: state.has(ItemName.Progression.ChaosPeace,
                                                                                 self.player)
-
-
-starting_area_items = {
-    Character.Sonic: {
-        StartingArea.StationSquare: [ItemName.KeyItem.TwinkleParkTicket,
-                                     ItemName.KeyItem.EmployeeCard],
-        StartingArea.Hotel: [],
-        StartingArea.MysticRuins: [],
-        StartingArea.EggCarrier: []
-    },
-    Character.Tails: {
-        StartingArea.StationSquare: [ItemName.KeyItem.EmployeeCard],
-        StartingArea.Casino: [],
-        StartingArea.MysticRuins: [],
-        StartingArea.EggCarrier: []
-    },
-    Character.Knuckles: {
-        StartingArea.StationSquare: [],
-        StartingArea.Casino: [],
-    },
-    Character.Amy: {
-        StartingArea.StationSquare: [ItemName.KeyItem.TwinkleParkTicket],
-        StartingArea.Jungle: [],
-        StartingArea.EggCarrier: []
-    },
-    Character.Gamma: {
-        StartingArea.StationSquare: [ItemName.KeyItem.HotelKeys],
-        StartingArea.Hotel: [],
-        StartingArea.MysticRuins: [ItemName.KeyItem.Dynamite],
-        StartingArea.Jungle: [],
-    },
-    Character.Big: {
-        StartingArea.Hotel: [],
-        StartingArea.StationSquare: [],
-        StartingArea.EggCarrier: []
-    }
-}
-
-starting_area_no_items = {
-    Character.Sonic: {
-        StartingArea.Hotel: [],
-        StartingArea.MysticRuins: [],
-        StartingArea.EggCarrier: []
-    },
-    Character.Tails: {
-        StartingArea.Casino: [],
-        StartingArea.MysticRuins: [],
-        StartingArea.EggCarrier: []
-    },
-    Character.Knuckles: {
-        StartingArea.StationSquare: [],
-        StartingArea.Casino: [],
-    },
-    Character.Amy: {
-        StartingArea.Jungle: [],
-        StartingArea.EggCarrier: []
-    },
-    Character.Gamma: {
-        StartingArea.Hotel: [],
-        StartingArea.Jungle: [],
-    },
-    Character.Big: {
-        StartingArea.Hotel: [],
-        StartingArea.StationSquare: [],
-        StartingArea.EggCarrier: []
-    }
-}

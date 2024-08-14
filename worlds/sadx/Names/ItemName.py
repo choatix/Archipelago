@@ -4,6 +4,13 @@ from typing import List
 class Progression:
     Emblem = "Emblem"
     ChaosPeace = "Chaos' Peace"
+    WhiteEmerald = "White Chaos Emerald"
+    RedEmerald = "Red Chaos Emerald"
+    CyanEmerald = "Cyan Chaos Emerald"
+    PurpleEmerald = "Purple Chaos Emerald"
+    GreenEmerald = "Green Chaos Emerald"
+    YellowEmerald = "Yellow Chaos Emerald"
+    BlueEmerald = "Blue Chaos Emerald"
 
 
 class Filler:
@@ -26,11 +33,13 @@ class KeyItem:
     Train = "Train"
     Boat = "Boat"
     Raft = "Raft"
+    StationKeys = "Station Keys"
     HotelKeys = "Hotel Keys"
     CasinoKeys = "Casino District Keys"
     TwinkleParkTicket = "Twinkle Park Ticket"
     EmployeeCard = "Employee Card"
     IceStone = "Ice Stone"
+    WindStone = "Wind Stone"
     Dynamite = "Dynamite"
     JungleCart = "Jungle Cart"
 

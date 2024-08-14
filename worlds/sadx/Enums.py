@@ -1,11 +1,12 @@
 import re
-from dataclasses import dataclass
 from enum import Enum, auto
 from typing import List
 
+SADX_BASE_ID = 543800000
+
 
 def pascal_to_space(s):
-    return re.sub(r'(?<!^)(?=[A-Z])', ' ', s)
+    return re.sub(r'(?<!^)(?=[A-Z0-9])', ' ', s)
 
 
 class Character(Enum):
@@ -70,6 +71,8 @@ class LevelMission(Enum):
 class SubLevel(Enum):
     SandHill = auto()
     TwinkleCircuit = auto()
+    SkyChaseAct1 = auto()
+    SkyChaseAct2 = auto()
 
 
 class AdventureField(Enum):
@@ -79,22 +82,9 @@ class AdventureField(Enum):
     Past = auto()
 
 
-class KeyItem(Enum):
-    HotelKeys = auto()
-    CasinoDistrictKeys = auto()
-    TwinkleParkTicket = auto()
-    EmployeeCard = auto()
-    Dynamite = auto()
-    IceStone = auto()
-    JungleKart = auto()
-    Train = auto()
-    Boat = auto()
-    Raft = auto()
-    NONE = auto()
-
-
 class StartingArea(Enum):
-    StationSquare = 0
+    StationSquareMain = 0
+    Station = auto()
     Hotel = auto()
     Casino = auto()
     MysticRuins = auto()
@@ -102,19 +92,14 @@ class StartingArea(Enum):
     EggCarrier = auto()
 
 
-@dataclass
-class AreaDetails:
-    field: AdventureField
-    keyItem: KeyItem
-
-
 class Area(Enum):
-    StationSquareMain = (AdventureField.StationSquare, KeyItem.NONE)
-    Hotel = (AdventureField.StationSquare, KeyItem.HotelKeys)
-    Casino = (AdventureField.StationSquare, KeyItem.CasinoDistrictKeys)
-    TwinklePark = (AdventureField.StationSquare, KeyItem.TwinkleParkTicket)
-    SpeedHighway = (AdventureField.StationSquare, KeyItem.EmployeeCard)
-    MysticRuinsMain = (AdventureField.MysticRuins, KeyItem.NONE)
-    AngelIsland = (AdventureField.MysticRuins, KeyItem.Dynamite)
-    Jungle = (AdventureField.MysticRuins, KeyItem.JungleKart)
-    EggCarrierMain = (AdventureField.EggCarrier, KeyItem.NONE)
+    StationSquareMain = 0
+    Station = auto()
+    Hotel = auto()
+    Casino = auto()
+    TwinklePark = auto()
+    SpeedHighway = auto()
+    MysticRuinsMain = auto()
+    AngelIsland = auto()
+    Jungle = auto()
+    EggCarrierMain = auto()
