@@ -1,10 +1,12 @@
 from worlds.generic.Rules import add_rule
-from .CharacterUtils import get_playable_character_item
+from . import SonicAdventureDXOptions
+from .CharacterUtils import get_playable_character_item, is_character_playable, are_character_upgrades_randomized
 from .Enums import Character, Goal
 from .Locations import get_location_by_name, LocationInfo, level_location_table, LevelLocation, \
     upgrade_location_table, UpgradeLocation, sub_level_location_table, SubLevelLocation, field_emblem_location_table, \
     EmblemLocation, life_capsule_location_table, LifeCapsuleLocation, boss_location_table, BossFightLocation
-from .Names import ItemName
+from .Names import ItemName, LocationName
+from ..AutoWorld import World
 
 
 def add_level_rules(self, location_name: str, level: LevelLocation):
@@ -97,3 +99,4 @@ def create_sadx_rules(self, needed_emblems: int):
 
     self.multiworld.completion_condition[self.player] = lambda state: state.has(ItemName.Progression.ChaosPeace,
                                                                                 self.player)
+

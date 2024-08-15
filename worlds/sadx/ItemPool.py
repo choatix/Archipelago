@@ -25,11 +25,11 @@ def create_sadx_items(world: World, starter_setup: StarterSetup,
     # Calculate the number of items per type
     item_count = get_item_count(world, len(item_names), needed_emblems, options)
 
+    # Character Upgrades
+    place_not_randomized_upgrades(world, options, item_names)
+
     # Keys and Characters Items
     itempool.extend(world.create_item(item_name) for item_name in item_names)
-
-    # Character Upgrades
-    place_not_randomized_upgrades(world, options)
 
     # Emblems
     for _ in range(item_count.emblem_count_progressive):
@@ -143,52 +143,50 @@ def get_item_for_options_per_character(character: Character, options: SonicAdven
         if unlock_character.character == character:
             item_names.append(unlock_character.name)
 
-    if are_character_upgrades_randomized(character, options):
-        for character_upgrade in character_upgrade_item_table:
-            if character_upgrade.character == character:
-                item_names.append(character_upgrade.name)
+    for character_upgrade in character_upgrade_item_table:
+        if character_upgrade.character == character:
+            item_names.append(character_upgrade.name)
 
     return item_names
 
 
-def place_not_randomized_upgrades(world: World, options: SonicAdventureDXOptions):
-    if is_character_playable(Character.Sonic, options) and not options.randomized_sonic_upgrades:
-        world.multiworld.get_location(LocationName.Sonic.LightShoes, world.player).place_locked_item(
-            world.create_item(ItemName.Sonic.LightShoes))
-        world.multiworld.get_location(LocationName.Sonic.CrystalRing, world.player).place_locked_item(
-            world.create_item(ItemName.Sonic.CrystalRing))
-        world.multiworld.get_location(LocationName.Sonic.AncientLight, world.player).place_locked_item(
-            world.create_item(ItemName.Sonic.AncientLight))
-    if is_character_playable(Character.Tails, options) and not options.randomized_tails_upgrades:
-        world.multiworld.get_location(LocationName.Tails.JetAnklet, world.player).place_locked_item(
-            world.create_item(ItemName.Tails.JetAnklet))
-        world.multiworld.get_location(LocationName.Tails.RhythmBadge, world.player).place_locked_item(
-            world.create_item(ItemName.Tails.RhythmBadge))
-    if is_character_playable(Character.Knuckles, options) and not options.randomized_knuckles_upgrades:
-        world.multiworld.get_location(LocationName.Knuckles.ShovelClaw, world.player).place_locked_item(
-            world.create_item(ItemName.Knuckles.ShovelClaw))
-        world.multiworld.get_location(LocationName.Knuckles.FightingGloves, world.player).place_locked_item(
-            world.create_item(ItemName.Knuckles.FightingGloves))
-    if is_character_playable(Character.Amy, options) and not options.randomized_amy_upgrades:
-        world.multiworld.get_location(LocationName.Amy.WarriorFeather, world.player).place_locked_item(
-            world.create_item(ItemName.Amy.WarriorFeather))
-        world.multiworld.get_location(LocationName.Amy.LongHammer, world.player).place_locked_item(
-            world.create_item(ItemName.Amy.LongHammer))
-    if is_character_playable(Character.Big, options) and not options.randomized_big_upgrades:
-        world.multiworld.get_location(LocationName.Big.LifeBelt, world.player).place_locked_item(
-            world.create_item(ItemName.Big.LifeBelt))
-        world.multiworld.get_location(LocationName.Big.PowerRod, world.player).place_locked_item(
-            world.create_item(ItemName.Big.PowerRod))
-        world.multiworld.get_location(LocationName.Big.Lure1, world.player).place_locked_item(
-            world.create_item(ItemName.Big.Lure1))
-        world.multiworld.get_location(LocationName.Big.Lure2, world.player).place_locked_item(
-            world.create_item(ItemName.Big.Lure2))
-        world.multiworld.get_location(LocationName.Big.Lure3, world.player).place_locked_item(
-            world.create_item(ItemName.Big.Lure3))
-        world.multiworld.get_location(LocationName.Big.Lure4, world.player).place_locked_item(
-            world.create_item(ItemName.Big.Lure4))
-    if is_character_playable(Character.Gamma, options) and not options.randomized_gamma_upgrades:
-        world.multiworld.get_location(LocationName.Gamma.JetBooster, world.player).place_locked_item(
-            world.create_item(ItemName.Gamma.JetBooster))
-        world.multiworld.get_location(LocationName.Gamma.LaserBlaster, world.player).place_locked_item(
-            world.create_item(ItemName.Gamma.LaserBlaster))
+def place_not_randomized_upgrades(world: World, options: SonicAdventureDXOptions, item_names: List[str]):
+    upgrades = {
+        Character.Sonic: [
+            (LocationName.Sonic.LightShoes, ItemName.Sonic.LightShoes),
+            (LocationName.Sonic.CrystalRing, ItemName.Sonic.CrystalRing),
+            (LocationName.Sonic.AncientLight, ItemName.Sonic.AncientLight)
+        ],
+        Character.Tails: [
+            (LocationName.Tails.JetAnklet, ItemName.Tails.JetAnklet),
+            (LocationName.Tails.RhythmBadge, ItemName.Tails.RhythmBadge)
+        ],
+        Character.Knuckles: [
+            (LocationName.Knuckles.ShovelClaw, ItemName.Knuckles.ShovelClaw),
+            (LocationName.Knuckles.FightingGloves, ItemName.Knuckles.FightingGloves)
+        ],
+        Character.Amy: [
+            (LocationName.Amy.WarriorFeather, ItemName.Amy.WarriorFeather),
+            (LocationName.Amy.LongHammer, ItemName.Amy.LongHammer)
+        ],
+        Character.Big: [
+            (LocationName.Big.LifeBelt, ItemName.Big.LifeBelt),
+            (LocationName.Big.PowerRod, ItemName.Big.PowerRod),
+            (LocationName.Big.Lure1, ItemName.Big.Lure1),
+            (LocationName.Big.Lure2, ItemName.Big.Lure2),
+            (LocationName.Big.Lure3, ItemName.Big.Lure3),
+            (LocationName.Big.Lure4, ItemName.Big.Lure4)
+        ],
+        Character.Gamma: [
+            (LocationName.Gamma.JetBooster, ItemName.Gamma.JetBooster),
+            (LocationName.Gamma.LaserBlaster, ItemName.Gamma.LaserBlaster)
+        ]
+    }
+
+    for character, upgrades in upgrades.items():
+        if is_character_playable(character, options) and not are_character_upgrades_randomized(character, options):
+            for location_name, item_name in upgrades:
+                world.multiworld.get_location(location_name, world.player).place_locked_item(
+                    world.create_item(item_name))
+                item_names.remove(item_name)
+
