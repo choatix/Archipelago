@@ -79,14 +79,14 @@ class SonicAdventureDXWorld(World):
         if self.options.goal.value is Goal.EmeraldHunt:
             return 0
 
-        item_names = get_item_names(self.options, self.starter_setup.item, self.starter_setup.character)
+        item_names = get_item_names(self.options, self.starter_setup)
         location_count = sum(1 for location in self.multiworld.get_locations(self.player) if not location.locked)
         emblem_count = max(1, location_count - len(item_names))
         return max(1, int(round(emblem_count * self.options.emblems_percentage / 100)))
 
     def fill_slot_data(self) -> Dict[str, Any]:
         return {
-            "ModVersion": "0.5.1",
+            "ModVersion": "0.5.2",
             "Goal": self.options.goal.value,
             "EmblemsForPerfectChaos": self.get_emblems_needed(),
             "StartingCharacter": self.starter_setup.character.value,
