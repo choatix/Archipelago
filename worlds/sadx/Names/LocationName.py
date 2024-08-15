@@ -44,3 +44,12 @@ class Boss:
     Zero = "E-100 Zero"
     E101Beta = "E-101 Beta"
     E101mkII = "E-101 mkII"
+
+
+class Groups:
+    UpgradePoints = "Upgrade Points"
+    FieldEmblems = "Field Emblems"
+    Levels = "Levels"
+    Sublevels = "Sublevels"
+    Bosses = "Bosses"
+    LifeCapsules = "Life Capsules"

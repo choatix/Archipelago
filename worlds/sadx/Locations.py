@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List, TypedDict
+from typing import List, TypedDict, Dict
 
 from BaseClasses import Location, Region
 from .Enums import Area, Level, SubLevel, Character, LevelMission, EVERYONE, FLYERS, \
@@ -493,6 +493,32 @@ all_location_table: List[LocationInfo] = ((get_location_from_level() + get_locat
                                            + get_location_from_sub_level() + get_location_from_emblem()
                                            + get_location_from_life_capsule() + get_location_from_boss()) +
                                           [{"id": 9, "name": "Perfect Chaos Fight"}])
+
+
+def get_location_name_by_level(level_name: str) -> List[str]:
+    return [location["name"] for location in get_location_from_level() if level_name in location["name"]] + \
+        [location["name"] for location in get_location_from_life_capsule() if level_name in location["name"]]
+
+
+group_location_table: Dict[str, List[str]] = {
+    LocationName.Groups.UpgradePoints: [location["name"] for location in get_location_from_upgrade()],
+    LocationName.Groups.FieldEmblems: [location["name"] for location in get_location_from_emblem()],
+    LocationName.Groups.Levels: [location["name"] for location in get_location_from_level()],
+    LocationName.Groups.Sublevels: [location["name"] for location in get_location_from_sub_level()],
+    LocationName.Groups.LifeCapsules: [location["name"] for location in get_location_from_life_capsule()],
+    LocationName.Groups.Bosses: [location["name"] for location in get_location_from_boss()],
+    pascal_to_space(Level.EmeraldCoast.name): get_location_name_by_level(pascal_to_space(Level.EmeraldCoast.name)),
+    pascal_to_space(Level.WindyValley.name): get_location_name_by_level(pascal_to_space(Level.WindyValley.name)),
+    pascal_to_space(Level.Casinopolis.name): get_location_name_by_level(pascal_to_space(Level.Casinopolis.name)),
+    pascal_to_space(Level.IceCap.name): get_location_name_by_level(pascal_to_space(Level.IceCap.name)),
+    pascal_to_space(Level.TwinklePark.name): get_location_name_by_level(pascal_to_space(Level.TwinklePark.name)),
+    pascal_to_space(Level.SpeedHighway.name): get_location_name_by_level(pascal_to_space(Level.SpeedHighway.name)),
+    pascal_to_space(Level.RedMountain.name): get_location_name_by_level(pascal_to_space(Level.RedMountain.name)),
+    pascal_to_space(Level.LostWorld.name): get_location_name_by_level(pascal_to_space(Level.LostWorld.name)),
+    pascal_to_space(Level.FinalEgg.name): get_location_name_by_level(pascal_to_space(Level.FinalEgg.name)),
+    pascal_to_space(Level.HotShelter.name): get_location_name_by_level(pascal_to_space(Level.HotShelter.name)),
+
+}
 
 
 def get_location_by_id(location_id: int) -> LocationInfo:
