@@ -1,6 +1,7 @@
 import math
 from typing import List
 
+from BaseClasses import ItemClassification
 from worlds.AutoWorld import World
 from .CharacterUtils import get_playable_character_item, is_character_playable, are_character_upgrades_randomized
 from .Enums import Character, Area, Goal
@@ -11,34 +12,35 @@ from .Regions import get_location_ids_for_area
 from .StartingSetup import StarterSetup
 
 
-class ItemCount:
+class ItemDistribution:
     emblem_count_progressive: int = 0
     emblem_count_non_progressive: int = 0
     filler_count: int = 0
     trap_count: int = 0
 
 
-def create_sadx_items(world: World, starter_setup: StarterSetup,
-                      needed_emblems: int, options: SonicAdventureDXOptions):
-    itempool = []
+def create_sadx_items(world: World, starter_setup: StarterSetup, needed_emblems: int, options: SonicAdventureDXOptions):
     item_names = get_item_names(options, starter_setup)
-    # Calculate the number of items per type
-    item_count = get_item_count(world, len(item_names), needed_emblems, options)
 
-    # Character Upgrades
+    # Calculate the number of items per type
+    item_distribution = get_item_distribution(world, len(item_names), needed_emblems, options)
+
+    # Character Upgrades and removal of from the item pool
     place_not_randomized_upgrades(world, options, item_names)
 
     # Keys and Characters Items
-    itempool.extend(world.create_item(item_name) for item_name in item_names)
+    itempool = [world.create_item(item_name) for item_name in item_names]
 
     # Emblems
-    for _ in range(item_count.emblem_count_progressive):
+    for _ in range(item_distribution.emblem_count_progressive):
         itempool.append(world.create_item(ItemName.Progression.Emblem))
-    for _ in range(item_count.emblem_count_non_progressive):
-        itempool.append(world.create_item(ItemName.Progression.Emblem, True))
+    for _ in range(item_distribution.emblem_count_non_progressive):
+        item = world.create_item(ItemName.Progression.Emblem)
+        item.classification = ItemClassification.filler
+        itempool.append(item)
 
     # Filler
-    for _ in range(item_count.filler_count):
+    for _ in range(item_distribution.filler_count):
         filler_item = world.random.choice(filler_item_table)
         itempool.append(world.create_item(filler_item.name))
 
@@ -48,7 +50,7 @@ def create_sadx_items(world: World, starter_setup: StarterSetup,
     trap_weights += [ItemName.Traps.SpringTrap] * options.spring_trap_weight.value
     trap_weights += [ItemName.Traps.PoliceTrap] * options.police_trap_weight.value
     trap_weights += [ItemName.Traps.BuyonTrap] * options.buyon_trap_weight.value
-    for _ in range(item_count.trap_count):
+    for _ in range(item_distribution.trap_count):
         trap_item_name = world.random.choice(trap_weights)
         itempool.append(world.create_item(trap_item_name))
 
@@ -61,26 +63,26 @@ def create_sadx_items(world: World, starter_setup: StarterSetup,
     world.multiworld.itempool += itempool
 
 
-def get_item_count(world: World, stating_item_count: int, needed_emblems: int,
-                   options: SonicAdventureDXOptions) -> ItemCount:
-    item_count = ItemCount()
+def get_item_distribution(world: World, stating_item_count: int, needed_emblems: int,
+                          options: SonicAdventureDXOptions) -> ItemDistribution:
+    distribution = ItemDistribution()
 
     location_count = sum(1 for location in world.multiworld.get_locations(world.player) if not location.locked)
     extra_items = max(0, location_count - (needed_emblems + stating_item_count))
 
-    if options.goal in {Goal.Emblems, Goal.EmblemsAndEmeraldHunt}:
+    if options.goal.value in {Goal.Emblems, Goal.EmblemsAndEmeraldHunt}:
         # If Emblems are enabled, we calculate how many progressive emblems and filler emblems we need
         junk_count = math.floor(extra_items * (options.junk_fill_percentage.value / 100.0))
     else:
         # If not, all the remaining locations are filler
         junk_count = extra_items
 
-    item_count.emblem_count_progressive = needed_emblems
-    item_count.emblem_count_non_progressive = extra_items - junk_count
-    item_count.trap_count = math.floor(junk_count * (options.trap_fill_percentage.value / 100.0))
-    item_count.filler_count = junk_count - item_count.trap_count
+    distribution.emblem_count_progressive = needed_emblems
+    distribution.emblem_count_non_progressive = extra_items - junk_count
+    distribution.trap_count = math.floor(junk_count * (options.trap_fill_percentage.value / 100.0))
+    distribution.filler_count = junk_count - distribution.trap_count
 
-    return item_count
+    return distribution
 
 
 def get_item_names(options: SonicAdventureDXOptions, starter_setup: StarterSetup) -> List[str]:
@@ -119,7 +121,7 @@ def get_item_names(options: SonicAdventureDXOptions, starter_setup: StarterSetup
             Character.Tails, options) or is_character_playable(Character.Gamma, options):
         item_names.append(ItemName.KeyItem.WindStone)
 
-    if options.goal in {Goal.EmeraldHunt, Goal.EmblemsAndEmeraldHunt}:
+    if options.goal.value in {Goal.EmeraldHunt, Goal.EmblemsAndEmeraldHunt}:
         item_names.append(ItemName.Progression.WhiteEmerald)
         item_names.append(ItemName.Progression.RedEmerald)
         item_names.append(ItemName.Progression.CyanEmerald)
@@ -189,4 +191,3 @@ def place_not_randomized_upgrades(world: World, options: SonicAdventureDXOptions
                 world.multiworld.get_location(location_name, world.player).place_locked_item(
                     world.create_item(item_name))
                 item_names.remove(item_name)
-

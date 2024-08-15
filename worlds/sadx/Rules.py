@@ -85,10 +85,10 @@ def create_sadx_rules(self, needed_emblems: int):
     perfect_chaos_fight = self.multiworld.get_location("Perfect Chaos Fight", self.player)
     perfect_chaos_fight.place_locked_item(self.create_item(ItemName.Progression.ChaosPeace))
 
-    if self.options.goal in {Goal.Emblems, Goal.EmblemsAndEmeraldHunt}:
+    if self.options.goal.value in {Goal.Emblems, Goal.EmblemsAndEmeraldHunt}:
         add_rule(perfect_chaos_fight, lambda state: state.has(ItemName.Progression.Emblem, self.player, needed_emblems))
 
-    if self.options.goal in {Goal.EmeraldHunt, Goal.EmblemsAndEmeraldHunt}:
+    if self.options.goal.value in {Goal.EmeraldHunt, Goal.EmblemsAndEmeraldHunt}:
         add_rule(perfect_chaos_fight, lambda state: state.has(ItemName.Progression.WhiteEmerald, self.player))
         add_rule(perfect_chaos_fight, lambda state: state.has(ItemName.Progression.RedEmerald, self.player))
         add_rule(perfect_chaos_fight, lambda state: state.has(ItemName.Progression.CyanEmerald, self.player))

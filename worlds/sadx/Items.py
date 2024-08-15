@@ -178,10 +178,9 @@ def get_items_from_traps() -> List[ItemInfo]:
 class SonicAdventureDXItem(Item):
     game: str = "Sonic Adventure DX"
 
-    def __init__(self, name: str, player, force_non_progression=False):
+    def __init__(self, name: str, player):
         item = get_item_by_name(name)
-        classification = ItemClassification.filler if force_non_progression else item["classification"]
-        super().__init__(item["name"], classification, item["id"] + SADX_BASE_ID, player)
+        super().__init__(item["name"], item["classification"], item["id"] + SADX_BASE_ID, player)
 
 
 all_item_table: List[ItemInfo] = (

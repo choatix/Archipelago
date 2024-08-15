@@ -61,7 +61,7 @@ class SonicAdventureDXWorld(World):
         return slot_data
 
     def create_item(self, name: str, force_non_progression=False) -> SonicAdventureDXItem:
-        return SonicAdventureDXItem(name, self.player, force_non_progression)
+        return SonicAdventureDXItem(name, self.player)
 
     def create_regions(self) -> None:
         create_sadx_regions(self, self.starter_setup.area, self.options)
