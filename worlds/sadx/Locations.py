@@ -262,7 +262,7 @@ field_emblem_location_table: List[EmblemLocation] = [
     # Egg Carrier
     EmblemLocation(30, Area.EggCarrierMain, FLYERS, "Pool Emblem"),
     EmblemLocation(31, Area.EggCarrierMain, [Character.Tails], "Spinning Platform Emblem"),
-    EmblemLocation(32, Area.EggCarrierMain, [Character.Tails], "Hidden Bed Emblem"),
+    EmblemLocation(32, Area.EggCarrierMain, [Character.Tails, Character.Sonic], "Hidden Bed Emblem"),
     EmblemLocation(33, Area.EggCarrierMain, [Character.Sonic], "Main Platform Emblem"),
 
 ]
