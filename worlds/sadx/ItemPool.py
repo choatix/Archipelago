@@ -3,7 +3,7 @@ from typing import List
 
 from worlds.AutoWorld import World
 from .CharacterUtils import get_playable_character_item, is_character_playable, are_character_upgrades_randomized
-from .Enums import Character, Area
+from .Enums import Character, Area, Goal
 from .Items import filler_item_table, playable_character_item_table, character_upgrade_item_table
 from .Names import ItemName, LocationName
 from .Options import SonicAdventureDXOptions
@@ -17,21 +17,24 @@ def create_sadx_items(world: World, starter_setup: StarterSetup,
 
     # Keys and Characters Items
     item_names = get_item_names(options, starter_setup.item, starter_setup.character)
-    for itemName in item_names:
-        itempool.append(world.create_item(itemName))
+    itempool.extend(world.create_item(item_name) for item_name in item_names)
 
+    # Character Upgrades
     place_not_randomized_upgrades(world, options)
 
-    # One less for the Perfect Chaos location
-    location_count = sum(1 for location in world.multiworld.get_locations(world.player) if not location.locked) - 1
-    emblem_count = max(1, location_count - len(item_names))
+    location_count = sum(1 for location in world.multiworld.get_locations(world.player) if not location.locked)
+    filler_items = max(0, location_count - (needed_emblems + len(item_names)))
 
-    filler_items = emblem_count - needed_emblems
-
-    for _ in range(needed_emblems):
-        itempool.append(world.create_item(ItemName.Progression.Emblem))
-
-    junk_count = math.floor(filler_items * (options.junk_fill_percentage.value / 100.0))
+    if options.goal in {Goal.Emblems, Goal.EmblemsAndEmeraldHunt}:
+        # If Emblems are enabled, we calculate how many progressive emblems and filler emblems we need
+        junk_count = math.floor(filler_items * (options.junk_fill_percentage.value / 100.0))
+        for _ in range(needed_emblems):
+            itempool.append(world.create_item(ItemName.Progression.Emblem))
+        for _ in range(filler_items - junk_count):
+            itempool.append(world.create_item(ItemName.Progression.Emblem, True))
+    else:
+        # If not, all the remaining locations are filler
+        junk_count = filler_items
 
     trap_count = math.floor(junk_count * (options.trap_fill_percentage.value / 100.0))
 
@@ -48,9 +51,6 @@ def create_sadx_items(world: World, starter_setup: StarterSetup,
     for _ in range(junk_count - trap_count):
         filler_item = world.random.choice(filler_item_table)
         itempool.append(world.create_item(filler_item.name))
-
-    for _ in range(filler_items - junk_count):
-        itempool.append(world.create_item(ItemName.Progression.Emblem, True))
 
     starter_character_name = get_playable_character_item(starter_setup.character)
     world.multiworld.push_precollected(world.create_item(starter_character_name))
@@ -91,12 +91,12 @@ def get_item_names(options: SonicAdventureDXOptions, starter_item: str, starter_
     if is_character_playable(Character.Sonic, options) or is_character_playable(
             Character.Tails, options) or is_character_playable(Character.Big, options):
         item_names.append(ItemName.KeyItem.IceStone)
-    # Don't include the wind stone for characters that aren't sonic/tails/big
+    # Don't include the wind stone for characters that aren't sonic/tails/gamma
     if is_character_playable(Character.Sonic, options) or is_character_playable(
             Character.Tails, options) or is_character_playable(Character.Gamma, options):
         item_names.append(ItemName.KeyItem.WindStone)
 
-    if options.goal == 1 or options.goal == 2:
+    if options.goal in {Goal.EmeraldHunt, Goal.EmblemsAndEmeraldHunt}:
         item_names.append(ItemName.Progression.WhiteEmerald)
         item_names.append(ItemName.Progression.RedEmerald)
         item_names.append(ItemName.Progression.CyanEmerald)

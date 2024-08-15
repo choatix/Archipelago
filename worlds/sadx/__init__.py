@@ -5,7 +5,7 @@ from BaseClasses import Tutorial
 from Options import PerGameCommonOptions
 from worlds.AutoWorld import WebWorld, World
 from .CharacterUtils import get_playable_characters
-from .Enums import Character, StartingArea, SADX_BASE_ID
+from .Enums import Character, StartingArea, SADX_BASE_ID, Goal
 from .ItemPool import create_sadx_items, get_item_names
 from .Items import all_item_table, SonicAdventureDXItem, get_item_by_name, group_item_table
 from .Locations import all_location_table, group_location_table
@@ -64,7 +64,7 @@ class SonicAdventureDXWorld(World):
         return SonicAdventureDXItem(name, self.player, force_non_progression)
 
     def create_regions(self) -> None:
-        create_sadx_regions(self, self.starter_setup.area, self.get_emblems_needed(), self.options)
+        create_sadx_regions(self, self.starter_setup.area, self.options)
 
     def create_items(self):
         create_sadx_items(self, self.starter_setup, self.get_emblems_needed(), self.options)
@@ -76,13 +76,13 @@ class SonicAdventureDXWorld(World):
         write_sadx_spoiler(self, spoiler_handle, self.starter_setup)
 
     def get_emblems_needed(self) -> int:
-        if self.options.goal == 1:
+        if self.options.goal.value is Goal.EmeraldHunt:
             return 0
 
         item_names = get_item_names(self.options, self.starter_setup.item, self.starter_setup.character)
         location_count = sum(1 for location in self.multiworld.get_locations(self.player) if not location.locked)
         emblem_count = max(1, location_count - len(item_names))
-        return int(round(emblem_count * self.options.emblems_percentage / 100))
+        return max(1, int(round(emblem_count * self.options.emblems_percentage / 100)))
 
     def fill_slot_data(self) -> Dict[str, Any]:
         return {

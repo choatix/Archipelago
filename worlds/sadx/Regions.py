@@ -9,8 +9,7 @@ from .Options import SonicAdventureDXOptions
 from ..AutoWorld import World
 
 
-def create_sadx_regions(world: World, starter_area: StartingArea, emblems_needed: int,
-                        options: SonicAdventureDXOptions):
+def create_sadx_regions(world: World, starter_area: StartingArea, options: SonicAdventureDXOptions):
     def create_region(name: str, area: Area) -> Region:
         region = Region(name, world.player, world.multiworld)
         world.multiworld.regions.append(region)
@@ -64,10 +63,10 @@ def create_sadx_regions(world: World, starter_area: StartingArea, emblems_needed
 
     perfect_chaos_area = Region("Perfect Chaos Fight", world.player, world.multiworld)
     perfect_chaos = SonicAdventureDXLocation(world.player, 9, menu_region)
+    perfect_chaos.locked = True
     perfect_chaos_area.locations.append(perfect_chaos)
 
-    menu_region.connect(perfect_chaos_area, None,
-                        lambda state: state.has(ItemName.Progression.ChaosPeace, world.player, emblems_needed))
+    menu_region.connect(perfect_chaos_area)
 
 
 def add_locations_to_region(region: Region, area: Area, player: int, options: SonicAdventureDXOptions):

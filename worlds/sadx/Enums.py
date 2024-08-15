@@ -9,6 +9,12 @@ def pascal_to_space(s):
     return re.sub(r'(?<!^)(?=[A-Z0-9])', ' ', s)
 
 
+class Goal(Enum):
+    Emblems = 0
+    EmeraldHunt = auto()
+    EmblemsAndEmeraldHunt = auto()
+
+
 class Character(Enum):
     Sonic = 1
     Tails = auto()
