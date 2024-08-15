@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import TypedDict, List
+from typing import TypedDict, List, Dict
 
 from BaseClasses import ItemClassification, Item
 from .Enums import Character, SADX_BASE_ID
@@ -48,7 +48,6 @@ class TrapItem:
 class ItemInfo(TypedDict):
     id: int
     name: str
-    count: int
     classification: ItemClassification
 
 
@@ -64,7 +63,7 @@ story_progression_item_table: List[StoryProgressionItem] = [
     StoryProgressionItem(98, ItemName.Progression.BlueEmerald),
 ]
 
-character_unlock_item_table: List[CharacterUnlockItem] = [
+playable_character_item_table: List[CharacterUnlockItem] = [
 
     CharacterUnlockItem(1, Character.Sonic, ItemName.Sonic.Playable),
     CharacterUnlockItem(2, Character.Tails, ItemName.Tails.Playable),
@@ -137,43 +136,42 @@ trap_item_table: List[TrapItem] = [
 def get_progression_items() -> List[ItemInfo]:
     items: List[ItemInfo] = []
     for key in story_progression_item_table:
-        items += [{"id": key.itemId, "name": key.name, "count": 0, "classification": ItemClassification.progression}]
+        items += [{"id": key.itemId, "name": key.name, "classification": ItemClassification.progression}]
     return items
 
 
-def get_items_from_unlock() -> List[ItemInfo]:
+def get_items_from_playable_characters() -> List[ItemInfo]:
     items: List[ItemInfo] = []
-    for unlock in character_unlock_item_table:
-        items += [{"id": unlock.itemId, "name": unlock.name, "count": 1,
-                   "classification": ItemClassification.progression}]
+    for unlock in playable_character_item_table:
+        items += [{"id": unlock.itemId, "name": unlock.name, "classification": ItemClassification.progression}]
     return items
 
 
 def get_items_from_upgrades() -> List[ItemInfo]:
     items: List[ItemInfo] = []
     for upgrade in character_upgrade_item_table:
-        items += [{"id": upgrade.itemId, "name": upgrade.name, "count": 1, "classification": upgrade.classification}]
+        items += [{"id": upgrade.itemId, "name": upgrade.name, "classification": upgrade.classification}]
     return items
 
 
 def get_items_from_keys() -> List[ItemInfo]:
     items: List[ItemInfo] = []
     for key in key_item_table:
-        items += [{"id": key.itemId, "name": key.name, "count": 1, "classification": ItemClassification.progression}]
+        items += [{"id": key.itemId, "name": key.name, "classification": ItemClassification.progression}]
     return items
 
 
 def get_items_from_filler() -> List[ItemInfo]:
     items: List[ItemInfo] = []
     for key in filler_item_table:
-        items += [{"id": key.itemId, "name": key.name, "count": 0, "classification": ItemClassification.filler}]
+        items += [{"id": key.itemId, "name": key.name, "classification": ItemClassification.filler}]
     return items
 
 
 def get_items_from_traps() -> List[ItemInfo]:
     items: List[ItemInfo] = []
     for key in trap_item_table:
-        items += [{"id": key.itemId, "name": key.name, "count": 0, "classification": ItemClassification.trap}]
+        items += [{"id": key.itemId, "name": key.name, "classification": ItemClassification.trap}]
     return items
 
 
@@ -186,8 +184,21 @@ class SonicAdventureDXItem(Item):
         super().__init__(item["name"], classification, item["id"] + SADX_BASE_ID, player)
 
 
-all_item_table: List[ItemInfo] = (get_progression_items() + get_items_from_unlock() + get_items_from_upgrades()
-                                  + get_items_from_keys() + get_items_from_filler() + get_items_from_traps())
+all_item_table: List[ItemInfo] = (
+        get_progression_items() + get_items_from_playable_characters() + get_items_from_upgrades()
+        + get_items_from_keys() + get_items_from_filler() + get_items_from_traps())
+
+group_item_table: Dict[str, List[str]] = {
+    ItemName.Groups.ChaosEmeralds: [ItemName.Progression.WhiteEmerald, ItemName.Progression.RedEmerald,
+                                    ItemName.Progression.CyanEmerald, ItemName.Progression.PurpleEmerald,
+                                    ItemName.Progression.GreenEmerald, ItemName.Progression.YellowEmerald,
+                                    ItemName.Progression.BlueEmerald],
+    ItemName.Groups.PlayableCharacters: [item["name"] for item in get_items_from_playable_characters()],
+    ItemName.Groups.Upgrades: [item["name"] for item in get_items_from_upgrades()],
+    ItemName.Groups.KeyItems: [item["name"] for item in get_items_from_keys()],
+    ItemName.Groups.Fillers: [item["name"] for item in get_items_from_filler()],
+    ItemName.Groups.Traps: [item["name"] for item in get_items_from_traps()],
+}
 
 
 def get_item_by_name(name: str) -> ItemInfo:

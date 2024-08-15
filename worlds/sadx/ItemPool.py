@@ -4,7 +4,7 @@ from typing import List
 from worlds.AutoWorld import World
 from .CharacterUtils import get_playable_character_item, is_character_playable, are_character_upgrades_randomized
 from .Enums import Character, Area
-from .Items import filler_item_table, character_unlock_item_table, character_upgrade_item_table
+from .Items import filler_item_table, playable_character_item_table, character_upgrade_item_table
 from .Names import ItemName, LocationName
 from .Options import SonicAdventureDXOptions
 from .Regions import get_location_ids_for_area
@@ -117,7 +117,7 @@ def get_item_for_options_per_character(character: Character, starter_character: 
         return item_names
 
     if character != starter_character:
-        for unlock_character in character_unlock_item_table:
+        for unlock_character in playable_character_item_table:
             if unlock_character.character == character:
                 item_names.append(unlock_character.name)
 
