@@ -106,7 +106,7 @@ def get_item_names(options: SonicAdventureDXOptions, starter_setup: StarterSetup
         item_names.append(ItemName.KeyItem.CasinoKeys)
     if len(get_location_ids_for_area(Area.TwinklePark, options)) > 0:
         item_names.append(ItemName.KeyItem.TwinkleParkTicket)
-    if len(get_location_ids_for_area(Area.SpeedHighway, options)) > 0:
+    if is_character_playable(Character.Sonic, options) or is_character_playable(Character.Tails, options):
         item_names.append(ItemName.KeyItem.EmployeeCard)
     if len(get_location_ids_for_area(Area.AngelIsland, options)) > 0:
         item_names.append(ItemName.KeyItem.Dynamite)

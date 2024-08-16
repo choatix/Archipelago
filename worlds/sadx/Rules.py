@@ -1,12 +1,11 @@
 from worlds.generic.Rules import add_rule
-from . import SonicAdventureDXOptions
-from .CharacterUtils import get_playable_character_item, is_character_playable, are_character_upgrades_randomized
+from .CharacterUtils import get_playable_character_item
 from .Enums import Character, Goal
 from .Locations import get_location_by_name, LocationInfo, level_location_table, LevelLocation, \
     upgrade_location_table, UpgradeLocation, sub_level_location_table, SubLevelLocation, field_emblem_location_table, \
-    EmblemLocation, life_capsule_location_table, LifeCapsuleLocation, boss_location_table, BossFightLocation
-from .Names import ItemName, LocationName
-from ..AutoWorld import World
+    EmblemLocation, life_capsule_location_table, LifeCapsuleLocation, boss_location_table, BossFightLocation, \
+    mission_location_table, MissionLocation
+from .Names import ItemName
 
 
 def add_level_rules(self, location_name: str, level: LevelLocation):
@@ -55,6 +54,16 @@ def add_boss_fight_rules(self, location_name: str, boss_fight: BossFightLocation
         state.has(get_playable_character_item(character), self.player) for character in boss_fight.characters))
 
 
+# add_mission_rules
+
+def add_mission_rules(self, location_name: str, mission: MissionLocation):
+    location = self.multiworld.get_location(location_name, self.player)
+    add_rule(location, lambda state, item=get_playable_character_item(mission.character): state.has(item, self.player))
+    add_rule(location, lambda state, card_area=mission.cardArea.value: state.can_reach_region(card_area, self.player))
+    for need in mission.extraItems:
+        add_rule(location, lambda state, item=need: state.has(item, self.player))
+
+
 def calculate_rules(self, location: LocationInfo):
     if location is None:
         return
@@ -76,6 +85,9 @@ def calculate_rules(self, location: LocationInfo):
     for boss_fight in boss_location_table:
         if location["id"] == boss_fight.locationId:
             add_boss_fight_rules(self, location["name"], boss_fight)
+    for mission in mission_location_table:
+        if location["id"] == mission.locationId:
+            add_mission_rules(self, location["name"], mission)
 
 
 def create_sadx_rules(self, needed_emblems: int):
@@ -99,4 +111,3 @@ def create_sadx_rules(self, needed_emblems: int):
 
     self.multiworld.completion_condition[self.player] = lambda state: state.has(ItemName.Progression.ChaosPeace,
                                                                                 self.player)
-

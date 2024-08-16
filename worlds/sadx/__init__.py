@@ -86,7 +86,7 @@ class SonicAdventureDXWorld(World):
 
     def fill_slot_data(self) -> Dict[str, Any]:
         return {
-            "ModVersion": "0.5.2",
+            "ModVersion": "0.6.0",
             "Goal": self.options.goal.value,
             "EmblemsForPerfectChaos": self.get_emblems_needed(),
             "StartingCharacter": self.starter_setup.character.value,
@@ -94,6 +94,7 @@ class SonicAdventureDXWorld(World):
             "StartingItem": self.starter_setup.item,
             "RandomStartingLocation": self.options.random_starting_location.value,
             "FieldEmblemChecks": self.options.field_emblems_checks.value,
+            "MissionModeChecks": self.options.mission_mode_checks.value,
 
             "LifeSanity": self.options.life_sanity.value,
             "PinballLifeCapsules": self.options.pinball_life_capsules.value,
