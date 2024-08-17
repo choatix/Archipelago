@@ -1,9 +1,10 @@
 from worlds.generic.Rules import add_rule
 from .CharacterUtils import get_playable_character_item
-from .Enums import Character
+from .Enums import Character, Goal
 from .Locations import get_location_by_name, LocationInfo, level_location_table, LevelLocation, \
     upgrade_location_table, UpgradeLocation, sub_level_location_table, SubLevelLocation, field_emblem_location_table, \
-    EmblemLocation, life_capsule_location_table, LifeCapsuleLocation, boss_location_table, BossFightLocation
+    EmblemLocation, life_capsule_location_table, LifeCapsuleLocation, boss_location_table, BossFightLocation, \
+    mission_location_table, MissionLocation
 from .Names import ItemName
 
 
@@ -53,7 +54,19 @@ def add_boss_fight_rules(self, location_name: str, boss_fight: BossFightLocation
         state.has(get_playable_character_item(character), self.player) for character in boss_fight.characters))
 
 
+# add_mission_rules
+
+def add_mission_rules(self, location_name: str, mission: MissionLocation):
+    location = self.multiworld.get_location(location_name, self.player)
+    add_rule(location, lambda state, item=get_playable_character_item(mission.character): state.has(item, self.player))
+    add_rule(location, lambda state, card_area=mission.cardArea.value: state.can_reach_region(card_area, self.player))
+    for need in mission.extraItems:
+        add_rule(location, lambda state, item=need: state.has(item, self.player))
+
+
 def calculate_rules(self, location: LocationInfo):
+    if location is None:
+        return
     for level in level_location_table:
         if location["id"] == level.locationId:
             add_level_rules(self, location["name"], level)
@@ -72,23 +85,22 @@ def calculate_rules(self, location: LocationInfo):
     for boss_fight in boss_location_table:
         if location["id"] == boss_fight.locationId:
             add_boss_fight_rules(self, location["name"], boss_fight)
+    for mission in mission_location_table:
+        if location["id"] == mission.locationId:
+            add_mission_rules(self, location["name"], mission)
 
 
 def create_sadx_rules(self, needed_emblems: int):
     for ap_location in self.multiworld.get_locations(self.player):
-        loc = get_location_by_name(ap_location.name)
-        if loc is not None:
-            calculate_rules(self, loc)
+        calculate_rules(self, get_location_by_name(ap_location.name))
 
-    perfect_chaos_fight = self.multiworld.get_location("Perfect Chaos Fight", self.player);
-
+    perfect_chaos_fight = self.multiworld.get_location("Perfect Chaos Fight", self.player)
     perfect_chaos_fight.place_locked_item(self.create_item(ItemName.Progression.ChaosPeace))
 
-    if self.options.goal == 0 or self.options.goal == 2:
-        add_rule(perfect_chaos_fight,
-                 lambda state: state.has(ItemName.Progression.Emblem, self.player, max(needed_emblems, 1)))
+    if self.options.goal.value in {Goal.Emblems, Goal.EmblemsAndEmeraldHunt}:
+        add_rule(perfect_chaos_fight, lambda state: state.has(ItemName.Progression.Emblem, self.player, needed_emblems))
 
-    if self.options.goal == 1 or self.options.goal == 2:
+    if self.options.goal.value in {Goal.EmeraldHunt, Goal.EmblemsAndEmeraldHunt}:
         add_rule(perfect_chaos_fight, lambda state: state.has(ItemName.Progression.WhiteEmerald, self.player))
         add_rule(perfect_chaos_fight, lambda state: state.has(ItemName.Progression.RedEmerald, self.player))
         add_rule(perfect_chaos_fight, lambda state: state.has(ItemName.Progression.CyanEmerald, self.player))

@@ -3,16 +3,16 @@ from .CharacterUtils import is_any_character_playable, character_has_life_sanity
 from .CharacterUtils import is_character_playable
 from .Enums import Area, StartingArea, SubLevelMission
 from .Locations import SonicAdventureDXLocation, boss_location_table, life_capsule_location_table, \
-    field_emblem_location_table, upgrade_location_table, level_location_table, sub_level_location_table
+    field_emblem_location_table, upgrade_location_table, level_location_table, sub_level_location_table, \
+    mission_location_table
 from .Names import ItemName, LocationName
 from .Options import SonicAdventureDXOptions
 from ..AutoWorld import World
 
 
-def create_sadx_regions(world: World, starter_area: StartingArea, emblems_needed: int,
-                        options: SonicAdventureDXOptions):
-    def create_region(name: str, area: Area) -> Region:
-        region = Region(name, world.player, world.multiworld)
+def create_sadx_regions(world: World, starter_area: StartingArea, options: SonicAdventureDXOptions):
+    def create_region_with_locations(area: Area) -> Region:
+        region = Region(area.value, world.player, world.multiworld)
         world.multiworld.regions.append(region)
         add_locations_to_region(region, area, world.player, options)
         return region
@@ -24,23 +24,21 @@ def create_sadx_regions(world: World, starter_area: StartingArea, emblems_needed
     menu_region = Region("Menu", world.player, world.multiworld)
     world.multiworld.regions.append(menu_region)
 
-    station_square_main_area = create_region("Station Square", Area.StationSquareMain)
-    station_area = create_region("Station", Area.Station)
-    hotel_area = create_region("Hotel Area", Area.Hotel)
-    casino_area = create_region("Casino Area", Area.Casino)
-    twinkle_park_area = create_region("Twinkle Park Area", Area.TwinklePark)
-    speed_highway_area = create_region("Speed Highway Area", Area.SpeedHighway)
-    mystic_ruins_area = create_region("Mystic Ruins", Area.MysticRuinsMain)
-    angel_island_area = create_region("Angel Island", Area.AngelIsland)
-    jungle_area = create_region("Jungle", Area.Jungle)
-    egg_carrier_area = create_region("Egg Carrier", Area.EggCarrierMain)
+    station_square_main_area = create_region_with_locations(Area.StationSquareMain)
+    station_area = create_region_with_locations(Area.Station)
+    hotel_area = create_region_with_locations(Area.Hotel)
+    casino_area = create_region_with_locations(Area.Casino)
+    twinkle_park_area = create_region_with_locations(Area.TwinklePark)
+    mystic_ruins_area = create_region_with_locations(Area.MysticRuinsMain)
+    angel_island_area = create_region_with_locations(Area.AngelIsland)
+    jungle_area = create_region_with_locations(Area.Jungle)
+    egg_carrier_area = create_region_with_locations(Area.EggCarrierMain)
 
     connect_two_way(station_square_main_area, station_area, ItemName.KeyItem.StationKeys)
     connect_two_way(station_square_main_area, hotel_area, ItemName.KeyItem.HotelKeys)
     connect_two_way(station_area, casino_area, ItemName.KeyItem.CasinoKeys)
     connect_two_way(hotel_area, casino_area, ItemName.KeyItem.CasinoKeys)
     connect_two_way(station_square_main_area, twinkle_park_area, ItemName.KeyItem.TwinkleParkTicket)
-    connect_two_way(station_square_main_area, speed_highway_area, ItemName.KeyItem.EmployeeCard)
     connect_two_way(mystic_ruins_area, angel_island_area, ItemName.KeyItem.Dynamite)
     connect_two_way(mystic_ruins_area, jungle_area, ItemName.KeyItem.JungleCart)
     connect_two_way(station_area, mystic_ruins_area, ItemName.KeyItem.Train)
@@ -49,7 +47,7 @@ def create_sadx_regions(world: World, starter_area: StartingArea, emblems_needed
 
     if starter_area == StartingArea.StationSquareMain:
         menu_region.connect(station_square_main_area)
-    if starter_area == StartingArea.Station:
+    elif starter_area == StartingArea.Station:
         menu_region.connect(station_area)
     elif starter_area == StartingArea.Hotel:
         menu_region.connect(hotel_area)
@@ -63,11 +61,11 @@ def create_sadx_regions(world: World, starter_area: StartingArea, emblems_needed
         menu_region.connect(egg_carrier_area)
 
     perfect_chaos_area = Region("Perfect Chaos Fight", world.player, world.multiworld)
-    perfect_chaos = SonicAdventureDXLocation(world.player, 9, menu_region)
-    perfect_chaos_area.locations.append(perfect_chaos)
+    perfect_chaos_fight = SonicAdventureDXLocation(world.player, 9, menu_region)
+    perfect_chaos_fight.locked = True
+    perfect_chaos_area.locations.append(perfect_chaos_fight)
 
-    menu_region.connect(perfect_chaos_area, None,
-                        lambda state: state.has(ItemName.Progression.ChaosPeace, world.player, emblems_needed))
+    menu_region.connect(perfect_chaos_area)
 
 
 def add_locations_to_region(region: Region, area: Area, player: int, options: SonicAdventureDXOptions):
@@ -129,5 +127,13 @@ def get_location_ids_for_area(area: Area, options: SonicAdventureDXOptions):
 
                 if is_any_character_playable(boss_fight.characters, options):
                     location_ids.append(boss_fight.locationId)
+
+    if options.mission_mode_checks:
+        for mission in mission_location_table:
+            if not options.non_stop_missions and mission.locationId in [49, 53, 54, 58]:
+                continue
+            if mission.objectiveArea == area:
+                if is_character_playable(mission.character, options):
+                    location_ids.append(mission.locationId)
 
     return location_ids

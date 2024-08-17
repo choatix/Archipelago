@@ -46,6 +46,21 @@ class FieldEmblemsChecks(DefaultOnToggle):
     display_name = "Field Emblems Checks"
 
 
+class MissionChecks(Toggle):
+    """Determines whether completing missions grants checks (60 Locations)"""
+    display_name = "Enable Mission Checks"
+
+
+class NonStopMission(Toggle):
+    """Determines whether missions where you can't stop to collect things are enabled:
+    Mission 49 (Flags in the Kart section of Twinkle Park )
+    Mission 53 (Triple Jump in the Snowboard section of Ice Cap)
+    Mission 54 (Flags in the Snowboard section of Ice Cap)
+    Mission 58 (Flags in the rolling bounce section of Lost World)
+    """
+    display_name = "Enable non-stop Mission"
+
+
 class RingLoss(Choice):
     """
     How taking damage is handled
@@ -318,6 +333,8 @@ class SonicAdventureDXOptions(PerGameCommonOptions):
     unify_egg_hornet: UnifyEggHornet
 
     field_emblems_checks: FieldEmblemsChecks
+    mission_mode_checks: MissionChecks
+    non_stop_missions: NonStopMission
     sub_level_checks: SubLevelChecks
     sub_level_checks_hard: SubLevelChecksHard
     life_sanity: LifeSanity
@@ -370,6 +387,8 @@ sadx_option_groups = [
     ]),
     OptionGroup("Extra locations", [
         FieldEmblemsChecks,
+        MissionChecks,
+        NonStopMission,
         SubLevelChecks,
         SubLevelChecksHard,
         LifeSanity,

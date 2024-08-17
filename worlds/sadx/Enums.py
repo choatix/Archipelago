@@ -9,6 +9,12 @@ def pascal_to_space(s):
     return re.sub(r'(?<!^)(?=[A-Z0-9])', ' ', s)
 
 
+class Goal:
+    Emblems = 0
+    EmeraldHunt = 1
+    EmblemsAndEmeraldHunt = 2
+
+
 class Character(Enum):
     Sonic = 1
     Tails = auto()
@@ -93,13 +99,12 @@ class StartingArea(Enum):
 
 
 class Area(Enum):
-    StationSquareMain = 0
-    Station = auto()
-    Hotel = auto()
-    Casino = auto()
-    TwinklePark = auto()
-    SpeedHighway = auto()
-    MysticRuinsMain = auto()
-    AngelIsland = auto()
-    Jungle = auto()
-    EggCarrierMain = auto()
+    StationSquareMain = "Station Square"
+    Station = "Station"
+    Hotel = "Hotel Area"
+    Casino = "Casino Area"
+    TwinklePark = "Twinkle Park Area"
+    MysticRuinsMain = "Mystic Ruins"
+    AngelIsland = "Angel Island"
+    Jungle = "Jungle"
+    EggCarrierMain = "Egg Carrier"

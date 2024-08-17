@@ -5,10 +5,10 @@ from BaseClasses import Tutorial
 from Options import PerGameCommonOptions
 from worlds.AutoWorld import WebWorld, World
 from .CharacterUtils import get_playable_characters
-from .Enums import Character, StartingArea, SADX_BASE_ID
+from .Enums import Character, StartingArea, SADX_BASE_ID, Goal
 from .ItemPool import create_sadx_items, get_item_names
-from .Items import all_item_table, SonicAdventureDXItem, get_item_by_name
-from .Locations import all_location_table
+from .Items import all_item_table, SonicAdventureDXItem, get_item_by_name, group_item_table
+from .Locations import all_location_table, group_location_table
 from .Names import ItemName, LocationName
 from .Options import sadx_option_groups, SonicAdventureDXOptions, BaseMissionChoice
 from .Regions import create_sadx_regions, get_location_ids_for_area
@@ -37,6 +37,9 @@ class SonicAdventureDXWorld(World):
     item_name_to_id = {item["name"]: (item["id"] + SADX_BASE_ID) for item in all_item_table}
     location_name_to_id = {loc["name"]: (loc["id"] + SADX_BASE_ID) for loc in all_location_table}
 
+    item_name_groups = group_item_table
+    location_name_groups = group_location_table
+
     options_dataclass: ClassVar[Type[PerGameCommonOptions]] = SonicAdventureDXOptions
 
     options: SonicAdventureDXOptions
@@ -58,10 +61,10 @@ class SonicAdventureDXWorld(World):
         return slot_data
 
     def create_item(self, name: str, force_non_progression=False) -> SonicAdventureDXItem:
-        return SonicAdventureDXItem(name, self.player, force_non_progression)
+        return SonicAdventureDXItem(name, self.player)
 
     def create_regions(self) -> None:
-        create_sadx_regions(self, self.starter_setup.area, self.get_emblems_needed(), self.options)
+        create_sadx_regions(self, self.starter_setup.area, self.options)
 
     def create_items(self):
         create_sadx_items(self, self.starter_setup, self.get_emblems_needed(), self.options)
@@ -73,17 +76,17 @@ class SonicAdventureDXWorld(World):
         write_sadx_spoiler(self, spoiler_handle, self.starter_setup)
 
     def get_emblems_needed(self) -> int:
-        if self.options.goal == 1:
+        if self.options.goal.value is Goal.EmeraldHunt:
             return 0
 
-        item_names = get_item_names(self.options, self.starter_setup.item, self.starter_setup.character)
+        item_names = get_item_names(self.options, self.starter_setup)
         location_count = sum(1 for location in self.multiworld.get_locations(self.player) if not location.locked)
         emblem_count = max(1, location_count - len(item_names))
-        return int(round(emblem_count * self.options.emblems_percentage / 100))
+        return max(1, int(round(emblem_count * self.options.emblems_percentage / 100)))
 
     def fill_slot_data(self) -> Dict[str, Any]:
         return {
-            "ModVersion": "0.5.0",
+            "ModVersion": "0.6.0",
             "Goal": self.options.goal.value,
             "EmblemsForPerfectChaos": self.get_emblems_needed(),
             "StartingCharacter": self.starter_setup.character.value,
@@ -91,6 +94,7 @@ class SonicAdventureDXWorld(World):
             "StartingItem": self.starter_setup.item,
             "RandomStartingLocation": self.options.random_starting_location.value,
             "FieldEmblemChecks": self.options.field_emblems_checks.value,
+            "MissionModeChecks": self.options.mission_mode_checks.value,
 
             "LifeSanity": self.options.life_sanity.value,
             "PinballLifeCapsules": self.options.pinball_life_capsules.value,

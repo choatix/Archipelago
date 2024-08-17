@@ -6,7 +6,7 @@ from worlds.AutoWorld import World
 from .CharacterUtils import get_playable_characters, are_character_upgrades_randomized
 from .Enums import Character, StartingArea, Area
 from .Locations import level_location_table, upgrade_location_table, sub_level_location_table, \
-    field_emblem_location_table, boss_location_table
+    field_emblem_location_table, boss_location_table, life_capsule_location_table, mission_location_table
 from .Names import ItemName
 from .Options import SonicAdventureDXOptions
 
@@ -35,8 +35,11 @@ def generate_early_sadx(world: World, options: SonicAdventureDXOptions) -> Start
         if len(possible_starting_items) > 0:
             starter_setup.item = world.random.choice(possible_starting_items)
     else:
-        possible_starter_areas = get_possible_starting_areas(world, starter_setup.character)
-        starter_setup.area = world.random.choice(possible_starter_areas)
+        if options.random_starting_location:
+            possible_starter_areas = get_possible_starting_areas(world, starter_setup.character)
+            starter_setup.area = world.random.choice(possible_starter_areas)
+        else:
+            starter_setup.area = StartingArea.StationSquareMain
 
     return starter_setup
 
@@ -80,6 +83,18 @@ def has_locations_without_items(character: Character, area: Area, options: Sonic
     if options.boss_checks:
         for boss_fight in boss_location_table:
             if character in boss_fight.characters and boss_fight.area == area:
+                return True
+
+    if options.life_sanity:
+        for life_capsule in life_capsule_location_table:
+            if life_capsule.character == character and life_capsule.area == area and not life_capsule.extraItems:
+                return True
+    # non_stop_missions
+    if options.mission_mode_checks:
+        for mission in mission_location_table:
+            if not options.non_stop_missions and mission.locationId in [49, 53, 54, 58]:
+                continue
+            if mission.character == character and mission.cardArea == area and mission.objectiveArea == area and not mission.extraItems:
                 return True
 
 

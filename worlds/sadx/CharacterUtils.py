@@ -35,7 +35,7 @@ def character_has_life_sanity(character: Character, options: SonicAdventureDXOpt
     return character_life_sanity.get(character)
 
 
-def are_character_upgrades_randomized(character: Character, options: SonicAdventureDXOptions) -> Toggle:
+def are_character_upgrades_randomized(character: Character, options: SonicAdventureDXOptions) -> bool:
     character_randomized_upgrades = {
         Character.Sonic: options.randomized_sonic_upgrades,
         Character.Tails: options.randomized_tails_upgrades,
@@ -44,7 +44,7 @@ def are_character_upgrades_randomized(character: Character, options: SonicAdvent
         Character.Big: options.randomized_big_upgrades,
         Character.Gamma: options.randomized_gamma_upgrades
     }
-    return character_randomized_upgrades.get(character)
+    return bool(character_randomized_upgrades.get(character).value)
 
 
 def get_character_missions(character: Character, options: SonicAdventureDXOptions) -> BaseMissionChoice:

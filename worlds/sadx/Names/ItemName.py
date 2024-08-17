@@ -85,4 +85,13 @@ class Big:
     Lure4 = "Lure 4"
 
 
+class Groups:
+    ChaosEmeralds = "Chaos Emeralds"
+    PlayableCharacters = "Playable Characters"
+    Upgrades = "Upgrades"
+    KeyItems = "Key Items"
+    Fillers = "Fillers"
+    Traps = "Traps"
+
+
 EVERY_LURE: List[str] = [Big.Lure1, Big.Lure2, Big.Lure3, Big.Lure4]
