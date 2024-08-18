@@ -26,6 +26,7 @@ class Character(Enum):
 
 EVERYONE: List[Character] = [Character.Sonic, Character.Tails, Character.Knuckles,
                              Character.Amy, Character.Big, Character.Gamma]
+SONIC_TAILS: List[Character] = [Character.Sonic, Character.Tails]
 FLYERS: List[Character] = [Character.Tails, Character.Knuckles]
 
 
