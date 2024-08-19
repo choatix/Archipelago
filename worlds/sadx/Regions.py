@@ -221,9 +221,7 @@ def get_location_ids_for_area(area: Area, character: Character, options: SonicAd
                             location_ids.append(life_capsule.locationId)
     if options.boss_checks:
         for boss_fight in boss_location_table:
-            if boss_fight.area == area:
-                if boss_fight.unified:
-                    continue
+            if boss_fight.area == area and len(boss_fight.characters) == 1 and boss_fight.characters[0] == character:
                 if options.unify_chaos4 and boss_fight.boss == LocationName.Boss.Chaos4 and not boss_fight.unified:
                     continue
                 if options.unify_chaos6 and boss_fight.boss == LocationName.Boss.Chaos6 and not boss_fight.unified:

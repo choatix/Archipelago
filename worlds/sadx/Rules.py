@@ -1,5 +1,5 @@
 from worlds.generic.Rules import add_rule
-from .CharacterUtils import get_playable_character_item, get_playable_characters
+from .CharacterUtils import get_playable_characters
 from .Enums import Goal
 from .Locations import get_location_by_name, LocationInfo, level_location_table, LevelLocation, \
     upgrade_location_table, UpgradeLocation, sub_level_location_table, SubLevelLocation, field_emblem_location_table, \
@@ -11,16 +11,12 @@ from .Regions import get_region_name
 
 def add_level_rules(self, location_name: str, level: LevelLocation):
     location = self.multiworld.get_location(location_name, self.player)
-    add_rule(location,
-             lambda state, item=get_playable_character_item(level.character): state.has(item, self.player))
     for need in level.extraItems:
         add_rule(location, lambda state, item=need: state.has(item, self.player))
 
 
 def add_upgrade_rules(self, location_name: str, upgrade: UpgradeLocation):
     location = self.multiworld.get_location(location_name, self.player)
-    add_rule(location,
-             lambda state, item=get_playable_character_item(upgrade.character): state.has(item, self.player))
     for need in upgrade.extraItems:
         add_rule(location, lambda state, item=need: state.has(item, self.player))
 
@@ -46,8 +42,6 @@ def add_field_emblem_rules(self, location_name: str, field_emblem: EmblemLocatio
 
 def add_life_capsule_rules(self, location_name: str, life_capsule: LifeCapsuleLocation):
     location = self.multiworld.get_location(location_name, self.player)
-    add_rule(location,
-             lambda state, item=get_playable_character_item(life_capsule.character): state.has(item, self.player))
     for need in life_capsule.extraItems:
         add_rule(location, lambda state, item=need: state.has(item, self.player))
 
@@ -61,11 +55,8 @@ def add_boss_fight_rules(self, location_name: str, boss_fight: BossFightLocation
         boss_fight.characters if character in get_playable_characters(self.options)))
 
 
-# add_mission_rules
-
 def add_mission_rules(self, location_name: str, mission: MissionLocation):
     location = self.multiworld.get_location(location_name, self.player)
-    add_rule(location, lambda state, item=get_playable_character_item(mission.character): state.has(item, self.player))
     card_area_name = get_region_name(mission.character, mission.cardArea)
     add_rule(location, lambda state, card_area=card_area_name: state.can_reach_region(card_area, self.player))
     for need in mission.extraItems:
