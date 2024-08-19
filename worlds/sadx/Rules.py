@@ -1,10 +1,10 @@
 from worlds.generic.Rules import add_rule
 from .CharacterUtils import get_playable_character_item
-from .Enums import Character, Goal
+from .Enums import Goal
 from .Locations import get_location_by_name, LocationInfo, level_location_table, LevelLocation, \
     upgrade_location_table, UpgradeLocation, sub_level_location_table, SubLevelLocation, field_emblem_location_table, \
     EmblemLocation, life_capsule_location_table, LifeCapsuleLocation, boss_location_table, BossFightLocation, \
-    mission_location_table, MissionLocation
+    mission_location_table, MissionLocation, CharacterUpgrade
 from .Names import ItemName
 
 
@@ -32,11 +32,12 @@ def add_sub_level_rules(self, location_name: str, sub_level: SubLevelLocation):
 
 def add_field_emblem_rules(self, location_name: str, field_emblem: EmblemLocation):
     location = self.multiworld.get_location(location_name, self.player)
-    # For the City Hall Emblem, Knuckles needs the Shovel Claw
+    # We check if the player has any of the character / character+upgraded needed
     add_rule(location, lambda state: any(
-        state.has(get_playable_character_item(character), self.player) and
-        (state.has(ItemName.Knuckles.ShovelClaw,
-                   self.player) if character == Character.Knuckles and field_emblem.emblemName == "City Hall Emblem" else True)
+        (state.has(
+            get_playable_character_item(character.character if isinstance(character, CharacterUpgrade) else character),
+            self.player) and
+         (state.has(character.upgrade, self.player) if isinstance(character, CharacterUpgrade) else True))
         for character in field_emblem.characters))
 
 

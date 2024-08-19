@@ -96,7 +96,7 @@ def get_location_ids_for_area(area: Area, options: SonicAdventureDXOptions):
     if options.field_emblems_checks:
         for field_emblem in field_emblem_location_table:
             if field_emblem.area == area:
-                if is_any_character_playable(field_emblem.characters, options):
+                if is_any_character_playable(field_emblem.get_characters(), options):
                     location_ids.append(field_emblem.locationId)
 
     if options.life_sanity:

@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List, TypedDict, Dict
+from typing import List, TypedDict, Dict, Union
 
 from BaseClasses import Location, Region
 from .Enums import Area, Level, SubLevel, Character, LevelMission, EVERYONE, SubLevelMission, pascal_to_space, \
@@ -37,11 +37,26 @@ class UpgradeLocation:
 
 
 @dataclass
+class CharacterUpgrade:
+    character: Character
+    upgrade: str
+
+
+@dataclass
 class EmblemLocation:
     locationId: int
     area: Area
-    characters: List[Character]
+    characters: List[Union[CharacterUpgrade, Character]]
     emblemName: str
+
+    def get_characters(self) -> List[Character]:
+        characters_list = []
+        for character in self.characters:
+            if isinstance(character, Character):
+                characters_list.append(character)
+            elif isinstance(character, CharacterUpgrade):
+                characters_list.append(character.character)
+        return characters_list
 
 
 @dataclass
@@ -260,9 +275,13 @@ field_emblem_location_table: List[EmblemLocation] = [
     EmblemLocation(11, Area.StationSquareMain,
                    [Character.Sonic, Character.Tails, Character.Knuckles, Character.Amy, Character.Big,
                     Character.Gamma], "Burger Shop Emblem"),
-    EmblemLocation(12, Area.StationSquareMain, [Character.Knuckles, Character.Tails], "City Hall Emblem"),
+    EmblemLocation(12, Area.StationSquareMain,
+                   [Character.Tails, CharacterUpgrade(Character.Knuckles, ItemName.Knuckles.ShovelClaw)],
+                   "City Hall Emblem"),
     EmblemLocation(13, Area.Casino, [Character.Tails], "Casino Emblem"),
-    EmblemLocation(20, Area.MysticRuinsMain, [Character.Tails, Character.Knuckles], "Tails' Workshop Emblem"),
+    EmblemLocation(20, Area.MysticRuinsMain,
+                   [Character.Tails, Character.Knuckles, CharacterUpgrade(Character.Gamma, ItemName.Gamma.JetBooster)],
+                   "Tails' Workshop Emblem"),
     EmblemLocation(21, Area.AngelIsland, [Character.Knuckles], "Shrine Emblem"),
     EmblemLocation(22, Area.Jungle, [Character.Sonic, Character.Tails, Character.Knuckles, Character.Amy, Character.Big,
                                      Character.Gamma], "Jungle Path Emblem"),
