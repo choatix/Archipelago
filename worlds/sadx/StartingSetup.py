@@ -4,7 +4,7 @@ from typing import List, TextIO
 from Options import OptionError
 from worlds.AutoWorld import World
 from .CharacterUtils import get_playable_characters, are_character_upgrades_randomized
-from .Enums import Character, StartingArea, Area
+from .Enums import Character, Area
 from .Locations import level_location_table, upgrade_location_table, sub_level_location_table, \
     field_emblem_location_table, boss_location_table, life_capsule_location_table, mission_location_table
 from .Names import ItemName
@@ -12,7 +12,7 @@ from .Options import SonicAdventureDXOptions
 
 
 class StarterSetup:
-    def __init__(self, character: Character = None, area: StartingArea = None, item: str = None):
+    def __init__(self, character: Character = None, area: Area = None, item: str = None):
         self.character = character
         self.area = area
         self.item = item
@@ -30,7 +30,7 @@ def generate_early_sadx(world: World, options: SonicAdventureDXOptions) -> Start
         if options.random_starting_location:
             starter_setup.area = world.random.choice(list(starting_area_items[starter_setup.character].keys()))
         else:
-            starter_setup.area = StartingArea.StationSquareMain
+            starter_setup.area = Area.StationSquareMain
         possible_starting_items = starting_area_items[starter_setup.character][starter_setup.area]
         if len(possible_starting_items) > 0:
             starter_setup.item = world.random.choice(possible_starting_items)
@@ -39,27 +39,27 @@ def generate_early_sadx(world: World, options: SonicAdventureDXOptions) -> Start
             possible_starter_areas = get_possible_starting_areas(world, starter_setup.character)
             starter_setup.area = world.random.choice(possible_starter_areas)
         else:
-            starter_setup.area = StartingArea.StationSquareMain
+            starter_setup.area = Area.StationSquareMain
 
     return starter_setup
 
 
-def get_possible_starting_areas(world, character: Character) -> List[StartingArea]:
+def get_possible_starting_areas(world, character: Character) -> List[Area]:
     possible_starting_areas = []
     if has_locations_without_items(character, Area.StationSquareMain, world.options):
-        possible_starting_areas += [StartingArea.StationSquareMain]
+        possible_starting_areas += [Area.StationSquareMain]
     if has_locations_without_items(character, Area.Station, world.options):
-        possible_starting_areas += [StartingArea.Station]
+        possible_starting_areas += [Area.Station]
     if has_locations_without_items(character, Area.Hotel, world.options):
-        possible_starting_areas += [StartingArea.Hotel]
+        possible_starting_areas += [Area.Hotel]
     if has_locations_without_items(character, Area.Casino, world.options):
-        possible_starting_areas += [StartingArea.Casino]
+        possible_starting_areas += [Area.Casino]
     if has_locations_without_items(character, Area.MysticRuinsMain, world.options):
-        possible_starting_areas += [StartingArea.MysticRuins]
+        possible_starting_areas += [Area.MysticRuinsMain]
     if has_locations_without_items(character, Area.Jungle, world.options):
-        possible_starting_areas += [StartingArea.Jungle]
+        possible_starting_areas += [Area.Jungle]
     if has_locations_without_items(character, Area.EggCarrierMain, world.options):
-        possible_starting_areas += [StartingArea.EggCarrier]
+        possible_starting_areas += [Area.EggCarrierMain]
 
     return possible_starting_areas
 
@@ -116,36 +116,35 @@ def write_sadx_spoiler(world: World, spoiler_handle: TextIO, starter_setup: Star
 
 starting_area_items = {
     Character.Sonic: {
-        StartingArea.StationSquareMain: [ItemName.KeyItem.TwinkleParkTicket,
-                                         ItemName.KeyItem.EmployeeCard],
-        StartingArea.Hotel: [],
-        StartingArea.MysticRuins: [ItemName.KeyItem.WindStone],
-        StartingArea.EggCarrier: []
+        Area.StationSquareMain: [ItemName.KeyItem.TwinkleParkTicket, ItemName.KeyItem.EmployeeCard],
+        Area.Hotel: [],
+        Area.MysticRuinsMain: [ItemName.KeyItem.WindStone],
+        Area.EggCarrierMain: []
     },
     Character.Tails: {
-        StartingArea.StationSquareMain: [ItemName.KeyItem.EmployeeCard],
-        StartingArea.Casino: [],
-        StartingArea.MysticRuins: [ItemName.KeyItem.WindStone],
-        StartingArea.EggCarrier: []
+        Area.StationSquareMain: [ItemName.KeyItem.EmployeeCard],
+        Area.Casino: [],
+        Area.MysticRuinsMain: [ItemName.KeyItem.WindStone],
+        Area.EggCarrierMain: []
     },
     Character.Knuckles: {
-        StartingArea.StationSquareMain: [],
-        StartingArea.Casino: [],
+        Area.StationSquareMain: [],
+        Area.Casino: [],
     },
     Character.Amy: {
-        StartingArea.StationSquareMain: [ItemName.KeyItem.TwinkleParkTicket],
-        StartingArea.Jungle: [],
-        StartingArea.EggCarrier: []
+        Area.StationSquareMain: [ItemName.KeyItem.TwinkleParkTicket],
+        Area.Jungle: [],
+        Area.EggCarrierMain: []
     },
     Character.Gamma: {
-        StartingArea.StationSquareMain: [ItemName.KeyItem.HotelKeys],
-        StartingArea.Hotel: [],
-        StartingArea.MysticRuins: [ItemName.KeyItem.Dynamite],
-        StartingArea.Jungle: [],
+        Area.StationSquareMain: [ItemName.KeyItem.HotelKeys],
+        Area.Hotel: [],
+        Area.MysticRuinsMain: [ItemName.KeyItem.Dynamite],
+        Area.Jungle: [],
     },
     Character.Big: {
-        StartingArea.StationSquareMain: [],
-        StartingArea.Hotel: [],
-        StartingArea.EggCarrier: []
+        Area.StationSquareMain: [],
+        Area.Hotel: [],
+        Area.EggCarrierMain: []
     }
 }

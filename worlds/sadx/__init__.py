@@ -5,7 +5,7 @@ from BaseClasses import Tutorial
 from Options import PerGameCommonOptions
 from worlds.AutoWorld import WebWorld, World
 from .CharacterUtils import get_playable_characters
-from .Enums import Character, StartingArea, SADX_BASE_ID, Goal
+from .Enums import Character, SADX_BASE_ID, Goal, Area
 from .ItemPool import create_sadx_items, get_item_names
 from .Items import all_item_table, SonicAdventureDXItem, get_item_by_name, group_item_table
 from .Locations import all_location_table, group_location_table
@@ -51,7 +51,7 @@ class SonicAdventureDXWorld(World):
             if "Sonic Adventure DX" in self.multiworld.re_gen_passthrough:
                 passthrough = self.multiworld.re_gen_passthrough["Sonic Adventure DX"]
                 self.starter_setup.character = Character(passthrough["StartingCharacter"])
-                self.starter_setup.area = StartingArea(passthrough["StartingArea"])
+                self.starter_setup.area = Area(passthrough["StartingArea"])
                 self.starter_setup.item = passthrough["StartingItem"]
 
     # For the universal tracker, doesn't get called in standard gen

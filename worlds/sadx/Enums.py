@@ -89,16 +89,6 @@ class AdventureField(Enum):
     Past = auto()
 
 
-class StartingArea(Enum):
-    StationSquareMain = 0
-    Station = auto()
-    Hotel = auto()
-    Casino = auto()
-    MysticRuins = auto()
-    Jungle = auto()
-    EggCarrier = auto()
-
-
 class Area(Enum):
     StationSquareMain = "Station Square"
     Station = "Station"
