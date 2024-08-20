@@ -40,25 +40,19 @@ class GuaranteedLevel(Toggle):
     display_name = "Guaranteed Level Access"
 
 
-class FieldEmblemsChecks(DefaultOnToggle):
-    """Determines whether collecting field emblems grants checks
-    (12 Locations)"""
-    display_name = "Field Emblems Checks"
-
-
-class MissionChecks(Toggle):
-    """Determines whether completing missions grants checks (60 Locations)"""
-    display_name = "Enable Mission Checks"
-
-
-class NonStopMission(Toggle):
-    """Determines whether missions where you can't stop to collect things are enabled:
-    Mission 49 (Flags in the Kart section of Twinkle Park )
-    Mission 53 (Triple Jump in the Snowboard section of Ice Cap)
-    Mission 54 (Flags in the Snowboard section of Ice Cap)
-    Mission 58 (Flags in the rolling bounce section of Lost World)
+class RingLink(Toggle):
     """
-    display_name = "Enable non-stop Mission"
+    Whether your in-level ring gain/loss is linked to other players
+    """
+    display_name = "Ring Link"
+
+
+class HardRingLink(Toggle):
+    """
+    If Ring Link is enabled, sends and receives rings in more situations.
+    Particularly it will subtract rings when finishing a level and during the Perfect Chaos fight.
+    """
+    display_name = "Hard Ring Link"
 
 
 class RingLoss(Choice):
@@ -75,96 +69,34 @@ class RingLoss(Choice):
     default = 0
 
 
-class RingLink(Toggle):
-    """
-    Whether your in-level ring gain/loss is linked to other players
-    """
-    display_name = "Ring Link"
+class PlayableSonic(DefaultOnToggle):
+    """Determines whether Sonic is playable"""
+    display_name = "Playable Sonic"
 
 
-class HardRingLink(Toggle):
-    """
-    If Ring Link is enabled, sends and receives rings in more situations.
-    Particularly it will subtract rings when finishing a level and during the Perfect Chaos fight.
-    """
-    display_name = "Hard Ring Link"
+class PlayableTails(DefaultOnToggle):
+    """Determines whether Tails is playable"""
+    display_name = "Playable Tails"
 
 
-class LifeSanity(Toggle):
-    """Determines whether collecting life capsules grants checks
-    (102 Locations)"""
-    display_name = "Life Sanity"
+class PlayableKnuckles(DefaultOnToggle):
+    """Determines whether Knuckles is playable"""
+    display_name = "Playable Knuckles"
 
 
-class SonicLifeSanity(DefaultOnToggle):
-    """If life-sanity is on, determines whether Sonic's life capsules are part of the randomizer"""
-    display_name = "Sonic's Life Sanity"
+class PlayableAmy(DefaultOnToggle):
+    """Determines whether Amy is playable"""
+    display_name = "Playable Amy"
 
 
-class TailsLifeSanity(DefaultOnToggle):
-    """If life-sanity is on, determines whether Tails' life capsules are part of the randomizer"""
-    display_name = "Tails' Life Sanity"
+class PlayableGamma(DefaultOnToggle):
+    """Determines whether Gamma is playable"""
+    display_name = "Playable Gamma"
 
 
-class KnucklesLifeSanity(DefaultOnToggle):
-    """If life-sanity is on, determines whether Knuckles' life capsules are part of the randomizer"""
-    display_name = "Knuckles' Life Sanity"
-
-
-class AmyLifeSanity(DefaultOnToggle):
-    """If life-sanity is on, determines whether Amy's life capsules are part of the randomizer"""
-    display_name = "Amy's Life Sanity"
-
-
-class BigLifeSanity(DefaultOnToggle):
-    """If life-sanity is on, determines whether Big's life capsules are part of the randomizer"""
-    display_name = "Big's Life Sanity"
-
-
-class GammaLifeSanity(DefaultOnToggle):
-    """If life-sanity is on, determines whether Gamma's life capsules are part of the randomizer"""
-    display_name = "Gamma's Life Sanity"
-
-
-class PinballLifeCapsules(Toggle):
-    """Determines whether pinball's life capsules grant checks
-    (2 Locations)"""
-    display_name = "Include pinball's Life Capsules"
-
-
-class SubLevelChecks(DefaultOnToggle):
-    """Determines whether beating the default sublevel mission  grants checks (4 Locations)
-    Current sublevels are: Twinkle Circuit, Sand Hill and Sky Chase Act 1 and 2"""
-    display_name = "Sub-Level Checks"
-
-
-class SubLevelChecksHard(Toggle):
-    """
-    Determines whether beating the harder (points based) sublevel mission grants checks (4 Locations)
-    Only works if sublevel checks are enabled
-    """
-    display_name = "Sub-Level Checks"
-
-
-class BossChecks(DefaultOnToggle):
-    """Determines whether beating a boss grants a check
-    (15 Locations)"""
-    display_name = "Boss Checks"
-
-
-class UnifyChaos4(DefaultOnToggle):
-    """Determines whether the Chaos 4 fight counts as a single location or three (Sonic, Tails and Knuckles)"""
-    display_name = "Unify Chaos 4"
-
-
-class UnifyChaos6(Toggle):
-    """Determines whether the Chaos 6 fight counts as a single location or three (Sonic, Big and Knuckles)"""
-    display_name = "Unify Chaos 6"
-
-
-class UnifyEggHornet(Toggle):
-    """Determines whether the Egg Hornet fight counts as a single location or two (Sonic, Tails)"""
-    display_name = "Unify Egg Hornet"
+class PlayableBig(DefaultOnToggle):
+    """Determines whether Big is playable"""
+    display_name = "Playable Big"
 
 
 class BaseMissionChoice(Choice):
@@ -173,13 +105,43 @@ class BaseMissionChoice(Choice):
         3 means Missions A, B and C
         2 means Missions B and C
         1 means Missions C
-        0 means the character is not played at all on the randomizer
+        0 means no missions at all (You can still play the character if they are enabled)
     """
     option_none = 0
     option_c = 1
     option_c_b = 2
     option_c_b_a = 3
     default = 1
+
+
+class SonicMissions(BaseMissionChoice):
+    """Choose what missions will be a location check for Sonic."""
+    display_name = "Sonic's Missions"
+
+
+class TailsMissions(BaseMissionChoice):
+    """Choose what missions will be a location check for Tails."""
+    display_name = "Tail's Missions"
+
+
+class KnucklesMissions(BaseMissionChoice):
+    """Choose what missions will be a location check for Knuckles."""
+    display_name = "Knuckles's Missions"
+
+
+class AmyMissions(BaseMissionChoice):
+    """Choose what missions will be a location check for Amy."""
+    display_name = "Amy's Missions"
+
+
+class GammaMissions(BaseMissionChoice):
+    """Choose what missions will be a location check for Gamma."""
+    display_name = "Gamma's Missions"
+
+
+class BigMissions(BaseMissionChoice):
+    """Choose what missions will be a location check for Big."""
+    display_name = "Big's Missions"
 
 
 class RandomizedSonicUpgrades(DefaultOnToggle):
@@ -212,34 +174,102 @@ class RandomizedGammaUpgrades(DefaultOnToggle):
     display_name = "Randomize Gamma's Upgrades"
 
 
-class SonicMissions(BaseMissionChoice):
-    """Choose what missions will be a location check for Sonic."""
-    display_name = "Sonic's Missions"
+class BossChecks(DefaultOnToggle):
+    """Determines whether beating a boss grants a check
+    (15 Locations)"""
+    display_name = "Boss Checks"
 
 
-class TailsMissions(BaseMissionChoice):
-    """Choose what missions will be a location check for Tails."""
-    display_name = "Tail's Missions"
+class UnifyChaos4(DefaultOnToggle):
+    """Determines whether the Chaos 4 fight counts as a single location or three (Sonic, Tails and Knuckles)"""
+    display_name = "Unify Chaos 4"
 
 
-class KnucklesMissions(BaseMissionChoice):
-    """Choose what missions will be a location check for Knuckles."""
-    display_name = "Knuckles's Missions"
+class UnifyChaos6(Toggle):
+    """Determines whether the Chaos 6 fight counts as a single location or three (Sonic, Big and Knuckles)"""
+    display_name = "Unify Chaos 6"
 
 
-class AmyMissions(BaseMissionChoice):
-    """Choose what missions will be a location check for Amy."""
-    display_name = "Amy's Missions"
+class UnifyEggHornet(Toggle):
+    """Determines whether the Egg Hornet fight counts as a single location or two (Sonic, Tails)"""
+    display_name = "Unify Egg Hornet"
 
 
-class GammaMissions(BaseMissionChoice):
-    """Choose what missions will be a location check for Gamma."""
-    display_name = "Gamma's Missions"
+class FieldEmblemsChecks(DefaultOnToggle):
+    """Determines whether collecting field emblems grants checks
+    (12 Locations)"""
+    display_name = "Field Emblems Checks"
 
 
-class BigMissions(BaseMissionChoice):
-    """Choose what missions will be a location check for Big."""
-    display_name = "Big's Missions"
+class MissionChecks(Toggle):
+    """Determines whether completing missions grants checks (60 Locations)"""
+    display_name = "Enable Mission Checks"
+
+
+class NonStopMission(Toggle):
+    """Determines whether missions where you can't stop to collect things are enabled:
+    Mission 49 (Flags in the Kart section of Twinkle Park )
+    Mission 53 (Triple Jump in the Snowboard section of Ice Cap)
+    Mission 54 (Flags in the Snowboard section of Ice Cap)
+    Mission 58 (Flags in the rolling bounce section of Lost World)
+    """
+    display_name = "Enable non-stop Mission"
+
+
+class SubLevelChecks(DefaultOnToggle):
+    """Determines whether beating the default sublevel mission  grants checks (4 Locations)
+    Current sublevels are: Twinkle Circuit, Sand Hill and Sky Chase Act 1 and 2"""
+    display_name = "Sub-Level Checks"
+
+
+class SubLevelChecksHard(Toggle):
+    """
+    Determines whether beating the harder (points based) sublevel mission grants checks (4 Locations)
+    Only works if sublevel checks are enabled
+    """
+    display_name = "Sub-Level Checks"
+
+
+class LifeSanity(Toggle):
+    """Determines whether collecting life capsules grants checks
+    (102 Locations)"""
+    display_name = "Life Sanity"
+
+
+class PinballLifeCapsules(Toggle):
+    """Determines whether pinball's life capsules grant checks
+    (2 Locations)"""
+    display_name = "Include pinball's Life Capsules"
+
+
+class SonicLifeSanity(DefaultOnToggle):
+    """If life-sanity is on, determines whether Sonic's life capsules are part of the randomizer"""
+    display_name = "Sonic's Life Sanity"
+
+
+class TailsLifeSanity(DefaultOnToggle):
+    """If life-sanity is on, determines whether Tails' life capsules are part of the randomizer"""
+    display_name = "Tails' Life Sanity"
+
+
+class KnucklesLifeSanity(DefaultOnToggle):
+    """If life-sanity is on, determines whether Knuckles' life capsules are part of the randomizer"""
+    display_name = "Knuckles' Life Sanity"
+
+
+class AmyLifeSanity(DefaultOnToggle):
+    """If life-sanity is on, determines whether Amy's life capsules are part of the randomizer"""
+    display_name = "Amy's Life Sanity"
+
+
+class BigLifeSanity(DefaultOnToggle):
+    """If life-sanity is on, determines whether Big's life capsules are part of the randomizer"""
+    display_name = "Big's Life Sanity"
+
+
+class GammaLifeSanity(DefaultOnToggle):
+    """If life-sanity is on, determines whether Gamma's life capsules are part of the randomizer"""
+    display_name = "Gamma's Life Sanity"
 
 
 class JunkFillPercentage(Range):
@@ -313,6 +343,13 @@ class SonicAdventureDXOptions(PerGameCommonOptions):
     hard_ring_link: HardRingLink
     ring_loss: RingLoss
 
+    playable_sonic: PlayableSonic
+    playable_tails: PlayableTails
+    playable_knuckles: PlayableKnuckles
+    playable_amy: PlayableAmy
+    playable_gamma: PlayableGamma
+    playable_big: PlayableBig
+
     sonic_missions: SonicMissions
     tails_missions: TailsMissions
     knuckles_missions: KnucklesMissions
@@ -362,6 +399,14 @@ sadx_option_groups = [
         RingLink,
         HardRingLink,
         RingLoss,
+    ]),
+    OptionGroup("Characters Options", [
+        PlayableSonic,
+        PlayableTails,
+        PlayableKnuckles,
+        PlayableAmy,
+        PlayableGamma,
+        PlayableBig,
     ]),
     OptionGroup("Stage Options", [
         SonicMissions,
