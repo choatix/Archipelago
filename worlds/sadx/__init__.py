@@ -145,6 +145,13 @@ class SonicAdventureDXWorld(World):
             "RandomizedGammaUpgrades": self.options.randomized_big_upgrades.value,
             "RandomizedBigUpgrades": self.options.randomized_gamma_upgrades.value,
 
+            "PlayableSonic": self.options.playable_sonic.value,
+            "PlayableTails": self.options.playable_tails.value,
+            "PlayableKnuckles": self.options.playable_knuckles.value,
+            "PlayableAmy": self.options.playable_amy.value,
+            "PlayableBig": self.options.playable_big.value,
+            "PlayableGamma": self.options.playable_gamma.value,
+
             "SonicActionStageMissions": self.options.sonic_action_stage_missions.value,
             "TailsActionStageMissions": self.options.tails_action_stage_missions.value,
             "KnucklesActionStageMissions": self.options.knuckles_action_stage_missions.value,
