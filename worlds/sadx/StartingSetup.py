@@ -1,4 +1,5 @@
 import re
+from dataclasses import dataclass, field
 from typing import List, TextIO
 
 from Options import OptionError
@@ -11,11 +12,24 @@ from .Names import ItemName
 from .Options import SonicAdventureDXOptions
 
 
+@dataclass
+class CharacterArea:
+    character: Character
+    area: Area = None
+
+
+@dataclass
 class StarterSetup:
-    def __init__(self, character: Character = None, area: Area = None, item: str = None):
-        self.character = character
-        self.area = area
-        self.item = item
+    character = None
+    area = None
+    item = None
+    charactersWithArea: List[CharacterArea] = field(default_factory=list)
+
+    def get_starting_area(self, character: Character) -> Area:
+        for char_area in self.charactersWithArea:
+            if char_area.character == character:
+                return char_area.area
+        return self.area
 
 
 def generate_early_sadx(world: World, options: SonicAdventureDXOptions) -> StarterSetup:
@@ -40,6 +54,24 @@ def generate_early_sadx(world: World, options: SonicAdventureDXOptions) -> Start
             starter_setup.area = world.random.choice(possible_starter_areas)
         else:
             starter_setup.area = Area.StationSquareMain
+
+    # We set different starting areas for each character, and we try to don't repeat them
+    if options.random_starting_location_per_character and options.random_starting_location:
+        used_areas = {starter_setup.area}
+        starter_setup.charactersWithArea.append(CharacterArea(starter_setup.character, starter_setup.area))
+        possible_areas_dict = {char: get_possible_starting_areas(world, char) for char in possible_characters}
+        characters_sorted_by_areas = sorted(possible_characters, key=lambda char: len(possible_areas_dict[char]))
+
+        for character in characters_sorted_by_areas:
+            if character == starter_setup.character:
+                continue
+            unused_areas = [area for area in possible_areas_dict[character] if area not in used_areas]
+            if unused_areas:
+                area = world.random.choice(unused_areas)
+            else:
+                area = world.random.choice(possible_areas_dict[character])
+            used_areas.add(area)
+            starter_setup.charactersWithArea.append(CharacterArea(character, area))
 
     return starter_setup
 
@@ -99,17 +131,23 @@ def has_locations_without_items(character: Character, area: Area, options: Sonic
 
 def write_sadx_spoiler(world: World, spoiler_handle: TextIO, starter_setup: StarterSetup):
     spoiler_handle.write("\n")
-    header_text = "Sonic Adventure starting setup for {}:\n"
-    header_text = header_text.format(world.multiworld.player_name[world.player])
+    header_text = f"Sonic Adventure starting setup for {world.multiworld.player_name[world.player]}:\n"
     spoiler_handle.write(header_text)
 
     starting_area_name = re.sub(r'(?<=[a-z])(?=[A-Z])', ' ', starter_setup.area.name)
-    if starter_setup.item is not None:
-        text = "Will start as {0} in the {1} area with {2}.\n"
+    if starter_setup.item:
+        text = "- Will start as {0} in the {1} area with {2}.\n"
         text = text.format(starter_setup.character.name, starting_area_name, starter_setup.item)
     else:
-        text = "Will start as {0} in the {1} area.\n"
+        text = "- Will start as {0} in the {1} area.\n"
         text = text.format(starter_setup.character.name, starting_area_name)
+
+    for characterArea in starter_setup.charactersWithArea:
+        if characterArea.character == starter_setup.character:
+            continue
+        starting_area_name = re.sub(r'(?<=[a-z])(?=[A-Z])', ' ', characterArea.area.name)
+        text += "- {0} will spawn in the {1} area.\n".format(characterArea.character.name, starting_area_name)
+
     spoiler_handle.writelines(text)
 
 

@@ -35,6 +35,11 @@ class RandomStartingLocation(DefaultOnToggle):
     display_name = "Random Starting location"
 
 
+class RandomStartingLocationPerCharacter(DefaultOnToggle):
+    """If Randomize starting location is enabled, each character will start in a random location"""
+    display_name = "Random Starting location per character"
+
+
 class GuaranteedLevel(Toggle):
     """Ensures access to a level from the start, even if it means giving you an item"""
     display_name = "Guaranteed Level Access"
@@ -339,6 +344,7 @@ class SonicAdventureDXOptions(PerGameCommonOptions):
     goal: Goal
     emblems_percentage: EmblemPercentage
     random_starting_location: RandomStartingLocation
+    random_starting_location_per_character: RandomStartingLocationPerCharacter
     guaranteed_level: GuaranteedLevel
     death_link: DeathLink
     ring_link: RingLink
@@ -397,6 +403,7 @@ sadx_option_groups = [
     OptionGroup("General Options", [
         EmblemPercentage,
         RandomStartingLocation,
+        RandomStartingLocationPerCharacter,
         GuaranteedLevel,
         RingLink,
         HardRingLink,

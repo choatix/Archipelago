@@ -11,6 +11,7 @@ from .Locations import SonicAdventureDXLocation, life_capsule_location_table, \
     field_emblem_location_table
 from .Names import ItemName, LocationName
 from .Options import SonicAdventureDXOptions
+from .StartingSetup import StarterSetup
 from ..AutoWorld import World
 
 
@@ -23,7 +24,7 @@ class AreaConnection:
 
 
 def get_region_name(character: Character, area: Area):
-    return character.name + area.value
+    return character.name + area.name
 
 
 created_regions: Dict[Tuple[Character, Area], Region] = {}
@@ -151,7 +152,7 @@ area_connections: Dict[Tuple[Character, Area, Area], str] = {
 }
 
 
-def create_sadx_regions(world: World, starter_area: Area, options: SonicAdventureDXOptions):
+def create_sadx_regions(world: World, starter_setup: StarterSetup, options: SonicAdventureDXOptions):
     menu_region = Region("Menu", world.player, world.multiworld)
     world.multiworld.regions.append(menu_region)
 
@@ -162,7 +163,7 @@ def create_sadx_regions(world: World, starter_area: Area, options: SonicAdventur
             world.multiworld.regions.append(region)
             add_locations_to_region(region, area, character, world.player, options)
             created_regions[(character, area)] = region
-            if area == starter_area:
+            if area == starter_setup.get_starting_area(character):
                 menu_region.connect(region, None,
                                     lambda state, item=get_playable_character_item(character): state.has(item,
                                                                                                          world.player))

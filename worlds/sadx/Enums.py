@@ -90,12 +90,12 @@ class AdventureField(Enum):
 
 
 class Area(Enum):
-    StationSquareMain = "Station Square"
-    Station = "Station"
-    Hotel = "Hotel Area"
-    Casino = "Casino Area"
-    TwinklePark = "Twinkle Park Area"
-    MysticRuinsMain = "Mystic Ruins"
-    AngelIsland = "Angel Island"
-    Jungle = "Jungle"
-    EggCarrierMain = "Egg Carrier"
+    StationSquareMain = 0
+    Station = auto()
+    Hotel = auto()
+    Casino = auto()
+    TwinklePark = auto()
+    MysticRuinsMain = auto()
+    AngelIsland = auto()
+    Jungle = auto()
+    EggCarrierMain = auto()
