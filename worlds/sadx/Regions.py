@@ -233,7 +233,7 @@ def get_location_ids_for_area(area: Area, character: Character, options: SonicAd
 
     if options.mission_mode_checks:
         for mission in mission_location_table:
-            if not options.non_stop_missions and mission.locationId in [49, 53, 54, 58]:
+            if str(mission.missionNumber) in options.mission_blacklist.value:
                 continue
             if mission.objectiveArea == area and mission.character == character:
                 if is_character_playable(mission.character, options):

@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from Options import OptionGroup, Choice, Range, DefaultOnToggle, Toggle, DeathLink
+from Options import OptionGroup, Choice, Range, DefaultOnToggle, Toggle, DeathLink, OptionSet
 from Options import PerGameCommonOptions
 
 
@@ -206,14 +206,16 @@ class MissionChecks(Toggle):
     display_name = "Enable Mission Checks"
 
 
-class NonStopMission(Toggle):
-    """Determines whether missions where you can't stop to collect things are enabled:
+class MissionBlackList(OptionSet):
+    """Determines what missions are blacklisted, the default are:
     Mission 49 (Flags in the Kart section of Twinkle Park )
     Mission 53 (Triple Jump in the Snowboard section of Ice Cap)
     Mission 54 (Flags in the Snowboard section of Ice Cap)
     Mission 58 (Flags in the rolling bounce section of Lost World)
     """
-    display_name = "Enable non-stop Mission"
+    display_name = "Mission Blacklist"
+    default = {49, 53, 54, 58}
+    valid_keys = [str(i) for i in range(1, 61)]
 
 
 class SubLevelChecks(DefaultOnToggle):
@@ -371,7 +373,7 @@ class SonicAdventureDXOptions(PerGameCommonOptions):
 
     field_emblems_checks: FieldEmblemsChecks
     mission_mode_checks: MissionChecks
-    non_stop_missions: NonStopMission
+    mission_blacklist: MissionBlackList
     sub_level_checks: SubLevelChecks
     sub_level_checks_hard: SubLevelChecksHard
     life_sanity: LifeSanity
@@ -433,7 +435,7 @@ sadx_option_groups = [
     OptionGroup("Extra locations", [
         FieldEmblemsChecks,
         MissionChecks,
-        NonStopMission,
+        MissionBlackList,
         SubLevelChecks,
         SubLevelChecksHard,
         LifeSanity,

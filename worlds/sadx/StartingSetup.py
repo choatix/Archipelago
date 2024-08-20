@@ -89,10 +89,9 @@ def has_locations_without_items(character: Character, area: Area, options: Sonic
         for life_capsule in life_capsule_location_table:
             if life_capsule.character == character and life_capsule.area == area and not life_capsule.extraItems:
                 return True
-    # non_stop_missions
     if options.mission_mode_checks:
         for mission in mission_location_table:
-            if not options.non_stop_missions and mission.locationId in [49, 53, 54, 58]:
+            if str(mission.missionNumber) in options.mission_blacklist.value:
                 continue
             if mission.character == character and mission.cardArea == area and mission.objectiveArea == area and not mission.extraItems:
                 return True
