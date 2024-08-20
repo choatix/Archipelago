@@ -496,7 +496,7 @@ mission_location_table: List[MissionLocation] = [
     MissionLocation(832, Area.AngelIsland, Area.AngelIsland, Character.Knuckles, 32, []),
     MissionLocation(833, Area.EggCarrierMain, Area.EggCarrierMain, Character.Sonic, 33, []),
     MissionLocation(834, Area.EggCarrierMain, Area.EggCarrierMain, Character.Sonic, 34, [ItemName.Sonic.LightShoes]),
-    MissionLocation(835, Area.MysticRuinsMain, Area.MysticRuinsMain, Character.Big, 35,
+    MissionLocation(835, Area.MysticRuinsMain, Area.AngelIsland, Character.Big, 35,
                     [ItemName.KeyItem.IceStone, ItemName.KeyItem.StationKeys, ItemName.KeyItem.Train]),
     MissionLocation(836, Area.EggCarrierMain, Area.EggCarrierMain, Character.Sonic, 36, []),
     MissionLocation(837, Area.Jungle, Area.Jungle, Character.Tails, 37, [ItemName.Tails.JetAnklet]),
