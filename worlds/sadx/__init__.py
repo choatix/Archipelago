@@ -10,7 +10,7 @@ from .ItemPool import create_sadx_items, get_item_names
 from .Items import all_item_table, SonicAdventureDXItem, get_item_by_name, group_item_table
 from .Locations import all_location_table, group_location_table
 from .Names import ItemName, LocationName
-from .Options import sadx_option_groups, SonicAdventureDXOptions, BaseMissionChoice
+from .Options import sadx_option_groups, SonicAdventureDXOptions
 from .Regions import create_sadx_regions, get_location_ids_for_area
 from .Rules import create_sadx_rules
 from .StartingSetup import StarterSetup, generate_early_sadx, write_sadx_spoiler
@@ -124,12 +124,12 @@ class SonicAdventureDXWorld(World):
             "RandomizedGammaUpgrades": self.options.randomized_big_upgrades.value,
             "RandomizedBigUpgrades": self.options.randomized_gamma_upgrades.value,
 
-            "SonicMissions": self.options.sonic_missions.value,
-            "TailsMissions": self.options.tails_missions.value,
-            "KnucklesMissions": self.options.knuckles_missions.value,
-            "AmyMissions": self.options.amy_missions.value,
-            "GammaMissions": self.options.gamma_missions.value,
-            "BigMissions": self.options.big_missions.value,
+            "SonicActionStageMissions": self.options.sonic_action_stage_missions.value,
+            "TailsActionStageMissions": self.options.tails_action_stage_missions.value,
+            "KnucklesActionStageMissions": self.options.knuckles_action_stage_missions.value,
+            "AmyActionStageMissions": self.options.amy_action_stage_missions.value,
+            "GammaActionStageMissions": self.options.gamma_action_stage_missions.value,
+            "BigActionStageMissions": self.options.big_action_stage_missions.value,
 
             "JunkFillPercentage": self.options.junk_fill_percentage.value
         }

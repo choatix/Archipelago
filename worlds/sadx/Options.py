@@ -99,7 +99,7 @@ class PlayableBig(DefaultOnToggle):
     display_name = "Playable Big"
 
 
-class BaseMissionChoice(Choice):
+class BaseActionStageMissionChoice(Choice):
     """
         For missions, the options go from 3 to 0
         3 means Missions A, B and C
@@ -114,34 +114,34 @@ class BaseMissionChoice(Choice):
     default = 1
 
 
-class SonicMissions(BaseMissionChoice):
-    """Choose what missions will be a location check for Sonic."""
-    display_name = "Sonic's Missions"
+class SonicActionStageMissions(BaseActionStageMissionChoice):
+    """Choose what action stage missions will be a location check for Sonic."""
+    display_name = "Sonic's Action Stage Missions"
 
 
-class TailsMissions(BaseMissionChoice):
-    """Choose what missions will be a location check for Tails."""
-    display_name = "Tail's Missions"
+class TailsActionStageMissions(BaseActionStageMissionChoice):
+    """Choose what action stage missions will be a location check for Tails."""
+    display_name = "Tail's Action Stage Missions"
 
 
-class KnucklesMissions(BaseMissionChoice):
-    """Choose what missions will be a location check for Knuckles."""
-    display_name = "Knuckles's Missions"
+class KnucklesActionStageMissions(BaseActionStageMissionChoice):
+    """Choose what action stage missions will be a location check for Knuckles."""
+    display_name = "Knuckles's Action Stage Missions"
 
 
-class AmyMissions(BaseMissionChoice):
-    """Choose what missions will be a location check for Amy."""
-    display_name = "Amy's Missions"
+class AmyActionStageMissions(BaseActionStageMissionChoice):
+    """Choose what action stage missions will be a location check for Amy."""
+    display_name = "Amy's Action Stage Missions"
 
 
-class GammaMissions(BaseMissionChoice):
-    """Choose what missions will be a location check for Gamma."""
-    display_name = "Gamma's Missions"
+class GammaActionStageMissions(BaseActionStageMissionChoice):
+    """Choose what action stage missions will be a location check for Gamma."""
+    display_name = "Gamma's Action Stage Missions"
 
 
-class BigMissions(BaseMissionChoice):
-    """Choose what missions will be a location check for Big."""
-    display_name = "Big's Missions"
+class BigActionStageMissions(BaseActionStageMissionChoice):
+    """Choose what action stage missions will be a location check for Big."""
+    display_name = "Big's Action Stage Missions"
 
 
 class RandomizedSonicUpgrades(DefaultOnToggle):
@@ -350,12 +350,12 @@ class SonicAdventureDXOptions(PerGameCommonOptions):
     playable_gamma: PlayableGamma
     playable_big: PlayableBig
 
-    sonic_missions: SonicMissions
-    tails_missions: TailsMissions
-    knuckles_missions: KnucklesMissions
-    amy_missions: AmyMissions
-    gamma_missions: GammaMissions
-    big_missions: BigMissions
+    sonic_action_stage_missions: SonicActionStageMissions
+    tails_action_stage_missions: TailsActionStageMissions
+    knuckles_action_stage_missions: KnucklesActionStageMissions
+    amy_action_stage_missions: AmyActionStageMissions
+    gamma_action_stage_missions: GammaActionStageMissions
+    big_action_stage_missions: BigActionStageMissions
 
     randomized_sonic_upgrades: RandomizedSonicUpgrades
     randomized_tails_upgrades: RandomizedTailsUpgrades
@@ -409,12 +409,12 @@ sadx_option_groups = [
         PlayableBig,
     ]),
     OptionGroup("Stage Options", [
-        SonicMissions,
-        TailsMissions,
-        KnucklesMissions,
-        AmyMissions,
-        GammaMissions,
-        BigMissions
+        SonicActionStageMissions,
+        TailsActionStageMissions,
+        KnucklesActionStageMissions,
+        AmyActionStageMissions,
+        GammaActionStageMissions,
+        BigActionStageMissions
     ]),
     OptionGroup("Upgrade Options", [
         RandomizedSonicUpgrades,
