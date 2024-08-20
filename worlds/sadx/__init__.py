@@ -53,6 +53,7 @@ class SonicAdventureDXWorld(World):
                 self.starter_setup.character = Character(passthrough["StartingCharacter"])
                 self.starter_setup.item = passthrough["StartingItem"]
                 self.starter_setup.area = Area(passthrough["StartingArea"])
+                self.starter_setup.charactersWithArea.clear()
                 self.starter_setup.charactersWithArea.append(
                     CharacterArea(Character.Sonic, Area(passthrough["SonicStartingArea"])))
                 self.starter_setup.charactersWithArea.append(
