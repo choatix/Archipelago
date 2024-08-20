@@ -50,20 +50,6 @@ class Upgrade(Enum):
     Lure4 = auto()
 
 
-class Level(Enum):
-    EmeraldCoast = 0
-    WindyValley = auto()
-    Casinopolis = auto()
-    IceCap = auto()
-    TwinklePark = auto()
-    SpeedHighway = auto()
-    RedMountain = auto()
-    SkyDeck = auto()
-    LostWorld = auto()
-    FinalEgg = auto()
-    HotShelter = auto()
-
-
 class SubLevelMission(Enum):
     B = 0
     A = auto()
@@ -94,8 +80,19 @@ class Area(Enum):
     Station = auto()
     Hotel = auto()
     Casino = auto()
-    TwinklePark = auto()
+    TwinkleParkLobby = auto()
     MysticRuinsMain = auto()
     AngelIsland = auto()
     Jungle = auto()
     EggCarrierMain = auto()
+    EmeraldCoast = auto()
+    WindyValley = auto()
+    Casinopolis = auto()
+    IceCap = auto()
+    TwinklePark = auto()
+    SpeedHighway = auto()
+    RedMountain = auto()
+    SkyDeck = auto()
+    LostWorld = auto()
+    FinalEgg = auto()
+    HotShelter = auto()
