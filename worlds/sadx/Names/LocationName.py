@@ -53,3 +53,4 @@ class Groups:
     Sublevels = "Sublevels"
     Bosses = "Bosses"
     LifeCapsules = "Life Capsules"
+    Missions = "Missions"
