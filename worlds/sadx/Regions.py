@@ -28,163 +28,312 @@ def get_region_name(character: Character, area: Area):
 
 
 created_regions: Dict[Tuple[Character, Area], Region] = {}
-area_connections: Dict[Tuple[Character, Area, Area], List[str]] = {
-    (Character.Sonic, Area.Hotel, Area.EmeraldCoast): [],
-    (Character.Sonic, Area.MysticRuinsMain, Area.WindyValley): [ItemName.KeyItem.WindStone],
-    (Character.Sonic, Area.Casino, Area.Casinopolis): [ItemName.Sonic.LightShoes],
-    (Character.Sonic, Area.AngelIsland, Area.IceCap): [ItemName.KeyItem.IceStone, ItemName.KeyItem.CasinoKeys,
-                                                       ItemName.KeyItem.Train],
-    (Character.Sonic, Area.TwinkleParkLobby, Area.TwinklePark): [],
-    (Character.Sonic, Area.StationSquareMain, Area.SpeedHighway): [ItemName.KeyItem.EmployeeCard],
-    (Character.Sonic, Area.AngelIsland, Area.RedMountain): [ItemName.Sonic.LightShoes, ItemName.Sonic.AncientLight],
-    (Character.Sonic, Area.EggCarrierMain, Area.SkyDeck): [],
-    (Character.Sonic, Area.Jungle, Area.LostWorld): [],
-    (Character.Sonic, Area.Jungle, Area.FinalEgg): [],
-    (Character.Tails, Area.MysticRuinsMain, Area.WindyValley): [ItemName.KeyItem.WindStone],
-    (Character.Tails, Area.Casino, Area.Casinopolis): [],
-    (Character.Tails, Area.AngelIsland, Area.IceCap): [ItemName.KeyItem.IceStone, ItemName.KeyItem.CasinoKeys,
-                                                       ItemName.KeyItem.Train],
-    (Character.Tails, Area.EggCarrierMain, Area.SkyDeck): [],
-    (Character.Tails, Area.StationSquareMain, Area.SpeedHighway): [ItemName.KeyItem.EmployeeCard],
-    (Character.Knuckles, Area.StationSquareMain, Area.SpeedHighway): [],
-    (Character.Knuckles, Area.Casino, Area.Casinopolis): [],
-    (Character.Knuckles, Area.AngelIsland, Area.RedMountain): [ItemName.Knuckles.ShovelClaw],
-    (Character.Knuckles, Area.Jungle, Area.LostWorld): [ItemName.Knuckles.ShovelClaw],
-    (Character.Knuckles, Area.EggCarrierMain, Area.SkyDeck): [],
-    (Character.Amy, Area.TwinkleParkLobby, Area.TwinklePark): [],
-    (Character.Amy, Area.EggCarrierMain, Area.HotShelter): [],
-    (Character.Amy, Area.Jungle, Area.FinalEgg): [],
-    (Character.Big, Area.TwinkleParkLobby, Area.TwinklePark): [],
-    (Character.Big, Area.AngelIsland, Area.IceCap): [ItemName.KeyItem.IceStone, ItemName.KeyItem.StationKeys,
-                                                     ItemName.KeyItem.Train],
-    (Character.Big, Area.Hotel, Area.EmeraldCoast): [],
-    (Character.Big, Area.EggCarrierMain, Area.HotShelter): [],
-    (Character.Gamma, Area.Jungle, Area.FinalEgg): [],
-    (Character.Gamma, Area.Hotel, Area.EmeraldCoast): [],
-    (Character.Gamma, Area.MysticRuinsMain, Area.WindyValley): [ItemName.KeyItem.WindStone],
-    (Character.Gamma, Area.AngelIsland, Area.RedMountain): [],
-    (Character.Gamma, Area.EggCarrierMain, Area.HotShelter): [],
 
-    (Character.Sonic, Area.StationSquareMain, Area.Station): [ItemName.KeyItem.StationKeys],
-    (Character.Sonic, Area.Station, Area.StationSquareMain): [ItemName.KeyItem.StationKeys],
-    (Character.Sonic, Area.StationSquareMain, Area.Hotel): [ItemName.KeyItem.HotelKeys],
-    (Character.Sonic, Area.Hotel, Area.StationSquareMain): [ItemName.KeyItem.HotelKeys],
-    (Character.Sonic, Area.Station, Area.Casino): [ItemName.KeyItem.CasinoKeys],
-    (Character.Sonic, Area.Casino, Area.Station): [ItemName.KeyItem.CasinoKeys],
-    (Character.Sonic, Area.Hotel, Area.Casino): [ItemName.KeyItem.CasinoKeys],
-    (Character.Sonic, Area.Casino, Area.Hotel): [ItemName.KeyItem.CasinoKeys],
-    (Character.Sonic, Area.StationSquareMain, Area.TwinkleParkLobby): [ItemName.KeyItem.TwinkleParkTicket],
-    (Character.Sonic, Area.TwinkleParkLobby, Area.StationSquareMain): [ItemName.KeyItem.TwinkleParkTicket],
-    (Character.Sonic, Area.MysticRuinsMain, Area.AngelIsland): [ItemName.KeyItem.Dynamite],
-    (Character.Sonic, Area.AngelIsland, Area.MysticRuinsMain): [ItemName.KeyItem.Dynamite],
-    (Character.Sonic, Area.MysticRuinsMain, Area.Jungle): [ItemName.KeyItem.JungleCart],
-    (Character.Sonic, Area.Jungle, Area.MysticRuinsMain): [ItemName.KeyItem.JungleCart],
-    (Character.Sonic, Area.Station, Area.MysticRuinsMain): [ItemName.KeyItem.Train],
-    (Character.Sonic, Area.MysticRuinsMain, Area.Station): [ItemName.KeyItem.Train],
-    (Character.Sonic, Area.StationSquareMain, Area.EggCarrierMain): [ItemName.KeyItem.Boat],
-    (Character.Sonic, Area.EggCarrierMain, Area.StationSquareMain): [ItemName.KeyItem.Boat],
-    (Character.Sonic, Area.MysticRuinsMain, Area.EggCarrierMain): [ItemName.KeyItem.Raft],
-    (Character.Sonic, Area.EggCarrierMain, Area.MysticRuinsMain): [ItemName.KeyItem.Raft],
-    (Character.Tails, Area.StationSquareMain, Area.Station): [ItemName.KeyItem.StationKeys],
-    (Character.Tails, Area.Station, Area.StationSquareMain): [ItemName.KeyItem.StationKeys],
-    (Character.Tails, Area.StationSquareMain, Area.Hotel): [ItemName.KeyItem.HotelKeys],
-    (Character.Tails, Area.Hotel, Area.StationSquareMain): [ItemName.KeyItem.HotelKeys],
-    (Character.Tails, Area.Station, Area.Casino): [ItemName.KeyItem.CasinoKeys],
-    (Character.Tails, Area.Casino, Area.Station): [ItemName.KeyItem.CasinoKeys],
-    (Character.Tails, Area.Hotel, Area.Casino): [ItemName.KeyItem.CasinoKeys],
-    (Character.Tails, Area.Casino, Area.Hotel): [ItemName.KeyItem.CasinoKeys],
-    (Character.Tails, Area.StationSquareMain, Area.TwinkleParkLobby): [ItemName.KeyItem.TwinkleParkTicket],
-    (Character.Tails, Area.TwinkleParkLobby, Area.StationSquareMain): [ItemName.KeyItem.TwinkleParkTicket],
-    (Character.Tails, Area.MysticRuinsMain, Area.AngelIsland): [ItemName.KeyItem.Dynamite],
-    (Character.Tails, Area.AngelIsland, Area.MysticRuinsMain): [ItemName.KeyItem.Dynamite],
-    (Character.Tails, Area.MysticRuinsMain, Area.Jungle): [ItemName.KeyItem.JungleCart],
-    (Character.Tails, Area.Jungle, Area.MysticRuinsMain): [ItemName.KeyItem.JungleCart],
-    (Character.Tails, Area.Station, Area.MysticRuinsMain): [ItemName.KeyItem.Train],
-    (Character.Tails, Area.MysticRuinsMain, Area.Station): [ItemName.KeyItem.Train],
-    (Character.Tails, Area.StationSquareMain, Area.EggCarrierMain): [ItemName.KeyItem.Boat],
-    (Character.Tails, Area.EggCarrierMain, Area.StationSquareMain): [ItemName.KeyItem.Boat],
-    (Character.Tails, Area.MysticRuinsMain, Area.EggCarrierMain): [ItemName.KeyItem.Raft],
-    (Character.Tails, Area.EggCarrierMain, Area.MysticRuinsMain): [ItemName.KeyItem.Raft],
-    (Character.Knuckles, Area.StationSquareMain, Area.Station): [ItemName.KeyItem.StationKeys],
-    (Character.Knuckles, Area.Station, Area.StationSquareMain): [ItemName.KeyItem.StationKeys],
-    (Character.Knuckles, Area.StationSquareMain, Area.Hotel): [ItemName.KeyItem.HotelKeys],
-    (Character.Knuckles, Area.Hotel, Area.StationSquareMain): [ItemName.KeyItem.HotelKeys],
-    (Character.Knuckles, Area.Station, Area.Casino): [ItemName.KeyItem.CasinoKeys],
-    (Character.Knuckles, Area.Casino, Area.Station): [ItemName.KeyItem.CasinoKeys],
-    (Character.Knuckles, Area.Hotel, Area.Casino): [ItemName.KeyItem.CasinoKeys],
-    (Character.Knuckles, Area.Casino, Area.Hotel): [ItemName.KeyItem.CasinoKeys],
-    (Character.Knuckles, Area.StationSquareMain, Area.TwinkleParkLobby): [ItemName.KeyItem.TwinkleParkTicket],
-    (Character.Knuckles, Area.TwinkleParkLobby, Area.StationSquareMain): [ItemName.KeyItem.TwinkleParkTicket],
-    (Character.Knuckles, Area.MysticRuinsMain, Area.AngelIsland): [ItemName.KeyItem.Dynamite],
-    (Character.Knuckles, Area.AngelIsland, Area.MysticRuinsMain): [ItemName.KeyItem.Dynamite],
-    (Character.Knuckles, Area.MysticRuinsMain, Area.Jungle): [ItemName.KeyItem.JungleCart],
-    (Character.Knuckles, Area.Jungle, Area.MysticRuinsMain): [ItemName.KeyItem.JungleCart],
-    (Character.Knuckles, Area.Station, Area.MysticRuinsMain): [ItemName.KeyItem.Train],
-    (Character.Knuckles, Area.MysticRuinsMain, Area.Station): [ItemName.KeyItem.Train],
-    (Character.Knuckles, Area.StationSquareMain, Area.EggCarrierMain): [ItemName.KeyItem.Boat],
-    (Character.Knuckles, Area.EggCarrierMain, Area.StationSquareMain): [ItemName.KeyItem.Boat],
-    (Character.Knuckles, Area.MysticRuinsMain, Area.EggCarrierMain): [ItemName.KeyItem.Raft],
-    (Character.Knuckles, Area.EggCarrierMain, Area.MysticRuinsMain): [ItemName.KeyItem.Raft],
-    (Character.Amy, Area.StationSquareMain, Area.Station): [ItemName.KeyItem.StationKeys],
-    (Character.Amy, Area.Station, Area.StationSquareMain): [ItemName.KeyItem.StationKeys],
-    (Character.Amy, Area.StationSquareMain, Area.Hotel): [ItemName.KeyItem.HotelKeys],
-    (Character.Amy, Area.Hotel, Area.StationSquareMain): [ItemName.KeyItem.HotelKeys],
-    (Character.Amy, Area.Station, Area.Casino): [ItemName.KeyItem.CasinoKeys],
-    (Character.Amy, Area.Casino, Area.Station): [ItemName.KeyItem.CasinoKeys],
-    (Character.Amy, Area.Hotel, Area.Casino): [ItemName.KeyItem.CasinoKeys],
-    (Character.Amy, Area.Casino, Area.Hotel): [ItemName.KeyItem.CasinoKeys],
-    (Character.Amy, Area.StationSquareMain, Area.TwinkleParkLobby): [ItemName.KeyItem.TwinkleParkTicket],
-    (Character.Amy, Area.TwinkleParkLobby, Area.StationSquareMain): [ItemName.KeyItem.TwinkleParkTicket],
-    (Character.Amy, Area.MysticRuinsMain, Area.AngelIsland): [ItemName.KeyItem.Dynamite],
-    (Character.Amy, Area.AngelIsland, Area.MysticRuinsMain): [ItemName.KeyItem.Dynamite],
-    (Character.Amy, Area.MysticRuinsMain, Area.Jungle): [ItemName.KeyItem.JungleCart],
-    (Character.Amy, Area.Jungle, Area.MysticRuinsMain): [ItemName.KeyItem.JungleCart],
-    (Character.Amy, Area.Station, Area.MysticRuinsMain): [ItemName.KeyItem.Train],
-    (Character.Amy, Area.MysticRuinsMain, Area.Station): [ItemName.KeyItem.Train],
-    (Character.Amy, Area.StationSquareMain, Area.EggCarrierMain): [ItemName.KeyItem.Boat],
-    (Character.Amy, Area.EggCarrierMain, Area.StationSquareMain): [ItemName.KeyItem.Boat],
-    (Character.Amy, Area.MysticRuinsMain, Area.EggCarrierMain): [ItemName.KeyItem.Raft],
-    (Character.Amy, Area.EggCarrierMain, Area.MysticRuinsMain): [ItemName.KeyItem.Raft],
-    (Character.Big, Area.StationSquareMain, Area.Station): [ItemName.KeyItem.StationKeys],
-    (Character.Big, Area.Station, Area.StationSquareMain): [ItemName.KeyItem.StationKeys],
-    (Character.Big, Area.StationSquareMain, Area.Hotel): [ItemName.KeyItem.HotelKeys],
-    (Character.Big, Area.Hotel, Area.StationSquareMain): [ItemName.KeyItem.HotelKeys],
-    (Character.Big, Area.Station, Area.Casino): [ItemName.KeyItem.CasinoKeys],
-    (Character.Big, Area.Casino, Area.Station): [ItemName.KeyItem.CasinoKeys],
-    (Character.Big, Area.Hotel, Area.Casino): [ItemName.KeyItem.CasinoKeys],
-    (Character.Big, Area.Casino, Area.Hotel): [ItemName.KeyItem.CasinoKeys],
-    (Character.Big, Area.StationSquareMain, Area.TwinkleParkLobby): [ItemName.KeyItem.TwinkleParkTicket],
-    (Character.Big, Area.TwinkleParkLobby, Area.StationSquareMain): [ItemName.KeyItem.TwinkleParkTicket],
-    (Character.Big, Area.MysticRuinsMain, Area.AngelIsland): [ItemName.KeyItem.Dynamite],
-    (Character.Big, Area.AngelIsland, Area.MysticRuinsMain): [ItemName.KeyItem.Dynamite],
-    (Character.Big, Area.MysticRuinsMain, Area.Jungle): [ItemName.KeyItem.JungleCart],
-    (Character.Big, Area.Jungle, Area.MysticRuinsMain): [ItemName.KeyItem.JungleCart],
-    (Character.Big, Area.Station, Area.MysticRuinsMain): [ItemName.KeyItem.Train],
-    (Character.Big, Area.MysticRuinsMain, Area.Station): [ItemName.KeyItem.Train],
-    (Character.Big, Area.StationSquareMain, Area.EggCarrierMain): [ItemName.KeyItem.Boat],
-    (Character.Big, Area.EggCarrierMain, Area.StationSquareMain): [ItemName.KeyItem.Boat],
-    (Character.Big, Area.MysticRuinsMain, Area.EggCarrierMain): [ItemName.KeyItem.Raft],
-    (Character.Big, Area.EggCarrierMain, Area.MysticRuinsMain): [ItemName.KeyItem.Raft],
-    (Character.Gamma, Area.StationSquareMain, Area.Station): [ItemName.KeyItem.StationKeys],
-    (Character.Gamma, Area.Station, Area.StationSquareMain): [ItemName.KeyItem.StationKeys],
-    (Character.Gamma, Area.StationSquareMain, Area.Hotel): [ItemName.KeyItem.HotelKeys],
-    (Character.Gamma, Area.Hotel, Area.StationSquareMain): [ItemName.KeyItem.HotelKeys],
-    (Character.Gamma, Area.Station, Area.Casino): [ItemName.KeyItem.CasinoKeys],
-    (Character.Gamma, Area.Casino, Area.Station): [ItemName.KeyItem.CasinoKeys],
-    (Character.Gamma, Area.Hotel, Area.Casino): [ItemName.KeyItem.CasinoKeys],
-    (Character.Gamma, Area.Casino, Area.Hotel): [ItemName.KeyItem.CasinoKeys],
-    (Character.Gamma, Area.StationSquareMain, Area.TwinkleParkLobby): [ItemName.KeyItem.TwinkleParkTicket],
-    (Character.Gamma, Area.TwinkleParkLobby, Area.StationSquareMain): [ItemName.KeyItem.TwinkleParkTicket],
-    (Character.Gamma, Area.MysticRuinsMain, Area.AngelIsland): [ItemName.KeyItem.Dynamite],
-    (Character.Gamma, Area.AngelIsland, Area.MysticRuinsMain): [ItemName.KeyItem.Dynamite],
-    (Character.Gamma, Area.MysticRuinsMain, Area.Jungle): [ItemName.KeyItem.JungleCart],
-    (Character.Gamma, Area.Jungle, Area.MysticRuinsMain): [ItemName.KeyItem.JungleCart],
-    (Character.Gamma, Area.Station, Area.MysticRuinsMain): [ItemName.KeyItem.Train],
-    (Character.Gamma, Area.MysticRuinsMain, Area.Station): [ItemName.KeyItem.Train],
-    (Character.Gamma, Area.StationSquareMain, Area.EggCarrierMain): [ItemName.KeyItem.Boat],
-    (Character.Gamma, Area.EggCarrierMain, Area.StationSquareMain): [ItemName.KeyItem.Boat],
-    (Character.Gamma, Area.MysticRuinsMain, Area.EggCarrierMain): [ItemName.KeyItem.Raft],
-    (Character.Gamma, Area.EggCarrierMain, Area.MysticRuinsMain): [ItemName.KeyItem.Raft],
+area_connections: Dict[Tuple[Character, Area, Area], Tuple[List[str], List[str], List[str]]] = {
+    (Character.Sonic, Area.Hotel, Area.EmeraldCoast): ([], [], []),
+    (Character.Sonic, Area.MysticRuinsMain, Area.WindyValley): (
+        [ItemName.KeyItem.WindStone], [ItemName.KeyItem.WindStone], [ItemName.KeyItem.WindStone]),
+    (Character.Sonic, Area.Casino, Area.Casinopolis): ([ItemName.Sonic.LightShoes], [ItemName.Sonic.LightShoes], []),
+    (Character.Sonic, Area.AngelIsland, Area.IceCap): (
+        [ItemName.KeyItem.IceStone, ItemName.KeyItem.CasinoKeys, ItemName.KeyItem.Train],
+        [ItemName.KeyItem.IceStone, ItemName.KeyItem.CasinoKeys, ItemName.KeyItem.Train],
+        [ItemName.KeyItem.IceStone, ItemName.KeyItem.CasinoKeys, ItemName.KeyItem.Train]),
+    (Character.Sonic, Area.TwinkleParkLobby, Area.TwinklePark): ([], [], []),
+    (Character.Sonic, Area.StationSquareMain, Area.SpeedHighway): (
+        [ItemName.KeyItem.EmployeeCard], [ItemName.KeyItem.EmployeeCard], [ItemName.KeyItem.EmployeeCard]),
+    (Character.Sonic, Area.AngelIsland, Area.RedMountain): (
+        [ItemName.Sonic.LightShoes, ItemName.Sonic.AncientLight],
+        [ItemName.Sonic.LightShoes, ItemName.Sonic.AncientLight],
+        [ItemName.Sonic.LightShoes, ItemName.Sonic.AncientLight]),
+    (Character.Sonic, Area.EggCarrierMain, Area.SkyDeck): ([], [], []),
+    (Character.Sonic, Area.Jungle, Area.LostWorld): ([], [], []),
+    (Character.Sonic, Area.Jungle, Area.FinalEgg): ([], [], []),
+    (Character.Tails, Area.MysticRuinsMain, Area.WindyValley): (
+        [ItemName.KeyItem.WindStone], [ItemName.KeyItem.WindStone], [ItemName.KeyItem.WindStone]),
+    (Character.Tails, Area.Casino, Area.Casinopolis): ([], [], []),
+    (Character.Tails, Area.AngelIsland, Area.IceCap): (
+        [ItemName.KeyItem.IceStone, ItemName.KeyItem.CasinoKeys, ItemName.KeyItem.Train],
+        [ItemName.KeyItem.IceStone, ItemName.KeyItem.CasinoKeys, ItemName.KeyItem.Train],
+        [ItemName.KeyItem.IceStone, ItemName.KeyItem.CasinoKeys, ItemName.KeyItem.Train]),
+    (Character.Tails, Area.EggCarrierMain, Area.SkyDeck): ([], [], []),
+    (Character.Tails, Area.StationSquareMain, Area.SpeedHighway): (
+        [ItemName.KeyItem.EmployeeCard], [ItemName.KeyItem.EmployeeCard], [ItemName.KeyItem.EmployeeCard]),
+    (Character.Knuckles, Area.StationSquareMain, Area.SpeedHighway): ([], [], []),
+    (Character.Knuckles, Area.Casino, Area.Casinopolis): ([], [], []),
+    (Character.Knuckles, Area.AngelIsland, Area.RedMountain): (
+        [ItemName.Knuckles.ShovelClaw], [ItemName.Knuckles.ShovelClaw], [ItemName.Knuckles.ShovelClaw]),
+    (Character.Knuckles, Area.Jungle, Area.LostWorld): (
+        [ItemName.Knuckles.ShovelClaw], [ItemName.Knuckles.ShovelClaw], [ItemName.Knuckles.ShovelClaw]),
+    (Character.Knuckles, Area.EggCarrierMain, Area.SkyDeck): ([], [], []),
+    (Character.Amy, Area.TwinkleParkLobby, Area.TwinklePark): ([], [], []),
+    (Character.Amy, Area.EggCarrierMain, Area.HotShelter): ([], [], []),
+    (Character.Amy, Area.Jungle, Area.FinalEgg): ([], [], []),
+    (Character.Big, Area.TwinkleParkLobby, Area.TwinklePark): ([], [], []),
+    (Character.Big, Area.AngelIsland, Area.IceCap): (
+        [ItemName.KeyItem.IceStone, ItemName.KeyItem.StationKeys, ItemName.KeyItem.Train],
+        [ItemName.KeyItem.IceStone, ItemName.KeyItem.StationKeys, ItemName.KeyItem.Train],
+        [ItemName.KeyItem.IceStone, ItemName.KeyItem.StationKeys, ItemName.KeyItem.Train]),
+    (Character.Big, Area.Hotel, Area.EmeraldCoast): ([], [], []),
+    (Character.Big, Area.EggCarrierMain, Area.HotShelter): ([], [], []),
+    (Character.Gamma, Area.Jungle, Area.FinalEgg): ([], [], []),
+    (Character.Gamma, Area.Hotel, Area.EmeraldCoast): ([], [], []),
+    (Character.Gamma, Area.MysticRuinsMain, Area.WindyValley): (
+        [ItemName.KeyItem.WindStone], [ItemName.KeyItem.WindStone], [ItemName.KeyItem.WindStone]),
+    (Character.Gamma, Area.AngelIsland, Area.RedMountain): ([], [], []),
+    (Character.Gamma, Area.EggCarrierMain, Area.HotShelter): ([], [], []),
+
+    (Character.Sonic, Area.StationSquareMain, Area.Station): (
+        [ItemName.KeyItem.StationKeys], [ItemName.KeyItem.StationKeys], []),
+    (Character.Sonic, Area.Station, Area.StationSquareMain): (
+        [ItemName.KeyItem.StationKeys], [ItemName.KeyItem.StationKeys], [ItemName.KeyItem.StationKeys]),
+    (Character.Sonic, Area.StationSquareMain, Area.Hotel): (
+        [ItemName.KeyItem.HotelKeys], [ItemName.KeyItem.HotelKeys], [ItemName.KeyItem.HotelKeys]),
+    (Character.Sonic, Area.Hotel, Area.StationSquareMain): (
+        [ItemName.KeyItem.HotelKeys], [ItemName.KeyItem.HotelKeys], []),
+    (Character.Sonic, Area.Station, Area.Casino): (
+        [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys]),
+    (Character.Sonic, Area.Casino, Area.Station): (
+        [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys]),
+    (Character.Sonic, Area.Hotel, Area.Casino): (
+        [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys]),
+    (Character.Sonic, Area.Casino, Area.Hotel): (
+        [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys]),
+    (Character.Sonic, Area.StationSquareMain, Area.TwinkleParkLobby): (
+        [ItemName.KeyItem.TwinkleParkTicket], [ItemName.KeyItem.TwinkleParkTicket],
+        [ItemName.KeyItem.TwinkleParkTicket]),
+    (Character.Sonic, Area.TwinkleParkLobby, Area.StationSquareMain): (
+        [ItemName.KeyItem.TwinkleParkTicket], [ItemName.KeyItem.TwinkleParkTicket],
+        [ItemName.KeyItem.TwinkleParkTicket]),
+    (Character.Sonic, Area.MysticRuinsMain, Area.AngelIsland): (
+        [ItemName.KeyItem.Dynamite], [ItemName.KeyItem.Dynamite], [ItemName.KeyItem.Dynamite]),
+    (Character.Sonic, Area.AngelIsland, Area.MysticRuinsMain): (
+        [ItemName.KeyItem.Dynamite], [ItemName.KeyItem.Dynamite], [ItemName.KeyItem.Dynamite]),
+    (Character.Sonic, Area.MysticRuinsMain, Area.Jungle): (
+        [ItemName.KeyItem.JungleCart], [ItemName.KeyItem.JungleCart], [ItemName.KeyItem.JungleCart]),
+    (Character.Sonic, Area.Jungle, Area.MysticRuinsMain): (
+        [ItemName.KeyItem.JungleCart], [ItemName.KeyItem.JungleCart], [ItemName.KeyItem.JungleCart]),
+    (Character.Sonic, Area.Station, Area.MysticRuinsMain): (
+        [ItemName.KeyItem.Train], [ItemName.KeyItem.Train], [ItemName.KeyItem.Train]),
+    (Character.Sonic, Area.MysticRuinsMain, Area.Station): (
+        [ItemName.KeyItem.Train], [ItemName.KeyItem.Train], [ItemName.KeyItem.Train]),
+    (Character.Sonic, Area.StationSquareMain, Area.EggCarrierMain): (
+        [ItemName.KeyItem.Boat], [ItemName.KeyItem.Boat], [ItemName.KeyItem.Boat]),
+    (Character.Sonic, Area.EggCarrierMain, Area.StationSquareMain): (
+        [ItemName.KeyItem.Boat], [ItemName.KeyItem.Boat], [ItemName.KeyItem.Boat]),
+    (Character.Sonic, Area.MysticRuinsMain, Area.EggCarrierMain): (
+        [ItemName.KeyItem.Raft], [ItemName.KeyItem.Raft], [ItemName.KeyItem.Raft]),
+    (Character.Sonic, Area.EggCarrierMain, Area.MysticRuinsMain): (
+        [ItemName.KeyItem.Raft], [ItemName.KeyItem.Raft], [ItemName.KeyItem.Raft]),
+    (Character.Tails, Area.StationSquareMain, Area.Station): (
+        [ItemName.KeyItem.StationKeys], [ItemName.KeyItem.StationKeys], [ItemName.KeyItem.StationKeys]),
+    (Character.Tails, Area.Station, Area.StationSquareMain): (
+        [ItemName.KeyItem.StationKeys], [ItemName.KeyItem.StationKeys], [ItemName.KeyItem.StationKeys]),
+    (Character.Tails, Area.StationSquareMain, Area.Hotel): (
+        [ItemName.KeyItem.HotelKeys], [ItemName.KeyItem.HotelKeys], [ItemName.KeyItem.HotelKeys]),
+    (Character.Tails, Area.Hotel, Area.StationSquareMain): (
+        [ItemName.KeyItem.HotelKeys], [ItemName.KeyItem.HotelKeys], [ItemName.KeyItem.HotelKeys]),
+    (Character.Tails, Area.Station, Area.Casino): (
+        [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys]),
+    (Character.Tails, Area.Casino, Area.Station): (
+        [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys]),
+    (Character.Tails, Area.Hotel, Area.Casino): (
+        [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys]),
+    (Character.Tails, Area.Casino, Area.Hotel): (
+        [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys]),
+    (Character.Tails, Area.StationSquareMain, Area.TwinkleParkLobby): (
+        [ItemName.KeyItem.TwinkleParkTicket], [ItemName.KeyItem.TwinkleParkTicket],
+        [ItemName.KeyItem.TwinkleParkTicket]),
+    (Character.Tails, Area.TwinkleParkLobby, Area.StationSquareMain): (
+        [ItemName.KeyItem.TwinkleParkTicket], [ItemName.KeyItem.TwinkleParkTicket],
+        [ItemName.KeyItem.TwinkleParkTicket]),
+    (Character.Tails, Area.MysticRuinsMain, Area.AngelIsland): (
+        [ItemName.KeyItem.Dynamite], [ItemName.KeyItem.Dynamite], [ItemName.KeyItem.Dynamite]),
+    (Character.Tails, Area.AngelIsland, Area.MysticRuinsMain): (
+        [ItemName.KeyItem.Dynamite], [ItemName.KeyItem.Dynamite], [ItemName.KeyItem.Dynamite]),
+    (Character.Tails, Area.MysticRuinsMain, Area.Jungle): (
+        [ItemName.KeyItem.JungleCart], [ItemName.KeyItem.JungleCart], [ItemName.KeyItem.JungleCart]),
+    (Character.Tails, Area.Jungle, Area.MysticRuinsMain): (
+        [ItemName.KeyItem.JungleCart], [ItemName.KeyItem.JungleCart], [ItemName.KeyItem.JungleCart]),
+    (Character.Tails, Area.Station, Area.MysticRuinsMain): (
+        [ItemName.KeyItem.Train], [ItemName.KeyItem.Train], [ItemName.KeyItem.Train]),
+    (Character.Tails, Area.MysticRuinsMain, Area.Station): (
+        [ItemName.KeyItem.Train], [ItemName.KeyItem.Train], [ItemName.KeyItem.Train]),
+    (Character.Tails, Area.StationSquareMain, Area.EggCarrierMain): (
+        [ItemName.KeyItem.Boat], [ItemName.KeyItem.Boat], [ItemName.KeyItem.Boat]),
+    (Character.Tails, Area.EggCarrierMain, Area.StationSquareMain): (
+        [ItemName.KeyItem.Boat], [ItemName.KeyItem.Boat], [ItemName.KeyItem.Boat]),
+    (Character.Tails, Area.MysticRuinsMain, Area.EggCarrierMain): (
+        [ItemName.KeyItem.Raft], [ItemName.KeyItem.Raft], [ItemName.KeyItem.Raft]),
+    (Character.Tails, Area.EggCarrierMain, Area.MysticRuinsMain): (
+        [ItemName.KeyItem.Raft], [ItemName.KeyItem.Raft], [ItemName.KeyItem.Raft]),
+    (Character.Knuckles, Area.StationSquareMain, Area.Station): (
+        [ItemName.KeyItem.StationKeys], [ItemName.KeyItem.StationKeys], [ItemName.KeyItem.StationKeys]),
+    (Character.Knuckles, Area.Station, Area.StationSquareMain): (
+        [ItemName.KeyItem.StationKeys], [ItemName.KeyItem.StationKeys], [ItemName.KeyItem.StationKeys]),
+    (Character.Knuckles, Area.StationSquareMain, Area.Hotel): (
+        [ItemName.KeyItem.HotelKeys], [ItemName.KeyItem.HotelKeys], [ItemName.KeyItem.HotelKeys]),
+    (Character.Knuckles, Area.Hotel, Area.StationSquareMain): (
+        [ItemName.KeyItem.HotelKeys], [ItemName.KeyItem.HotelKeys], [ItemName.KeyItem.HotelKeys]),
+    (Character.Knuckles, Area.Station, Area.Casino): (
+        [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys]),
+    (Character.Knuckles, Area.Casino, Area.Station): (
+        [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys]),
+    (Character.Knuckles, Area.Hotel, Area.Casino): (
+        [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys]),
+    (Character.Knuckles, Area.Casino, Area.Hotel): (
+        [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys]),
+    (Character.Knuckles, Area.StationSquareMain, Area.TwinkleParkLobby): (
+        [ItemName.KeyItem.TwinkleParkTicket], [ItemName.KeyItem.TwinkleParkTicket],
+        [ItemName.KeyItem.TwinkleParkTicket]),
+    (Character.Knuckles, Area.TwinkleParkLobby, Area.StationSquareMain): (
+        [ItemName.KeyItem.TwinkleParkTicket], [ItemName.KeyItem.TwinkleParkTicket],
+        [ItemName.KeyItem.TwinkleParkTicket]),
+    (Character.Knuckles, Area.MysticRuinsMain, Area.AngelIsland): (
+        [ItemName.KeyItem.Dynamite], [ItemName.KeyItem.Dynamite], [ItemName.KeyItem.Dynamite]),
+    (Character.Knuckles, Area.AngelIsland, Area.MysticRuinsMain): (
+        [ItemName.KeyItem.Dynamite], [ItemName.KeyItem.Dynamite], [ItemName.KeyItem.Dynamite]),
+    (Character.Knuckles, Area.MysticRuinsMain, Area.Jungle): (
+        [ItemName.KeyItem.JungleCart], [ItemName.KeyItem.JungleCart], [ItemName.KeyItem.JungleCart]),
+    (Character.Knuckles, Area.Jungle, Area.MysticRuinsMain): (
+        [ItemName.KeyItem.JungleCart], [ItemName.KeyItem.JungleCart], [ItemName.KeyItem.JungleCart]),
+    (Character.Knuckles, Area.Station, Area.MysticRuinsMain): (
+        [ItemName.KeyItem.Train], [ItemName.KeyItem.Train], [ItemName.KeyItem.Train]),
+    (Character.Knuckles, Area.MysticRuinsMain, Area.Station): (
+        [ItemName.KeyItem.Train], [ItemName.KeyItem.Train], [ItemName.KeyItem.Train]),
+    (Character.Knuckles, Area.StationSquareMain, Area.EggCarrierMain): (
+        [ItemName.KeyItem.Boat], [ItemName.KeyItem.Boat], [ItemName.KeyItem.Boat]),
+    (Character.Knuckles, Area.EggCarrierMain, Area.StationSquareMain): (
+        [ItemName.KeyItem.Boat], [ItemName.KeyItem.Boat], [ItemName.KeyItem.Boat]),
+    (Character.Knuckles, Area.MysticRuinsMain, Area.EggCarrierMain): (
+        [ItemName.KeyItem.Raft], [ItemName.KeyItem.Raft], [ItemName.KeyItem.Raft]),
+    (Character.Knuckles, Area.EggCarrierMain, Area.MysticRuinsMain): (
+        [ItemName.KeyItem.Raft], [ItemName.KeyItem.Raft], [ItemName.KeyItem.Raft]),
+    (Character.Amy, Area.StationSquareMain, Area.Station): (
+        [ItemName.KeyItem.StationKeys], [ItemName.KeyItem.StationKeys], [ItemName.KeyItem.StationKeys]),
+    (Character.Amy, Area.Station, Area.StationSquareMain): (
+        [ItemName.KeyItem.StationKeys], [ItemName.KeyItem.StationKeys], [ItemName.KeyItem.StationKeys]),
+    (Character.Amy, Area.StationSquareMain, Area.Hotel): (
+        [ItemName.KeyItem.HotelKeys], [ItemName.KeyItem.HotelKeys], [ItemName.KeyItem.HotelKeys]),
+    (Character.Amy, Area.Hotel, Area.StationSquareMain): (
+        [ItemName.KeyItem.HotelKeys], [ItemName.KeyItem.HotelKeys], [ItemName.KeyItem.HotelKeys]),
+    (Character.Amy, Area.Station, Area.Casino): (
+        [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys]),
+    (Character.Amy, Area.Casino, Area.Station): (
+        [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys]),
+    (Character.Amy, Area.Hotel, Area.Casino): (
+        [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys]),
+    (Character.Amy, Area.Casino, Area.Hotel): (
+        [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys]),
+    (Character.Amy, Area.StationSquareMain, Area.TwinkleParkLobby): (
+        [ItemName.KeyItem.TwinkleParkTicket], [ItemName.KeyItem.TwinkleParkTicket],
+        [ItemName.KeyItem.TwinkleParkTicket]),
+    (Character.Amy, Area.TwinkleParkLobby, Area.StationSquareMain): (
+        [ItemName.KeyItem.TwinkleParkTicket], [ItemName.KeyItem.TwinkleParkTicket],
+        [ItemName.KeyItem.TwinkleParkTicket]),
+    (Character.Amy, Area.MysticRuinsMain, Area.AngelIsland): (
+        [ItemName.KeyItem.Dynamite], [ItemName.KeyItem.Dynamite], [ItemName.KeyItem.Dynamite]),
+    (Character.Amy, Area.AngelIsland, Area.MysticRuinsMain): (
+        [ItemName.KeyItem.Dynamite], [ItemName.KeyItem.Dynamite], [ItemName.KeyItem.Dynamite]),
+    (Character.Amy, Area.MysticRuinsMain, Area.Jungle): (
+        [ItemName.KeyItem.JungleCart], [ItemName.KeyItem.JungleCart], [ItemName.KeyItem.JungleCart]),
+    (Character.Amy, Area.Jungle, Area.MysticRuinsMain): (
+        [ItemName.KeyItem.JungleCart], [ItemName.KeyItem.JungleCart], [ItemName.KeyItem.JungleCart]),
+    (Character.Amy, Area.Station, Area.MysticRuinsMain): (
+        [ItemName.KeyItem.Train], [ItemName.KeyItem.Train], [ItemName.KeyItem.Train]),
+    (Character.Amy, Area.MysticRuinsMain, Area.Station): (
+        [ItemName.KeyItem.Train], [ItemName.KeyItem.Train], [ItemName.KeyItem.Train]),
+    (Character.Amy, Area.StationSquareMain, Area.EggCarrierMain): (
+        [ItemName.KeyItem.Boat], [ItemName.KeyItem.Boat], [ItemName.KeyItem.Boat]),
+    (Character.Amy, Area.EggCarrierMain, Area.StationSquareMain): (
+        [ItemName.KeyItem.Boat], [ItemName.KeyItem.Boat], [ItemName.KeyItem.Boat]),
+    (Character.Amy, Area.MysticRuinsMain, Area.EggCarrierMain): (
+        [ItemName.KeyItem.Raft], [ItemName.KeyItem.Raft], [ItemName.KeyItem.Raft]),
+    (Character.Amy, Area.EggCarrierMain, Area.MysticRuinsMain): (
+        [ItemName.KeyItem.Raft], [ItemName.KeyItem.Raft], [ItemName.KeyItem.Raft]),
+    (Character.Big, Area.StationSquareMain, Area.Station): (
+        [ItemName.KeyItem.StationKeys], [ItemName.KeyItem.StationKeys], [ItemName.KeyItem.StationKeys]),
+    (Character.Big, Area.Station, Area.StationSquareMain): (
+        [ItemName.KeyItem.StationKeys], [ItemName.KeyItem.StationKeys], [ItemName.KeyItem.StationKeys]),
+    (Character.Big, Area.StationSquareMain, Area.Hotel): (
+        [ItemName.KeyItem.HotelKeys], [ItemName.KeyItem.HotelKeys], [ItemName.KeyItem.HotelKeys]),
+    (Character.Big, Area.Hotel, Area.StationSquareMain): (
+        [ItemName.KeyItem.HotelKeys], [ItemName.KeyItem.HotelKeys], [ItemName.KeyItem.HotelKeys]),
+    (Character.Big, Area.Station, Area.Casino): (
+        [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys]),
+    (Character.Big, Area.Casino, Area.Station): (
+        [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys]),
+    (Character.Big, Area.Hotel, Area.Casino): (
+        [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys]),
+    (Character.Big, Area.Casino, Area.Hotel): (
+        [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys]),
+    (Character.Big, Area.StationSquareMain, Area.TwinkleParkLobby): (
+        [ItemName.KeyItem.TwinkleParkTicket], [ItemName.KeyItem.TwinkleParkTicket],
+        [ItemName.KeyItem.TwinkleParkTicket]),
+    (Character.Big, Area.TwinkleParkLobby, Area.StationSquareMain): (
+        [ItemName.KeyItem.TwinkleParkTicket], [ItemName.KeyItem.TwinkleParkTicket],
+        [ItemName.KeyItem.TwinkleParkTicket]),
+    (Character.Big, Area.MysticRuinsMain, Area.AngelIsland): (
+        [ItemName.KeyItem.Dynamite], [ItemName.KeyItem.Dynamite], [ItemName.KeyItem.Dynamite]),
+    (Character.Big, Area.AngelIsland, Area.MysticRuinsMain): (
+        [ItemName.KeyItem.Dynamite], [ItemName.KeyItem.Dynamite], [ItemName.KeyItem.Dynamite]),
+    (Character.Big, Area.MysticRuinsMain, Area.Jungle): (
+        [ItemName.KeyItem.JungleCart], [ItemName.KeyItem.JungleCart], [ItemName.KeyItem.JungleCart]),
+    (Character.Big, Area.Jungle, Area.MysticRuinsMain): (
+        [ItemName.KeyItem.JungleCart], [ItemName.KeyItem.JungleCart], [ItemName.KeyItem.JungleCart]),
+    (Character.Big, Area.Station, Area.MysticRuinsMain): (
+        [ItemName.KeyItem.Train], [ItemName.KeyItem.Train], [ItemName.KeyItem.Train]),
+    (Character.Big, Area.MysticRuinsMain, Area.Station): (
+        [ItemName.KeyItem.Train], [ItemName.KeyItem.Train], [ItemName.KeyItem.Train]),
+    (Character.Big, Area.StationSquareMain, Area.EggCarrierMain): (
+        [ItemName.KeyItem.Boat], [ItemName.KeyItem.Boat], [ItemName.KeyItem.Boat]),
+    (Character.Big, Area.EggCarrierMain, Area.StationSquareMain): (
+        [ItemName.KeyItem.Boat], [ItemName.KeyItem.Boat], [ItemName.KeyItem.Boat]),
+    (Character.Big, Area.MysticRuinsMain, Area.EggCarrierMain): (
+        [ItemName.KeyItem.Raft], [ItemName.KeyItem.Raft], [ItemName.KeyItem.Raft]),
+    (Character.Big, Area.EggCarrierMain, Area.MysticRuinsMain): (
+        [ItemName.KeyItem.Raft], [ItemName.KeyItem.Raft], [ItemName.KeyItem.Raft]),
+    (Character.Gamma, Area.StationSquareMain, Area.Station): (
+        [ItemName.KeyItem.StationKeys], [ItemName.KeyItem.StationKeys], [ItemName.KeyItem.StationKeys]),
+    (Character.Gamma, Area.Station, Area.StationSquareMain): (
+        [ItemName.KeyItem.StationKeys], [ItemName.KeyItem.StationKeys], [ItemName.KeyItem.StationKeys]),
+    (Character.Gamma, Area.StationSquareMain, Area.Hotel): (
+        [ItemName.KeyItem.HotelKeys], [ItemName.KeyItem.HotelKeys], [ItemName.KeyItem.HotelKeys]),
+    (Character.Gamma, Area.Hotel, Area.StationSquareMain): (
+        [ItemName.KeyItem.HotelKeys], [ItemName.KeyItem.HotelKeys], [ItemName.KeyItem.HotelKeys]),
+    (Character.Gamma, Area.Station, Area.Casino): (
+        [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys]),
+    (Character.Gamma, Area.Casino, Area.Station): (
+        [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys]),
+    (Character.Gamma, Area.Hotel, Area.Casino): (
+        [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys]),
+    (Character.Gamma, Area.Casino, Area.Hotel): (
+        [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys]),
+    (Character.Gamma, Area.StationSquareMain, Area.TwinkleParkLobby): (
+        [ItemName.KeyItem.TwinkleParkTicket], [ItemName.KeyItem.TwinkleParkTicket],
+        [ItemName.KeyItem.TwinkleParkTicket]),
+    (Character.Gamma, Area.TwinkleParkLobby, Area.StationSquareMain): (
+        [ItemName.KeyItem.TwinkleParkTicket], [ItemName.KeyItem.TwinkleParkTicket],
+        [ItemName.KeyItem.TwinkleParkTicket]),
+    (Character.Gamma, Area.MysticRuinsMain, Area.AngelIsland): (
+        [ItemName.KeyItem.Dynamite], [ItemName.KeyItem.Dynamite], [ItemName.KeyItem.Dynamite]),
+    (Character.Gamma, Area.AngelIsland, Area.MysticRuinsMain): (
+        [ItemName.KeyItem.Dynamite], [ItemName.KeyItem.Dynamite], [ItemName.KeyItem.Dynamite]),
+    (Character.Gamma, Area.MysticRuinsMain, Area.Jungle): (
+        [ItemName.KeyItem.JungleCart], [ItemName.KeyItem.JungleCart], [ItemName.KeyItem.JungleCart]),
+    (Character.Gamma, Area.Jungle, Area.MysticRuinsMain): (
+        [ItemName.KeyItem.JungleCart], [ItemName.KeyItem.JungleCart], [ItemName.KeyItem.JungleCart]),
+    (Character.Gamma, Area.Station, Area.MysticRuinsMain): (
+        [ItemName.KeyItem.Train], [ItemName.KeyItem.Train], [ItemName.KeyItem.Train]),
+    (Character.Gamma, Area.MysticRuinsMain, Area.Station): (
+        [ItemName.KeyItem.Train], [ItemName.KeyItem.Train], [ItemName.KeyItem.Train]),
+    (Character.Gamma, Area.StationSquareMain, Area.EggCarrierMain): (
+        [ItemName.KeyItem.Boat], [ItemName.KeyItem.Boat], [ItemName.KeyItem.Boat]),
+    (Character.Gamma, Area.EggCarrierMain, Area.StationSquareMain): (
+        [ItemName.KeyItem.Boat], [ItemName.KeyItem.Boat], [ItemName.KeyItem.Boat]),
+    (Character.Gamma, Area.MysticRuinsMain, Area.EggCarrierMain): (
+        [ItemName.KeyItem.Raft], [ItemName.KeyItem.Raft], [ItemName.KeyItem.Raft]),
+    (Character.Gamma, Area.EggCarrierMain, Area.MysticRuinsMain): (
+        [ItemName.KeyItem.Raft], [ItemName.KeyItem.Raft], [ItemName.KeyItem.Raft]),
 }
 
 
@@ -205,9 +354,18 @@ def create_sadx_regions(world: World, starter_setup: StarterSetup, options: Soni
                                                                                                          world.player))
 
     # We connect the regions based on the area connections rules
-    for (character, area_from, area_to), key_items in area_connections.items():
+    for (character, area_from, area_to), (
+            casual_logic_items, normal_logic_items, hard_logic_items) in area_connections.items():
         region_from = created_regions.get((character, area_from))
         region_to = created_regions.get((character, area_to))
+
+        if options.logic_level.value == 2:
+            key_items = hard_logic_items
+        elif options.logic_level.value == 1:
+            key_items = normal_logic_items
+        else:
+            key_items = casual_logic_items
+
         if region_from and region_to:
             if key_items:
                 region_from.connect(region_to, None,
@@ -297,7 +455,7 @@ def get_location_ids_for_common_region(options):
                     location_ids.append(sub_level.locationId)
     if options.field_emblems_checks:
         for field_emblem in field_emblem_location_table:
-            if is_any_character_playable(field_emblem.get_characters(), options):
+            if is_any_character_playable(field_emblem.get_logic_characters(options), options):
                 location_ids.append(field_emblem.locationId)
 
     if options.boss_checks:

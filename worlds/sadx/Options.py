@@ -22,6 +22,20 @@ class Goal(Choice):
     default = 0
 
 
+class LogicLevel(Choice):
+    """
+    What kind of logic the randomizer will use
+    Casual Logic (0): Very forgiving, ideal if you are not used to this game or its location checks.
+    Normal Logic (1): Less forgiving logic, some checks require to do spindash jumps or dying to get the check.
+    Hard Logic (2): The most unforgiving logic, some checks require to do precise jumps or glitches.
+    """
+    display_name = "Logic Level"
+    option_casual_logic = 0
+    option_normal_logic = 1
+    option_hard_logic = 2
+    default = 0
+
+
 class EmblemPercentage(Range):
     """What percentage of the available emblems do you need to unlock the final story"""
     display_name = "Emblem Requirement Percentage"
@@ -342,6 +356,7 @@ class BuyonTrapWeight(BaseTrapWeight):
 @dataclass
 class SonicAdventureDXOptions(PerGameCommonOptions):
     goal: Goal
+    logic_level: LogicLevel
     emblems_percentage: EmblemPercentage
     random_starting_location: RandomStartingLocation
     random_starting_location_per_character: RandomStartingLocationPerCharacter
@@ -401,6 +416,8 @@ class SonicAdventureDXOptions(PerGameCommonOptions):
 
 sadx_option_groups = [
     OptionGroup("General Options", [
+        Goal,
+        LogicLevel,
         EmblemPercentage,
         RandomStartingLocation,
         RandomStartingLocationPerCharacter,

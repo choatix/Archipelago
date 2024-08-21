@@ -11,13 +11,13 @@ from .Regions import get_region_name
 
 def add_level_rules(self, location_name: str, level: LevelLocation):
     location = self.multiworld.get_location(location_name, self.player)
-    for need in level.extraItems:
+    for need in level.get_logic_items(self.options):
         add_rule(location, lambda state, item=need: state.has(item, self.player))
 
 
 def add_upgrade_rules(self, location_name: str, upgrade: UpgradeLocation):
     location = self.multiworld.get_location(location_name, self.player)
-    for need in upgrade.extraItems:
+    for need in upgrade.get_logic_items(self.options):
         add_rule(location, lambda state, item=need: state.has(item, self.player))
 
 
@@ -36,13 +36,14 @@ def add_field_emblem_rules(self, location_name: str, field_emblem: EmblemLocatio
             get_region_name(character.character if isinstance(character, CharacterUpgrade) else character,
                             field_emblem.area), self.player) and
          (state.has(character.upgrade, self.player) if isinstance(character, CharacterUpgrade) else True))
-        for character in field_emblem.characters if character in get_playable_characters(self.options) or
+        for character in field_emblem.get_logic_characters_upgrades(self.options) if
+        character in get_playable_characters(self.options) or
         (isinstance(character, CharacterUpgrade) and character.character in get_playable_characters(self.options))))
 
 
 def add_life_capsule_rules(self, location_name: str, life_capsule: LifeCapsuleLocation):
     location = self.multiworld.get_location(location_name, self.player)
-    for need in life_capsule.extraItems:
+    for need in life_capsule.get_logic_items(self.options):
         add_rule(location, lambda state, item=need: state.has(item, self.player))
 
 
@@ -59,7 +60,7 @@ def add_mission_rules(self, location_name: str, mission: MissionLocation):
     location = self.multiworld.get_location(location_name, self.player)
     card_area_name = get_region_name(mission.character, mission.cardArea)
     add_rule(location, lambda state, card_area=card_area_name: state.can_reach_region(card_area, self.player))
-    for need in mission.extraItems:
+    for need in mission.get_logic_items(self.options):
         add_rule(location, lambda state, item=need: state.has(item, self.player))
 
 

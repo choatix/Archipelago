@@ -98,11 +98,11 @@ def get_possible_starting_areas(world, character: Character) -> List[Area]:
 
 def has_locations_without_items(character: Character, area: Area, options: SonicAdventureDXOptions) -> bool:
     for level in level_location_table:
-        if level.character == character and level.area == area and not level.extraItems:
+        if level.character == character and level.area == area and not level.get_logic_items(options):
             return True
     if are_character_upgrades_randomized(character, options):
         for upgrade in upgrade_location_table:
-            if upgrade.character == character and upgrade.area == area and not upgrade.extraItems:
+            if upgrade.character == character and upgrade.area == area and not upgrade.get_logic_items(options):
                 return True
     if options.sub_level_checks:
         for sub_level in sub_level_location_table:
@@ -110,7 +110,7 @@ def has_locations_without_items(character: Character, area: Area, options: Sonic
                 return True
     if options.field_emblems_checks:
         for field_emblem in field_emblem_location_table:
-            if character in field_emblem.characters and field_emblem.area == area:
+            if character in field_emblem.get_logic_characters_upgrades(options) and field_emblem.area == area:
                 return True
     if options.boss_checks:
         for boss_fight in boss_location_table:
@@ -119,13 +119,15 @@ def has_locations_without_items(character: Character, area: Area, options: Sonic
 
     if options.life_sanity:
         for life_capsule in life_capsule_location_table:
-            if life_capsule.character == character and life_capsule.area == area and not life_capsule.extraItems:
+            if life_capsule.character == character and life_capsule.area == area and not life_capsule.get_logic_items(
+                    options):
                 return True
     if options.mission_mode_checks:
         for mission in mission_location_table:
             if str(mission.missionNumber) in options.mission_blacklist.value:
                 continue
-            if mission.character == character and mission.cardArea == area and mission.objectiveArea == area and not mission.extraItems:
+            if (mission.character == character and mission.cardArea == area
+                    and mission.objectiveArea == area and not mission.get_logic_items(options)):
                 return True
 
 
