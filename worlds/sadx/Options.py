@@ -233,7 +233,7 @@ class MissionBlackList(OptionSet):
     Mission 58 (Flags in the rolling bounce section of Lost World)
     """
     display_name = "Mission Blacklist"
-    default = {49, 53, 54, 58}
+    default = {'49', '53', '54', '58'}
     valid_keys = [str(i) for i in range(1, 61)]
 
 
