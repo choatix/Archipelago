@@ -1836,12 +1836,12 @@ def handle_boss_gate(multiworld: MultiWorld, player: int, names: dict[str, int],
     if gate_bosses[gate_index] == all_gate_bosses_table[king_boom_boo]:
         connect(multiworld, player, names, gate_boss_region, gate_region,
                 lambda state: (state.has(ItemName.knuckles_shovel_claws, player)))
-    elif gate_bosses[gate_index] == all_gate_bosses_table[hot_shot]:
-        connect(multiworld, player, names, gate_boss_region, gate_region,
-                lambda state: (state.has(ItemName.sonic_bounce_bracelet, player)))
-    elif gate_bosses[gate_index] == all_gate_bosses_table[big_foot]:
-        connect(multiworld, player, names, gate_boss_region, gate_region,
-                lambda state: (state.has(ItemName.sonic_bounce_bracelet, player)))
+    #elif gate_bosses[gate_index] == all_gate_bosses_table[hot_shot]:
+    #    connect(multiworld, player, names, gate_boss_region, gate_region,
+    #            lambda state: (state.has(ItemName.sonic_bounce_bracelet, player)))
+    #elif gate_bosses[gate_index] == all_gate_bosses_table[big_foot]:
+    #    connect(multiworld, player, names, gate_boss_region, gate_region,
+    #            lambda state: (state.has(ItemName.sonic_bounce_bracelet, player)))
     else:
         connect(multiworld, player, names, gate_boss_region, gate_region)
 

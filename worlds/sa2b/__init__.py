@@ -928,6 +928,8 @@ class SA2BWorld(World):
 
             # TODO: This feature could do with more configuration
             multiplier_min = self.options.black_market_price_multiplier_min
+            if multiplier_min == self.options.black_market_price_multiplier.value:
+                multiplier_min = multiplier_min - 1
             random_multiplier = random.choice(range(multiplier_min, self.options.black_market_price_multiplier.value))
             item_price = math.floor(ring_costs[progression_flags[item_idx]] * random_multiplier)
             market_data[(item_idx * 46) + 42] = item_price

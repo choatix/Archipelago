@@ -1074,6 +1074,19 @@ class OnlyAdditionalTrapNames(DefaultOffToggle):
     """
     display_name = "Replace Traps"
 
+class MissionShuffleParameters(OptionSet):
+    """
+    Parameters to determine some forced restrictions on some mission shuffle behaviours
+    """
+    display_name = "Shuffle Params"
+
+class DisallowOnlyM2(DefaultOffToggle):
+    """
+    Option to disallow only M2 as a valid level choice
+    """
+    display_name = "Disallow Only M2"
+
+
 
 sa2b_option_groups = [
     OptionGroup("General Options", [
@@ -1340,3 +1353,6 @@ class SA2BOptions(PerGameCommonOptions):
     additional_trap_names: AdditionalTrapNames
     replace_chao_names: OnlyAdditionalChaoNames
     replace_trap_names: OnlyAdditionalTrapNames
+    disallow_only_M2: DisallowOnlyM2
+
+    mission_shuffle_parameters: MissionShuffleParameters

@@ -392,6 +392,29 @@ def get_mission_table(multiworld: MultiWorld, world: World, player: int, mission
                             required[level_name] = []
                         required[level_name].append(i)
 
+        force_mission_position = {}
+        mission_shuffle_params = getattr(world.options, "mission_shuffle_parameters", None)
+        if mission_shuffle_params is not None:
+            for stage_name in stage_name_prefixes:
+                for i in range(1, 6):
+                    stage_mission = stage_name + str(i)
+                    level_name = stage_name.replace(" - ", "")
+                    for j in range(1,6):
+                        level_name_plus_position_positive = stage_mission + " / " + str(j)
+                        level_name_plus_position_negative = stage_mission + " / !" + str(j)
+
+                        if level_name_plus_position_positive in mission_shuffle_params:
+                            if level_name not in force_mission_position:
+                                force_mission_position[level_name] = {}
+                            force_mission_position[level_name][i] = (j,True)
+
+                        if level_name_plus_position_negative in mission_shuffle_params:
+                            if level_name not in force_mission_position:
+                                force_mission_position[level_name] = {}
+                            force_mission_position[level_name][i] = (j,False)
+
+        disallow_only_M2 = getattr(world.options, "disallow_only_M2", None)
+
         for level in range(31):
 
             mission_count = mission_count_map[level]
@@ -414,11 +437,26 @@ def get_mission_table(multiworld: MultiWorld, world: World, player: int, mission
             if level_name in required:
                 required_missions = required[level_name]
 
-            if mission_count == 1 and level_style != 3:
-                first_mission_options.remove(2)
+            if disallow_only_M2:
+                if mission_count == 1 and level_style != 3:
+                    first_mission_options.remove(2)
 
             if not world.options.animalsanity:
                 first_mission_options.append(4)
+
+            if level_name in force_mission_position:
+                forces = force_mission_position[level_name]
+                for f in forces.items():
+                    force_mission = f[0]
+                    force_position_tuple = f[1]
+                    force_position_value = force_position_tuple[0]
+                    force_position_route = force_position_tuple[1]
+
+                    if force_position_value == 1 and force_position_route and force_mission in first_mission_options:
+                        first_mission_options = [force_mission]
+                    elif force_mission in first_mission_options:
+                        first_mission_options.remove(force_mission)
+
 
             use_required = False
             if len(required_missions) > mission_count:
@@ -447,15 +485,36 @@ def get_mission_table(multiworld: MultiWorld, world: World, player: int, mission
                 if mission not in level_chosen_missions and mission not in excluded_missions:
                     level_chosen_missions.append(mission)
 
+            multiworld.random.shuffle(level_active_missions)
+
+            #forces = force_mission_position[level_name]
+            #for f in forces.items():
+            #    force_mission = f[0]
+            #    force_position_tuple = f[1]
+            #    force_position_value = force_position_tuple[0] - 1
+            #    force_position_route = force_position_tuple[1]
+
+            #    if force_position_value == 1:
+            #        continue
+
+            #    if force_position_value == 1 and force_position_route:
+            #        pass
+            #    else:
+            #        pass
+
             # Place Active Missions in the chosen mission list
             for mission in level_active_missions:
-                if len(level_chosen_missions) + 1 == mission_count:
+                mission_number = len(level_chosen_missions) + 1
+
+                if mission_number == mission_count:
                     break
+
                 if mission not in level_chosen_missions and mission not in excluded_missions:
                     level_chosen_missions.append(mission)
 
-            if world.options.mission_shuffle:
-                multiworld.random.shuffle(level_chosen_missions)
+
+            #if world.options.mission_shuffle:
+            #    multiworld.random.shuffle(level_chosen_missions)
 
             level_chosen_missions.insert(0, first_mission)
 
