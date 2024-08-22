@@ -4,11 +4,10 @@ from typing import List
 from BaseClasses import ItemClassification
 from worlds.AutoWorld import World
 from .CharacterUtils import get_playable_character_item, is_character_playable, are_character_upgrades_randomized
-from .Enums import Character, Area, Goal
+from .Enums import Character, Goal
 from .Items import filler_item_table, playable_character_item_table, character_upgrade_item_table
 from .Names import ItemName, LocationName
 from .Options import SonicAdventureDXOptions
-from .Regions import get_location_ids_for_area
 from .StartingSetup import StarterSetup
 
 
@@ -99,19 +98,15 @@ def get_item_names(options: SonicAdventureDXOptions, starter_setup: StarterSetup
     item_names.append(ItemName.KeyItem.Boat)
     item_names.append(ItemName.KeyItem.Raft)
     item_names.append(ItemName.KeyItem.StationKeys)
+    item_names.append(ItemName.KeyItem.HotelKeys)
+    item_names.append(ItemName.KeyItem.CasinoKeys)
+    item_names.append(ItemName.KeyItem.TwinkleParkTicket)
+    item_names.append(ItemName.KeyItem.Dynamite)
+    item_names.append(ItemName.KeyItem.JungleCart)
 
-    if len(get_location_ids_for_area(Area.Hotel, options)) > 0:
-        item_names.append(ItemName.KeyItem.HotelKeys)
-    if len(get_location_ids_for_area(Area.Casino, options)) > 0:
-        item_names.append(ItemName.KeyItem.CasinoKeys)
-    if len(get_location_ids_for_area(Area.TwinklePark, options)) > 0:
-        item_names.append(ItemName.KeyItem.TwinkleParkTicket)
+    # Don't include the employee card for characters that aren't sonic/tails
     if is_character_playable(Character.Sonic, options) or is_character_playable(Character.Tails, options):
         item_names.append(ItemName.KeyItem.EmployeeCard)
-    if len(get_location_ids_for_area(Area.AngelIsland, options)) > 0:
-        item_names.append(ItemName.KeyItem.Dynamite)
-    if len(get_location_ids_for_area(Area.Jungle, options)) > 0:
-        item_names.append(ItemName.KeyItem.JungleCart)
     # Don't include the ice stone for characters that aren't sonic/tails/big
     if is_character_playable(Character.Sonic, options) or is_character_playable(
             Character.Tails, options) or is_character_playable(Character.Big, options):

@@ -5,15 +5,15 @@ from BaseClasses import Tutorial
 from Options import PerGameCommonOptions
 from worlds.AutoWorld import WebWorld, World
 from .CharacterUtils import get_playable_characters
-from .Enums import Character, StartingArea, SADX_BASE_ID, Goal
+from .Enums import Character, SADX_BASE_ID, Goal, Area
 from .ItemPool import create_sadx_items, get_item_names
 from .Items import all_item_table, SonicAdventureDXItem, get_item_by_name, group_item_table
 from .Locations import all_location_table, group_location_table
 from .Names import ItemName, LocationName
-from .Options import sadx_option_groups, SonicAdventureDXOptions, BaseMissionChoice
+from .Options import sadx_option_groups, SonicAdventureDXOptions
 from .Regions import create_sadx_regions, get_location_ids_for_area
 from .Rules import create_sadx_rules
-from .StartingSetup import StarterSetup, generate_early_sadx, write_sadx_spoiler
+from .StartingSetup import StarterSetup, generate_early_sadx, write_sadx_spoiler, CharacterArea
 
 
 class SonicAdventureDXWeb(WebWorld):
@@ -51,8 +51,21 @@ class SonicAdventureDXWorld(World):
             if "Sonic Adventure DX" in self.multiworld.re_gen_passthrough:
                 passthrough = self.multiworld.re_gen_passthrough["Sonic Adventure DX"]
                 self.starter_setup.character = Character(passthrough["StartingCharacter"])
-                self.starter_setup.area = StartingArea(passthrough["StartingArea"])
                 self.starter_setup.item = passthrough["StartingItem"]
+                self.starter_setup.area = Area(passthrough["StartingArea"])
+                self.starter_setup.charactersWithArea.clear()
+                self.starter_setup.charactersWithArea.append(
+                    CharacterArea(Character.Sonic, Area(passthrough["SonicStartingArea"])))
+                self.starter_setup.charactersWithArea.append(
+                    CharacterArea(Character.Tails, Area(passthrough["TailsStartingArea"])))
+                self.starter_setup.charactersWithArea.append(
+                    CharacterArea(Character.Knuckles, Area(passthrough["KnucklesStartingArea"])))
+                self.starter_setup.charactersWithArea.append(
+                    CharacterArea(Character.Amy, Area(passthrough["AmyStartingArea"])))
+                self.starter_setup.charactersWithArea.append(
+                    CharacterArea(Character.Gamma, Area(passthrough["GammaStartingArea"])))
+                self.starter_setup.charactersWithArea.append(
+                    CharacterArea(Character.Big, Area(passthrough["BigStartingArea"])))
 
     # For the universal tracker, doesn't get called in standard gen
     # Returning slot_data so it regens, giving it back in multiworld.re_gen_passthrough
@@ -64,7 +77,7 @@ class SonicAdventureDXWorld(World):
         return SonicAdventureDXItem(name, self.player)
 
     def create_regions(self) -> None:
-        create_sadx_regions(self, self.starter_setup.area, self.options)
+        create_sadx_regions(self, self.starter_setup, self.options)
 
     def create_items(self):
         create_sadx_items(self, self.starter_setup, self.get_emblems_needed(), self.options)
@@ -86,13 +99,22 @@ class SonicAdventureDXWorld(World):
 
     def fill_slot_data(self) -> Dict[str, Any]:
         return {
-            "ModVersion": "0.6.0",
+            "ModVersion": "0.7.0",
             "Goal": self.options.goal.value,
             "EmblemsForPerfectChaos": self.get_emblems_needed(),
+
             "StartingCharacter": self.starter_setup.character.value,
-            "StartingArea": self.starter_setup.area.value,
             "StartingItem": self.starter_setup.item,
+            "StartingArea": self.starter_setup.area.value,
+            "SonicStartingArea": self.starter_setup.get_starting_area(Character.Sonic).value,
+            "TailsStartingArea": self.starter_setup.get_starting_area(Character.Tails).value,
+            "KnucklesStartingArea": self.starter_setup.get_starting_area(Character.Knuckles).value,
+            "AmyStartingArea": self.starter_setup.get_starting_area(Character.Amy).value,
+            "GammaStartingArea": self.starter_setup.get_starting_area(Character.Gamma).value,
+            "BigStartingArea": self.starter_setup.get_starting_area(Character.Big).value,
+
             "RandomStartingLocation": self.options.random_starting_location.value,
+            "RandomStartingLocationPerCharacter": self.options.random_starting_location_per_character.value,
             "FieldEmblemChecks": self.options.field_emblems_checks.value,
             "MissionModeChecks": self.options.mission_mode_checks.value,
 
@@ -124,12 +146,19 @@ class SonicAdventureDXWorld(World):
             "RandomizedGammaUpgrades": self.options.randomized_big_upgrades.value,
             "RandomizedBigUpgrades": self.options.randomized_gamma_upgrades.value,
 
-            "SonicMissions": self.options.sonic_missions.value,
-            "TailsMissions": self.options.tails_missions.value,
-            "KnucklesMissions": self.options.knuckles_missions.value,
-            "AmyMissions": self.options.amy_missions.value,
-            "GammaMissions": self.options.gamma_missions.value,
-            "BigMissions": self.options.big_missions.value,
+            "PlayableSonic": self.options.playable_sonic.value,
+            "PlayableTails": self.options.playable_tails.value,
+            "PlayableKnuckles": self.options.playable_knuckles.value,
+            "PlayableAmy": self.options.playable_amy.value,
+            "PlayableBig": self.options.playable_big.value,
+            "PlayableGamma": self.options.playable_gamma.value,
+
+            "SonicActionStageMissions": self.options.sonic_action_stage_missions.value,
+            "TailsActionStageMissions": self.options.tails_action_stage_missions.value,
+            "KnucklesActionStageMissions": self.options.knuckles_action_stage_missions.value,
+            "AmyActionStageMissions": self.options.amy_action_stage_missions.value,
+            "GammaActionStageMissions": self.options.gamma_action_stage_missions.value,
+            "BigActionStageMissions": self.options.big_action_stage_missions.value,
 
             "JunkFillPercentage": self.options.junk_fill_percentage.value
         }

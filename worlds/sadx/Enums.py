@@ -26,6 +26,7 @@ class Character(Enum):
 
 EVERYONE: List[Character] = [Character.Sonic, Character.Tails, Character.Knuckles,
                              Character.Amy, Character.Big, Character.Gamma]
+SONIC_TAILS: List[Character] = [Character.Sonic, Character.Tails]
 FLYERS: List[Character] = [Character.Tails, Character.Knuckles]
 
 
@@ -47,20 +48,6 @@ class Upgrade(Enum):
     Lure2 = auto()
     Lure3 = auto()
     Lure4 = auto()
-
-
-class Level(Enum):
-    EmeraldCoast = 0
-    WindyValley = auto()
-    Casinopolis = auto()
-    IceCap = auto()
-    TwinklePark = auto()
-    SpeedHighway = auto()
-    RedMountain = auto()
-    SkyDeck = auto()
-    LostWorld = auto()
-    FinalEgg = auto()
-    HotShelter = auto()
 
 
 class SubLevelMission(Enum):
@@ -88,23 +75,24 @@ class AdventureField(Enum):
     Past = auto()
 
 
-class StartingArea(Enum):
+class Area(Enum):
     StationSquareMain = 0
     Station = auto()
     Hotel = auto()
     Casino = auto()
-    MysticRuins = auto()
+    TwinkleParkLobby = auto()
+    MysticRuinsMain = auto()
+    AngelIsland = auto()
     Jungle = auto()
-    EggCarrier = auto()
-
-
-class Area(Enum):
-    StationSquareMain = "Station Square"
-    Station = "Station"
-    Hotel = "Hotel Area"
-    Casino = "Casino Area"
-    TwinklePark = "Twinkle Park Area"
-    MysticRuinsMain = "Mystic Ruins"
-    AngelIsland = "Angel Island"
-    Jungle = "Jungle"
-    EggCarrierMain = "Egg Carrier"
+    EggCarrierMain = auto()
+    EmeraldCoast = auto()
+    WindyValley = auto()
+    Casinopolis = auto()
+    IceCap = auto()
+    TwinklePark = auto()
+    SpeedHighway = auto()
+    RedMountain = auto()
+    SkyDeck = auto()
+    LostWorld = auto()
+    FinalEgg = auto()
+    HotShelter = auto()
