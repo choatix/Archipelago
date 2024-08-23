@@ -16,6 +16,9 @@ class ItemInfo:
 story_progression_item_table: List[ItemInfo] = [
     ItemInfo(90, ItemName.Progression.Emblem, ItemClassification.progression),
     ItemInfo(91, ItemName.Progression.ChaosPeace, ItemClassification.progression),
+]
+
+chaos_emerald_item_table: List[ItemInfo] = [
     ItemInfo(92, ItemName.Progression.WhiteEmerald, ItemClassification.progression),
     ItemInfo(93, ItemName.Progression.RedEmerald, ItemClassification.progression),
     ItemInfo(94, ItemName.Progression.CyanEmerald, ItemClassification.progression),
@@ -34,6 +37,7 @@ playable_character_item_table: List[ItemInfo] = [
     ItemInfo(6, ItemName.Big.Playable, ItemClassification.progression),
 
 ]
+
 character_upgrade_item_table: List[ItemInfo] = [
     ItemInfo(10, ItemName.Sonic.LightShoes, ItemClassification.progression),
     ItemInfo(11, ItemName.Sonic.CrystalRing, ItemClassification.useful),
@@ -87,24 +91,15 @@ trap_item_table: List[ItemInfo] = [
     ItemInfo(103, ItemName.Traps.BuyonTrap, ItemClassification.trap),
 ]
 
-
-class SonicAdventureDXItem(Item):
-    game: str = "Sonic Adventure DX"
-
-    def __init__(self, name: str, player):
-        item = get_item_by_name(name)
-        super().__init__(item.name, item.classification, item.itemId + SADX_BASE_ID, player)
-
-
-all_item_table: List[ItemInfo] = (story_progression_item_table + playable_character_item_table
-                                  + character_upgrade_item_table + key_item_table
-                                  + filler_item_table + trap_item_table)
+item_name_to_info: Dict[str, ItemInfo] = {
+    item.name: item for item in (
+            story_progression_item_table + chaos_emerald_item_table + playable_character_item_table
+            + character_upgrade_item_table + key_item_table + filler_item_table + trap_item_table
+    )
+}
 
 group_item_table: Dict[str, List[str]] = {
-    ItemName.Groups.ChaosEmeralds: [ItemName.Progression.WhiteEmerald, ItemName.Progression.RedEmerald,
-                                    ItemName.Progression.CyanEmerald, ItemName.Progression.PurpleEmerald,
-                                    ItemName.Progression.GreenEmerald, ItemName.Progression.YellowEmerald,
-                                    ItemName.Progression.BlueEmerald],
+    ItemName.Groups.ChaosEmeralds: [item.name for item in chaos_emerald_item_table],
     ItemName.Groups.PlayableCharacters: [item.name for item in playable_character_item_table],
     ItemName.Groups.Upgrades: [item.name for item in character_upgrade_item_table],
     ItemName.Groups.KeyItems: [item.name for item in key_item_table],
@@ -113,9 +108,9 @@ group_item_table: Dict[str, List[str]] = {
 }
 
 
-def get_item_by_name(name: str) -> ItemInfo:
-    return next(item for item in all_item_table if item.name == name)
+class SonicAdventureDXItem(Item):
+    game: str = "Sonic Adventure DX"
 
-
-def get_item(item_id: int) -> ItemInfo:
-    return next(item for item in all_item_table if item.name == item_id)
+    def __init__(self, name: str, player):
+        item = item_name_to_info[name]
+        super().__init__(item.name, item.classification, item.itemId + SADX_BASE_ID, player)

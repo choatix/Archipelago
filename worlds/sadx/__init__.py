@@ -7,7 +7,7 @@ from worlds.AutoWorld import WebWorld, World
 from .CharacterUtils import get_playable_characters
 from .Enums import Character, SADX_BASE_ID, Goal, Area
 from .ItemPool import create_sadx_items, get_item_names
-from .Items import all_item_table, SonicAdventureDXItem, get_item_by_name, group_item_table
+from .Items import SonicAdventureDXItem, group_item_table, item_name_to_info
 from .Locations import all_location_table, group_location_table
 from .Names import ItemName, LocationName
 from .Options import sadx_option_groups, SonicAdventureDXOptions
@@ -34,7 +34,7 @@ class SonicAdventureDXWorld(World):
     web = SonicAdventureDXWeb()
     starter_setup: StarterSetup = StarterSetup()
 
-    item_name_to_id = {item.name: (item.itemId + SADX_BASE_ID) for item in all_item_table}
+    item_name_to_id = {item.name: (item.itemId + SADX_BASE_ID) for item in item_name_to_info.values()}
     location_name_to_id = {loc["name"]: (loc["id"] + SADX_BASE_ID) for loc in all_location_table}
 
     item_name_groups = group_item_table
