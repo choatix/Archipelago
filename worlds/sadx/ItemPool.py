@@ -13,10 +13,11 @@ from .StartingSetup import StarterSetup
 
 
 class ItemDistribution:
-    emblem_count_progressive: int = 0
-    emblem_count_non_progressive: int = 0
-    filler_count: int = 0
-    trap_count: int = 0
+    def __init__(self, emblem_count_progressive=0, emblem_count_non_progressive=0, filler_count=0, trap_count=0):
+        self.emblem_count_progressive = emblem_count_progressive
+        self.emblem_count_non_progressive = emblem_count_non_progressive
+        self.filler_count = filler_count
+        self.trap_count = trap_count
 
 
 def create_sadx_items(world: World, starter_setup: StarterSetup, needed_emblems: int, options: SonicAdventureDXOptions):
@@ -34,114 +35,77 @@ def create_sadx_items(world: World, starter_setup: StarterSetup, needed_emblems:
     # Emblems
     for _ in range(item_distribution.emblem_count_progressive):
         itempool.append(world.create_item(ItemName.Progression.Emblem))
+
     for _ in range(item_distribution.emblem_count_non_progressive):
         item = world.create_item(ItemName.Progression.Emblem)
         item.classification = ItemClassification.filler
         itempool.append(item)
 
-    # Filler
     for _ in range(item_distribution.filler_count):
-        filler_item = world.random.choice(filler_item_table)
-        itempool.append(world.create_item(filler_item.name))
+        itempool.append(world.create_item(world.random.choice(filler_item_table).name))
 
-    # Traps
-    trap_weights = []
-    trap_weights += [ItemName.Traps.IceTrap] * options.ice_trap_weight.value
-    trap_weights += [ItemName.Traps.SpringTrap] * options.spring_trap_weight.value
-    trap_weights += [ItemName.Traps.PoliceTrap] * options.police_trap_weight.value
-    trap_weights += [ItemName.Traps.BuyonTrap] * options.buyon_trap_weight.value
+    trap_weights = (
+            [ItemName.Traps.IceTrap] * options.ice_trap_weight.value +
+            [ItemName.Traps.SpringTrap] * options.spring_trap_weight.value +
+            [ItemName.Traps.PoliceTrap] * options.police_trap_weight.value +
+            [ItemName.Traps.BuyonTrap] * options.buyon_trap_weight.value
+    )
+
     for _ in range(item_distribution.trap_count):
-        trap_item_name = world.random.choice(trap_weights)
-        itempool.append(world.create_item(trap_item_name))
+        itempool.append(world.create_item(world.random.choice(trap_weights)))
 
-    # Push the starter items
-    starter_character_name = get_playable_character_item(starter_setup.character)
-    world.multiworld.push_precollected(world.create_item(starter_character_name))
-    if starter_setup.item is not None:
+    world.multiworld.push_precollected(world.create_item(get_playable_character_item(starter_setup.character)))
+
+    if starter_setup.item:
         world.multiworld.push_precollected(world.create_item(starter_setup.item))
 
     world.multiworld.itempool += itempool
 
 
-def get_item_distribution(world: World, stating_item_count: int, needed_emblems: int,
+def get_item_distribution(world: World, starting_item_count: int, needed_emblems: int,
                           options: SonicAdventureDXOptions) -> ItemDistribution:
-    distribution = ItemDistribution()
-
     location_count = sum(1 for location in world.multiworld.get_locations(world.player) if not location.locked)
-    extra_items = max(0, location_count - (needed_emblems + stating_item_count))
-
+    extra_items = max(0, location_count - (needed_emblems + starting_item_count))
     if options.goal.value in {Goal.Emblems, Goal.EmblemsAndEmeraldHunt}:
         # If Emblems are enabled, we calculate how many progressive emblems and filler emblems we need
         junk_count = math.floor(extra_items * (options.junk_fill_percentage.value / 100.0))
     else:
         # If not, all the remaining locations are filler
         junk_count = extra_items
-
-    distribution.emblem_count_progressive = needed_emblems
-    distribution.emblem_count_non_progressive = extra_items - junk_count
-    distribution.trap_count = math.floor(junk_count * (options.trap_fill_percentage.value / 100.0))
-    distribution.filler_count = junk_count - distribution.trap_count
-
-    return distribution
+    return ItemDistribution(
+        emblem_count_progressive=needed_emblems,
+        emblem_count_non_progressive=extra_items - junk_count,
+        filler_count=junk_count - math.floor(junk_count * (options.trap_fill_percentage.value / 100.0)),
+        trap_count=math.floor(junk_count * (options.trap_fill_percentage.value / 100.0))
+    )
 
 
 def get_item_names(options: SonicAdventureDXOptions, starter_setup: StarterSetup) -> List[str]:
-    item_names = []
-    item_names += get_item_for_options_per_character(Character.Sonic, options)
-    item_names += get_item_for_options_per_character(Character.Tails, options)
-    item_names += get_item_for_options_per_character(Character.Knuckles, options)
-    item_names += get_item_for_options_per_character(Character.Amy, options)
-    item_names += get_item_for_options_per_character(Character.Big, options)
-    item_names += get_item_for_options_per_character(Character.Gamma, options)
-    # We don't add key items that aren't used for the randomizer
-
-    item_names.append(ItemName.KeyItem.Train)
-    item_names.append(ItemName.KeyItem.Boat)
-    item_names.append(ItemName.KeyItem.Raft)
-    item_names.append(ItemName.KeyItem.StationKeys)
-    item_names.append(ItemName.KeyItem.HotelKeys)
-    item_names.append(ItemName.KeyItem.CasinoKeys)
-    item_names.append(ItemName.KeyItem.TwinkleParkTicket)
-    item_names.append(ItemName.KeyItem.Dynamite)
-    item_names.append(ItemName.KeyItem.JungleCart)
-
-    # Don't include the employee card for characters that aren't sonic/tails
-    if is_character_playable(Character.Sonic, options) or is_character_playable(Character.Tails, options):
-        item_names.append(ItemName.KeyItem.EmployeeCard)
-    # Don't include the ice stone for characters that aren't sonic/tails/big
-    if is_character_playable(Character.Sonic, options) or is_character_playable(
-            Character.Tails, options) or is_character_playable(Character.Big, options):
-        item_names.append(ItemName.KeyItem.IceStone)
-    # Don't include the wind stone for characters that aren't sonic/tails/gamma
-    if is_character_playable(Character.Sonic, options) or is_character_playable(
-            Character.Tails, options) or is_character_playable(Character.Gamma, options):
-        item_names.append(ItemName.KeyItem.WindStone)
+    item_names = sum((get_item_for_options_per_character(character, options) for character in Character), [])
+    item_names += [
+        ItemName.KeyItem.Train, ItemName.KeyItem.Boat, ItemName.KeyItem.Raft, ItemName.KeyItem.StationKeys,
+        ItemName.KeyItem.HotelKeys, ItemName.KeyItem.CasinoKeys, ItemName.KeyItem.TwinkleParkTicket,
+        ItemName.KeyItem.EmployeeCard, ItemName.KeyItem.Dynamite, ItemName.KeyItem.JungleCart,
+        ItemName.KeyItem.IceStone, ItemName.KeyItem.WindStone
+    ]
 
     if options.goal.value in {Goal.EmeraldHunt, Goal.EmblemsAndEmeraldHunt}:
-        item_names.append(ItemName.Progression.WhiteEmerald)
-        item_names.append(ItemName.Progression.RedEmerald)
-        item_names.append(ItemName.Progression.CyanEmerald)
-        item_names.append(ItemName.Progression.PurpleEmerald)
-        item_names.append(ItemName.Progression.GreenEmerald)
-        item_names.append(ItemName.Progression.YellowEmerald)
-        item_names.append(ItemName.Progression.BlueEmerald)
+        item_names += [
+            ItemName.Progression.WhiteEmerald, ItemName.Progression.RedEmerald, ItemName.Progression.CyanEmerald,
+            ItemName.Progression.PurpleEmerald, ItemName.Progression.GreenEmerald, ItemName.Progression.YellowEmerald,
+            ItemName.Progression.BlueEmerald
+        ]
 
     item_names.remove(get_playable_character_item(starter_setup.character))
-    if starter_setup.item is not None:
+    if starter_setup.item:
         item_names.remove(starter_setup.item)
     return item_names
 
 
 def get_item_for_options_per_character(character: Character, options: SonicAdventureDXOptions) -> List[str]:
-    item_names = []
     if not is_character_playable(character, options):
-        return item_names
-    item_names.append(get_playable_character_item(character))
-
-    for character_upgrade in get_character_upgrades_item(character):
-        item_names.append(character_upgrade)
-
-    return item_names
+        return []
+    return [get_playable_character_item(character)] + get_character_upgrades_item(character)
 
 
 def place_not_randomized_upgrades(world: World, options: SonicAdventureDXOptions, item_names: List[str]):

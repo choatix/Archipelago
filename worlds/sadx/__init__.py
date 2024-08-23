@@ -34,14 +34,13 @@ class SonicAdventureDXWorld(World):
     web = SonicAdventureDXWeb()
     starter_setup: StarterSetup = StarterSetup()
 
-    item_name_to_id = {item.name: (item.itemId + SADX_BASE_ID) for item in item_name_to_info.values()}
-    location_name_to_id = {loc["name"]: (loc["id"] + SADX_BASE_ID) for loc in all_location_table}
+    item_name_to_id = {item.name: item.itemId + SADX_BASE_ID for item in item_name_to_info.values()}
+    location_name_to_id = {loc["name"]: loc["id"] + SADX_BASE_ID for loc in all_location_table}
 
     item_name_groups = group_item_table
     location_name_groups = group_location_table
 
-    options_dataclass: ClassVar[Type[PerGameCommonOptions]] = SonicAdventureDXOptions
-
+    options_dataclass = SonicAdventureDXOptions
     options: SonicAdventureDXOptions
 
     def generate_early(self):
@@ -53,19 +52,14 @@ class SonicAdventureDXWorld(World):
                 self.starter_setup.character = Character(passthrough["StartingCharacter"])
                 self.starter_setup.item = passthrough["StartingItem"]
                 self.starter_setup.area = Area(passthrough["StartingArea"])
-                self.starter_setup.charactersWithArea.clear()
-                self.starter_setup.charactersWithArea.append(
-                    CharacterArea(Character.Sonic, Area(passthrough["SonicStartingArea"])))
-                self.starter_setup.charactersWithArea.append(
-                    CharacterArea(Character.Tails, Area(passthrough["TailsStartingArea"])))
-                self.starter_setup.charactersWithArea.append(
-                    CharacterArea(Character.Knuckles, Area(passthrough["KnucklesStartingArea"])))
-                self.starter_setup.charactersWithArea.append(
-                    CharacterArea(Character.Amy, Area(passthrough["AmyStartingArea"])))
-                self.starter_setup.charactersWithArea.append(
-                    CharacterArea(Character.Gamma, Area(passthrough["GammaStartingArea"])))
-                self.starter_setup.charactersWithArea.append(
-                    CharacterArea(Character.Big, Area(passthrough["BigStartingArea"])))
+                self.starter_setup.charactersWithArea = [
+                    CharacterArea(Character.Sonic, Area(passthrough["SonicStartingArea"])),
+                    CharacterArea(Character.Tails, Area(passthrough["TailsStartingArea"])),
+                    CharacterArea(Character.Knuckles, Area(passthrough["KnucklesStartingArea"])),
+                    CharacterArea(Character.Amy, Area(passthrough["AmyStartingArea"])),
+                    CharacterArea(Character.Gamma, Area(passthrough["GammaStartingArea"])),
+                    CharacterArea(Character.Big, Area(passthrough["BigStartingArea"]))
+                ]
 
     # For the universal tracker, doesn't get called in standard gen
     # Returning slot_data so it regens, giving it back in multiworld.re_gen_passthrough
@@ -73,7 +67,7 @@ class SonicAdventureDXWorld(World):
     def interpret_slot_data(slot_data: Dict[str, Any]) -> Dict[str, Any]:
         return slot_data
 
-    def create_item(self, name: str, force_non_progression=False) -> SonicAdventureDXItem:
+    def create_item(self, name: str) -> SonicAdventureDXItem:
         return SonicAdventureDXItem(name, self.player)
 
     def create_regions(self) -> None:

@@ -1,9 +1,8 @@
 from typing import List
 
-from Options import Toggle
 from worlds.sadx.Enums import Character, LevelMission
 from worlds.sadx.Locations import LevelLocation
-from worlds.sadx.Options import SonicAdventureDXOptions, BaseActionStageMissionChoice
+from worlds.sadx.Options import SonicAdventureDXOptions
 
 
 def get_playable_character_item(character: Character) -> str:
@@ -31,7 +30,7 @@ def get_character_upgrades_item(character: Character) -> List[str]:
     }.get(character)
 
 
-def character_has_life_sanity(character: Character, options: SonicAdventureDXOptions) -> Toggle:
+def character_has_life_sanity(character: Character, options: SonicAdventureDXOptions) -> bool:
     return {
         Character.Sonic: options.sonic_life_sanity,
         Character.Tails: options.tails_life_sanity,
@@ -39,21 +38,21 @@ def character_has_life_sanity(character: Character, options: SonicAdventureDXOpt
         Character.Amy: options.amy_life_sanity,
         Character.Big: options.big_life_sanity,
         Character.Gamma: options.gamma_life_sanity
-    }.get(character)
+    }.get(character).value > 0
 
 
 def are_character_upgrades_randomized(character: Character, options: SonicAdventureDXOptions) -> bool:
-    return bool({
-                    Character.Sonic: options.randomized_sonic_upgrades,
-                    Character.Tails: options.randomized_tails_upgrades,
-                    Character.Knuckles: options.randomized_knuckles_upgrades,
-                    Character.Amy: options.randomized_amy_upgrades,
-                    Character.Big: options.randomized_big_upgrades,
-                    Character.Gamma: options.randomized_gamma_upgrades
-                }.get(character).value)
+    return {
+        Character.Sonic: options.randomized_sonic_upgrades,
+        Character.Tails: options.randomized_tails_upgrades,
+        Character.Knuckles: options.randomized_knuckles_upgrades,
+        Character.Amy: options.randomized_amy_upgrades,
+        Character.Big: options.randomized_big_upgrades,
+        Character.Gamma: options.randomized_gamma_upgrades
+    }.get(character).value > 0
 
 
-def get_character_playable_option(character: Character, options: SonicAdventureDXOptions) -> Toggle:
+def is_character_playable(character: Character, options: SonicAdventureDXOptions) -> bool:
     return {
         Character.Sonic: options.playable_sonic,
         Character.Tails: options.playable_tails,
@@ -61,11 +60,7 @@ def get_character_playable_option(character: Character, options: SonicAdventureD
         Character.Amy: options.playable_amy,
         Character.Big: options.playable_big,
         Character.Gamma: options.playable_gamma
-    }.get(character)
-
-
-def is_character_playable(character: Character, options: SonicAdventureDXOptions) -> bool:
-    return get_character_playable_option(character, options).value > 0
+    }.get(character).value > 0
 
 
 def is_any_character_playable(characters: List[Character], options: SonicAdventureDXOptions) -> bool:
@@ -73,25 +68,22 @@ def is_any_character_playable(characters: List[Character], options: SonicAdventu
 
 
 def get_playable_characters(options: SonicAdventureDXOptions) -> List[Character]:
-    return [character for character in Character if get_character_playable_option(character, options).value > 0]
+    return [character for character in Character if is_character_playable(character, options)]
 
 
-def get_character_action_stage_missions(character: Character,
-                                        options: SonicAdventureDXOptions) -> BaseActionStageMissionChoice:
-    return {
+def is_level_playable(level: LevelLocation, options: SonicAdventureDXOptions) -> bool:
+    if not is_character_playable(level.character, options):
+        return False
+
+    character_missions = {
         Character.Sonic: options.sonic_action_stage_missions,
         Character.Tails: options.tails_action_stage_missions,
         Character.Knuckles: options.knuckles_action_stage_missions,
         Character.Amy: options.amy_action_stage_missions,
         Character.Big: options.big_action_stage_missions,
         Character.Gamma: options.gamma_action_stage_missions
-    }.get(character)
+    }.get(level.character)
 
-
-def is_level_playable(level: LevelLocation, options: SonicAdventureDXOptions) -> bool:
-    if not is_character_playable(level.character, options):
-        return False
-    character_missions = get_character_action_stage_missions(level.character, options)
     return (character_missions == 3 and level.levelMission in {LevelMission.C, LevelMission.B, LevelMission.A}) or \
         (character_missions == 2 and level.levelMission in {LevelMission.C, LevelMission.B}) or \
         (character_missions == 1 and level.levelMission == LevelMission.C)
