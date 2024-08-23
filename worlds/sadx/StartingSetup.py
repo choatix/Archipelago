@@ -20,9 +20,9 @@ class CharacterArea:
 
 @dataclass
 class StarterSetup:
-    character = None
-    area = None
-    item = None
+    character: Character = None
+    area: Area = None
+    item: str = None
     charactersWithArea: List[CharacterArea] = field(default_factory=list)
 
     def get_starting_area(self, character: Character) -> Area:

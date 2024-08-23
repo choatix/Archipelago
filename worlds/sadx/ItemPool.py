@@ -3,9 +3,10 @@ from typing import List
 
 from BaseClasses import ItemClassification
 from worlds.AutoWorld import World
-from .CharacterUtils import get_playable_character_item, is_character_playable, are_character_upgrades_randomized
+from .CharacterUtils import get_playable_character_item, is_character_playable, are_character_upgrades_randomized, \
+    get_character_upgrades_item
 from .Enums import Character, Goal
-from .Items import filler_item_table, playable_character_item_table, character_upgrade_item_table
+from .Items import filler_item_table
 from .Names import ItemName, LocationName
 from .Options import SonicAdventureDXOptions
 from .StartingSetup import StarterSetup
@@ -135,14 +136,10 @@ def get_item_for_options_per_character(character: Character, options: SonicAdven
     item_names = []
     if not is_character_playable(character, options):
         return item_names
+    item_names.append(get_playable_character_item(character))
 
-    for unlock_character in playable_character_item_table:
-        if unlock_character.character == character:
-            item_names.append(unlock_character.name)
-
-    for character_upgrade in character_upgrade_item_table:
-        if character_upgrade.character == character:
-            item_names.append(character_upgrade.name)
+    for character_upgrade in get_character_upgrades_item(character):
+        item_names.append(character_upgrade)
 
     return item_names
 

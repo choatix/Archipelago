@@ -34,7 +34,7 @@ class SonicAdventureDXWorld(World):
     web = SonicAdventureDXWeb()
     starter_setup: StarterSetup = StarterSetup()
 
-    item_name_to_id = {item["name"]: (item["id"] + SADX_BASE_ID) for item in all_item_table}
+    item_name_to_id = {item.name: (item.itemId + SADX_BASE_ID) for item in all_item_table}
     location_name_to_id = {loc["name"]: (loc["id"] + SADX_BASE_ID) for loc in all_location_table}
 
     item_name_groups = group_item_table
