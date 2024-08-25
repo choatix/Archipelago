@@ -86,8 +86,12 @@ def get_possible_starting_areas(world, character: Character) -> List[Area]:
         possible_starting_areas += [Area.Hotel]
     if has_locations_without_items(character, Area.Casino, world.options):
         possible_starting_areas += [Area.Casino]
+    if has_locations_without_items(character, Area.TwinkleParkLobby, world.options):
+        possible_starting_areas += [Area.TwinkleParkLobby]
     if has_locations_without_items(character, Area.MysticRuinsMain, world.options):
         possible_starting_areas += [Area.MysticRuinsMain]
+    if has_locations_without_items(character, Area.AngelIsland, world.options):
+        possible_starting_areas += [Area.AngelIsland]
     if has_locations_without_items(character, Area.Jungle, world.options):
         possible_starting_areas += [Area.Jungle]
     if has_locations_without_items(character, Area.EggCarrierMain, world.options):
