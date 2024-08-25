@@ -44,7 +44,7 @@ class EmblemPercentage(Range):
     """What percentage of the available emblems do you need to unlock the final story"""
     display_name = "Emblem Requirement Percentage"
     range_start = 1
-    range_end = 100
+    range_end = 80
     default = 80
 
 
