@@ -247,15 +247,27 @@ class MissionBlackList(OptionSet):
 
 
 class SubLevelChecks(DefaultOnToggle):
-    """Determines whether beating the default sublevel mission  grants checks (4 Locations)
-    Current sublevels are: Twinkle Circuit, Sand Hill and Sky Chase Act 1 and 2"""
+    """Determines whether beating Twinkle Circuit and Sand Hill grants checks (2 Locations)"""
     display_name = "Sub-Level Checks"
 
 
 class SubLevelChecksHard(Toggle):
     """
-    Determines whether beating the harder (points based) sublevel mission grants checks (4 Locations)
+    Determines whether beating the harder (points based) Twinkle Circuit and Sand Hill missions grants checks (2 Locations)
     Only works if sublevel checks are enabled
+    """
+    display_name = "Sub-Level Checks"
+
+
+class SkyChaseChecks(DefaultOnToggle):
+    """Determines whether beating Sky Chase Act 1 and 2 grants checks (2 Locations)"""
+    display_name = "Sub-Level Checks"
+
+
+class SkyChaseChecksHard(Toggle):
+    """
+    Determines whether beating the harder (points based) Sky Chase Act 1 and 2 mission grants checks (2 Locations)
+    Only works if Sky Chase checks are enabled
     """
     display_name = "Sub-Level Checks"
 
@@ -407,6 +419,8 @@ class SonicAdventureDXOptions(PerGameCommonOptions):
     mission_blacklist: MissionBlackList
     sub_level_checks: SubLevelChecks
     sub_level_checks_hard: SubLevelChecksHard
+    sky_chase_checks: SkyChaseChecks
+    sky_chase_checks_hard: SkyChaseChecksHard
 
     life_sanity: LifeSanity
     pinball_life_capsules: PinballLifeCapsules
@@ -474,6 +488,8 @@ sadx_option_groups = [
         MissionBlackList,
         SubLevelChecks,
         SubLevelChecksHard,
+        SkyChaseChecks,
+        SkyChaseChecksHard,
         LifeSanity,
         PinballLifeCapsules,
         SonicLifeSanity,

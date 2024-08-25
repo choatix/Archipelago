@@ -5,7 +5,7 @@ from BaseClasses import Region
 from .CharacterUtils import character_has_life_sanity, is_level_playable, \
     get_playable_characters, get_playable_character_item, is_any_character_playable
 from .CharacterUtils import is_character_playable
-from .Enums import Area, Character, SubLevelMission
+from .Enums import Area, Character, SubLevelMission, SubLevel
 from .Locations import SonicAdventureDXLocation, life_capsule_location_table, \
     upgrade_location_table, level_location_table, mission_location_table, boss_location_table, sub_level_location_table, \
     field_emblem_location_table
@@ -449,10 +449,19 @@ def get_location_ids_for_common_region(options):
     location_ids = []
     if options.sub_level_checks:
         for sub_level in sub_level_location_table:
-            if is_any_character_playable(sub_level.characters, options):
-                if ((options.sub_level_checks_hard and sub_level.subLevelMission == SubLevelMission.A)
-                        or sub_level.subLevelMission == SubLevelMission.B):
-                    location_ids.append(sub_level.locationId)
+            if sub_level.subLevel == SubLevel.SandHill or sub_level.subLevel == SubLevel.TwinkleCircuit:
+                if is_any_character_playable(sub_level.characters, options):
+                    if ((options.sub_level_checks_hard and sub_level.subLevelMission == SubLevelMission.A)
+                            or sub_level.subLevelMission == SubLevelMission.B):
+                        location_ids.append(sub_level.locationId)
+    if options.sky_chase_checks:
+        for sub_level in sub_level_location_table:
+            if sub_level.subLevel == SubLevel.SkyChaseAct1 or sub_level.subLevel == SubLevel.SkyChaseAct2:
+                if is_any_character_playable(sub_level.characters, options):
+                    if ((options.sky_chase_checks_hard and sub_level.subLevelMission == SubLevelMission.A)
+                            or sub_level.subLevelMission == SubLevelMission.B):
+                        location_ids.append(sub_level.locationId)
+
     if options.field_emblems_checks:
         for field_emblem in field_emblem_location_table:
             if is_any_character_playable(field_emblem.get_logic_characters(options), options):

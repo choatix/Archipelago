@@ -5,7 +5,7 @@ from typing import List, TextIO
 from Options import OptionError
 from worlds.AutoWorld import World
 from .CharacterUtils import get_playable_characters, are_character_upgrades_randomized
-from .Enums import Character, Area
+from .Enums import Character, Area, SubLevel
 from .Locations import level_location_table, upgrade_location_table, sub_level_location_table, \
     field_emblem_location_table, boss_location_table, life_capsule_location_table, mission_location_table
 from .Names import ItemName
@@ -110,8 +110,14 @@ def has_locations_without_items(character: Character, area: Area, options: Sonic
                 return True
     if options.sub_level_checks:
         for sub_level in sub_level_location_table:
-            if character in sub_level.characters and sub_level.area == area:
-                return True
+            if sub_level.subLevel == SubLevel.SandHill or sub_level.subLevel == SubLevel.TwinkleCircuit:
+                if character in sub_level.characters and sub_level.area == area:
+                    return True
+    if options.sky_chase_checks:
+        for sub_level in sub_level_location_table:
+            if sub_level.subLevel == SubLevel.SkyChaseAct1 or sub_level.subLevel == SubLevel.SkyChaseAct2:
+                if character in sub_level.characters and sub_level.area == area:
+                    return True
     if options.field_emblems_checks:
         for field_emblem in field_emblem_location_table:
             if character in field_emblem.get_logic_characters_upgrades(options) and field_emblem.area == area:

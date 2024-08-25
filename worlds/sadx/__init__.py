@@ -1,8 +1,7 @@
 import typing
-from typing import ClassVar, Type, Dict, Any
+from typing import Dict, Any
 
 from BaseClasses import Tutorial
-from Options import PerGameCommonOptions
 from worlds.AutoWorld import WebWorld, World
 from .CharacterUtils import get_playable_characters
 from .Enums import Character, SADX_BASE_ID, Goal, Area
@@ -126,8 +125,7 @@ class SonicAdventureDXWorld(World):
             "RingLink": self.options.ring_link.value,
             "HardRingLink": self.options.hard_ring_link.value,
             "RingLoss": self.options.ring_loss.value,
-            "SubLevelChecks": self.options.sub_level_checks.value,
-            "SubLevelChecksHard": self.options.sub_level_checks_hard.value,
+            "SkyChaseChecks": self.options.sky_chase_checks.value,
 
             "BossChecks": self.options.boss_checks.value,
             "UnifyChaos4": self.options.unify_chaos4.value,
