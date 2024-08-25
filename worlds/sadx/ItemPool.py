@@ -2,6 +2,7 @@ import math
 from typing import List
 
 from BaseClasses import ItemClassification
+from Options import OptionError
 from worlds.AutoWorld import World
 from .CharacterUtils import get_playable_character_item, is_character_playable, are_character_upgrades_randomized, \
     get_character_upgrades_item
@@ -25,7 +26,6 @@ def create_sadx_items(world: World, starter_setup: StarterSetup, options: SonicA
 
     # Calculate the number of items per type
     item_distribution = get_item_distribution(world, len(item_names), options)
-    print(" -- Item distribution: ", item_distribution.__dict__)
 
     # Character Upgrades and removal of from the item pool
     place_not_randomized_upgrades(world, options, item_names)
@@ -68,10 +68,19 @@ def create_sadx_items(world: World, starter_setup: StarterSetup, options: SonicA
 
 def get_item_distribution(world: World, starting_item_count: int, options: SonicAdventureDXOptions) -> ItemDistribution:
     location_count = sum(1 for location in world.multiworld.get_locations(world.player) if not location.locked)
-    available_locations = max(0, location_count - starting_item_count)
+    available_locations = location_count - starting_item_count
+
+    if available_locations < 0:
+        raise OptionError(
+            "SADX Error: There are not enough available locations to place required items for the selected options. "
+            + "Please enable more more checks, you need at least {} more locations.".format(-available_locations))
 
     # If Emblems are enabled, we calculate how many progressive emblems and filler emblems we need
     if options.goal.value in {Goal.Emblems, Goal.EmblemsAndEmeraldHunt}:
+        if available_locations < 5:
+            raise OptionError("SADX Error: There are not enough available locations to place Emblems. "
+                              + "Please enable more more checks or change your goal. "
+                              + "You need at least {} more locations.".format(5 - available_locations))
         emblem_count_progressive = max(1, round(available_locations * options.emblems_percentage.value / 100.0))
         emblem_count_non_progressive = available_locations - emblem_count_progressive
         junk_count = math.floor(emblem_count_non_progressive * (options.junk_fill_percentage.value / 100.0))

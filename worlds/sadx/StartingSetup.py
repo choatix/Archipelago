@@ -36,7 +36,7 @@ def generate_early_sadx(world: World, options: SonicAdventureDXOptions) -> Start
     starter_setup = StarterSetup()
     possible_characters = get_playable_characters(options)
     if len(possible_characters) == 0:
-        raise OptionError("You need at least one playable character")
+        raise OptionError("SADX Error: You need at least one playable character.")
 
     starter_setup.character = world.random.choice(possible_characters)
 
