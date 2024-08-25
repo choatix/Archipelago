@@ -41,9 +41,11 @@ def create_sadx_items(world: World, starter_setup: StarterSetup, needed_emblems:
         item.classification = ItemClassification.filler
         itempool.append(item)
 
+    # Filler
     for _ in range(item_distribution.filler_count):
         itempool.append(world.create_item(world.random.choice(filler_item_table).name))
 
+    # Traps
     trap_weights = (
             [ItemName.Traps.IceTrap] * options.ice_trap_weight.value +
             [ItemName.Traps.SpringTrap] * options.spring_trap_weight.value +
@@ -89,7 +91,7 @@ def get_item_names(options: SonicAdventureDXOptions, starter_setup: StarterSetup
         ItemName.KeyItem.IceStone, ItemName.KeyItem.WindStone
     ]
 
-    if options.goal.value in {Goal.EmeraldHunt, Goal.EmblemsAndEmeraldHunt}:
+    if options.goal.value in {Goal.EmeraldHunt, Goal.EmblemsAndEmeraldHunt, Goal.LevelsAndEmeraldHunt}:
         item_names += [
             ItemName.Progression.WhiteEmerald, ItemName.Progression.RedEmerald, ItemName.Progression.CyanEmerald,
             ItemName.Progression.PurpleEmerald, ItemName.Progression.GreenEmerald, ItemName.Progression.YellowEmerald,

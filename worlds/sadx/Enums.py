@@ -10,9 +10,11 @@ def pascal_to_space(s):
 
 
 class Goal:
-    Emblems = 0
-    EmeraldHunt = 1
-    EmblemsAndEmeraldHunt = 2
+    Levels = 0
+    Emblems = 1
+    EmeraldHunt = 2
+    LevelsAndEmeraldHunt = 3
+    EmblemsAndEmeraldHunt = 4
 
 
 class Character(Enum):

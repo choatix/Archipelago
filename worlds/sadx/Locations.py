@@ -19,6 +19,9 @@ class LevelLocation:
     normalLogicItems: List[str]
     hardLogicItems: List[str]
 
+    def get_level_name(self) -> str:
+        return f"{pascal_to_space(self.area.name)} ({self.character.name} - Mission {self.levelMission.name})"
+
     def get_logic_items(self, options: SonicAdventureDXOptions) -> List[str]:
         if options.logic_level.value == 2:
             return self.hardLogicItems
@@ -298,7 +301,7 @@ field_emblem_location_table: List[EmblemLocation] = [
     EmblemLocation(12, Area.StationSquareMain,
                    [Character.Tails, CharacterUpgrade(Character.Knuckles, ItemName.Knuckles.ShovelClaw)],
                    [Character.Tails, CharacterUpgrade(Character.Knuckles, ItemName.Knuckles.ShovelClaw)],
-                   [Character.Tails, CharacterUpgrade(Character.Knuckles, ItemName.Knuckles.ShovelClaw)],
+                   [Character.Amy, Character.Tails, CharacterUpgrade(Character.Knuckles, ItemName.Knuckles.ShovelClaw)],
                    "City Hall Emblem"),
     EmblemLocation(13, Area.Casino, [Character.Tails], [Character.Tails], [Character.Tails], "Casino Emblem"),
     EmblemLocation(20, Area.MysticRuinsMain,
@@ -452,7 +455,7 @@ mission_location_table: List[MissionLocation] = [
     MissionLocation(810, Area.Hotel, Area.Hotel, Character.Tails, 10, [], [], []),
     MissionLocation(811, Area.MysticRuinsMain, Area.WindyValley, Character.Sonic, 11, [], [], []),
     MissionLocation(812, Area.MysticRuinsMain, Area.MysticRuinsMain, Character.Knuckles, 12,
-                    [ItemName.Knuckles.ShovelClaw], [], []),
+                    [ItemName.Knuckles.ShovelClaw], [ItemName.Knuckles.ShovelClaw], [ItemName.Knuckles.ShovelClaw]),
     MissionLocation(813, Area.Casino, Area.Casinopolis, Character.Sonic, 13, [], [], []),
     MissionLocation(814, Area.StationSquareMain, Area.Hotel, Character.Big, 14, [], [], []),
     MissionLocation(815, Area.MysticRuinsMain, Area.WindyValley, Character.Sonic, 15, [], [], []),
@@ -461,9 +464,12 @@ mission_location_table: List[MissionLocation] = [
     MissionLocation(818, Area.Station, Area.TwinklePark, Character.Amy, 18, [], [], []),
     MissionLocation(819, Area.StationSquareMain, Area.TwinkleParkLobby, Character.Amy, 19, [], [], []),
     MissionLocation(820, Area.AngelIsland, Area.IceCap, Character.Sonic, 20,
-                    [ItemName.KeyItem.IceStone, ItemName.KeyItem.CasinoKeys, ItemName.KeyItem.Train], [], []),
+                    [ItemName.KeyItem.IceStone, ItemName.KeyItem.CasinoKeys, ItemName.KeyItem.Train],
+                    [ItemName.KeyItem.IceStone, ItemName.KeyItem.CasinoKeys, ItemName.KeyItem.Train],
+                    [ItemName.KeyItem.IceStone, ItemName.KeyItem.CasinoKeys, ItemName.KeyItem.Train]),
     MissionLocation(821, Area.Jungle, Area.FinalEgg, Character.Gamma, 21, [], [], []),
-    MissionLocation(822, Area.Hotel, Area.EmeraldCoast, Character.Big, 22, [ItemName.Big.LifeBelt], [], []),
+    MissionLocation(822, Area.Hotel, Area.EmeraldCoast, Character.Big, 22, [ItemName.Big.LifeBelt],
+                    [ItemName.Big.LifeBelt], [ItemName.Big.LifeBelt]),
     MissionLocation(823, Area.TwinkleParkLobby, Area.TwinklePark, Character.Sonic, 23, [], [], []),
     MissionLocation(824, Area.Casino, Area.Casinopolis, Character.Tails, 24, [], [], []),
     MissionLocation(825, Area.StationSquareMain, Area.Casinopolis, Character.Knuckles, 25, [], [], []),
@@ -475,16 +481,20 @@ mission_location_table: List[MissionLocation] = [
     MissionLocation(831, Area.Station, Area.Casinopolis, Character.Tails, 31, [], [], []),
     MissionLocation(832, Area.AngelIsland, Area.AngelIsland, Character.Knuckles, 32, [], [], []),
     MissionLocation(833, Area.EggCarrierMain, Area.EggCarrierMain, Character.Sonic, 33, [], [], []),
-    MissionLocation(834, Area.EggCarrierMain, Area.EggCarrierMain, Character.Sonic, 34, [ItemName.Sonic.LightShoes], [],
-                    []),
+    MissionLocation(834, Area.EggCarrierMain, Area.EggCarrierMain, Character.Sonic, 34, [ItemName.Sonic.LightShoes],
+                    [ItemName.Sonic.LightShoes], []),
     MissionLocation(835, Area.MysticRuinsMain, Area.AngelIsland, Character.Big, 35,
-                    [ItemName.KeyItem.IceStone, ItemName.KeyItem.StationKeys, ItemName.KeyItem.Train], [], []),
+                    [ItemName.KeyItem.IceStone, ItemName.KeyItem.StationKeys, ItemName.KeyItem.Train],
+                    [ItemName.KeyItem.IceStone, ItemName.KeyItem.StationKeys, ItemName.KeyItem.Train],
+                    [ItemName.KeyItem.IceStone, ItemName.KeyItem.StationKeys, ItemName.KeyItem.Train]),
     MissionLocation(836, Area.EggCarrierMain, Area.SkyDeck, Character.Sonic, 36, [], [], []),
     MissionLocation(837, Area.Jungle, Area.Jungle, Character.Tails, 37, [ItemName.Tails.JetAnklet], [], []),
-    MissionLocation(838, Area.Jungle, Area.LostWorld, Character.Knuckles, 38, [ItemName.Knuckles.ShovelClaw], [], []),
-    MissionLocation(839, Area.Hotel, Area.EmeraldCoast, Character.Gamma, 39, [ItemName.Gamma.JetBooster], [], []),
-    MissionLocation(840, Area.MysticRuinsMain, Area.LostWorld, Character.Sonic, 40, [ItemName.Sonic.LightShoes], [],
-                    []),
+    MissionLocation(838, Area.Jungle, Area.LostWorld, Character.Knuckles, 38, [ItemName.Knuckles.ShovelClaw],
+                    [ItemName.Knuckles.ShovelClaw], [ItemName.Knuckles.ShovelClaw]),
+    MissionLocation(839, Area.Hotel, Area.EmeraldCoast, Character.Gamma, 39, [ItemName.Gamma.JetBooster],
+                    [ItemName.Gamma.JetBooster], [ItemName.Gamma.JetBooster]),
+    MissionLocation(840, Area.MysticRuinsMain, Area.LostWorld, Character.Sonic, 40, [ItemName.Sonic.LightShoes],
+                    [ItemName.Sonic.LightShoes], [ItemName.Sonic.LightShoes]),
     MissionLocation(841, Area.Jungle, Area.LostWorld, Character.Sonic, 41, [ItemName.Sonic.LightShoes], [], []),
     MissionLocation(842, Area.EggCarrierMain, Area.HotShelter, Character.Gamma, 42, [], [], []),
     MissionLocation(843, Area.EggCarrierMain, Area.HotShelter, Character.Amy, 43, [], [], []),
@@ -495,13 +505,14 @@ mission_location_table: List[MissionLocation] = [
     MissionLocation(848, Area.StationSquareMain, Area.Casinopolis, Character.Knuckles, 48, [], [], []),
     MissionLocation(849, Area.StationSquareMain, Area.TwinklePark, Character.Sonic, 49, [], [], []),
     MissionLocation(850, Area.Jungle, Area.FinalEgg, Character.Amy, 50, [], [], []),
-    MissionLocation(851, Area.Jungle, Area.WindyValley, Character.Gamma, 51, [ItemName.Gamma.JetBooster], [], []),
+    MissionLocation(851, Area.Jungle, Area.WindyValley, Character.Gamma, 51, [ItemName.Gamma.JetBooster],
+                    [ItemName.Gamma.JetBooster], [ItemName.Gamma.JetBooster]),
     MissionLocation(852, Area.Jungle, Area.Jungle, Character.Big, 52, [], [], []),
     MissionLocation(853, Area.AngelIsland, Area.IceCap, Character.Sonic, 53, [], [], []),
     MissionLocation(854, Area.AngelIsland, Area.IceCap, Character.Tails, 54, [], [], []),
     MissionLocation(855, Area.TwinkleParkLobby, Area.SpeedHighway, Character.Sonic, 55, [], [], []),
     MissionLocation(856, Area.MysticRuinsMain, Area.RedMountain, Character.Knuckles, 56, [ItemName.Knuckles.ShovelClaw],
-                    [], []),
+                    [ItemName.Knuckles.ShovelClaw], [ItemName.Knuckles.ShovelClaw]),
     MissionLocation(857, Area.AngelIsland, Area.RedMountain, Character.Sonic, 57, [], [], []),
     MissionLocation(858, Area.Jungle, Area.LostWorld, Character.Sonic, 58, [], [], []),
     MissionLocation(859, Area.EggCarrierMain, Area.SkyDeck, Character.Knuckles, 59, [], [], []),
@@ -551,8 +562,7 @@ class LocationInfo(TypedDict):
 def get_location_from_level() -> List[LocationInfo]:
     locations: List[LocationInfo] = []
     for level in level_location_table:
-        level_name: str = f"{pascal_to_space(level.area.name)} ({level.character.name} - Mission {level.levelMission.name})"
-        locations += [{"id": level.locationId, "name": level_name}]
+        locations += [{"id": level.locationId, "name": level.get_level_name()}]
     return locations
 
 

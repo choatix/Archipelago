@@ -83,7 +83,7 @@ class SonicAdventureDXWorld(World):
         write_sadx_spoiler(self, spoiler_handle, self.starter_setup)
 
     def get_emblems_needed(self) -> int:
-        if self.options.goal.value is Goal.EmeraldHunt:
+        if self.options.goal.value not in {Goal.Emblems, Goal.EmblemsAndEmeraldHunt}:
             return 0
 
         item_names = get_item_names(self.options, self.starter_setup)
