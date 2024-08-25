@@ -20,11 +20,12 @@ class ItemDistribution:
         self.trap_count = trap_count
 
 
-def create_sadx_items(world: World, starter_setup: StarterSetup, needed_emblems: int, options: SonicAdventureDXOptions):
+def create_sadx_items(world: World, starter_setup: StarterSetup, options: SonicAdventureDXOptions):
     item_names = get_item_names(options, starter_setup)
 
     # Calculate the number of items per type
-    item_distribution = get_item_distribution(world, len(item_names), needed_emblems, options)
+    item_distribution = get_item_distribution(world, len(item_names), options)
+    print(" -- Item distribution: ", item_distribution.__dict__)
 
     # Character Upgrades and removal of from the item pool
     place_not_randomized_upgrades(world, options, item_names)
@@ -62,23 +63,33 @@ def create_sadx_items(world: World, starter_setup: StarterSetup, needed_emblems:
         world.multiworld.push_precollected(world.create_item(starter_setup.item))
 
     world.multiworld.itempool += itempool
+    return item_distribution
 
 
-def get_item_distribution(world: World, starting_item_count: int, needed_emblems: int,
-                          options: SonicAdventureDXOptions) -> ItemDistribution:
+def get_item_distribution(world: World, starting_item_count: int, options: SonicAdventureDXOptions) -> ItemDistribution:
     location_count = sum(1 for location in world.multiworld.get_locations(world.player) if not location.locked)
-    extra_items = max(0, location_count - (needed_emblems + starting_item_count))
+    available_locations = max(0, location_count - starting_item_count)
+
+    # If Emblems are enabled, we calculate how many progressive emblems and filler emblems we need
     if options.goal.value in {Goal.Emblems, Goal.EmblemsAndEmeraldHunt}:
-        # If Emblems are enabled, we calculate how many progressive emblems and filler emblems we need
-        junk_count = math.floor(extra_items * (options.junk_fill_percentage.value / 100.0))
+        emblem_count_progressive = max(1, round(available_locations * options.emblems_percentage.value / 100.0))
+        emblem_count_non_progressive = available_locations - emblem_count_progressive
+        junk_count = math.floor(emblem_count_non_progressive * (options.junk_fill_percentage.value / 100.0))
+        emblem_count_non_progressive -= junk_count
+    # If not, all the remaining locations are filler
     else:
-        # If not, all the remaining locations are filler
-        junk_count = extra_items
+        emblem_count_progressive = 0
+        emblem_count_non_progressive = 0
+        junk_count = available_locations
+
+    trap_count = math.floor(junk_count * (options.trap_fill_percentage.value / 100.0))
+    filler_count = junk_count - trap_count
+
     return ItemDistribution(
-        emblem_count_progressive=needed_emblems,
-        emblem_count_non_progressive=extra_items - junk_count,
-        filler_count=junk_count - math.floor(junk_count * (options.trap_fill_percentage.value / 100.0)),
-        trap_count=math.floor(junk_count * (options.trap_fill_percentage.value / 100.0))
+        emblem_count_progressive=emblem_count_progressive,
+        emblem_count_non_progressive=emblem_count_non_progressive,
+        filler_count=filler_count,
+        trap_count=trap_count
     )
 
 

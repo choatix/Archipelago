@@ -5,7 +5,7 @@ from BaseClasses import Tutorial
 from worlds.AutoWorld import WebWorld, World
 from .CharacterUtils import get_playable_characters
 from .Enums import Character, SADX_BASE_ID, Goal, Area
-from .ItemPool import create_sadx_items, get_item_names
+from .ItemPool import create_sadx_items, get_item_names, ItemDistribution
 from .Items import SonicAdventureDXItem, group_item_table, item_name_to_info
 from .Locations import all_location_table, group_location_table
 from .Names import ItemName, LocationName
@@ -32,6 +32,7 @@ class SonicAdventureDXWorld(World):
     game = "Sonic Adventure DX"
     web = SonicAdventureDXWeb()
     starter_setup: StarterSetup = StarterSetup()
+    item_distribution: ItemDistribution = ItemDistribution()
 
     item_name_to_id = {item.name: item.itemId + SADX_BASE_ID for item in item_name_to_info.values()}
     location_name_to_id = {loc["name"]: loc["id"] + SADX_BASE_ID for loc in all_location_table}
@@ -73,29 +74,19 @@ class SonicAdventureDXWorld(World):
         create_sadx_regions(self, self.starter_setup, self.options)
 
     def create_items(self):
-        create_sadx_items(self, self.starter_setup, self.get_emblems_needed(), self.options)
+        self.item_distribution = create_sadx_items(self, self.starter_setup, self.options)
 
     def set_rules(self):
-        create_sadx_rules(self, self.get_emblems_needed())
+        create_sadx_rules(self, self.item_distribution.emblem_count_progressive)
 
     def write_spoiler(self, spoiler_handle: typing.TextIO):
         write_sadx_spoiler(self, spoiler_handle, self.starter_setup)
-
-    def get_emblems_needed(self) -> int:
-        if self.options.goal.value not in {Goal.Emblems, Goal.EmblemsAndEmeraldHunt}:
-            return 0
-
-        item_names = get_item_names(self.options, self.starter_setup)
-        location_count = sum(1 for location in self.multiworld.get_locations(self.player) if not location.locked)
-        emblem_count = max(1, location_count - len(item_names))
-        return max(1, int(round(emblem_count * self.options.emblems_percentage / 100)))
 
     def fill_slot_data(self) -> Dict[str, Any]:
         return {
             "ModVersion": 80,
             "Goal": self.options.goal.value,
-            "EmblemsForPerfectChaos": self.get_emblems_needed(),
-
+            "EmblemsForPerfectChaos": self.item_distribution.emblem_count_progressive,
             "StartingCharacter": self.starter_setup.character.value,
             "StartingItem": self.starter_setup.item,
             "StartingArea": self.starter_setup.area.value,
