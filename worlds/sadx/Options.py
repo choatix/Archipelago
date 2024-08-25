@@ -229,6 +229,11 @@ class MissionChecks(Toggle):
     display_name = "Enable Mission Checks"
 
 
+class AutoStartMissions(Toggle):
+    """Determines whether missions will start already activated."""
+    display_name = "Auto Start Missions"
+
+
 class MissionBlackList(OptionSet):
     """Determines what missions are blacklisted, the default are:
     Mission 49 (Flags in the Kart section of Twinkle Park )
@@ -398,6 +403,7 @@ class SonicAdventureDXOptions(PerGameCommonOptions):
 
     field_emblems_checks: FieldEmblemsChecks
     mission_mode_checks: MissionChecks
+    auto_start_missions: AutoStartMissions
     mission_blacklist: MissionBlackList
     sub_level_checks: SubLevelChecks
     sub_level_checks_hard: SubLevelChecksHard
@@ -464,6 +470,7 @@ sadx_option_groups = [
     OptionGroup("Extra locations", [
         FieldEmblemsChecks,
         MissionChecks,
+        AutoStartMissions,
         MissionBlackList,
         SubLevelChecks,
         SubLevelChecksHard,

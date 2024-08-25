@@ -61,7 +61,8 @@ def add_boss_fight_rules(self, location_name: str, boss_fight: BossFightLocation
 def add_mission_rules(self, location_name: str, mission: MissionLocation):
     location = self.multiworld.get_location(location_name, self.player)
     card_area_name = get_region_name(mission.character, mission.cardArea)
-    add_rule(location, lambda state, card_area=card_area_name: state.can_reach_region(card_area, self.player))
+    if not self.options.auto_start_missions:
+        add_rule(location, lambda state, card_area=card_area_name: state.can_reach_region(card_area, self.player))
     for need in mission.get_logic_items(self.options):
         add_rule(location, lambda state, item=need: state.has(item, self.player))
 

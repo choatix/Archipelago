@@ -111,6 +111,7 @@ class SonicAdventureDXWorld(World):
             "RandomStartingLocationPerCharacter": self.options.random_starting_location_per_character.value,
             "FieldEmblemChecks": self.options.field_emblems_checks.value,
             "MissionModeChecks": self.options.mission_mode_checks.value,
+            "AutoStartMissions": self.options.auto_start_missions.value,
 
             "LifeSanity": self.options.life_sanity.value,
             "PinballLifeCapsules": self.options.pinball_life_capsules.value,
