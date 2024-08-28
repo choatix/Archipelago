@@ -23,8 +23,6 @@ class AreaConnection:
     item: str
 
 
-created_regions: Dict[Tuple[Character, Area], Region] = {}
-
 area_connections: Dict[Tuple[Character, Area, Area], Tuple[List[str], List[str], List[str]]] = {
     (Character.Sonic, Area.Hotel, Area.EmeraldCoast): ([], [], []),
     (Character.Sonic, Area.MysticRuinsMain, Area.WindyValley): (
@@ -306,7 +304,9 @@ area_connections: Dict[Tuple[Character, Area, Area], Tuple[List[str], List[str],
     (Character.Big, Area.Casino, Area.Hotel): (
         [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys]),
     (Character.Big, Area.StationSquareMain, Area.TwinkleParkLobby): ([], [], []),
-    (Character.Big, Area.TwinkleParkLobby, Area.StationSquareMain): ([], [], []),
+    (Character.Big, Area.TwinkleParkLobby, Area.StationSquareMain): (
+        [ItemName.KeyItem.TwinkleParkTicket], [ItemName.KeyItem.TwinkleParkTicket],
+        [ItemName.KeyItem.TwinkleParkTicket]),
     (Character.Big, Area.MysticRuinsMain, Area.AngelIsland): (
         [ItemName.KeyItem.Dynamite], [ItemName.KeyItem.Dynamite], [ItemName.KeyItem.Dynamite]),
     (Character.Big, Area.AngelIsland, Area.MysticRuinsMain): (
@@ -385,6 +385,7 @@ def create_sadx_regions(world: World, starter_setup: StarterSetup, options: Soni
     world.multiworld.regions.append(menu_region)
 
     # Create regions for each character in each area
+    created_regions: Dict[Tuple[Character, Area], Region] = {}
     for area in Area:
         for character in get_playable_characters(options):
             region = Region(get_region_name(character, area), world.player, world.multiworld)
