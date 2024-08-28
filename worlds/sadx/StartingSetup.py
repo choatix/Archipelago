@@ -5,7 +5,7 @@ from typing import List, TextIO, Any
 from Options import OptionError
 from worlds.AutoWorld import World
 from .CharacterUtils import get_playable_characters, are_character_upgrades_randomized
-from .Enums import Character, Area, SubLevel
+from .Enums import Character, Area, SubLevel, pascal_to_space
 from .Locations import level_location_table, upgrade_location_table, sub_level_location_table, \
     field_emblem_location_table, boss_location_table, life_capsule_location_table, mission_location_table
 from .Names import ItemName
@@ -187,7 +187,7 @@ def write_sadx_spoiler(world: World, spoiler_handle: TextIO, starter_setup: Star
     if options.entrance_randomizer:
         text += f"\nLevel entrances:\n"
         for original, randomized in starter_setup.level_mapping.items():
-            text += f"- {original.name} -> {randomized.name}\n"
+            text += f"- {pascal_to_space(original.name)} -> {pascal_to_space(randomized.name)}\n"
     spoiler_handle.writelines(text)
 
 

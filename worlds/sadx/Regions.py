@@ -377,7 +377,7 @@ def get_region_name(character: Character, area: Area) -> str:
 
 
 def get_entrance_name(character: Character, area: Area) -> str:
-    return "{} entrance ({})".format(pascal_to_space(area.name), character.name)
+    return "{} Entrance ({})".format(pascal_to_space(area.name), character.name)
 
 
 def create_sadx_regions(world: World, starter_setup: StarterSetup, options: SonicAdventureDXOptions):
