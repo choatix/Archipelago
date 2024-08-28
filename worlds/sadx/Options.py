@@ -64,7 +64,7 @@ class GuaranteedLevel(Toggle):
 
 
 class EntranceRandomizer(Toggle):
-    """ Randomizes the entrance of levels """
+    """ Randomizes the entrance of action stages """
     display_name = "Entrance Randomizer"
 
 
