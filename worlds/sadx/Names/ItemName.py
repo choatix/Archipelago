@@ -89,4 +89,3 @@ class Groups:
     KeyItems = "Key Items"
     Fillers = "Fillers"
     Traps = "Traps"
-

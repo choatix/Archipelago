@@ -63,6 +63,11 @@ class GuaranteedLevel(Toggle):
     display_name = "Guaranteed Level Access"
 
 
+class EntranceRandomizer(Toggle):
+    """ Randomizes the entrance of levels """
+    display_name = "Entrance Randomizer"
+
+
 class RingLink(Toggle):
     """
     Whether your in-level ring gain/loss is linked to other players
@@ -382,6 +387,8 @@ class SonicAdventureDXOptions(PerGameCommonOptions):
     random_starting_location: RandomStartingLocation
     random_starting_location_per_character: RandomStartingLocationPerCharacter
     guaranteed_level: GuaranteedLevel
+    entrance_randomizer: EntranceRandomizer
+
     death_link: DeathLink
     ring_link: RingLink
     hard_ring_link: HardRingLink
@@ -447,6 +454,7 @@ sadx_option_groups = [
         RandomStartingLocation,
         RandomStartingLocationPerCharacter,
         GuaranteedLevel,
+        EntranceRandomizer,
         RingLink,
         HardRingLink,
         RingLoss,

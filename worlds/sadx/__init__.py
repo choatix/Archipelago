@@ -59,7 +59,10 @@ class SonicAdventureDXWorld(World):
                     CharacterArea(Character.Amy, Area(passthrough["AmyStartingArea"])),
                     CharacterArea(Character.Gamma, Area(passthrough["GammaStartingArea"])),
                     CharacterArea(Character.Big, Area(passthrough["BigStartingArea"]))
+
                 ]
+                self.starter_setup.level_mapping = {Area(int(original)): Area(int(randomized))
+                                                    for original, randomized in passthrough["LevelEntranceMap"].items()}
 
     # For the universal tracker, doesn't get called in standard gen
     # Returning slot_data so it regens, giving it back in multiworld.re_gen_passthrough
@@ -80,7 +83,7 @@ class SonicAdventureDXWorld(World):
         create_sadx_rules(self, self.item_distribution.emblem_count_progressive)
 
     def write_spoiler(self, spoiler_handle: typing.TextIO):
-        write_sadx_spoiler(self, spoiler_handle, self.starter_setup)
+        write_sadx_spoiler(self, spoiler_handle, self.starter_setup, self.options)
 
     def fill_slot_data(self) -> Dict[str, Any]:
         return {
@@ -96,6 +99,9 @@ class SonicAdventureDXWorld(World):
             "AmyStartingArea": self.starter_setup.get_starting_area(Character.Amy).value,
             "GammaStartingArea": self.starter_setup.get_starting_area(Character.Gamma).value,
             "BigStartingArea": self.starter_setup.get_starting_area(Character.Big).value,
+            "EntranceRandomizer": self.options.entrance_randomizer.value,
+            "LevelEntranceMap": {original.value: randomized.value for original, randomized in
+                                 self.starter_setup.level_mapping.items()},
 
             "RandomStartingLocation": self.options.random_starting_location.value,
             "RandomStartingLocationPerCharacter": self.options.random_starting_location_per_character.value,

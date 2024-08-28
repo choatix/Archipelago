@@ -1,6 +1,6 @@
 import re
 from dataclasses import dataclass, field
-from typing import List, TextIO
+from typing import List, TextIO, Any
 
 from Options import OptionError
 from worlds.AutoWorld import World
@@ -18,12 +18,28 @@ class CharacterArea:
     area: Area = None
 
 
+level_areas = [
+    Area.EmeraldCoast,
+    Area.WindyValley,
+    Area.Casinopolis,
+    Area.IceCap,
+    Area.TwinklePark,
+    Area.SpeedHighway,
+    Area.RedMountain,
+    Area.SkyDeck,
+    Area.LostWorld,
+    Area.FinalEgg,
+    Area.HotShelter
+]
+
+
 @dataclass
 class StarterSetup:
     character: Character = None
     area: Area = None
     item: str = None
     charactersWithArea: List[CharacterArea] = field(default_factory=list)
+    level_mapping: dict[Any, Any] = field(default_factory=dict)
 
     def get_starting_area(self, character: Character) -> Area:
         for char_area in self.charactersWithArea:
@@ -73,6 +89,13 @@ def generate_early_sadx(world: World, options: SonicAdventureDXOptions) -> Start
             used_areas.add(area)
             starter_setup.charactersWithArea.append(CharacterArea(character, area))
 
+    randomized_level_areas = world.random.sample(level_areas, len(level_areas))
+
+    if options.entrance_randomizer:
+        starter_setup.level_mapping = {original: randomized for original, randomized in
+                                       zip(level_areas, randomized_level_areas)}
+    else:
+        starter_setup.level_mapping = {}
     return starter_setup
 
 
@@ -141,7 +164,8 @@ def has_locations_without_items(character: Character, area: Area, options: Sonic
                 return True
 
 
-def write_sadx_spoiler(world: World, spoiler_handle: TextIO, starter_setup: StarterSetup):
+def write_sadx_spoiler(world: World, spoiler_handle: TextIO, starter_setup: StarterSetup,
+                       options: SonicAdventureDXOptions):
     spoiler_handle.write("\n")
     header_text = f"Sonic Adventure starting setup for {world.multiworld.player_name[world.player]}:\n"
     spoiler_handle.write(header_text)
@@ -160,6 +184,10 @@ def write_sadx_spoiler(world: World, spoiler_handle: TextIO, starter_setup: Star
         starting_area_name = re.sub(r'(?<=[a-z])(?=[A-Z])', ' ', characterArea.area.name)
         text += "- {0} will spawn in the {1} area.\n".format(characterArea.character.name, starting_area_name)
 
+    if options.entrance_randomizer:
+        text += f"\nLevel entrances:\n"
+        for original, randomized in starter_setup.level_mapping.items():
+            text += f"- {original.name} -> {randomized.name}\n"
     spoiler_handle.writelines(text)
 
 

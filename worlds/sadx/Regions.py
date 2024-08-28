@@ -5,7 +5,7 @@ from BaseClasses import Region
 from .CharacterUtils import character_has_life_sanity, is_level_playable, \
     get_playable_characters, get_playable_character_item, is_any_character_playable
 from .CharacterUtils import is_character_playable
-from .Enums import Area, Character, SubLevelMission, SubLevel
+from .Enums import Area, Character, SubLevelMission, SubLevel, pascal_to_space
 from .Locations import SonicAdventureDXLocation, life_capsule_location_table, \
     upgrade_location_table, level_location_table, mission_location_table, boss_location_table, sub_level_location_table, \
     field_emblem_location_table
@@ -21,10 +21,6 @@ class AreaConnection:
     areaTo: Area
     character: Character
     item: str
-
-
-def get_region_name(character: Character, area: Area):
-    return character.name + area.name
 
 
 created_regions: Dict[Tuple[Character, Area], Region] = {}
@@ -48,6 +44,8 @@ area_connections: Dict[Tuple[Character, Area, Area], Tuple[List[str], List[str],
     (Character.Sonic, Area.EggCarrierMain, Area.SkyDeck): ([], [], []),
     (Character.Sonic, Area.Jungle, Area.LostWorld): ([], [], []),
     (Character.Sonic, Area.Jungle, Area.FinalEgg): ([], [], []),
+    (Character.Sonic, Area.EggCarrierMain, Area.HotShelter): ([], [], []),
+    (Character.Tails, Area.Hotel, Area.EmeraldCoast): ([], [], []),
     (Character.Tails, Area.MysticRuinsMain, Area.WindyValley): (
         [ItemName.KeyItem.WindStone], [ItemName.KeyItem.WindStone], [ItemName.KeyItem.WindStone]),
     (Character.Tails, Area.Casino, Area.Casinopolis): ([], [], []),
@@ -55,31 +53,72 @@ area_connections: Dict[Tuple[Character, Area, Area], Tuple[List[str], List[str],
         [ItemName.KeyItem.IceStone, ItemName.KeyItem.CasinoKeys, ItemName.KeyItem.Train],
         [ItemName.KeyItem.IceStone, ItemName.KeyItem.CasinoKeys, ItemName.KeyItem.Train],
         [ItemName.KeyItem.IceStone, ItemName.KeyItem.CasinoKeys, ItemName.KeyItem.Train]),
-    (Character.Tails, Area.EggCarrierMain, Area.SkyDeck): ([], [], []),
+    (Character.Tails, Area.TwinkleParkLobby, Area.TwinklePark): ([], [], []),
     (Character.Tails, Area.StationSquareMain, Area.SpeedHighway): (
         [ItemName.KeyItem.EmployeeCard], [ItemName.KeyItem.EmployeeCard], [ItemName.KeyItem.EmployeeCard]),
-    (Character.Knuckles, Area.StationSquareMain, Area.SpeedHighway): ([], [], []),
+    (Character.Tails, Area.AngelIsland, Area.RedMountain): ([], [], []),
+    (Character.Tails, Area.EggCarrierMain, Area.SkyDeck): ([], [], []),
+    (Character.Tails, Area.Jungle, Area.LostWorld): ([], [], []),
+    (Character.Tails, Area.Jungle, Area.FinalEgg): ([], [], []),
+    (Character.Tails, Area.EggCarrierMain, Area.HotShelter): ([], [], []),
+    (Character.Knuckles, Area.Hotel, Area.EmeraldCoast): ([], [], []),
+    (Character.Knuckles, Area.MysticRuinsMain, Area.WindyValley): (
+        [ItemName.KeyItem.WindStone], [ItemName.KeyItem.WindStone], [ItemName.KeyItem.WindStone]),
     (Character.Knuckles, Area.Casino, Area.Casinopolis): ([], [], []),
+    (Character.Knuckles, Area.AngelIsland, Area.IceCap): (
+        [ItemName.KeyItem.IceStone], [ItemName.KeyItem.IceStone], [ItemName.KeyItem.IceStone]),
+    (Character.Knuckles, Area.TwinkleParkLobby, Area.TwinklePark): ([], [], []),
+    (Character.Knuckles, Area.StationSquareMain, Area.SpeedHighway): ([], [], []),
     (Character.Knuckles, Area.AngelIsland, Area.RedMountain): (
         [ItemName.Knuckles.ShovelClaw], [ItemName.Knuckles.ShovelClaw], [ItemName.Knuckles.ShovelClaw]),
+    (Character.Knuckles, Area.EggCarrierMain, Area.SkyDeck): ([], [], []),
     (Character.Knuckles, Area.Jungle, Area.LostWorld): (
         [ItemName.Knuckles.ShovelClaw], [ItemName.Knuckles.ShovelClaw], [ItemName.Knuckles.ShovelClaw]),
-    (Character.Knuckles, Area.EggCarrierMain, Area.SkyDeck): ([], [], []),
+    (Character.Knuckles, Area.Jungle, Area.FinalEgg): ([], [], []),
+    (Character.Knuckles, Area.EggCarrierMain, Area.HotShelter): ([], [], []),
+    (Character.Amy, Area.Hotel, Area.EmeraldCoast): ([], [], []),
+    (Character.Amy, Area.MysticRuinsMain, Area.WindyValley): (
+        [ItemName.KeyItem.WindStone], [ItemName.KeyItem.WindStone], [ItemName.KeyItem.WindStone]),
+    (Character.Amy, Area.Casino, Area.Casinopolis): ([], [], []),
+    (Character.Amy, Area.AngelIsland, Area.IceCap): (
+        [ItemName.KeyItem.IceStone], [ItemName.KeyItem.IceStone], [ItemName.KeyItem.IceStone]),
     (Character.Amy, Area.TwinkleParkLobby, Area.TwinklePark): ([], [], []),
-    (Character.Amy, Area.EggCarrierMain, Area.HotShelter): ([], [], []),
+    (Character.Amy, Area.StationSquareMain, Area.SpeedHighway): (
+        [ItemName.KeyItem.EmployeeCard], [ItemName.KeyItem.EmployeeCard], [ItemName.KeyItem.EmployeeCard]),
+    (Character.Amy, Area.AngelIsland, Area.RedMountain): ([], [], []),
+    (Character.Amy, Area.EggCarrierMain, Area.SkyDeck): ([], [], []),
+    (Character.Amy, Area.Jungle, Area.LostWorld): ([], [], []),
     (Character.Amy, Area.Jungle, Area.FinalEgg): ([], [], []),
-    (Character.Big, Area.TwinkleParkLobby, Area.TwinklePark): ([], [], []),
+    (Character.Amy, Area.EggCarrierMain, Area.HotShelter): ([], [], []),
+    (Character.Big, Area.Hotel, Area.EmeraldCoast): ([], [], []),
+    (Character.Big, Area.MysticRuinsMain, Area.WindyValley): (
+        [ItemName.KeyItem.WindStone], [ItemName.KeyItem.WindStone], [ItemName.KeyItem.WindStone]),
+    (Character.Big, Area.Casino, Area.Casinopolis): ([], [], []),
     (Character.Big, Area.AngelIsland, Area.IceCap): (
         [ItemName.KeyItem.IceStone, ItemName.KeyItem.StationKeys, ItemName.KeyItem.Train],
         [ItemName.KeyItem.IceStone, ItemName.KeyItem.StationKeys, ItemName.KeyItem.Train],
         [ItemName.KeyItem.IceStone, ItemName.KeyItem.StationKeys, ItemName.KeyItem.Train]),
-    (Character.Big, Area.Hotel, Area.EmeraldCoast): ([], [], []),
+    (Character.Big, Area.TwinkleParkLobby, Area.TwinklePark): ([], [], []),
+    (Character.Big, Area.StationSquareMain, Area.SpeedHighway): (
+        [ItemName.KeyItem.EmployeeCard], [ItemName.KeyItem.EmployeeCard], [ItemName.KeyItem.EmployeeCard]),
+    (Character.Big, Area.AngelIsland, Area.RedMountain): ([], [], []),
+    (Character.Big, Area.EggCarrierMain, Area.SkyDeck): ([], [], []),
+    (Character.Big, Area.Jungle, Area.LostWorld): ([], [], []),
+    (Character.Big, Area.Jungle, Area.FinalEgg): ([], [], []),
     (Character.Big, Area.EggCarrierMain, Area.HotShelter): ([], [], []),
-    (Character.Gamma, Area.Jungle, Area.FinalEgg): ([], [], []),
     (Character.Gamma, Area.Hotel, Area.EmeraldCoast): ([], [], []),
     (Character.Gamma, Area.MysticRuinsMain, Area.WindyValley): (
         [ItemName.KeyItem.WindStone], [ItemName.KeyItem.WindStone], [ItemName.KeyItem.WindStone]),
+    (Character.Gamma, Area.Casino, Area.Casinopolis): ([], [], []),
+    (Character.Gamma, Area.AngelIsland, Area.IceCap): (
+        [ItemName.KeyItem.IceStone], [ItemName.KeyItem.IceStone], [ItemName.KeyItem.IceStone]),
+    (Character.Gamma, Area.TwinkleParkLobby, Area.TwinklePark): ([], [], []),
+    (Character.Gamma, Area.StationSquareMain, Area.SpeedHighway): (
+        [ItemName.KeyItem.EmployeeCard], [ItemName.KeyItem.EmployeeCard], [ItemName.KeyItem.EmployeeCard]),
     (Character.Gamma, Area.AngelIsland, Area.RedMountain): ([], [], []),
+    (Character.Gamma, Area.EggCarrierMain, Area.SkyDeck): ([], [], []),
+    (Character.Gamma, Area.Jungle, Area.LostWorld): ([], [], []),
+    (Character.Gamma, Area.Jungle, Area.FinalEgg): ([], [], []),
     (Character.Gamma, Area.EggCarrierMain, Area.HotShelter): ([], [], []),
 
     (Character.Sonic, Area.StationSquareMain, Area.Station): (
@@ -266,12 +305,8 @@ area_connections: Dict[Tuple[Character, Area, Area], Tuple[List[str], List[str],
         [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys]),
     (Character.Big, Area.Casino, Area.Hotel): (
         [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys]),
-    (Character.Big, Area.StationSquareMain, Area.TwinkleParkLobby): (
-        [ItemName.KeyItem.TwinkleParkTicket], [ItemName.KeyItem.TwinkleParkTicket],
-        [ItemName.KeyItem.TwinkleParkTicket]),
-    (Character.Big, Area.TwinkleParkLobby, Area.StationSquareMain): (
-        [ItemName.KeyItem.TwinkleParkTicket], [ItemName.KeyItem.TwinkleParkTicket],
-        [ItemName.KeyItem.TwinkleParkTicket]),
+    (Character.Big, Area.StationSquareMain, Area.TwinkleParkLobby): ([], [], []),
+    (Character.Big, Area.TwinkleParkLobby, Area.StationSquareMain): ([], [], []),
     (Character.Big, Area.MysticRuinsMain, Area.AngelIsland): (
         [ItemName.KeyItem.Dynamite], [ItemName.KeyItem.Dynamite], [ItemName.KeyItem.Dynamite]),
     (Character.Big, Area.AngelIsland, Area.MysticRuinsMain): (
@@ -337,11 +372,19 @@ area_connections: Dict[Tuple[Character, Area, Area], Tuple[List[str], List[str],
 }
 
 
+def get_region_name(character: Character, area: Area) -> str:
+    return "{} ({})".format(pascal_to_space(area.name), character.name)
+
+
+def get_entrance_name(character: Character, area: Area) -> str:
+    return "{} entrance ({})".format(pascal_to_space(area.name), character.name)
+
+
 def create_sadx_regions(world: World, starter_setup: StarterSetup, options: SonicAdventureDXOptions):
     menu_region = Region("Menu", world.player, world.multiworld)
     world.multiworld.regions.append(menu_region)
 
-    # We create regions for each character in each area
+    # Create regions for each character in each area
     for area in Area:
         for character in get_playable_characters(options):
             region = Region(get_region_name(character, area), world.player, world.multiworld)
@@ -353,11 +396,17 @@ def create_sadx_regions(world: World, starter_setup: StarterSetup, options: Soni
                                     lambda state, item=get_playable_character_item(character): state.has(item,
                                                                                                          world.player))
 
-    # We connect the regions based on the area connections rules
+    # Connect regions based on area connections rules
     for (character, area_from, area_to), (
             casual_logic_items, normal_logic_items, hard_logic_items) in area_connections.items():
+
+        if options.entrance_randomizer:
+            actual_area = starter_setup.level_mapping.get(area_to, area_to)
+        else:
+            actual_area = area_to
+
         region_from = created_regions.get((character, area_from))
-        region_to = created_regions.get((character, area_to))
+        region_to = created_regions.get((character, actual_area))
 
         if options.logic_level.value == 2:
             key_items = hard_logic_items
@@ -366,12 +415,17 @@ def create_sadx_regions(world: World, starter_setup: StarterSetup, options: Soni
         else:
             key_items = casual_logic_items
 
+        if Area.EmeraldCoast.value <= area_to.value <= Area.HotShelter.value:
+            entrance_name = get_entrance_name(character, area_to)
+        else:
+            entrance_name = None
+
         if region_from and region_to:
             if key_items:
-                region_from.connect(region_to, None,
+                region_from.connect(region_to, entrance_name,
                                     lambda state, items=key_items: all(state.has(item, world.player) for item in items))
             else:
-                region_from.connect(region_to)
+                region_from.connect(region_to, entrance_name)
 
     common_region = Region("Common region", world.player, world.multiworld)
     world.multiworld.regions.append(common_region)
