@@ -10,12 +10,12 @@ class Goal(Choice):
     Levels (0): You have to complete all the action stages available to unlock the Perfect Chaos Fight.
     Emblems (1): You have to collect a certain number of emblems to unlock the Perfect Chaos Fight.
     Chaos Emerald Hunt (2): You have to collect all 7 Chaos Emeralds to unlock the Perfect Chaos Fight.
-        There won't be any emblems in the item pool, only filler items and traps depending on your options
     Levels and Chaos Emerald Hunt (3): You have to beat all the action stages and collect the emeralds to fight Perfect Chaos.
     Emblems and Chaos Emerald Hunt (4): You have to collect both emblems and the emeralds to fight Perfect Chaos.
 
-    Keep in mind select emerald hunt will require enough checks to add the 7 emeralds to the pool,
-        some options will fail to generate a seed if there are not enough checks to add the emeralds.
+    Keep in mind selecting emerald hunt will require enough checks to add the 7 emeralds to the pool.
+    Also, selecting emblems will require at least 5 checks to add the 5 emblems to the pool.
+    Some options will fail to generate a seed if there are not enough checks to add the emeralds.
     """
     display_name = "Goal"
     option_levels = 0
