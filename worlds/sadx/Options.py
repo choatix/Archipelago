@@ -7,18 +7,22 @@ from Options import PerGameCommonOptions
 class Goal(Choice):
     """
     Determines the goal of the seed
-    Emblems (0): You have to collect a certain number of emblems to unlock the Perfect Chaos Fight.
-    Chaos Emerald Hunt (1): You have to collect all 7 Chaos Emeralds to unlock the Perfect Chaos Fight.
-        There won't be any emblems in the item pool, only filler items and traps depending on your options
-    Emblems and Chaos Emerald Hunt (2): You have to collect both emblems and the emeralds to fight Perfect Chaos.
+    Levels (0): You have to complete all the action stages available to unlock the Perfect Chaos Fight.
+    Emblems (1): You have to collect a certain number of emblems to unlock the Perfect Chaos Fight.
+    Chaos Emerald Hunt (2): You have to collect all 7 Chaos Emeralds to unlock the Perfect Chaos Fight.
+    Levels and Chaos Emerald Hunt (3): You have to beat all the action stages and collect the emeralds to fight Perfect Chaos.
+    Emblems and Chaos Emerald Hunt (4): You have to collect both emblems and the emeralds to fight Perfect Chaos.
 
-    Keep in mind select emerald hunt will require enough checks to add the 7 emeralds to the pool,
-        some options will fail to generate a seed if there are not enough checks to add the emeralds.
+    Keep in mind selecting emerald hunt will require enough checks to add the 7 emeralds to the pool.
+    Also, selecting emblems will require at least 5 checks to add the 5 emblems to the pool.
+    Some options will fail to generate a seed if there are not enough checks to add the emeralds.
     """
     display_name = "Goal"
-    option_emblems = 0
-    option_emerald_hunt = 1
-    option_emblems_and_emerald_hunt = 2
+    option_levels = 0
+    option_emblems = 1
+    option_emerald_hunt = 2
+    option_levels_and_emerald_hunt = 3
+    option_emblems_and_emerald_hunt = 4
     default = 0
 
 
@@ -40,7 +44,7 @@ class EmblemPercentage(Range):
     """What percentage of the available emblems do you need to unlock the final story"""
     display_name = "Emblem Requirement Percentage"
     range_start = 1
-    range_end = 100
+    range_end = 80
     default = 80
 
 
@@ -57,6 +61,11 @@ class RandomStartingLocationPerCharacter(DefaultOnToggle):
 class GuaranteedLevel(Toggle):
     """Ensures access to a level from the start, even if it means giving you an item"""
     display_name = "Guaranteed Level Access"
+
+
+class EntranceRandomizer(Toggle):
+    """ Randomizes the entrance of action stages """
+    display_name = "Entrance Randomizer"
 
 
 class RingLink(Toggle):
@@ -225,6 +234,11 @@ class MissionChecks(Toggle):
     display_name = "Enable Mission Checks"
 
 
+class AutoStartMissions(Toggle):
+    """Determines whether missions will start already activated."""
+    display_name = "Auto Start Missions"
+
+
 class MissionBlackList(OptionSet):
     """Determines what missions are blacklisted, the default are:
     Mission 49 (Flags in the Kart section of Twinkle Park )
@@ -238,15 +252,27 @@ class MissionBlackList(OptionSet):
 
 
 class SubLevelChecks(DefaultOnToggle):
-    """Determines whether beating the default sublevel mission  grants checks (4 Locations)
-    Current sublevels are: Twinkle Circuit, Sand Hill and Sky Chase Act 1 and 2"""
+    """Determines whether beating Twinkle Circuit and Sand Hill grants checks (2 Locations)"""
     display_name = "Sub-Level Checks"
 
 
 class SubLevelChecksHard(Toggle):
     """
-    Determines whether beating the harder (points based) sublevel mission grants checks (4 Locations)
+    Determines whether beating the harder (points based) Twinkle Circuit and Sand Hill missions grants checks (2 Locations)
     Only works if sublevel checks are enabled
+    """
+    display_name = "Sub-Level Checks"
+
+
+class SkyChaseChecks(DefaultOnToggle):
+    """Determines whether beating Sky Chase Act 1 and 2 grants checks (2 Locations)"""
+    display_name = "Sub-Level Checks"
+
+
+class SkyChaseChecksHard(Toggle):
+    """
+    Determines whether beating the harder (points based) Sky Chase Act 1 and 2 mission grants checks (2 Locations)
+    Only works if Sky Chase checks are enabled
     """
     display_name = "Sub-Level Checks"
 
@@ -361,6 +387,8 @@ class SonicAdventureDXOptions(PerGameCommonOptions):
     random_starting_location: RandomStartingLocation
     random_starting_location_per_character: RandomStartingLocationPerCharacter
     guaranteed_level: GuaranteedLevel
+    entrance_randomizer: EntranceRandomizer
+
     death_link: DeathLink
     ring_link: RingLink
     hard_ring_link: HardRingLink
@@ -394,9 +422,13 @@ class SonicAdventureDXOptions(PerGameCommonOptions):
 
     field_emblems_checks: FieldEmblemsChecks
     mission_mode_checks: MissionChecks
+    auto_start_missions: AutoStartMissions
     mission_blacklist: MissionBlackList
     sub_level_checks: SubLevelChecks
     sub_level_checks_hard: SubLevelChecksHard
+    sky_chase_checks: SkyChaseChecks
+    sky_chase_checks_hard: SkyChaseChecksHard
+
     life_sanity: LifeSanity
     pinball_life_capsules: PinballLifeCapsules
     sonic_life_sanity: SonicLifeSanity
@@ -422,6 +454,7 @@ sadx_option_groups = [
         RandomStartingLocation,
         RandomStartingLocationPerCharacter,
         GuaranteedLevel,
+        EntranceRandomizer,
         RingLink,
         HardRingLink,
         RingLoss,
@@ -459,9 +492,12 @@ sadx_option_groups = [
     OptionGroup("Extra locations", [
         FieldEmblemsChecks,
         MissionChecks,
+        AutoStartMissions,
         MissionBlackList,
         SubLevelChecks,
         SubLevelChecksHard,
+        SkyChaseChecks,
+        SkyChaseChecksHard,
         LifeSanity,
         PinballLifeCapsules,
         SonicLifeSanity,

@@ -1,19 +1,18 @@
 import typing
-from typing import ClassVar, Type, Dict, Any
+from typing import Dict, Any
 
 from BaseClasses import Tutorial
-from Options import PerGameCommonOptions
 from worlds.AutoWorld import WebWorld, World
 from .CharacterUtils import get_playable_characters
-from .Enums import Character, SADX_BASE_ID, Goal, Area
-from .ItemPool import create_sadx_items, get_item_names
-from .Items import all_item_table, SonicAdventureDXItem, get_item_by_name, group_item_table
+from .Enums import Character, SADX_BASE_ID, Goal, Area, remove_character_suffix, pascal_to_space
+from .ItemPool import create_sadx_items, get_item_names, ItemDistribution
+from .Items import SonicAdventureDXItem, group_item_table, item_name_to_info
 from .Locations import all_location_table, group_location_table
 from .Names import ItemName, LocationName
 from .Options import sadx_option_groups, SonicAdventureDXOptions
 from .Regions import create_sadx_regions, get_location_ids_for_area
 from .Rules import create_sadx_rules
-from .StartingSetup import StarterSetup, generate_early_sadx, write_sadx_spoiler, CharacterArea
+from .StartingSetup import StarterSetup, generate_early_sadx, write_sadx_spoiler, CharacterArea, level_areas
 
 
 class SonicAdventureDXWeb(WebWorld):
@@ -33,15 +32,15 @@ class SonicAdventureDXWorld(World):
     game = "Sonic Adventure DX"
     web = SonicAdventureDXWeb()
     starter_setup: StarterSetup = StarterSetup()
+    item_distribution: ItemDistribution = ItemDistribution()
 
-    item_name_to_id = {item["name"]: (item["id"] + SADX_BASE_ID) for item in all_item_table}
-    location_name_to_id = {loc["name"]: (loc["id"] + SADX_BASE_ID) for loc in all_location_table}
+    item_name_to_id = {item.name: item.itemId + SADX_BASE_ID for item in item_name_to_info.values()}
+    location_name_to_id = {loc["name"]: loc["id"] + SADX_BASE_ID for loc in all_location_table}
 
     item_name_groups = group_item_table
     location_name_groups = group_location_table
 
-    options_dataclass: ClassVar[Type[PerGameCommonOptions]] = SonicAdventureDXOptions
-
+    options_dataclass = SonicAdventureDXOptions
     options: SonicAdventureDXOptions
 
     def generate_early(self):
@@ -53,19 +52,17 @@ class SonicAdventureDXWorld(World):
                 self.starter_setup.character = Character(passthrough["StartingCharacter"])
                 self.starter_setup.item = passthrough["StartingItem"]
                 self.starter_setup.area = Area(passthrough["StartingArea"])
-                self.starter_setup.charactersWithArea.clear()
-                self.starter_setup.charactersWithArea.append(
-                    CharacterArea(Character.Sonic, Area(passthrough["SonicStartingArea"])))
-                self.starter_setup.charactersWithArea.append(
-                    CharacterArea(Character.Tails, Area(passthrough["TailsStartingArea"])))
-                self.starter_setup.charactersWithArea.append(
-                    CharacterArea(Character.Knuckles, Area(passthrough["KnucklesStartingArea"])))
-                self.starter_setup.charactersWithArea.append(
-                    CharacterArea(Character.Amy, Area(passthrough["AmyStartingArea"])))
-                self.starter_setup.charactersWithArea.append(
-                    CharacterArea(Character.Gamma, Area(passthrough["GammaStartingArea"])))
-                self.starter_setup.charactersWithArea.append(
-                    CharacterArea(Character.Big, Area(passthrough["BigStartingArea"])))
+                self.starter_setup.charactersWithArea = [
+                    CharacterArea(Character.Sonic, Area(passthrough["SonicStartingArea"])),
+                    CharacterArea(Character.Tails, Area(passthrough["TailsStartingArea"])),
+                    CharacterArea(Character.Knuckles, Area(passthrough["KnucklesStartingArea"])),
+                    CharacterArea(Character.Amy, Area(passthrough["AmyStartingArea"])),
+                    CharacterArea(Character.Gamma, Area(passthrough["GammaStartingArea"])),
+                    CharacterArea(Character.Big, Area(passthrough["BigStartingArea"]))
+
+                ]
+                self.starter_setup.level_mapping = {Area(int(original)): Area(int(randomized))
+                                                    for original, randomized in passthrough["LevelEntranceMap"].items()}
 
     # For the universal tracker, doesn't get called in standard gen
     # Returning slot_data so it regens, giving it back in multiworld.re_gen_passthrough
@@ -73,36 +70,39 @@ class SonicAdventureDXWorld(World):
     def interpret_slot_data(slot_data: Dict[str, Any]) -> Dict[str, Any]:
         return slot_data
 
-    def create_item(self, name: str, force_non_progression=False) -> SonicAdventureDXItem:
+    def create_item(self, name: str) -> SonicAdventureDXItem:
         return SonicAdventureDXItem(name, self.player)
 
     def create_regions(self) -> None:
         create_sadx_regions(self, self.starter_setup, self.options)
 
     def create_items(self):
-        create_sadx_items(self, self.starter_setup, self.get_emblems_needed(), self.options)
+        self.item_distribution = create_sadx_items(self, self.starter_setup, self.options)
 
     def set_rules(self):
-        create_sadx_rules(self, self.get_emblems_needed())
+        create_sadx_rules(self, self.item_distribution.emblem_count_progressive)
 
     def write_spoiler(self, spoiler_handle: typing.TextIO):
-        write_sadx_spoiler(self, spoiler_handle, self.starter_setup)
+        write_sadx_spoiler(self, spoiler_handle, self.starter_setup, self.options)
 
-    def get_emblems_needed(self) -> int:
-        if self.options.goal.value is Goal.EmeraldHunt:
-            return 0
+    def extend_hint_information(self, hint_data: typing.Dict[int, typing.Dict[int, str]]):
+        if not self.options.entrance_randomizer:
+            return
 
-        item_names = get_item_names(self.options, self.starter_setup)
-        location_count = sum(1 for location in self.multiworld.get_locations(self.player) if not location.locked)
-        emblem_count = max(1, location_count - len(item_names))
-        return max(1, int(round(emblem_count * self.options.emblems_percentage / 100)))
+        sadx_hint_data = {}
+        level_area_strings = [pascal_to_space(area.name) + " (" for area in level_areas]
+        # Add level entrance hints if entrance randomizer is on
+        for location in self.multiworld.get_locations(self.player):
+            if any(location.parent_region.name.startswith(area_string) for area_string in level_area_strings):
+                sadx_hint_data[location.address] = remove_character_suffix(location.parent_region.entrances[0].name)
+
+        hint_data[self.player] = sadx_hint_data
 
     def fill_slot_data(self) -> Dict[str, Any]:
         return {
-            "ModVersion": "0.7.0",
+            "ModVersion": 81,
             "Goal": self.options.goal.value,
-            "EmblemsForPerfectChaos": self.get_emblems_needed(),
-
+            "EmblemsForPerfectChaos": self.item_distribution.emblem_count_progressive,
             "StartingCharacter": self.starter_setup.character.value,
             "StartingItem": self.starter_setup.item,
             "StartingArea": self.starter_setup.area.value,
@@ -112,11 +112,15 @@ class SonicAdventureDXWorld(World):
             "AmyStartingArea": self.starter_setup.get_starting_area(Character.Amy).value,
             "GammaStartingArea": self.starter_setup.get_starting_area(Character.Gamma).value,
             "BigStartingArea": self.starter_setup.get_starting_area(Character.Big).value,
+            "EntranceRandomizer": self.options.entrance_randomizer.value,
+            "LevelEntranceMap": {original.value: randomized.value for original, randomized in
+                                 self.starter_setup.level_mapping.items()},
 
             "RandomStartingLocation": self.options.random_starting_location.value,
             "RandomStartingLocationPerCharacter": self.options.random_starting_location_per_character.value,
             "FieldEmblemChecks": self.options.field_emblems_checks.value,
             "MissionModeChecks": self.options.mission_mode_checks.value,
+            "AutoStartMissions": self.options.auto_start_missions.value,
 
             "LifeSanity": self.options.life_sanity.value,
             "PinballLifeCapsules": self.options.pinball_life_capsules.value,
@@ -131,8 +135,7 @@ class SonicAdventureDXWorld(World):
             "RingLink": self.options.ring_link.value,
             "HardRingLink": self.options.hard_ring_link.value,
             "RingLoss": self.options.ring_loss.value,
-            "SubLevelChecks": self.options.sub_level_checks.value,
-            "SubLevelChecksHard": self.options.sub_level_checks_hard.value,
+            "SkyChaseChecks": self.options.sky_chase_checks.value,
 
             "BossChecks": self.options.boss_checks.value,
             "UnifyChaos4": self.options.unify_chaos4.value,

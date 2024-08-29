@@ -10,9 +10,11 @@ def pascal_to_space(s):
 
 
 class Goal:
-    Emblems = 0
-    EmeraldHunt = 1
-    EmblemsAndEmeraldHunt = 2
+    Levels = 0
+    Emblems = 1
+    EmeraldHunt = 2
+    LevelsAndEmeraldHunt = 3
+    EmblemsAndEmeraldHunt = 4
 
 
 class Character(Enum):
@@ -22,6 +24,13 @@ class Character(Enum):
     Amy = auto()
     Big = auto()
     Gamma = auto()
+
+
+def remove_character_suffix(string: str) -> str:
+    for character in Character:
+        if string.endswith(f" ({character.name})"):
+            return re.sub(rf" \({character.name}\)$", "", string)
+    return string
 
 
 EVERYONE: List[Character] = [Character.Sonic, Character.Tails, Character.Knuckles,

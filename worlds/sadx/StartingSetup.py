@@ -1,11 +1,11 @@
 import re
 from dataclasses import dataclass, field
-from typing import List, TextIO
+from typing import List, TextIO, Any
 
 from Options import OptionError
 from worlds.AutoWorld import World
 from .CharacterUtils import get_playable_characters, are_character_upgrades_randomized
-from .Enums import Character, Area
+from .Enums import Character, Area, SubLevel, pascal_to_space
 from .Locations import level_location_table, upgrade_location_table, sub_level_location_table, \
     field_emblem_location_table, boss_location_table, life_capsule_location_table, mission_location_table
 from .Names import ItemName
@@ -18,12 +18,28 @@ class CharacterArea:
     area: Area = None
 
 
+level_areas = [
+    Area.EmeraldCoast,
+    Area.WindyValley,
+    Area.Casinopolis,
+    Area.IceCap,
+    Area.TwinklePark,
+    Area.SpeedHighway,
+    Area.RedMountain,
+    Area.SkyDeck,
+    Area.LostWorld,
+    Area.FinalEgg,
+    Area.HotShelter
+]
+
+
 @dataclass
 class StarterSetup:
-    character = None
-    area = None
-    item = None
+    character: Character = None
+    area: Area = None
+    item: str = None
     charactersWithArea: List[CharacterArea] = field(default_factory=list)
+    level_mapping: dict[Any, Any] = field(default_factory=dict)
 
     def get_starting_area(self, character: Character) -> Area:
         for char_area in self.charactersWithArea:
@@ -36,7 +52,7 @@ def generate_early_sadx(world: World, options: SonicAdventureDXOptions) -> Start
     starter_setup = StarterSetup()
     possible_characters = get_playable_characters(options)
     if len(possible_characters) == 0:
-        raise OptionError("You need at least one playable character")
+        raise OptionError("SADX Error: You need at least one playable character.")
 
     starter_setup.character = world.random.choice(possible_characters)
 
@@ -73,6 +89,13 @@ def generate_early_sadx(world: World, options: SonicAdventureDXOptions) -> Start
             used_areas.add(area)
             starter_setup.charactersWithArea.append(CharacterArea(character, area))
 
+    randomized_level_areas = world.random.sample(level_areas, len(level_areas))
+
+    if options.entrance_randomizer:
+        starter_setup.level_mapping = {original: randomized for original, randomized in
+                                       zip(level_areas, randomized_level_areas)}
+    else:
+        starter_setup.level_mapping = {}
     return starter_setup
 
 
@@ -86,8 +109,12 @@ def get_possible_starting_areas(world, character: Character) -> List[Area]:
         possible_starting_areas += [Area.Hotel]
     if has_locations_without_items(character, Area.Casino, world.options):
         possible_starting_areas += [Area.Casino]
+    if has_locations_without_items(character, Area.TwinkleParkLobby, world.options):
+        possible_starting_areas += [Area.TwinkleParkLobby]
     if has_locations_without_items(character, Area.MysticRuinsMain, world.options):
         possible_starting_areas += [Area.MysticRuinsMain]
+    if has_locations_without_items(character, Area.AngelIsland, world.options):
+        possible_starting_areas += [Area.AngelIsland]
     if has_locations_without_items(character, Area.Jungle, world.options):
         possible_starting_areas += [Area.Jungle]
     if has_locations_without_items(character, Area.EggCarrierMain, world.options):
@@ -106,8 +133,14 @@ def has_locations_without_items(character: Character, area: Area, options: Sonic
                 return True
     if options.sub_level_checks:
         for sub_level in sub_level_location_table:
-            if character in sub_level.characters and sub_level.area == area:
-                return True
+            if sub_level.subLevel == SubLevel.SandHill or sub_level.subLevel == SubLevel.TwinkleCircuit:
+                if character in sub_level.characters and sub_level.area == area:
+                    return True
+    if options.sky_chase_checks:
+        for sub_level in sub_level_location_table:
+            if sub_level.subLevel == SubLevel.SkyChaseAct1 or sub_level.subLevel == SubLevel.SkyChaseAct2:
+                if character in sub_level.characters and sub_level.area == area:
+                    return True
     if options.field_emblems_checks:
         for field_emblem in field_emblem_location_table:
             if character in field_emblem.get_logic_characters_upgrades(options) and field_emblem.area == area:
@@ -131,7 +164,8 @@ def has_locations_without_items(character: Character, area: Area, options: Sonic
                 return True
 
 
-def write_sadx_spoiler(world: World, spoiler_handle: TextIO, starter_setup: StarterSetup):
+def write_sadx_spoiler(world: World, spoiler_handle: TextIO, starter_setup: StarterSetup,
+                       options: SonicAdventureDXOptions):
     spoiler_handle.write("\n")
     header_text = f"Sonic Adventure starting setup for {world.multiworld.player_name[world.player]}:\n"
     spoiler_handle.write(header_text)
@@ -150,6 +184,10 @@ def write_sadx_spoiler(world: World, spoiler_handle: TextIO, starter_setup: Star
         starting_area_name = re.sub(r'(?<=[a-z])(?=[A-Z])', ' ', characterArea.area.name)
         text += "- {0} will spawn in the {1} area.\n".format(characterArea.character.name, starting_area_name)
 
+    if options.entrance_randomizer:
+        text += f"\nLevel entrances:\n"
+        for original, randomized in starter_setup.level_mapping.items():
+            text += f"- {pascal_to_space(original.name)} -> {pascal_to_space(randomized.name)}\n"
     spoiler_handle.writelines(text)
 
 

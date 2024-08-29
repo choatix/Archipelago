@@ -1,10 +1,12 @@
 from worlds.generic.Rules import add_rule
-from .CharacterUtils import get_playable_characters
-from .Enums import Goal
-from .Locations import get_location_by_name, LocationInfo, level_location_table, LevelLocation, \
-    upgrade_location_table, UpgradeLocation, sub_level_location_table, SubLevelLocation, field_emblem_location_table, \
-    EmblemLocation, life_capsule_location_table, LifeCapsuleLocation, boss_location_table, BossFightLocation, \
-    mission_location_table, MissionLocation, CharacterUpgrade
+from .CharacterUtils import get_playable_characters, is_level_playable
+from .Enums import Goal, LevelMission
+from .Locations import (
+    get_location_by_name, level_location_table, LevelLocation, upgrade_location_table, UpgradeLocation,
+    sub_level_location_table, SubLevelLocation, field_emblem_location_table, EmblemLocation,
+    life_capsule_location_table, LifeCapsuleLocation, boss_location_table, BossFightLocation,
+    mission_location_table, MissionLocation, CharacterUpgrade, LocationInfo
+)
 from .Names import ItemName
 from .Regions import get_region_name
 
@@ -59,7 +61,8 @@ def add_boss_fight_rules(self, location_name: str, boss_fight: BossFightLocation
 def add_mission_rules(self, location_name: str, mission: MissionLocation):
     location = self.multiworld.get_location(location_name, self.player)
     card_area_name = get_region_name(mission.character, mission.cardArea)
-    add_rule(location, lambda state, card_area=card_area_name: state.can_reach_region(card_area, self.player))
+    if not self.options.auto_start_missions:
+        add_rule(location, lambda state, card_area=card_area_name: state.can_reach_region(card_area, self.player))
     for need in mission.get_logic_items(self.options):
         add_rule(location, lambda state, item=need: state.has(item, self.player))
 
@@ -100,7 +103,13 @@ def create_sadx_rules(self, needed_emblems: int):
     if self.options.goal.value in {Goal.Emblems, Goal.EmblemsAndEmeraldHunt}:
         add_rule(perfect_chaos_fight, lambda state: state.has(ItemName.Progression.Emblem, self.player, needed_emblems))
 
-    if self.options.goal.value in {Goal.EmeraldHunt, Goal.EmblemsAndEmeraldHunt}:
+    if self.options.goal.value in {Goal.Levels, Goal.LevelsAndEmeraldHunt}:
+        for level in level_location_table:
+            if is_level_playable(level, self.options) and level.levelMission == LevelMission.C:
+                location = self.multiworld.get_location(level.get_level_name(), self.player)
+                add_rule(perfect_chaos_fight, lambda state: location.can_reach(state))
+
+    if self.options.goal.value in {Goal.EmeraldHunt, Goal.LevelsAndEmeraldHunt, Goal.EmblemsAndEmeraldHunt}:
         add_rule(perfect_chaos_fight, lambda state: state.has(ItemName.Progression.WhiteEmerald, self.player))
         add_rule(perfect_chaos_fight, lambda state: state.has(ItemName.Progression.RedEmerald, self.player))
         add_rule(perfect_chaos_fight, lambda state: state.has(ItemName.Progression.CyanEmerald, self.player))

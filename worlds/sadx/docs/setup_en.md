@@ -13,7 +13,8 @@
 2. Install SA Mod Manager as per [its instructions in GameBanana](https://gamebanana.com/tools/15436)
 3. Unpack the Archipelago Mod into the `/mods` directory in the folder into which you installed Sonic Adventure DX so
    that `/mods/SADX_Archipelago` is a valid path.
-4. Launch the `SAModManager.exe` and make sure the SADX_Archipelago mod is listed and enabled. Make sure the mod is at the bottom of the list.
+4. Launch the `SAModManager.exe` and make sure the SADX_Archipelago mod is listed and enabled. Make sure the mod is at
+   the bottom of the list.
 5. Disable the "Steam Achievements Mod" if enabled.
 6. Disable the "Fixes, Adds, and Beta Restores" if enabled
 
@@ -28,16 +29,18 @@
 5. Click The `Save` button then hit `Save & Play` to launch the game.
 6. Create a new save file to start playing! Use the same savefile to continuing playing.
 
-## Troubleshooting 
+## Troubleshooting
+
 - You get the SADX_Archipelago: DLL error - The specified module could not be found.
-  - Make sure that the antivirus didn't delete the `/mods/SADX_Archipelago/sadx-classic-randomizer.dll` file.
+    - Make sure that the antivirus didn't delete the `/mods/SADX_Archipelago/sadx-classic-randomizer.dll` file.
 - The game closes when you press start.
-  - This is a steam input issue. Either run the game from steam or adjust the "Desktop controller configuration" to just be a controller. 
-  - You can also just simple close steam
+    - This is a steam input issue. Either run the game from steam or adjust the "Desktop controller configuration" to
+      just be a controller.
+    - You can also just simple close steam
 - Some of the emblems don't give me checks
-  - Disable the "Steam Achievements Mod" if enabled
+    - Disable the "Steam Achievements Mod" if enabled
 - Some checks or elements of the randomizer are missing
-  - Disable the "Fixes, Adds, and Beta Restores" if enabled
+    - Disable the "Fixes, Adds, and Beta Restores" if enabled
 - Failed to generate the world
-  - Try updating your Archipelago mod to the latest version (at least 0.5.0)
-  - Try enabling more options in the yaml, being too restrictive will prevent the world from generation
+    - Try updating your Archipelago mod to the latest version (at least 0.5.0)
+    - Try enabling more options in the yaml, being too restrictive will prevent the world from generation
