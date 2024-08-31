@@ -399,7 +399,7 @@ def create_sadx_regions(world: World, starter_setup: StarterSetup, options: Soni
 
     # Connect regions based on area connections rules
     for (character, area_from, area_to), (
-            casual_logic_items, normal_logic_items, hard_logic_items) in area_connections.items():
+            normal_logic_items, hard_logic_items, expert_logic_items) in area_connections.items():
 
         if options.entrance_randomizer:
             actual_area = starter_setup.level_mapping.get(area_to, area_to)
@@ -410,11 +410,11 @@ def create_sadx_regions(world: World, starter_setup: StarterSetup, options: Soni
         region_to = created_regions.get((character, actual_area))
 
         if options.logic_level.value == 2:
-            key_items = hard_logic_items
+            key_items = expert_logic_items
         elif options.logic_level.value == 1:
-            key_items = normal_logic_items
+            key_items = hard_logic_items
         else:
-            key_items = casual_logic_items
+            key_items = normal_logic_items
 
         if Area.EmeraldCoast.value <= area_to.value <= Area.HotShelter.value:
             entrance_name = get_entrance_name(character, area_to)

@@ -29,14 +29,14 @@ class Goal(Choice):
 class LogicLevel(Choice):
     """
     What kind of logic the randomizer will use
-    Casual Logic (0): Very forgiving, ideal if you are not used to this game or its location checks.
-    Normal Logic (1): Less forgiving logic, some checks require to do spindash jumps or dying to get the check.
-    Hard Logic (2): The most unforgiving logic, some checks require to do precise jumps or glitches.
+    Normal Logic (0): Very forgiving, ideal if you are not used to this game or its location checks.
+    Hard Logic (1): Less forgiving logic, some checks require to do spindash jumps or dying to get the check.
+    Expert Logic (2): The most unforgiving logic, some checks require to do out of bounds jumps.
     """
     display_name = "Logic Level"
-    option_casual_logic = 0
-    option_normal_logic = 1
-    option_hard_logic = 2
+    option_normal_logic = 0
+    option_hard_logic = 1
+    option_expert_logic = 2
     default = 0
 
 

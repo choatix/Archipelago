@@ -15,20 +15,20 @@ class LevelLocation:
     area: Area
     character: Character
     levelMission: LevelMission
-    casualLogicItems: List[str]
     normalLogicItems: List[str]
     hardLogicItems: List[str]
+    expertLogicItems: List[str]
 
     def get_level_name(self) -> str:
         return f"{pascal_to_space(self.area.name)} ({self.character.name} - Mission {self.levelMission.name})"
 
     def get_logic_items(self, options: SonicAdventureDXOptions) -> List[str]:
         if options.logic_level.value == 2:
-            return self.hardLogicItems
+            return self.expertLogicItems
         elif options.logic_level.value == 1:
-            return self.normalLogicItems
+            return self.hardLogicItems
         else:
-            return self.casualLogicItems
+            return self.normalLogicItems
 
 
 @dataclass
@@ -37,17 +37,17 @@ class UpgradeLocation:
     locationName: str
     area: Area
     character: Character
-    casualLogicItems: List[str]
     normalLogicItems: List[str]
     hardLogicItems: List[str]
+    expertLogicItems: List[str]
 
     def get_logic_items(self, options: SonicAdventureDXOptions) -> List[str]:
         if options.logic_level.value == 2:
-            return self.hardLogicItems
+            return self.expertLogicItems
         elif options.logic_level.value == 1:
-            return self.normalLogicItems
+            return self.hardLogicItems
         else:
-            return self.casualLogicItems
+            return self.normalLogicItems
 
 
 @dataclass
@@ -60,27 +60,27 @@ class CharacterUpgrade:
 class EmblemLocation:
     locationId: int
     area: Area
-    casualLogicCharacters: List[Union[CharacterUpgrade, Character]]
     normalLogicCharacters: List[Union[CharacterUpgrade, Character]]
     hardLogicCharacters: List[Union[CharacterUpgrade, Character]]
+    expertLogicCharacters: List[Union[CharacterUpgrade, Character]]
     emblemName: str
 
     def get_logic_characters_upgrades(self, options: SonicAdventureDXOptions) -> (
             List)[Union[CharacterUpgrade, Character]]:
         if options.logic_level.value == 2:
-            return self.hardLogicCharacters
+            return self.expertLogicCharacters
         elif options.logic_level.value == 1:
-            return self.normalLogicCharacters
+            return self.hardLogicCharacters
         else:
-            return self.casualLogicCharacters
+            return self.normalLogicCharacters
 
     def get_logic_characters(self, options: SonicAdventureDXOptions) -> List[Character]:
         if options.logic_level.value == 2:
-            return self._get_characters(self.hardLogicCharacters)
+            return self._get_characters(self.expertLogicCharacters)
         elif options.logic_level.value == 1:
-            return self._get_characters(self.normalLogicCharacters)
+            return self._get_characters(self.hardLogicCharacters)
         else:
-            return self._get_characters(self.casualLogicCharacters)
+            return self._get_characters(self.normalLogicCharacters)
 
     @staticmethod
     def _get_characters(logic: List[Union[CharacterUpgrade, Character]]) -> List[Character]:
@@ -93,17 +93,17 @@ class LifeCapsuleLocation:
     area: Area
     character: Character
     lifeCapsuleNumber: int
-    casualLogicItems: List[str]
     normalLogicItems: List[str]
     hardLogicItems: List[str]
+    expertLogicItems: List[str]
 
     def get_logic_items(self, options: SonicAdventureDXOptions) -> List[str]:
         if options.logic_level.value == 2:
-            return self.hardLogicItems
+            return self.expertLogicItems
         elif options.logic_level.value == 1:
-            return self.normalLogicItems
+            return self.hardLogicItems
         else:
-            return self.casualLogicItems
+            return self.normalLogicItems
 
 
 @dataclass
@@ -113,17 +113,17 @@ class MissionLocation:
     objectiveArea: Area
     character: Character
     missionNumber: int
-    casualLogicItems: List[str]
     normalLogicItems: List[str]
     hardLogicItems: List[str]
+    expertLogicItems: List[str]
 
     def get_logic_items(self, options: SonicAdventureDXOptions) -> List[str]:
         if options.logic_level.value == 2:
-            return self.hardLogicItems
+            return self.expertLogicItems
         elif options.logic_level.value == 1:
-            return self.normalLogicItems
+            return self.hardLogicItems
         else:
-            return self.casualLogicItems
+            return self.normalLogicItems
 
 
 @dataclass
