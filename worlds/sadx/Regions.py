@@ -124,9 +124,9 @@ area_connections: Dict[Tuple[Character, Area, Area], Tuple[List[str], List[str],
     (Character.Sonic, Area.Station, Area.StationSquareMain): (
         [ItemName.KeyItem.StationKeys], [ItemName.KeyItem.StationKeys], [ItemName.KeyItem.StationKeys]),
     (Character.Sonic, Area.StationSquareMain, Area.Hotel): (
-        [ItemName.KeyItem.HotelKeys], [ItemName.KeyItem.HotelKeys], [ItemName.KeyItem.HotelKeys]),
-    (Character.Sonic, Area.Hotel, Area.StationSquareMain): (
         [ItemName.KeyItem.HotelKeys], [ItemName.KeyItem.HotelKeys], []),
+    (Character.Sonic, Area.Hotel, Area.StationSquareMain): (
+        [ItemName.KeyItem.HotelKeys], [ItemName.KeyItem.HotelKeys], [ItemName.KeyItem.HotelKeys]),
     (Character.Sonic, Area.Station, Area.Casino): (
         [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys]),
     (Character.Sonic, Area.Casino, Area.Station): (
