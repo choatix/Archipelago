@@ -394,15 +394,15 @@ class SonicAdventureDXOptions(PerGameCommonOptions):
     playable_tails: PlayableTails
     playable_knuckles: PlayableKnuckles
     playable_amy: PlayableAmy
-    playable_gamma: PlayableGamma
     playable_big: PlayableBig
+    playable_gamma: PlayableGamma
 
     sonic_action_stage_missions: SonicActionStageMissions
     tails_action_stage_missions: TailsActionStageMissions
     knuckles_action_stage_missions: KnucklesActionStageMissions
     amy_action_stage_missions: AmyActionStageMissions
-    gamma_action_stage_missions: GammaActionStageMissions
     big_action_stage_missions: BigActionStageMissions
+    gamma_action_stage_missions: GammaActionStageMissions
 
     randomized_sonic_upgrades: RandomizedSonicUpgrades
     randomized_tails_upgrades: RandomizedTailsUpgrades
@@ -460,16 +460,16 @@ sadx_option_groups = [
         PlayableTails,
         PlayableKnuckles,
         PlayableAmy,
-        PlayableGamma,
         PlayableBig,
+        PlayableGamma,
     ]),
     OptionGroup("Stage Options", [
         SonicActionStageMissions,
         TailsActionStageMissions,
         KnucklesActionStageMissions,
         AmyActionStageMissions,
-        GammaActionStageMissions,
-        BigActionStageMissions
+        BigActionStageMissions,
+        GammaActionStageMissions
     ]),
     OptionGroup("Upgrade Options", [
         RandomizedSonicUpgrades,
