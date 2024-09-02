@@ -467,7 +467,7 @@ mission_location_table: List[MissionLocation] = [
     MissionLocation(816, Area.MysticRuinsMain, Area.WindyValley, Character.Tails, 16, [], [], []),
     MissionLocation(817, Area.StationSquareMain, Area.Casinopolis, Character.Sonic, 17, [], [], []),
     MissionLocation(818, Area.Station, Area.TwinklePark, Character.Amy, 18, [], [], []),
-    MissionLocation(819, Area.StationSquareMain, Area.TwinkleParkLobby, Character.Amy, 19, [], [], []),
+    MissionLocation(819, Area.StationSquareMain, Area.TwinklePark, Character.Amy, 19, [], [], []),
     MissionLocation(820, Area.AngelIsland, Area.IceCap, Character.Sonic, 20,
                     [ItemName.KeyItem.IceStone, ItemName.KeyItem.CasinoKeys, ItemName.KeyItem.Train],
                     [ItemName.KeyItem.IceStone, ItemName.KeyItem.CasinoKeys, ItemName.KeyItem.Train],
