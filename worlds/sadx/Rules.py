@@ -1,12 +1,10 @@
 from worlds.generic.Rules import add_rule
 from .CharacterUtils import get_playable_characters, is_level_playable
 from .Enums import Goal, LevelMission
-from .Locations import (
-    get_location_by_name, level_location_table, LevelLocation, upgrade_location_table, UpgradeLocation,
-    sub_level_location_table, SubLevelLocation, field_emblem_location_table, EmblemLocation,
-    life_capsule_location_table, LifeCapsuleLocation, boss_location_table, BossFightLocation,
-    mission_location_table, MissionLocation, CharacterUpgrade, LocationInfo
-)
+from .Locations import get_location_by_name, level_location_table, upgrade_location_table, sub_level_location_table, \
+    LocationInfo, life_capsule_location_table, boss_location_table, mission_location_table, field_emblem_location_table
+from .Logic import LevelLocation, UpgradeLocation, SubLevelLocation, EmblemLocation, CharacterUpgrade, \
+    LifeCapsuleLocation, BossFightLocation, MissionLocation
 from .Names import ItemName
 from .Regions import get_region_name
 

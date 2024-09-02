@@ -56,6 +56,13 @@ def generate_early_sadx(world: World, options: SonicAdventureDXOptions) -> Start
 
     starter_setup.character = world.random.choice(possible_characters)
 
+    randomized_level_areas = world.random.sample(level_areas, len(level_areas))
+    if options.entrance_randomizer:
+        starter_setup.level_mapping = {original: randomized for original, randomized in
+                                       zip(level_areas, randomized_level_areas)}
+    else:
+        starter_setup.level_mapping = {}
+
     if options.guaranteed_level:
         if options.random_starting_location:
             starter_setup.area = world.random.choice(list(starting_area_items[starter_setup.character].keys()))
@@ -89,13 +96,6 @@ def generate_early_sadx(world: World, options: SonicAdventureDXOptions) -> Start
             used_areas.add(area)
             starter_setup.charactersWithArea.append(CharacterArea(character, area))
 
-    randomized_level_areas = world.random.sample(level_areas, len(level_areas))
-
-    if options.entrance_randomizer:
-        starter_setup.level_mapping = {original: randomized for original, randomized in
-                                       zip(level_areas, randomized_level_areas)}
-    else:
-        starter_setup.level_mapping = {}
     return starter_setup
 
 
