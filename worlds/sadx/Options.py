@@ -64,7 +64,13 @@ class GuaranteedLevel(Toggle):
 
 
 class EntranceRandomizer(Toggle):
-    """Randomizes the entrance of action stages."""
+    """
+    Randomizes the entrances to action stages.
+    This means that the entrance to an action stage could be different from the original game.
+    If a given entrance is closed (e.g., doors not opening), it indicates that the level behind that entrance is not accessible.
+    For example, if Hot Shelter is inside the Emerald Coast entrance, the beach entrance will appear closed for Sonic but open for Amy.
+    Depending on the character, the entrance may be Sonic's or Knuckles'. Big, for example, can't use the Speed Highway elevator.
+    """
     display_name = "Entrance Randomizer"
 
 
