@@ -133,6 +133,7 @@ class SonicAdventureDXWorld(World):
 
             "DeathLink": self.options.death_link.value,
             "RingLink": self.options.ring_link.value,
+            "CasinopolisRingLink": self.options.casinopolis_ring_link.value,
             "HardRingLink": self.options.hard_ring_link.value,
             "RingLoss": self.options.ring_loss.value,
             "SkyChaseChecks": self.options.sky_chase_checks.value,

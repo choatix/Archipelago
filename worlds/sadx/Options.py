@@ -85,7 +85,9 @@ class LevelEntrancePlando(OptionDict):
     """
     display_name = "Level Entrance Plando"
     valid_keys = {pascal_to_space(area.name): area.name for area in level_areas}
-    schema = Schema({Optional(pascal_to_space(area.name)): And(str, lambda n: n in [pascal_to_space(a.name) for a in level_areas]) for area in level_areas})
+    schema = Schema(
+        {Optional(pascal_to_space(area.name)): And(str, lambda n: n in [pascal_to_space(a.name) for a in level_areas])
+         for area in level_areas})
 
 
 class RingLink(Toggle):
@@ -93,6 +95,13 @@ class RingLink(Toggle):
     Whether your in-level ring gain/loss is linked to other players.
     """
     display_name = "Ring Link"
+
+
+class CasinopolisRingLink(Toggle):
+    """
+    Whether Ring Link is enabled while playing Sonic's Casinopolis.
+    """
+    display_name = "Enable Ring Link while playing Sonic's Casinopolis"
 
 
 class HardRingLink(Toggle):
@@ -408,6 +417,7 @@ class SonicAdventureDXOptions(PerGameCommonOptions):
 
     death_link: DeathLink
     ring_link: RingLink
+    casinopolis_ring_link: CasinopolisRingLink
     hard_ring_link: HardRingLink
     ring_loss: RingLoss
 
@@ -474,6 +484,7 @@ sadx_option_groups = [
         EntranceRandomizer,
         LevelEntrancePlando,
         RingLink,
+        CasinopolisRingLink,
         HardRingLink,
         RingLoss,
     ]),
