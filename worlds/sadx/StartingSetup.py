@@ -53,39 +53,32 @@ class StarterSetup:
 def generate_early_sadx(world: World, options: SonicAdventureDXOptions) -> StarterSetup:
     starter_setup = StarterSetup()
     possible_characters = get_playable_characters(options)
-    if len(possible_characters) == 0:
+    if not possible_characters:
         raise OptionError("SADX Error: You need at least one playable character.")
 
     starter_setup.character = world.random.choice(possible_characters)
 
-    randomized_level_areas = world.random.sample(level_areas, len(level_areas))
-
-    # Random Level Entrances
-    starter_setup.level_mapping = {}
     if options.entrance_randomizer:
-        starter_setup.level_mapping = {original: randomized for original, randomized in
-                                       zip(level_areas, randomized_level_areas)}
+        randomized_level_areas = world.random.sample(level_areas, len(level_areas))
+        starter_setup.level_mapping = dict(zip(level_areas, randomized_level_areas))
 
-    # We calculate the possible starting areas for the character and take guaranteed level into account
     possible_starter_areas = get_possible_starting_areas(world, starter_setup.character,
                                                          starter_setup.level_mapping,
                                                          options.guaranteed_level.value == 1)
 
-    # If random starting areas are disabled, we only consider the Station Square Main area
     if not options.random_starting_location:
         possible_starter_areas = {area: items for area, items in possible_starter_areas.items() if
                                   area == Area.StationSquareMain}
 
-    # We prioritize starting areas without items
-    all_pairs = [(area, item) for area, items in possible_starter_areas.items() for item in items]
-    none_pairs = [pair for pair in all_pairs if pair[1] is None]
-    string_pairs = [pair for pair in all_pairs if pair[1] is not None]
-    if not string_pairs and not none_pairs:
-        raise OptionError("SADX Error: Couldn't define a valid starting location (Probably a problem of low settings, guaranteed level and/or random level entrance).")
-    starting_pair = world.random.choice(none_pairs if none_pairs else string_pairs)
-    starter_setup.area, starter_setup.item = starting_pair[0], starting_pair[1]
+    areas_mixed = [(area, item) for area, items in possible_starter_areas.items() for item in items]
+    areas_without_items = [pair for pair in areas_mixed if pair[1] is None]
+    areas_with_items = [pair for pair in areas_mixed if pair[1] is not None]
+    if not areas_with_items and not areas_without_items:
+        raise OptionError(
+            "SADX Error: Couldn't define a valid starting location (Probably a problem of low settings, guaranteed level and/or random level entrance).")
+    starting_pair = world.random.choice(areas_without_items if areas_without_items else areas_with_items)
+    starter_setup.area, starter_setup.item = starting_pair
 
-    # We set different starting areas for each character, and we try to don't repeat them
     if options.random_starting_location_per_character and options.random_starting_location:
         used_areas = {starter_setup.area}
         starter_setup.charactersWithArea.append(CharacterArea(starter_setup.character, starter_setup.area))
@@ -99,10 +92,7 @@ def generate_early_sadx(world: World, options: SonicAdventureDXOptions) -> Start
             if character == starter_setup.character:
                 continue
             unused_areas = [area for area in filtered_areas_dict[character] if area not in used_areas]
-            if unused_areas:
-                area = world.random.choice(unused_areas)
-            else:
-                area = world.random.choice(filtered_areas_dict[character])
+            area = world.random.choice(unused_areas if unused_areas else filtered_areas_dict[character])
             used_areas.add(area)
             starter_setup.charactersWithArea.append(CharacterArea(character, area))
 
@@ -114,16 +104,16 @@ def get_possible_starting_areas(world, character: Character, level_mapping: dict
     possible_starting_areas = {}
     for area in {Area.StationSquareMain, Area.Station, Area.Hotel, Area.Casino, Area.TwinkleParkLobby,
                  Area.MysticRuinsMain, Area.AngelIsland, Area.Jungle, Area.EggCarrierMain}:
-        possible_list_for_area = has_locations_without_items(character, area, world.options, level_mapping,
-                                                             guaranteed_level)
+        possible_list_for_area = get_possible_starting_area_information(character, area, world.options, level_mapping,
+                                                                        guaranteed_level)
         if possible_list_for_area:
             possible_starting_areas.update(possible_list_for_area)
 
     return possible_starting_areas
 
 
-def has_locations_without_items(character: Character, area: Area, options: SonicAdventureDXOptions,
-                                level_mapping: dict[Area, Area], guaranteed_level: bool) -> \
+def get_possible_starting_area_information(character: Character, area: Area, options: SonicAdventureDXOptions,
+                                           level_mapping: dict[Area, Area], guaranteed_level: bool) -> \
         dict[Area, List[Optional[str]]]:
     if guaranteed_level:
         level_with_item: dict[Area, List[Optional[str]]] = collections.defaultdict(list)
