@@ -97,7 +97,7 @@ class RingLink(Toggle):
     display_name = "Ring Link"
 
 
-class CasinopolisRingLink(DefaultOnToggle):
+class CasinopolisRingLink(Toggle):
     """
     Whether Ring Link is enabled while playing Sonic's Casinopolis.
     """
