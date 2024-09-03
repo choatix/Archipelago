@@ -82,7 +82,7 @@ def generate_early_sadx(world: World, options: SonicAdventureDXOptions) -> Start
 
     if not valid_starting_pair:
         raise OptionError(
-            "SADX Error: Couldn't define a valid starting location (Probably a problem of low settings, guaranteed level and/or random level entrance).")
+            "SADX Error: Couldn't define a valid starting location (Probably a problem of low settings, guaranteed level and/or fixed starting location).")
 
     if options.random_starting_location_per_character and options.random_starting_location:
         used_areas = {starter_setup.area}
