@@ -106,9 +106,9 @@ class HardRingLink(Toggle):
 class RingLoss(Choice):
     """
     How taking damage is handled.
-    Classic: You lose all of your rings when hit.
-    Modern: You lose 20 rings when hit.
-    One Hit K.O.: You die immediately when hit.
+    Classic (0): You lose all of your rings when hit.
+    Modern (1): You lose 20 rings when hit.
+    One Hit K.O. (2): You die immediately when hit.
     """
     display_name = "Ring Loss"
     option_classic = 0
