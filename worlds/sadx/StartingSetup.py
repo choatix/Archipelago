@@ -56,28 +56,33 @@ def generate_early_sadx(world: World, options: SonicAdventureDXOptions) -> Start
     if not possible_characters:
         raise OptionError("SADX Error: You need at least one playable character.")
 
-    starter_setup.character = world.random.choice(possible_characters)
-
     if options.entrance_randomizer:
         randomized_level_areas = world.random.sample(level_areas, len(level_areas))
         starter_setup.level_mapping = dict(zip(level_areas, randomized_level_areas))
 
-    possible_starter_areas = get_possible_starting_areas(world, starter_setup.character,
-                                                         starter_setup.level_mapping,
-                                                         options.guaranteed_level.value == 1)
+    valid_starting_pair = None
 
-    if not options.random_starting_location:
-        possible_starter_areas = {area: items for area, items in possible_starter_areas.items() if
-                                  area == Area.StationSquareMain}
+    for character in possible_characters:
+        possible_starter_areas = get_possible_starting_areas(world, character,
+                                                             starter_setup.level_mapping,
+                                                             options.guaranteed_level.value == 1)
+        if not options.random_starting_location:
+            possible_starter_areas = {area: items for area, items in possible_starter_areas.items() if
+                                      area == Area.StationSquareMain}
 
-    areas_mixed = [(area, item) for area, items in possible_starter_areas.items() for item in items]
-    areas_without_items = [pair for pair in areas_mixed if pair[1] is None]
-    areas_with_items = [pair for pair in areas_mixed if pair[1] is not None]
-    if not areas_with_items and not areas_without_items:
+        areas_mixed = [(area, item) for area, items in possible_starter_areas.items() for item in items]
+        areas_without_items = [pair for pair in areas_mixed if pair[1] is None]
+        areas_with_items = [pair for pair in areas_mixed if pair[1] is not None]
+
+        if areas_with_items or areas_without_items:
+            valid_starting_pair = world.random.choice(areas_without_items if areas_without_items else areas_with_items)
+            starter_setup.character = character
+            starter_setup.area, starter_setup.item = valid_starting_pair
+            break
+
+    if not valid_starting_pair:
         raise OptionError(
             "SADX Error: Couldn't define a valid starting location (Probably a problem of low settings, guaranteed level and/or random level entrance).")
-    starting_pair = world.random.choice(areas_without_items if areas_without_items else areas_with_items)
-    starter_setup.area, starter_setup.item = starting_pair
 
     if options.random_starting_location_per_character and options.random_starting_location:
         used_areas = {starter_setup.area}
