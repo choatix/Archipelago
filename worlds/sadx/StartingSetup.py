@@ -38,6 +38,7 @@ class StarterSetup:
 def generate_early_sadx(world: World, options: SonicAdventureDXOptions) -> StarterSetup:
     starter_setup = StarterSetup()
     possible_characters = get_playable_characters(options)
+    world.random.shuffle(possible_characters)
     if not possible_characters:
         raise OptionError("SADX Error: You need at least one playable character.")
 
@@ -50,7 +51,6 @@ def generate_early_sadx(world: World, options: SonicAdventureDXOptions) -> Start
             zip([area for area in level_areas if area not in fixed_areas], randomized_remaining_areas))}
 
     valid_starting_pair = None
-
     for character in possible_characters:
         possible_starter_areas = get_possible_starting_areas(world, character,
                                                              starter_setup.level_mapping,
