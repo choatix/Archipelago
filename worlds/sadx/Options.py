@@ -1,7 +1,10 @@
 from dataclasses import dataclass
 
-from Options import OptionGroup, Choice, Range, DefaultOnToggle, Toggle, DeathLink, OptionSet
+from schema import Schema, And, Optional
+
+from Options import OptionGroup, Choice, Range, DefaultOnToggle, Toggle, DeathLink, OptionSet, OptionDict
 from Options import PerGameCommonOptions
+from .Enums import level_areas, pascal_to_space
 
 
 class Goal(Choice):
@@ -72,6 +75,17 @@ class EntranceRandomizer(Toggle):
     Depending on the character, the entrance may be Sonic's or Knuckles'. Big, for example, can't use the Speed Highway elevator.
     """
     display_name = "Entrance Randomizer"
+
+
+class LevelEntrancePlando(OptionDict):
+    """
+    Plando for level entrance. Only works if Entrance Randomizer is enabled.
+    The level name should be Capitalized with no spaces.
+    For example, {'Emerald Coast': 'Final Egg'} will place Final Egg behind the Emerald Coast entrance and randomize the rest.
+    """
+    display_name = "Level Entrance Plando"
+    valid_keys = {pascal_to_space(area.name): area.name for area in level_areas}
+    schema = Schema({Optional(pascal_to_space(area.name)): And(str, lambda n: n in [pascal_to_space(a.name) for a in level_areas]) for area in level_areas})
 
 
 class RingLink(Toggle):
@@ -390,6 +404,7 @@ class SonicAdventureDXOptions(PerGameCommonOptions):
     random_starting_location_per_character: RandomStartingLocationPerCharacter
     guaranteed_level: GuaranteedLevel
     entrance_randomizer: EntranceRandomizer
+    level_entrance_plando: LevelEntrancePlando
 
     death_link: DeathLink
     ring_link: RingLink
@@ -457,6 +472,7 @@ sadx_option_groups = [
         RandomStartingLocationPerCharacter,
         GuaranteedLevel,
         EntranceRandomizer,
+        LevelEntrancePlando,
         RingLink,
         HardRingLink,
         RingLoss,

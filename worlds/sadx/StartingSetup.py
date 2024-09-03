@@ -6,7 +6,7 @@ from typing import List, Optional, TextIO
 from Options import OptionError
 from worlds.AutoWorld import World
 from .CharacterUtils import get_playable_characters, are_character_upgrades_randomized, is_level_playable
-from .Enums import Character, Area, SubLevel, pascal_to_space
+from .Enums import Character, Area, SubLevel, pascal_to_space, level_areas
 from .Locations import level_location_table, upgrade_location_table, sub_level_location_table, \
     field_emblem_location_table, boss_location_table, life_capsule_location_table, mission_location_table
 from .Logic import area_connections
@@ -18,21 +18,6 @@ from .Options import SonicAdventureDXOptions
 class CharacterArea:
     character: Character
     area: Area = None
-
-
-level_areas = [
-    Area.EmeraldCoast,
-    Area.WindyValley,
-    Area.Casinopolis,
-    Area.IceCap,
-    Area.TwinklePark,
-    Area.SpeedHighway,
-    Area.RedMountain,
-    Area.SkyDeck,
-    Area.LostWorld,
-    Area.FinalEgg,
-    Area.HotShelter
-]
 
 
 @dataclass
@@ -57,8 +42,12 @@ def generate_early_sadx(world: World, options: SonicAdventureDXOptions) -> Start
         raise OptionError("SADX Error: You need at least one playable character.")
 
     if options.entrance_randomizer:
-        randomized_level_areas = world.random.sample(level_areas, len(level_areas))
-        starter_setup.level_mapping = dict(zip(level_areas, randomized_level_areas))
+        fixed_areas = {Area[re.sub(r' ', '', area)]: Area[re.sub(r' ', '', dest)]
+                       for area, dest in options.level_entrance_plando.items()}
+        remaining_areas = [area for area in level_areas if area not in fixed_areas.values()]
+        randomized_remaining_areas = world.random.sample(remaining_areas, len(remaining_areas))
+        starter_setup.level_mapping = {**fixed_areas, **dict(
+            zip([area for area in level_areas if area not in fixed_areas], randomized_remaining_areas))}
 
     valid_starting_pair = None
 

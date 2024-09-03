@@ -105,3 +105,18 @@ class Area(Enum):
     LostWorld = auto()
     FinalEgg = auto()
     HotShelter = auto()
+
+
+level_areas = [
+    Area.EmeraldCoast,
+    Area.WindyValley,
+    Area.Casinopolis,
+    Area.IceCap,
+    Area.TwinklePark,
+    Area.SpeedHighway,
+    Area.RedMountain,
+    Area.SkyDeck,
+    Area.LostWorld,
+    Area.FinalEgg,
+    Area.HotShelter
+]
