@@ -1,5 +1,6 @@
 import math
 
+from Options import OptionError
 from worlds.generic.Rules import add_rule
 from .CharacterUtils import get_playable_characters, is_level_playable, is_character_playable
 from .Enums import Goal, LevelMission
@@ -112,20 +113,34 @@ def create_sadx_rules(self, needed_emblems: int) -> LocationDistribution:
         add_rule(perfect_chaos_fight, lambda state: state.has(ItemName.Progression.Emblem, self.player, needed_emblems))
 
     if self.options.goal.value in {Goal.Levels, Goal.LevelsAndEmeraldHunt}:
+        level_location_list = []
         for level in level_location_table:
             if is_level_playable(level, self.options) and level.levelMission == LevelMission.C:
-                levels_for_perfect_chaos += 1
-                location = self.multiworld.get_location(level.get_level_name(), self.player)
-                add_rule(perfect_chaos_fight, lambda state: location.can_reach(state))
+                level_location_list.append(self.multiworld.get_location(level.get_level_name(), self.player))
+
+        self.random.shuffle(level_location_list)
+        num_locations = max(1, math.ceil(len(level_location_list) * self.options.levels_percentage.value / 100))
+        for location in level_location_list[:num_locations]:
+            add_rule(perfect_chaos_fight, lambda state: location.can_reach(state))
+            levels_for_perfect_chaos += 1
+        if levels_for_perfect_chaos == 0:
+            raise OptionError("SADX Error: You need to add action stages in the configuration to use levels as goal.")
 
     if self.options.goal.value in {Goal.Missions, Goal.MissionsAndEmeraldHunt}:
+        mission_location_list = []
         for mission in mission_location_table:
             if str(mission.missionNumber) in self.options.mission_blacklist.value:
                 continue
-            if is_character_playable(mission.character, self.options):
-                missions_for_perfect_chaos += 1
-                location = self.multiworld.get_location(mission.get_mission_name(), self.player)
-                add_rule(perfect_chaos_fight, lambda state: location.can_reach(state))
+            if is_character_playable(mission.character, self.options) and self.options.mission_mode_checks:
+                mission_location_list.append(self.multiworld.get_location(mission.get_mission_name(), self.player))
+
+        self.random.shuffle(mission_location_list)
+        num_locations = max(1, math.ceil(len(mission_location_list) * self.options.mission_percentage.value / 100))
+        for location in mission_location_list[:num_locations]:
+            add_rule(perfect_chaos_fight, lambda state: location.can_reach(state))
+            missions_for_perfect_chaos += 1
+        if missions_for_perfect_chaos == 0:
+            raise OptionError("SADX Error: You need to add more missions in the configuration to use mission as goal.")
 
     if self.options.goal.value in {Goal.EmeraldHunt, Goal.LevelsAndEmeraldHunt, Goal.EmblemsAndEmeraldHunt,
                                    Goal.MissionsAndEmeraldHunt}:
@@ -140,8 +155,6 @@ def create_sadx_rules(self, needed_emblems: int) -> LocationDistribution:
     self.multiworld.completion_condition[self.player] = lambda state: state.has(ItemName.Progression.ChaosPeace,
                                                                                 self.player)
     return LocationDistribution(
-        levels_for_perfect_chaos=max(1,
-                                     math.ceil(levels_for_perfect_chaos * self.options.levels_percentage.value / 100)),
-        missions_for_perfect_chaos=max(1, math.ceil(
-            missions_for_perfect_chaos * self.options.mission_percentage.value / 100)),
+        levels_for_perfect_chaos=levels_for_perfect_chaos,
+        missions_for_perfect_chaos=missions_for_perfect_chaos,
     )
