@@ -15,6 +15,8 @@ class Goal:
     EmeraldHunt = 2
     LevelsAndEmeraldHunt = 3
     EmblemsAndEmeraldHunt = 4
+    Missions = 5
+    MissionsAndEmeraldHunt = 6
 
 
 class Character(Enum):

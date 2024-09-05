@@ -1,10 +1,10 @@
 from dataclasses import dataclass
 from typing import Dict, Tuple, List, Union
 
-from .Options import SonicAdventureDXOptions
 from .Enums import Character, Area, SubLevel, LevelMission, pascal_to_space, SubLevelMission, EVERYONE, SONIC_TAILS
 from .Names import ItemName, LocationName
 from .Names.LocationName import Boss
+from .Options import SonicAdventureDXOptions
 
 
 @dataclass
@@ -114,6 +114,9 @@ class MissionLocation:
     normalLogicItems: List[str]
     hardLogicItems: List[str]
     expertLogicItems: List[str]
+
+    def get_mission_name(self) -> str:
+        return f"Mission {self.missionNumber} ({self.character.name})"
 
     def get_logic_items(self, options: SonicAdventureDXOptions) -> List[str]:
         if options.logic_level.value == 2:

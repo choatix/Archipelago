@@ -64,8 +64,7 @@ def get_location_from_boss() -> List[LocationInfo]:
 def get_location_from_mission() -> List[LocationInfo]:
     locations: List[LocationInfo] = []
     for mission in mission_location_table:
-        mission_name: str = f"Mission {mission.missionNumber} ({mission.character.name})"
-        locations += [{"id": mission.locationId, "name": mission_name}]
+        locations += [{"id": mission.locationId, "name": mission.get_mission_name()}]
     return locations
 
 

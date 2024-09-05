@@ -11,7 +11,7 @@ from .Locations import all_location_table, group_location_table
 from .Names import ItemName, LocationName
 from .Options import sadx_option_groups, SonicAdventureDXOptions
 from .Regions import create_sadx_regions, get_location_ids_for_area
-from .Rules import create_sadx_rules
+from .Rules import create_sadx_rules, LocationDistribution
 from .StartingSetup import StarterSetup, generate_early_sadx, write_sadx_spoiler, CharacterArea, level_areas
 
 
@@ -33,6 +33,7 @@ class SonicAdventureDXWorld(World):
     web = SonicAdventureDXWeb()
     starter_setup: StarterSetup = StarterSetup()
     item_distribution: ItemDistribution = ItemDistribution()
+    location_distribution: LocationDistribution = LocationDistribution()
 
     item_name_to_id = {item.name: item.itemId + SADX_BASE_ID for item in item_name_to_info.values()}
     location_name_to_id = {loc["name"]: loc["id"] + SADX_BASE_ID for loc in all_location_table}
@@ -80,7 +81,7 @@ class SonicAdventureDXWorld(World):
         self.item_distribution = create_sadx_items(self, self.starter_setup, self.options)
 
     def set_rules(self):
-        create_sadx_rules(self, self.item_distribution.emblem_count_progressive)
+        self.location_distribution = create_sadx_rules(self, self.item_distribution.emblem_count_progressive)
 
     def write_spoiler(self, spoiler_handle: typing.TextIO):
         write_sadx_spoiler(self, spoiler_handle, self.starter_setup, self.options)
@@ -100,9 +101,11 @@ class SonicAdventureDXWorld(World):
 
     def fill_slot_data(self) -> Dict[str, Any]:
         return {
-            "ModVersion": 83,
+            "ModVersion": 84,
             "Goal": self.options.goal.value,
             "EmblemsForPerfectChaos": self.item_distribution.emblem_count_progressive,
+            "LevelForPerfectChaos": self.location_distribution.levels_for_perfect_chaos,
+            "MissionForPerfectChaos": self.location_distribution.missions_for_perfect_chaos,
             "StartingCharacter": self.starter_setup.character.value,
             "StartingItem": self.starter_setup.item,
             "StartingArea": self.starter_setup.area.value,
@@ -121,6 +124,7 @@ class SonicAdventureDXWorld(World):
             "FieldEmblemChecks": self.options.field_emblems_checks.value,
             "MissionModeChecks": self.options.mission_mode_checks.value,
             "AutoStartMissions": self.options.auto_start_missions.value,
+            "MissionBlackList": {int(mission): int(mission) for mission in self.options.mission_blacklist.value},
 
             "LifeSanity": self.options.life_sanity.value,
             "PinballLifeCapsules": self.options.pinball_life_capsules.value,

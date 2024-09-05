@@ -10,11 +10,13 @@ from .Enums import level_areas, pascal_to_space
 class Goal(Choice):
     """
     Determines the goal of the seed.
-    Levels (0): Complete all the action stages available to unlock the Perfect Chaos Fight.
+    Levels (0): Complete action stages available to unlock the Perfect Chaos Fight.
     Emblems (1): Collect a certain number of emblems to unlock the Perfect Chaos Fight.
     Chaos Emerald Hunt (2): Collect all 7 Chaos Emeralds to unlock the Perfect Chaos Fight.
-    Levels and Chaos Emerald Hunt (3): Beat all the action stages and collect the emeralds to fight Perfect Chaos.
+    Levels and Chaos Emerald Hunt (3): Beat action stages and collect the emeralds to fight Perfect Chaos.
     Emblems and Chaos Emerald Hunt (4): Collect both emblems and the emeralds to fight Perfect Chaos.
+    Missions (5): Complete missions to unlock the Perfect Chaos Fight.
+    Missions and Chaos Emerald Hunt (6): Complete and collect the emeralds to fight Perfect Chaos.
 
     Keep in mind selecting emerald hunt will require enough checks to add the 7 emeralds to the pool.
     Also, selecting emblems will require at least 5 checks to add the 5 emblems to the pool.
@@ -26,6 +28,8 @@ class Goal(Choice):
     option_emerald_hunt = 2
     option_levels_and_emerald_hunt = 3
     option_emblems_and_emerald_hunt = 4
+    option_missions = 5
+    option_missions_and_emerald_hunt = 6
     default = 0
 
 
@@ -44,11 +48,27 @@ class LogicLevel(Choice):
 
 
 class EmblemPercentage(Range):
-    """Percentage of the available emblems needed to unlock the final story."""
+    """If Emblems are part of the goal, percentage of the available emblems needed to unlock the final story."""
     display_name = "Emblem Requirement Percentage"
     range_start = 1
     range_end = 80
     default = 80
+
+
+class LevelPercentage(Range):
+    """If Levels are part of the goal, Percentage of the available levels that needed to be completed to unlock the final story."""
+    display_name = "Level Requirement Percentage"
+    range_start = 25
+    range_end = 100
+    default = 100
+
+
+class MissionPercentage(Range):
+    """If Missions are part of the goal, Percentage of the available missions that needed to be completed to unlock the final story."""
+    display_name = "Mission Requirement Percentage"
+    range_start = 25
+    range_end = 100
+    default = 100
 
 
 class RandomStartingLocation(DefaultOnToggle):
@@ -409,6 +429,8 @@ class SonicAdventureDXOptions(PerGameCommonOptions):
     goal: Goal
     logic_level: LogicLevel
     emblems_percentage: EmblemPercentage
+    levels_percentage: LevelPercentage
+    mission_percentage: MissionPercentage
     random_starting_location: RandomStartingLocation
     random_starting_location_per_character: RandomStartingLocationPerCharacter
     guaranteed_level: GuaranteedLevel
@@ -478,6 +500,8 @@ sadx_option_groups = [
         Goal,
         LogicLevel,
         EmblemPercentage,
+        LevelPercentage,
+        MissionPercentage,
         RandomStartingLocation,
         RandomStartingLocationPerCharacter,
         GuaranteedLevel,

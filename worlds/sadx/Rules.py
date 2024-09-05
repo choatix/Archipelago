@@ -1,5 +1,7 @@
+import math
+
 from worlds.generic.Rules import add_rule
-from .CharacterUtils import get_playable_characters, is_level_playable
+from .CharacterUtils import get_playable_characters, is_level_playable, is_character_playable
 from .Enums import Goal, LevelMission
 from .Locations import get_location_by_name, level_location_table, upgrade_location_table, sub_level_location_table, \
     LocationInfo, life_capsule_location_table, boss_location_table, mission_location_table, field_emblem_location_table
@@ -7,6 +9,12 @@ from .Logic import LevelLocation, UpgradeLocation, SubLevelLocation, EmblemLocat
     LifeCapsuleLocation, BossFightLocation, MissionLocation
 from .Names import ItemName
 from .Regions import get_region_name
+
+
+class LocationDistribution:
+    def __init__(self, levels_for_perfect_chaos=0, missions_for_perfect_chaos=0):
+        self.levels_for_perfect_chaos = levels_for_perfect_chaos
+        self.missions_for_perfect_chaos = missions_for_perfect_chaos
 
 
 def add_level_rules(self, location_name: str, level: LevelLocation):
@@ -91,7 +99,9 @@ def calculate_rules(self, location: LocationInfo):
             add_mission_rules(self, location["name"], mission)
 
 
-def create_sadx_rules(self, needed_emblems: int):
+def create_sadx_rules(self, needed_emblems: int) -> LocationDistribution:
+    levels_for_perfect_chaos = 0
+    missions_for_perfect_chaos = 0
     for ap_location in self.multiworld.get_locations(self.player):
         calculate_rules(self, get_location_by_name(ap_location.name))
 
@@ -104,10 +114,21 @@ def create_sadx_rules(self, needed_emblems: int):
     if self.options.goal.value in {Goal.Levels, Goal.LevelsAndEmeraldHunt}:
         for level in level_location_table:
             if is_level_playable(level, self.options) and level.levelMission == LevelMission.C:
+                levels_for_perfect_chaos += 1
                 location = self.multiworld.get_location(level.get_level_name(), self.player)
                 add_rule(perfect_chaos_fight, lambda state: location.can_reach(state))
 
-    if self.options.goal.value in {Goal.EmeraldHunt, Goal.LevelsAndEmeraldHunt, Goal.EmblemsAndEmeraldHunt}:
+    if self.options.goal.value in {Goal.Missions, Goal.MissionsAndEmeraldHunt}:
+        for mission in mission_location_table:
+            if str(mission.missionNumber) in self.options.mission_blacklist.value:
+                continue
+            if is_character_playable(mission.character, self.options):
+                missions_for_perfect_chaos += 1
+                location = self.multiworld.get_location(mission.get_mission_name(), self.player)
+                add_rule(perfect_chaos_fight, lambda state: location.can_reach(state))
+
+    if self.options.goal.value in {Goal.EmeraldHunt, Goal.LevelsAndEmeraldHunt, Goal.EmblemsAndEmeraldHunt,
+                                   Goal.MissionsAndEmeraldHunt}:
         add_rule(perfect_chaos_fight, lambda state: state.has(ItemName.Progression.WhiteEmerald, self.player))
         add_rule(perfect_chaos_fight, lambda state: state.has(ItemName.Progression.RedEmerald, self.player))
         add_rule(perfect_chaos_fight, lambda state: state.has(ItemName.Progression.CyanEmerald, self.player))
@@ -118,3 +139,9 @@ def create_sadx_rules(self, needed_emblems: int):
 
     self.multiworld.completion_condition[self.player] = lambda state: state.has(ItemName.Progression.ChaosPeace,
                                                                                 self.player)
+    return LocationDistribution(
+        levels_for_perfect_chaos=max(1,
+                                     math.ceil(levels_for_perfect_chaos * self.options.levels_percentage.value / 100)),
+        missions_for_perfect_chaos=max(1, math.ceil(
+            missions_for_perfect_chaos * self.options.mission_percentage.value / 100)),
+    )
