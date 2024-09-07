@@ -101,7 +101,7 @@ class SonicAdventureDXWorld(World):
 
     def fill_slot_data(self) -> Dict[str, Any]:
         return {
-            "ModVersion": 84,
+            "ModVersion": 85,
             "Goal": self.options.goal.value,
             "EmblemsForPerfectChaos": self.item_distribution.emblem_count_progressive,
             "LevelForPerfectChaos": self.location_distribution.levels_for_perfect_chaos,
