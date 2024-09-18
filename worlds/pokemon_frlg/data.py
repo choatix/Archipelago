@@ -13,6 +13,7 @@ from typing import Dict, List, NamedTuple, Optional, Set, FrozenSet, Any, Union,
 from BaseClasses import ItemClassification
 
 BASE_OFFSET = 6420000
+FAMESANITY_OFFSET = 10000
 NUM_REAL_SPECIES = 386
 
 
@@ -106,6 +107,7 @@ class MapData:
     land_encounters: Optional[EncounterTableData]
     water_encounters: Optional[EncounterTableData]
     fishing_encounters: Optional[EncounterTableData]
+    kanto: bool
 
 
 class EventData(NamedTuple):
@@ -119,18 +121,19 @@ class EventData(NamedTuple):
 class RegionData:
     id: str
     name: str
-    parent_map: MapData
+    parent_map: Optional[MapData]
     encounter_region: str
     has_land: bool
     has_water: bool
     has_fishing: bool
-    exits: List[str]
+    kanto: bool
+    exits: Dict[str, str]
     warps: List[str]
     locations: List[str]
     events: List[str]
 
-    def __init__(self, region_id: str, name: str, parent_map: MapData, encounter_region: str,
-                 has_land: bool, has_water: bool, has_fishing: bool):
+    def __init__(self, region_id: str, name: str, parent_map: Optional[MapData], encounter_region: str,
+                 has_land: bool, has_water: bool, has_fishing: bool, kanto: bool):
         self.id = region_id
         self.name = name
         self.parent_map = parent_map
@@ -138,6 +141,7 @@ class RegionData:
         self.has_land = has_land
         self.has_water = has_water
         self.has_fishing = has_fishing
+        self.kanto = kanto
         self.exits = []
         self.warps = []
         self.locations = []
@@ -716,7 +720,6 @@ def _init() -> None:
     location_data = load_json_data("locations.json")
     event_data = load_json_data("events.json")
     item_data = load_json_data("items.json")
-    warp_data = load_json_data("warps.json")
 
     # Create map data
     for map_name, map_json in extracted_data["maps"].items():
@@ -775,7 +778,8 @@ def _init() -> None:
             map_json["header_address"],
             land_encounters,
             water_encounters,
-            fishing_encounters
+            fishing_encounters,
+            True
         )
 
     # Load/merge region json files
@@ -788,7 +792,7 @@ def _init() -> None:
     for region_subset in region_json_list:
         for region_name, region_json in region_subset.items():
             if region_name in regions_json:
-                raise AssertionError("Region [{region_name}] was defined multiple times")
+                raise AssertionError("Pokemon FRLG: Region [{region_name}] was defined multiple times")
             regions_json[region_name] = region_json
 
     # Create region data
@@ -797,20 +801,26 @@ def _init() -> None:
 
     data.regions = {}
     for region_id, region_json in regions_json.items():
+        parent_map = data.maps[region_json["parent_map"]] if region_json["parent_map"] is not None else None
+
+        if parent_map is not None:
+            parent_map.kanto = region_json["kanto"]
+
         new_region = RegionData(
             region_id,
             region_json["name"],
-            data.maps[region_json["parent_map"]],
+            parent_map,
             region_json["encounter_region"],
             region_json["has_land"],
             region_json["has_water"],
-            region_json["has_fishing"]
+            region_json["has_fishing"],
+            region_json["kanto"]
         )
 
         # Locations
         for location_id in region_json["locations"]:
             if location_id in claimed_locations:
-                raise AssertionError(f"Location [{location_id}] was claimed by multiple regions")
+                raise AssertionError(f"Pokemon FRLG: Location [{location_id}] was claimed by multiple regions")
 
             location_json = extracted_data["locations"][location_id]
 
@@ -856,8 +866,6 @@ def _init() -> None:
             data.locations[location_id] = new_location
             claimed_locations.add(location_id)
 
-        new_region.locations.sort(key=lambda loc: data.locations[loc].name)
-
         # Events
         for event_id in region_json["events"]:
             new_event = EventData(
@@ -870,20 +878,14 @@ def _init() -> None:
             new_region.events.append(event_id)
             data.events[event_id] = new_event
 
-        new_region.events.sort(key=lambda event: data.events[event].name)
-
         # Exits
-        for region_exit in region_json["exits"]:
-            new_region.exits.append(region_exit)
+        new_region.exits = region_json["exits"]
 
         # Warps
-        for encoded_warp in region_json["warps"]:
+        for encoded_warp, name in region_json["warps"].items():
             if encoded_warp in claimed_warps:
-                raise AssertionError(f"Warp [{encoded_warp}] was claimed by multiple regions")
+                raise AssertionError(f"Pokemon FRLG: Warp [{encoded_warp}] was claimed by multiple regions")
             new_region.warps.append(encoded_warp)
-            name: str = None
-            if encoded_warp in warp_data:
-                name = warp_data[encoded_warp]
             data.warps[encoded_warp] = Warp(encoded_warp, name, region_id)
             claimed_warps.add(encoded_warp)
 
