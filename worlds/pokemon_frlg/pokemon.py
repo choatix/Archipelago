@@ -799,16 +799,59 @@ def randomize_tm_moves(world: "PokemonFRLGWorld") -> None:
     new_moves: Set[int] = set()
 
     for i in range(50):
-        new_move = _get_random_move(world.random, new_moves | world.blacklisted_moves)
+        new_move = None
+        remaining_moves = len(world.required_tm_tutor_moves - new_moves - world.blacklisted_moves)
+        if remaining_moves > 0:
+            if remaining_moves == (50 - i):
+                chance = 100
+            else:
+                chance = 3
+
+            select_required = False
+            if 0 < chance < 100:
+                v = world.random.randrange(0, 100)
+                if v < chance:
+                    select_required = True
+
+            if select_required or chance == 100:
+                m = world.required_tm_tutor_moves - new_moves
+                new_move = world.random.choice(list(m))
+
+        if new_move is None:
+            new_move = _get_random_move(world.random, new_moves | world.blacklisted_moves)
+
         new_moves.add(new_move)
         world.modified_tmhm_moves[i] = new_move
 
 
 def randomize_tutor_moves(world: "PokemonFRLGWorld") -> List[int]:
-    new_moves = []
+    banned_moves = set()
+    banned_moves.union(set(world.modified_tmhm_moves))
+    banned_moves.union(set(world.blacklisted_moves))
+    new_moves = set()
 
     for i in range(15):
-        new_move = _get_random_move(world.random, set(new_moves) | world.blacklisted_moves)
-        new_moves.append(new_move)
+        new_move = None
+        remaining_moves = len(world.required_tm_tutor_moves - new_moves - banned_moves)
+        if remaining_moves > 0:
+            if remaining_moves == (15 - i):
+                chance = 100
+            else:
+                chance = 3
 
-    return new_moves
+            select_required = False
+            if 0 < chance < 100:
+                v = world.random.randrange(0, 100)
+                if v < chance:
+                    select_required = True
+
+            if select_required or chance == 100:
+                m = world.required_tm_tutor_moves - new_moves
+                new_move = world.random.choice(list(m))
+
+        if new_move is None:
+            new_move = _get_random_move(world.random, new_moves | banned_moves)
+
+        new_moves.add(new_move)
+
+    return list(new_moves)

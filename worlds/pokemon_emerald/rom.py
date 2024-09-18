@@ -4,7 +4,7 @@ Classes and functions related to creating a ROM patch
 import copy
 import os
 import struct
-from typing import TYPE_CHECKING, Dict, List, Tuple
+from typing import TYPE_CHECKING, Dict, List, Tuple, Set
 
 from worlds.Files import APProcedurePatch, APTokenMixin, APTokenTypes
 from settings import get_settings
@@ -836,10 +836,38 @@ def _randomize_move_tutor_moves(world: "PokemonEmeraldWorld", patch: PokemonEmer
             )
     else:
         if world.options.tm_tutor_moves:
-            new_tutor_moves = []
+            new_tutor_moves: Set[int] = set()
+            banned_moves: Set[int] = set()
+            banned_moves.union(set(world.modified_tmhm_moves))
+            banned_moves.union(set(world.blacklisted_moves))
             for i in range(30):
-                new_move = get_random_move(world.random, set(new_tutor_moves) | world.blacklisted_moves | HM_MOVES)
-                new_tutor_moves.append(new_move)
+
+                if i == FORTREE_MOVE_TUTOR_INDEX:
+                    continue
+
+                new_move = None
+                remaining_moves = len(world.required_tm_tutor_moves
+                                      - new_tutor_moves - banned_moves)
+                if remaining_moves > 0:
+                    if remaining_moves == (30 - i):
+                        chance = 100
+                    else:
+                        chance = 3
+
+                    select_required = False
+                    if 0 < chance < 100:
+                        v = world.random.randrange(0, 100)
+                        if v < chance:
+                            select_required = True
+
+                    if select_required or chance == 100:
+                        m = world.required_tm_tutor_moves - new_tutor_moves
+                        new_move = world.random.choice(list(m))
+
+                if new_move is None:
+                    new_move = get_random_move(world.random, new_tutor_moves | banned_moves)
+
+                new_tutor_moves.add(new_move)
 
                 patch.write_token(
                     APTokenTypes.WRITE,

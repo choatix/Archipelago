@@ -1,11 +1,13 @@
 """
 Archipelago World definition for Pokemon Emerald Version
 """
+import random
 from collections import Counter
 import copy
 import logging
 import os
 import pkgutil
+from math import floor
 from typing import Any, Set, List, Dict, Optional, Tuple, ClassVar, TextIO, Union
 
 from BaseClasses import ItemClassification, MultiWorld, Tutorial, LocationProgressType
@@ -108,6 +110,8 @@ class PokemonEmeraldWorld(World):
     hm_requirements: Dict[str, Union[int, List[str]]]
     auth: bytes
 
+    required_tm_tutor_moves: Set[int]
+
     modified_species: Dict[int, SpeciesData]
     modified_maps: Dict[str, MapData]
     modified_tmhm_moves: List[int]
@@ -155,6 +159,7 @@ class PokemonEmeraldWorld(World):
             self.hm_requirements["HM02 Fly"] = 0
 
         self.blacklisted_moves = {emerald_data.move_labels[label] for label in self.options.move_blacklist.value}
+        self.required_tm_tutor_moves = {emerald_data.move_labels[label] for label in self.options.required_tm_tutor_moves.value}
 
         self.blacklisted_wilds = {
             get_species_id_by_label(species_name)
@@ -585,9 +590,32 @@ class PokemonEmeraldWorld(World):
             new_moves: Set[int] = set()
 
             for i in range(50):
-                new_move = get_random_move(self.random, new_moves | self.blacklisted_moves)
+                new_move = None
+                remaining_moves = len(self.required_tm_tutor_moves - new_moves - self.blacklisted_moves)
+                if remaining_moves > 0:
+                    if remaining_moves == (50 - i):
+                        chance = 100
+                    else:
+                        chance = 3
+
+                    select_required = False
+                    if 0 < chance < 100:
+                        v = self.random.randrange(0, 100)
+                        if v < chance:
+                            select_required = True
+
+                    if select_required or chance == 100:
+                        m = self.required_tm_tutor_moves - new_moves
+                        new_move = self.random.choice(list(m))
+
+                if new_move is None:
+                    new_move = get_random_move(self.random, new_moves | self.blacklisted_moves)
+
                 new_moves.add(new_move)
                 self.modified_tmhm_moves[i] = new_move
+
+        #inv_map = {v: k for k, v in data.data.move_labels.items()}
+        #print([ inv_map[l] for l in self.modified_tmhm_moves])
 
         randomize_abilities(self)
         randomize_learnsets(self)
