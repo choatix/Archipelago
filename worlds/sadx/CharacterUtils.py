@@ -1,8 +1,8 @@
 from typing import List
 
-from worlds.sadx.Enums import Character, LevelMission
-from worlds.sadx.Locations import LevelLocation
-from worlds.sadx.Options import SonicAdventureDXOptions
+from .Enums import Character, LevelMission
+from .Logic import LevelLocation
+from .Options import SonicAdventureDXOptions
 
 
 def get_playable_character_item(character: Character) -> str:

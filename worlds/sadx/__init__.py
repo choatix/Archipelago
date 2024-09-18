@@ -11,7 +11,7 @@ from .Locations import all_location_table, group_location_table
 from .Names import ItemName, LocationName
 from .Options import sadx_option_groups, SonicAdventureDXOptions
 from .Regions import create_sadx_regions, get_location_ids_for_area
-from .Rules import create_sadx_rules
+from .Rules import create_sadx_rules, LocationDistribution
 from .StartingSetup import StarterSetup, generate_early_sadx, write_sadx_spoiler, CharacterArea, level_areas
 
 
@@ -33,6 +33,7 @@ class SonicAdventureDXWorld(World):
     web = SonicAdventureDXWeb()
     starter_setup: StarterSetup = StarterSetup()
     item_distribution: ItemDistribution = ItemDistribution()
+    location_distribution: LocationDistribution = LocationDistribution()
 
     item_name_to_id = {item.name: item.itemId + SADX_BASE_ID for item in item_name_to_info.values()}
     location_name_to_id = {loc["name"]: loc["id"] + SADX_BASE_ID for loc in all_location_table}
@@ -64,6 +65,58 @@ class SonicAdventureDXWorld(World):
                 self.starter_setup.level_mapping = {Area(int(original)): Area(int(randomized))
                                                     for original, randomized in passthrough["LevelEntranceMap"].items()}
 
+                # Options synchronization, needed for weighted values
+                self.options.goal.value = passthrough["Goal"]
+                self.options.logic_level.value = passthrough["LogicLevel"]
+                self.options.emblems_percentage.value = passthrough["EmblemsPercentage"]
+                self.options.levels_percentage.value = passthrough["LevelsPercentage"]
+                self.options.mission_percentage.value = passthrough["MissionsPercentage"]
+                self.options.entrance_randomizer.value = passthrough["EntranceRandomizer"]
+
+                self.options.playable_sonic.value = passthrough["PlayableSonic"]
+                self.options.playable_tails.value = passthrough["PlayableTails"]
+                self.options.playable_knuckles.value = passthrough["PlayableKnuckles"]
+                self.options.playable_amy.value = passthrough["PlayableAmy"]
+                self.options.playable_big.value = passthrough["PlayableBig"]
+                self.options.playable_gamma.value = passthrough["PlayableGamma"]
+
+                self.options.sonic_action_stage_missions.value = passthrough["SonicActionStageMissions"]
+                self.options.tails_action_stage_missions.value = passthrough["TailsActionStageMissions"]
+                self.options.knuckles_action_stage_missions.value = passthrough["KnucklesActionStageMissions"]
+                self.options.amy_action_stage_missions.value = passthrough["AmyActionStageMissions"]
+                self.options.gamma_action_stage_missions.value = passthrough["GammaActionStageMissions"]
+                self.options.big_action_stage_missions.value = passthrough["BigActionStageMissions"]
+
+                self.options.randomized_sonic_upgrades.value = passthrough["RandomizedSonicUpgrades"]
+                self.options.randomized_tails_upgrades.value = passthrough["RandomizedTailsUpgrades"]
+                self.options.randomized_knuckles_upgrades.value = passthrough["RandomizedKnucklesUpgrades"]
+                self.options.randomized_amy_upgrades.value = passthrough["RandomizedAmyUpgrades"]
+                self.options.randomized_big_upgrades.value = passthrough["RandomizedGammaUpgrades"]
+                self.options.randomized_gamma_upgrades.value = passthrough["RandomizedBigUpgrades"]
+
+                self.options.boss_checks.value = passthrough["BossChecks"]
+                self.options.unify_chaos4.value = passthrough["UnifyChaos4"]
+                self.options.unify_chaos6.value = passthrough["UnifyChaos6"]
+                self.options.unify_egg_hornet.value = passthrough["UnifyEggHornet"]
+
+                self.options.field_emblems_checks.value = passthrough["FieldEmblemChecks"]
+                self.options.mission_mode_checks.value = passthrough["MissionModeChecks"]
+                self.options.auto_start_missions.value = passthrough["AutoStartMissions"]
+
+                self.options.sub_level_checks.value = passthrough["SubLevelChecks"]
+                self.options.sub_level_checks_hard.value = passthrough["SubLevelChecksHard"]
+                self.options.sky_chase_checks.value = passthrough["SkyChaseChecks"]
+                self.options.sky_chase_checks_hard.value = passthrough["SkyChaseChecksHard"]
+
+                self.options.life_sanity.value = passthrough["LifeSanity"]
+                self.options.pinball_life_capsules.value = passthrough["PinballLifeCapsules"]
+                self.options.sonic_life_sanity.value = passthrough["SonicLifeSanity"]
+                self.options.tails_life_sanity.value = passthrough["TailsLifeSanity"]
+                self.options.knuckles_life_sanity.value = passthrough["KnucklesLifeSanity"]
+                self.options.amy_life_sanity.value = passthrough["AmyLifeSanity"]
+                self.options.big_life_sanity.value = passthrough["BigLifeSanity"]
+                self.options.gamma_life_sanity.value = passthrough["GammaLifeSanity"]
+
     # For the universal tracker, doesn't get called in standard gen
     # Returning slot_data so it regens, giving it back in multiworld.re_gen_passthrough
     @staticmethod
@@ -80,7 +133,7 @@ class SonicAdventureDXWorld(World):
         self.item_distribution = create_sadx_items(self, self.starter_setup, self.options)
 
     def set_rules(self):
-        create_sadx_rules(self, self.item_distribution.emblem_count_progressive)
+        self.location_distribution = create_sadx_rules(self, self.item_distribution.emblem_count_progressive)
 
     def write_spoiler(self, spoiler_handle: typing.TextIO):
         write_sadx_spoiler(self, spoiler_handle, self.starter_setup, self.options)
@@ -100,9 +153,15 @@ class SonicAdventureDXWorld(World):
 
     def fill_slot_data(self) -> Dict[str, Any]:
         return {
-            "ModVersion": 81,
+            "ModVersion": 86,
             "Goal": self.options.goal.value,
+            "LogicLevel": self.options.logic_level.value,
+            "EmblemsPercentage": self.options.emblems_percentage.value,
+            "LevelsPercentage": self.options.levels_percentage.value,
+            "MissionsPercentage": self.options.mission_percentage.value,
             "EmblemsForPerfectChaos": self.item_distribution.emblem_count_progressive,
+            "LevelForPerfectChaos": self.location_distribution.levels_for_perfect_chaos,
+            "MissionForPerfectChaos": self.location_distribution.missions_for_perfect_chaos,
             "StartingCharacter": self.starter_setup.character.value,
             "StartingItem": self.starter_setup.item,
             "StartingArea": self.starter_setup.area.value,
@@ -121,6 +180,7 @@ class SonicAdventureDXWorld(World):
             "FieldEmblemChecks": self.options.field_emblems_checks.value,
             "MissionModeChecks": self.options.mission_mode_checks.value,
             "AutoStartMissions": self.options.auto_start_missions.value,
+            "MissionBlackList": {int(mission): int(mission) for mission in self.options.mission_blacklist.value},
 
             "LifeSanity": self.options.life_sanity.value,
             "PinballLifeCapsules": self.options.pinball_life_capsules.value,
@@ -133,9 +193,13 @@ class SonicAdventureDXWorld(World):
 
             "DeathLink": self.options.death_link.value,
             "RingLink": self.options.ring_link.value,
+            "CasinopolisRingLink": self.options.casinopolis_ring_link.value,
             "HardRingLink": self.options.hard_ring_link.value,
             "RingLoss": self.options.ring_loss.value,
+            "SubLevelChecks": self.options.sub_level_checks.value,
+            "SubLevelChecksHard": self.options.sub_level_checks_hard.value,
             "SkyChaseChecks": self.options.sky_chase_checks.value,
+            "SkyChaseChecksHard": self.options.sky_chase_checks_hard.value,
 
             "BossChecks": self.options.boss_checks.value,
             "UnifyChaos4": self.options.unify_chaos4.value,
@@ -164,4 +228,5 @@ class SonicAdventureDXWorld(World):
             "BigActionStageMissions": self.options.big_action_stage_missions.value,
 
             "JunkFillPercentage": self.options.junk_fill_percentage.value
+
         }

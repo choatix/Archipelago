@@ -81,7 +81,7 @@ def get_item_distribution(world: World, starting_item_count: int, options: Sonic
             raise OptionError("SADX Error: There are not enough available locations to place Emblems. "
                               + "Please enable more more checks or change your goal. "
                               + "You need at least {} more locations.".format(5 - available_locations))
-        emblem_count_progressive = max(1, round(available_locations * options.emblems_percentage.value / 100.0))
+        emblem_count_progressive = max(1, math.ceil(available_locations * options.emblems_percentage.value / 100.0))
         emblem_count_non_progressive = available_locations - emblem_count_progressive
         junk_count = math.floor(emblem_count_non_progressive * (options.junk_fill_percentage.value / 100.0))
         emblem_count_non_progressive -= junk_count
@@ -111,7 +111,8 @@ def get_item_names(options: SonicAdventureDXOptions, starter_setup: StarterSetup
         ItemName.KeyItem.IceStone, ItemName.KeyItem.WindStone
     ]
 
-    if options.goal.value in {Goal.EmeraldHunt, Goal.EmblemsAndEmeraldHunt, Goal.LevelsAndEmeraldHunt}:
+    if options.goal.value in {Goal.EmeraldHunt, Goal.EmblemsAndEmeraldHunt, Goal.LevelsAndEmeraldHunt,
+                              Goal.MissionsAndEmeraldHunt}:
         item_names += [
             ItemName.Progression.WhiteEmerald, ItemName.Progression.RedEmerald, ItemName.Progression.CyanEmerald,
             ItemName.Progression.PurpleEmerald, ItemName.Progression.GreenEmerald, ItemName.Progression.YellowEmerald,
