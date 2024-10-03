@@ -44,7 +44,7 @@ class ShtHWebWorld(WebWorld):
     tutorials = [
         Tutorial(
             "Multiworld Setup Guide",
-            "A guide to setting up the Archipelago The Wind Waker software on your computer.",
+            "A guide to setting up the Archipelago Shadow The Hedgehog software on your computer.",
             "English",
             "setup_en.md",
             "setup/en",
@@ -67,10 +67,10 @@ class ShtHWorld(World):
     location_name_to_id: ClassVar[Dict[str, int]] = Locations.GetLocationDict()
 
     required_client_version: Tuple[int, int, int] = (0, 5, 0)
+    web = ShtHWebWorld()
+
     def __init__(self, *args, **kwargs):
         self.first_regions = []
-
-        # Randomise level behaviour to increase chances of needing to finish stages
 
         super(ShtHWorld, self).__init__(*args, **kwargs)
 
@@ -114,7 +114,7 @@ class ShtHWorld(World):
     #    return ShadowTheHedgehogItem(item, self.player)
 
     def create_item(self, name: str) -> "ShadowTheHedgehogItem":
-        return Items.GetItemByName(name, self.player)
+        return Items.GetItemByName(name)
 
     def create_items(self):
         PopulateItemPool(self, self.first_regions)

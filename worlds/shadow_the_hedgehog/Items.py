@@ -4,6 +4,7 @@ from typing import List, Dict, Optional
 
 from BaseClasses import Item, ItemClassification, MultiWorld
 from worlds.AutoWorld import World
+from worlds.shadow_the_hedgehog import Locations
 from worlds.shadow_the_hedgehog.Levels import LEVEL_ID_TO_LEVEL, ALL_STAGES
 from worlds.shadow_the_hedgehog.Locations import MissionClearLocations, GetAlignmentsForStage
 
@@ -28,6 +29,9 @@ class Progression:
     GreenEmerald = "Green Chaos Emerald"
     YellowEmerald = "Damn Fourth Chaos Emerald"
     BlueEmerald = "Blue Chaos Emerald"
+
+class Junk:
+    NothingJunk = "Nothing Junk"
 
 def PopulateLevelUnlockItems():
     level_unlock_items = []
@@ -82,6 +86,8 @@ class ShadowTheHedgehogItem(Item):
         super().__init__(item.name, item.classification, item.itemId + BASE_ID, player)
 
 
+
+
 def GetFinalItem():
     info = ItemInfo(1, Progression.GoodbyeForever, ItemClassification.progression, None, None, type="final")
     return info
@@ -119,6 +125,13 @@ def GetItemLookupDict():
 
     return result
 
+def GetItemByName(name):
+    d = GetItemLookupDict()
+    name_map = {v.name: v for k, v in d.items()}
+    return name_map[name]
+
+def GetJunkItemInfo():
+    return ItemInfo(2, Junk.NothingJunk, ItemClassification.filler, None, None, "Junk")
 
 def GetAllItemInfo():
     level_unlocks_item_table: List[ItemInfo] = PopulateLevelUnlockItems()
@@ -141,11 +154,13 @@ def GetAllItemInfo():
         for i in range(0, lookup.requirement_count):
             stage_items.append(item)
 
-    return emerald_items, level_unlock_items, stage_items
+    junk_items =  [GetJunkItemInfo()]
+
+    return emerald_items, level_unlock_items, stage_items, junk_items
 
 def PopulateItemPool(world : World, first_regions):
     # TODO: Do not add item for stages you start with
-    emerald_items, level_unlock_items, stage_items = GetAllItemInfo()
+    emerald_items, level_unlock_items, stage_items, junk_items = GetAllItemInfo()
 
     # Don't use level unlocks for stages you start with!
     use_level_unlock_items = [ l for l in level_unlock_items if l.stageId not in first_regions]
@@ -155,9 +170,15 @@ def PopulateItemPool(world : World, first_regions):
     mw_level_unlock_items = [ ShadowTheHedgehogItem(l,world.player) for l in use_level_unlock_items ]
     mw_stage_items =  [ ShadowTheHedgehogItem(s, world.player) for s in stage_items]
 
+    item_count = len(mw_em_items) + len(mw_level_unlock_items) + len(mw_stage_items) + 1 # end item
+    location_count = Locations.count_locations()
+    junk_items = [ ShadowTheHedgehogItem(
+       world.random.choice(junk_items), world.player) for _ in range(0, location_count - item_count) ]
+
     world.multiworld.itempool += mw_em_items
     world.multiworld.itempool += mw_level_unlock_items
     world.multiworld.itempool += mw_stage_items
+    world.multiworld.itempool += junk_items
 
 
 

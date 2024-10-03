@@ -171,6 +171,14 @@ def create_locations(regions: Dict[str, Region], player):
     devil_doom_location = ShadowTheHedgehogLocation(player, end_location[0].name, end_location[0].locationId, end_region)
     end_region.locations.append(devil_doom_location)
 
+def count_locations():
+    location_groups = GetAllLocationInfo()
+    count = 0
+    for group in location_groups:
+        count += len(group)
+
+    return count
+
 
 
 
