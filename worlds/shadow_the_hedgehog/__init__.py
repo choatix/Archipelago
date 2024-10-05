@@ -105,14 +105,6 @@ class ShtHWorld(World):
 
         options = self.options
 
-#        if hasattr(self.multiworld, "re_gen_passthrough"):
-#            if "Shadow the Hedgehog" in self.multiworld.re_gen_passthrough:
-#                passthrough = self.multiworld.re_gen_passthrough["Shadow the Hedgehog"]
-#                self.first_regions = passthrough["first_levels"]
-
-#   def interpret_slot_data(self, slot_data: Dict[str, Any]) -> Dict[str, Any]:
-#       self.first_regions = slot_data["first_levels"]
-
     def create_regions(self):
         regions = Regions.create_regions(self)
         Locations.create_locations(regions, self.player)
