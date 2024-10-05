@@ -2,7 +2,7 @@ import copy
 import os
 import random
 from dataclasses import fields
-from typing import ClassVar, Dict, List, Set, Tuple, Type
+from typing import ClassVar, Dict, List, Set, Tuple, Type, Any
 
 import yaml
 
@@ -105,6 +105,14 @@ class ShtHWorld(World):
 
         options = self.options
 
+#        if hasattr(self.multiworld, "re_gen_passthrough"):
+#            if "Shadow the Hedgehog" in self.multiworld.re_gen_passthrough:
+#                passthrough = self.multiworld.re_gen_passthrough["Shadow the Hedgehog"]
+#                self.first_regions = passthrough["first_levels"]
+
+#   def interpret_slot_data(self, slot_data: Dict[str, Any]) -> Dict[str, Any]:
+#       self.first_regions = slot_data["first_levels"]
+
     def create_regions(self):
         regions = Regions.create_regions(self)
         Locations.create_locations(regions, self.player)
@@ -128,9 +136,7 @@ class ShtHWorld(World):
 
         return res
 
-    def fill_slot_data(self):
-        slot_data = {
+    def fill_slot_data(self) -> Dict[str, Any]:
+        return {
             "first_levels": self.first_regions
         }
-
-        return slot_data
