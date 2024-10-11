@@ -23,7 +23,7 @@ from .Options import ShadowTheHedgehogOptions
 
 #from . import Macros
 
-VERSION: Tuple[int, int, int] = (0, 0, 1)
+VERSION: Tuple[int, int, int] = (0, 0, 2)
 
 
 def run_client():
