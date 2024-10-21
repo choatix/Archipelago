@@ -2,7 +2,7 @@ import typing
 from typing import Dict
 
 from BaseClasses import Region, Entrance, MultiWorld
-from worlds.shadow_the_hedgehog import Levels, Items
+from . import Levels, Items
 
 
 def stage_id_to_region(level_id: int) -> str:
@@ -36,8 +36,8 @@ def create_regions(world: "ShtHWorld") -> Dict[str, Region]:
     world.first_regions = [ region_to_stage_id[region] for region in first_regions]
 
     regions["Menu"] = Region("Menu", world.player, world.multiworld)
-    for region in first_regions:
-        regions["Menu"].connect(regions[region.name], "Start Game "+region.name)
+    #for region in first_regions:
+    #    regions["Menu"].connect(regions[region.name], "Start Game "+region.name)
 
     for region in stage_regions:
         #if region not in first_regions:

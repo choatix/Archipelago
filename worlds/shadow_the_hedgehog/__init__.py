@@ -1,19 +1,9 @@
-import copy
-import os
-import random
-from dataclasses import fields
-from typing import ClassVar, Dict, List, Set, Tuple, Type
-
-import yaml
-
-from BaseClasses import ItemClassification as IC
-from BaseClasses import LocationProgressType, Region, Tutorial
-from Options import OptionError
-from worlds.AutoWorld import WebWorld, World
-from worlds.generic.Rules import add_item_rule
+from typing import ClassVar, Tuple
+from BaseClasses import  Tutorial
+from worlds.AutoWorld import WebWorld
 from worlds.LauncherComponents import Component, SuffixIdentifier, Type, components, launch_subprocess
-from worlds.shadow_the_hedgehog.Levels import GetLevelCompletionNames
 
+from .Levels import GetLevelCompletionNames
 from .Items import *
 from .Locations import *
 from . import Rules
@@ -110,11 +100,13 @@ class ShtHWorld(World):
         if self.options.objective_sanity.value and self.options.force_objective_sanity_chance > 0\
                 and self.options.force_objective_sanity_max > 0:
             for locationData in Locations.MissionClearLocations:
+                if locationData.requirement_count is None:
+                    continue
+                if locationData.requirement_count == 1:
+                    continue
                 if mission_counter >= maximum_force_missions:
                     continue
                 if locationData.requirement_count + mission_total > maximum_force_mission_counter:
-                    continue
-                if locationData.requirement_count == 1:
                     continue
 
                 location_id, completion_location_name = GetLevelCompletionNames(locationData.stageId, locationData.alignmentId)
@@ -174,7 +166,8 @@ class ShtHWorld(World):
             "required_dark_tokens": self.required_tokens[Items.Progression.StandardDarkToken],
             "required_final_tokens": self.required_tokens[Items.Progression.FinalToken],
             "required_objective_tokens": self.required_tokens[Items.Progression.ObjectiveToken],
-            "requires_emeralds": self.options.goal_chaos_emeralds.value
+            "requires_emeralds": self.options.goal_chaos_emeralds.value,
+            "key_sanity": self.options.key_sanity.value
         }
 
 

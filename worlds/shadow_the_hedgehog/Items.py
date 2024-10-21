@@ -1,14 +1,13 @@
-import copy
 from dataclasses import dataclass
 from typing import List, Optional
 
 from BaseClasses import Item, ItemClassification
 from worlds.AutoWorld import World
-from worlds.shadow_the_hedgehog import Locations
-from worlds.shadow_the_hedgehog.Levels import LEVEL_ID_TO_LEVEL, ALL_STAGES, MISSION_ALIGNMENT_DARK, \
+from . import Locations
+from .Levels import LEVEL_ID_TO_LEVEL, ALL_STAGES, MISSION_ALIGNMENT_DARK, \
     MISSION_ALIGNMENT_HERO, MISSION_ALIGNMENT_NEUTRAL, ITEM_TOKEN_TYPE_STANDARD, ITEM_TOKEN_TYPE_FINAL, \
     ITEM_TOKEN_TYPE_OBJECTIVE, ITEM_TOKEN_TYPE_ALIGNMENT
-from worlds.shadow_the_hedgehog.Locations import MissionClearLocations, GetAlignmentsForStage
+from .Locations import MissionClearLocations, GetAlignmentsForStage
 
 BASE_ID = 1743800000
 ITEM_ID_START_AT_JUNK = 3000
@@ -64,7 +63,7 @@ TOKENS = [
 class Junk:
     NothingJunk = "Nothing Junk"
 
-GaugeAmounts = [1, 100, 1000, 2000, 5000, 10000, 25000, 50000]
+GaugeAmounts = [1, 1000, 2000, 5000, 10000, 15000, 20000, 30000]
 RingAmounts = [1, 2, 5, 10, 20]
 
 
@@ -319,6 +318,7 @@ useful_to_count = {
     "Satellite Gun": 2,
     "Samurai Blade": 2,
     "Omochao Gun": 2,
+    "Heal Cannon": 2,
     "Shadow Rifle": 1
 }
 

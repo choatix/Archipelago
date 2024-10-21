@@ -3,12 +3,12 @@ from math import ceil
 from BaseClasses import MultiWorld
 from worlds.AutoWorld import World
 from worlds.generic.Rules import add_rule
-from worlds.shadow_the_hedgehog import Items, Levels, LEVEL_ID_TO_LEVEL, CharacterToLevel, ITEM_TOKEN_TYPE_FINAL, \
-    MISSION_ALIGNMENT_DARK, MISSION_ALIGNMENT_HERO, MISSION_ALIGNMENT_NEUTRAL, ITEM_TOKEN_TYPE_OBJECTIVE, \
-    ITEM_TOKEN_TYPE_STANDARD, ITEM_TOKEN_TYPE_ALIGNMENT
-from worlds.shadow_the_hedgehog.Items import ShadowTheHedgehogItem, GetLevelTokenItems
-from worlds.shadow_the_hedgehog.Locations import MissionClearLocations, GetAllLocationInfo, LocationInfo
-from worlds.shadow_the_hedgehog.Regions import character_name_to_region, stage_id_to_region, region_name_for_character
+from . import Items, Levels, LEVEL_ID_TO_LEVEL, CharacterToLevel, ITEM_TOKEN_TYPE_FINAL, \
+    MISSION_ALIGNMENT_DARK, MISSION_ALIGNMENT_HERO, ITEM_TOKEN_TYPE_OBJECTIVE, \
+    ITEM_TOKEN_TYPE_STANDARD, ITEM_TOKEN_TYPE_ALIGNMENT, Utils
+from .Items import ShadowTheHedgehogItem, GetLevelTokenItems
+from .Locations import MissionClearLocations, LocationInfo
+from .Regions import character_name_to_region, stage_id_to_region, region_name_for_character
 
 def GetRelevantTokenItem(token: LocationInfo):
     level_token_items = GetLevelTokenItems()
@@ -43,12 +43,12 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
         id, name = Levels.GetLevelCompletionNames(clear.stageId, clear.alignmentId)
         try:
             rule = None
-            if clear.requirement_count != 1:
+            if clear.requirement_count is not None:
                 location = multiworld.get_location(name, player)
                 item_name = Items.GetStageAlignmentObject(clear.stageId, clear.alignmentId)
                 if world.options.objective_sanity:
-                    percentage = world.options.objective_item_percentage.value
-                    required_count = ceil(clear.requirement_count * percentage / 100)
+                    required_count = Utils.getRequiredCount(clear.requirement_count,
+                                                      world.options.objective_item_percentage.value, round_method=ceil)
                     rule = lambda state, itemname=item_name, count=required_count: state.has(itemname, player, count=count)
                     add_rule(location, rule)
 
@@ -129,6 +129,6 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
 
 def get_token_count(world, type, token_assignments, goal_value):
     count = len(token_assignments[type])
-    goal_req = ceil(count * goal_value / 100)
+    goal_req = Utils.getRequiredCount(count, goal_value, ceil)
     world.required_tokens[type] = goal_req
     return (type, goal_req)

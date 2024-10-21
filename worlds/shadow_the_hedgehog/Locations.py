@@ -3,8 +3,8 @@ from math import floor
 from typing import Dict, Optional
 
 from BaseClasses import Location, Region
-from worlds.shadow_the_hedgehog import Regions, Levels
-from worlds.shadow_the_hedgehog.Levels import *
+from . import Regions, Levels, Utils
+from .Levels import *
 
 
 class ShadowTheHedgehogLocation(Location):
@@ -13,9 +13,18 @@ class ShadowTheHedgehogLocation(Location):
     def __init__(self, player, location_name, location_id, region):
         super().__init__(player, location_name, location_id, region)
 
+LOCATION_TYPE_MISSION_CLEAR = 1
+LOCATION_TYPE_MISSION_OBJECTIVE = 2
+LOCATION_TYPE_ENEMY = 3
+LOCATION_TYPE_TOKEN = 4
+LOCATION_TYPE_CHECKPOINT = 5
+LOCATION_TYPE_KEY = 6
+LOCATION_TYPE_OTHER = 7
+LOCATION_TYPE_CHARACTER = 8
 
 @dataclass
 class LocationInfo:
+    location_type: int
     locationId: int
     name: str
     stageId: Optional[int | None]
@@ -29,7 +38,7 @@ class LocationInfo:
 class MissionClearLocation:
     stageId: int
     alignmentId: int
-    requirement_count: int
+    requirement_count: int | None
     mission_object_name: Optional[str]
 
 
@@ -55,81 +64,83 @@ class CharacterLocation:
 
 MissionClearLocations = [
     MissionClearLocation(STAGE_WESTOPOLIS, MISSION_ALIGNMENT_DARK, 35, "Soldier"),
-    MissionClearLocation(STAGE_WESTOPOLIS, MISSION_ALIGNMENT_NEUTRAL, 1, None),
+    MissionClearLocation(STAGE_WESTOPOLIS, MISSION_ALIGNMENT_NEUTRAL, None, None),
     MissionClearLocation(STAGE_WESTOPOLIS, MISSION_ALIGNMENT_HERO, 45, "Alien"),
 
-    MissionClearLocation(STAGE_DIGITAL_CIRCUIT, MISSION_ALIGNMENT_HERO, 1, None),
-    MissionClearLocation(STAGE_DIGITAL_CIRCUIT, MISSION_ALIGNMENT_DARK, 1, None),
+    MissionClearLocation(STAGE_DIGITAL_CIRCUIT, MISSION_ALIGNMENT_HERO, None, None),
+    #MissionClearLocation(STAGE_DIGITAL_CIRCUIT, MISSION_ALIGNMENT_DARK, 1, "Core"),
+    MissionClearLocation(STAGE_DIGITAL_CIRCUIT, MISSION_ALIGNMENT_DARK, None, None),
 
-    MissionClearLocation(STAGE_GLYPHIC_CANYON, MISSION_ALIGNMENT_NEUTRAL, 1, None),
+    MissionClearLocation(STAGE_GLYPHIC_CANYON, MISSION_ALIGNMENT_NEUTRAL, None, None),
     MissionClearLocation(STAGE_GLYPHIC_CANYON, MISSION_ALIGNMENT_HERO, 60, "Alien"),
     MissionClearLocation(STAGE_GLYPHIC_CANYON, MISSION_ALIGNMENT_DARK, 5, "Temple"),
 
-    MissionClearLocation(STAGE_LETHAL_HIGHWAY, MISSION_ALIGNMENT_DARK, 1, None),
-    MissionClearLocation(STAGE_LETHAL_HIGHWAY, MISSION_ALIGNMENT_HERO, 1, None),
+    MissionClearLocation(STAGE_LETHAL_HIGHWAY, MISSION_ALIGNMENT_DARK, None, None),
+    MissionClearLocation(STAGE_LETHAL_HIGHWAY, MISSION_ALIGNMENT_HERO, 1, "Tank"),
 
     MissionClearLocation(STAGE_CRYPTIC_CASTLE, MISSION_ALIGNMENT_DARK, 5, "Lantern"),
-    MissionClearLocation(STAGE_CRYPTIC_CASTLE, MISSION_ALIGNMENT_NEUTRAL, 1, None),
+    MissionClearLocation(STAGE_CRYPTIC_CASTLE, MISSION_ALIGNMENT_NEUTRAL, None, None),
     MissionClearLocation(STAGE_CRYPTIC_CASTLE, MISSION_ALIGNMENT_HERO, 2, "Cream"),
 
     MissionClearLocation(STAGE_PRISON_ISLAND, MISSION_ALIGNMENT_DARK, 40, "Soldier"),
-    MissionClearLocation(STAGE_PRISON_ISLAND, MISSION_ALIGNMENT_NEUTRAL, 1, None),
+    MissionClearLocation(STAGE_PRISON_ISLAND, MISSION_ALIGNMENT_NEUTRAL, None, None),
     MissionClearLocation(STAGE_PRISON_ISLAND, MISSION_ALIGNMENT_HERO, 5, "Disc"),
 
     MissionClearLocation(STAGE_CIRCUS_PARK, MISSION_ALIGNMENT_DARK, 20, "Soldier"),
-    MissionClearLocation(STAGE_CIRCUS_PARK, MISSION_ALIGNMENT_NEUTRAL, 1, None),
-    MissionClearLocation(STAGE_CIRCUS_PARK, MISSION_ALIGNMENT_HERO, 1, None),
+    MissionClearLocation(STAGE_CIRCUS_PARK, MISSION_ALIGNMENT_NEUTRAL, None, None),
+    MissionClearLocation(STAGE_CIRCUS_PARK, MISSION_ALIGNMENT_HERO, None, None),
 
     MissionClearLocation(STAGE_CENTRAL_CITY, MISSION_ALIGNMENT_DARK, 5, "Big Bomb"),
     MissionClearLocation(STAGE_CENTRAL_CITY, MISSION_ALIGNMENT_HERO, 20, "Little Bomb"),
 
     MissionClearLocation(STAGE_THE_DOOM, MISSION_ALIGNMENT_DARK, 60, "Soldier"),
-    MissionClearLocation(STAGE_THE_DOOM, MISSION_ALIGNMENT_NEUTRAL, 1, None),
+    MissionClearLocation(STAGE_THE_DOOM, MISSION_ALIGNMENT_NEUTRAL, None, None),
     MissionClearLocation(STAGE_THE_DOOM, MISSION_ALIGNMENT_HERO, 10, "Researcher"),
 
     MissionClearLocation(STAGE_SKY_TROOPS, MISSION_ALIGNMENT_DARK, 5, "Egg Ship"),
-    MissionClearLocation(STAGE_SKY_TROOPS, MISSION_ALIGNMENT_NEUTRAL, 1, None),
+    MissionClearLocation(STAGE_SKY_TROOPS, MISSION_ALIGNMENT_NEUTRAL, None, None),
     MissionClearLocation(STAGE_SKY_TROOPS, MISSION_ALIGNMENT_HERO, 5, "Temple"),
 
     MissionClearLocation(STAGE_MAD_MATRIX, MISSION_ALIGNMENT_DARK, 30, "Bomb"),
-    MissionClearLocation(STAGE_MAD_MATRIX, MISSION_ALIGNMENT_NEUTRAL, 1, None),
+    MissionClearLocation(STAGE_MAD_MATRIX, MISSION_ALIGNMENT_NEUTRAL, None, None),
     MissionClearLocation(STAGE_MAD_MATRIX, MISSION_ALIGNMENT_HERO, 4, "Terminal"),
 
-    MissionClearLocation(STAGE_DEATH_RUINS, MISSION_ALIGNMENT_DARK, 1, None),
+    MissionClearLocation(STAGE_DEATH_RUINS, MISSION_ALIGNMENT_DARK, None, None),
     MissionClearLocation(STAGE_DEATH_RUINS, MISSION_ALIGNMENT_HERO, 50, "Alien"),
 
     MissionClearLocation(STAGE_THE_ARK, MISSION_ALIGNMENT_DARK, 4, "Defense Unit"),
-    MissionClearLocation(STAGE_THE_ARK, MISSION_ALIGNMENT_NEUTRAL, 1, None),
+    MissionClearLocation(STAGE_THE_ARK, MISSION_ALIGNMENT_NEUTRAL, None, None),
 
-    MissionClearLocation(STAGE_AIR_FLEET, MISSION_ALIGNMENT_DARK, 1, None),
-    MissionClearLocation(STAGE_AIR_FLEET, MISSION_ALIGNMENT_NEUTRAL, 1, None),
+    MissionClearLocation(STAGE_AIR_FLEET, MISSION_ALIGNMENT_DARK, 1, "President Aircraft"),
+    MissionClearLocation(STAGE_AIR_FLEET, MISSION_ALIGNMENT_NEUTRAL, None, None),
     MissionClearLocation(STAGE_AIR_FLEET, MISSION_ALIGNMENT_HERO, 35, "Alien"),
 
     MissionClearLocation(STAGE_IRON_JUNGLE, MISSION_ALIGNMENT_DARK, 28, "Soldier"),
-    MissionClearLocation(STAGE_IRON_JUNGLE, MISSION_ALIGNMENT_NEUTRAL, 1, None),
-    MissionClearLocation(STAGE_IRON_JUNGLE, MISSION_ALIGNMENT_HERO, 1, None),
+    MissionClearLocation(STAGE_IRON_JUNGLE, MISSION_ALIGNMENT_NEUTRAL, None, None),
+    MissionClearLocation(STAGE_IRON_JUNGLE, MISSION_ALIGNMENT_HERO, 1, "Egg Balloon"),
 
     MissionClearLocation(STAGE_SPACE_GADGET, MISSION_ALIGNMENT_DARK, 6, "Defense Unit"),
-    MissionClearLocation(STAGE_SPACE_GADGET, MISSION_ALIGNMENT_NEUTRAL, 1, None),
-    MissionClearLocation(STAGE_SPACE_GADGET, MISSION_ALIGNMENT_HERO, 1, None),
+    MissionClearLocation(STAGE_SPACE_GADGET, MISSION_ALIGNMENT_NEUTRAL, None, None),
+    MissionClearLocation(STAGE_SPACE_GADGET, MISSION_ALIGNMENT_HERO, None, None),
 
-    MissionClearLocation(STAGE_LOST_IMPACT, MISSION_ALIGNMENT_NEUTRAL, 1, None),
+    MissionClearLocation(STAGE_LOST_IMPACT, MISSION_ALIGNMENT_NEUTRAL, None, None),
     MissionClearLocation(STAGE_LOST_IMPACT, MISSION_ALIGNMENT_HERO, 35, "Artificial Chaos"),
 
     MissionClearLocation(STAGE_GUN_FORTRESS, MISSION_ALIGNMENT_DARK, 3, "Computer"),
-    MissionClearLocation(STAGE_GUN_FORTRESS, MISSION_ALIGNMENT_HERO, 1, None),
+    MissionClearLocation(STAGE_GUN_FORTRESS, MISSION_ALIGNMENT_HERO, None, None),
 
     MissionClearLocation(STAGE_BLACK_COMET, MISSION_ALIGNMENT_DARK, 50, "Soldier"),
-    MissionClearLocation(STAGE_BLACK_COMET, MISSION_ALIGNMENT_HERO, 1, None),
+    MissionClearLocation(STAGE_BLACK_COMET, MISSION_ALIGNMENT_HERO, None, None),
 
     MissionClearLocation(STAGE_LAVA_SHELTER, MISSION_ALIGNMENT_DARK, 5, "Defense"),
-    MissionClearLocation(STAGE_LAVA_SHELTER, MISSION_ALIGNMENT_HERO, 1, None),
+    MissionClearLocation(STAGE_LAVA_SHELTER, MISSION_ALIGNMENT_HERO, None, None),
 
-    MissionClearLocation(STAGE_COSMIC_FALL, MISSION_ALIGNMENT_DARK, 1, None),
-    MissionClearLocation(STAGE_COSMIC_FALL, MISSION_ALIGNMENT_HERO, 1, None),
+    MissionClearLocation(STAGE_COSMIC_FALL, MISSION_ALIGNMENT_DARK, None, None),
+    MissionClearLocation(STAGE_COSMIC_FALL, MISSION_ALIGNMENT_HERO, None, None),
+    #MissionClearLocation(STAGE_COSMIC_FALL, MISSION_ALIGNMENT_HERO, 1, "Computer Room"),
 
     MissionClearLocation(STAGE_FINAL_HAUNT, MISSION_ALIGNMENT_DARK, 4, "Shield"),
-    MissionClearLocation(STAGE_FINAL_HAUNT, MISSION_ALIGNMENT_HERO, 1, None),
+    MissionClearLocation(STAGE_FINAL_HAUNT, MISSION_ALIGNMENT_HERO, None, None),
 
 ]
 
@@ -250,6 +261,16 @@ def GetLocationDict():
 
     return result
 
+def GetLocationInfoDict():
+    all_locations = GetAllLocationInfo()
+
+    result = {}
+    for location_type in all_locations:
+        for location in location_type:
+            result[location.locationId] = location
+
+    return result
+
 
 
 def GetEnemyLocationName(stageId, enemyClass, objectName, i):
@@ -270,6 +291,12 @@ def GetCharacterLocationName(objectName,i):
 
     return id_name, objective_location_name
 
+def GetKeysanityLocationName(stageId, i):
+    id_name = int(str(LOCATION_ID_PLUS) + str(0) + str(stageId) + str(i+1) + "7")
+    view_name = (LEVEL_ID_TO_LEVEL[stageId] + " Key " + str(i+1))
+
+    return id_name, view_name
+
 def GetAllLocationInfo():
     mission_clear_locations = []
     token_locations = []
@@ -277,23 +304,24 @@ def GetAllLocationInfo():
     enemysanity_locations = []
     checkpointsanity_locations = []
     charactersanity_locations = []
+    keysanity_locations = []
 
     for location in MissionClearLocations:
         location_id, completion_location_name = GetLevelCompletionNames(location.stageId, location.alignmentId)
-        info = LocationInfo(location_id, completion_location_name,
+        info = LocationInfo(LOCATION_TYPE_MISSION_CLEAR, location_id, completion_location_name,
                             stageId=location.stageId, alignmentId=location.alignmentId, count=None, total=None,
                             other=None)
         mission_clear_locations.append(info)
 
         base_token_id, base_token_name = GetLevelTokenNames(location.stageId, location.alignmentId, Levels.ITEM_TOKEN_TYPE_STANDARD)
-        info = LocationInfo(base_token_id, base_token_name,
+        info = LocationInfo(LOCATION_TYPE_TOKEN,base_token_id, base_token_name,
                             stageId=location.stageId, alignmentId=location.alignmentId, count=None, total=None,
                             other=Levels.ITEM_TOKEN_TYPE_STANDARD)
         token_locations.append(info)
 
         if location.alignmentId != MISSION_ALIGNMENT_NEUTRAL:
             hero_or_dark_token_id, hero_or_dark_token_name = GetLevelTokenNames(location.stageId, location.alignmentId, Levels.ITEM_TOKEN_TYPE_ALIGNMENT)
-            info = LocationInfo(hero_or_dark_token_id, hero_or_dark_token_name,
+            info = LocationInfo(LOCATION_TYPE_TOKEN, hero_or_dark_token_id, hero_or_dark_token_name,
                                 stageId=location.stageId, alignmentId=location.alignmentId, count=None, total=None,
                                 other=Levels.ITEM_TOKEN_TYPE_ALIGNMENT)
             token_locations.append(info)
@@ -301,17 +329,16 @@ def GetAllLocationInfo():
         if location.stageId in Levels.FINAL_STAGES:
             final_token_id, final_token_name = GetLevelTokenNames(location.stageId, location.alignmentId,
                                                                 ITEM_TOKEN_TYPE_FINAL)
-            info = LocationInfo(final_token_id, final_token_name,
+            info = LocationInfo(LOCATION_TYPE_TOKEN, final_token_id, final_token_name,
                                 stageId=location.stageId, alignmentId=location.alignmentId, count=None, total=None,
                                 other=Levels.ITEM_TOKEN_TYPE_FINAL)
             token_locations.append(info)
 
         i = 0
-        if location.requirement_count > 1:
-
+        if location.requirement_count is not None:
             requirement_token_id, requirement_token_name = GetLevelTokenNames(location.stageId, location.alignmentId,
                                                                 ITEM_TOKEN_TYPE_OBJECTIVE)
-            info = LocationInfo(requirement_token_id, requirement_token_name,
+            info = LocationInfo(LOCATION_TYPE_TOKEN, requirement_token_id, requirement_token_name,
                                 stageId=location.stageId, alignmentId=location.alignmentId, count=None, total=None,
                                 other=Levels.ITEM_TOKEN_TYPE_OBJECTIVE)
             token_locations.append(info)
@@ -320,7 +347,7 @@ def GetAllLocationInfo():
                 i += 1
                 location_id, objective_location_name = (
                     GetLevelObjectNames(location.stageId, location.alignmentId, location.mission_object_name, j))
-                info = LocationInfo(location_id, objective_location_name,
+                info = LocationInfo(LOCATION_TYPE_MISSION_OBJECTIVE, location_id, objective_location_name,
                                    stageId=location.stageId, alignmentId=location.alignmentId,
                                     count=j, total=location.requirement_count, other=None)
                 mission_locations.append(info)
@@ -331,13 +358,13 @@ def GetAllLocationInfo():
             i += 1
             location_id, objective_location_name = (
                 GetEnemyLocationName(enemy.stageId, enemy.enemyClass, enemy.mission_object_name, j))
-            info = LocationInfo(location_id, objective_location_name,
+            info = LocationInfo(LOCATION_TYPE_ENEMY, location_id, objective_location_name,
                                stageId=enemy.stageId, alignmentId=enemy.enemyClass,
                                 count=j, total=enemy.total_count, other=None)
             enemysanity_locations.append(info)
 
 
-    progression_locations = [LocationInfo(LOCATION_ID_PLUS+1000, Levels.DevilDoom_Name, stageId=None, alignmentId=None,
+    progression_locations = [LocationInfo(LOCATION_TYPE_OTHER, LOCATION_ID_PLUS+1000, Levels.DevilDoom_Name, stageId=None, alignmentId=None,
                                  total=None, count=None, other=None)]
 
     for location in CheckpointLocations:
@@ -346,7 +373,7 @@ def GetAllLocationInfo():
             i += 1
             location_id, objective_location_name = (
                 GetCheckpointLocationName(location.stageId,"Checkpoint", j))
-            info = LocationInfo(location_id, objective_location_name,
+            info = LocationInfo(LOCATION_TYPE_CHECKPOINT, location_id, objective_location_name,
                                stageId=location.stageId, alignmentId=None,
                                 count=j, total=location.total_count, other=None)
             checkpointsanity_locations.append(info)
@@ -354,15 +381,22 @@ def GetAllLocationInfo():
     char_index = 0
     for character in CharacterToLevel.keys():
         location_id, objective_location_name = GetCharacterLocationName(character,char_index)
-        info = LocationInfo(location_id, objective_location_name,
+        info = LocationInfo(LOCATION_TYPE_CHARACTER, location_id, objective_location_name,
                             stageId=None, alignmentId=None,
                             count=None, total=None, other=character)
         charactersanity_locations.append(info)
         char_index+=1
 
+    for stage in ALL_STAGES:
+        for i in range(0, 5):
+            key_location_id, key_location_name  = GetKeysanityLocationName(stage, i)
+            info = LocationInfo(LOCATION_TYPE_KEY, key_location_id, key_location_name,
+                                stageId=stage, alignmentId=None, count=i, total=5, other=None)
+            keysanity_locations.append(info)
+
     return (mission_clear_locations, mission_locations, progression_locations,
             enemysanity_locations, checkpointsanity_locations, charactersanity_locations,
-            token_locations)
+            token_locations, keysanity_locations)
 
 
 def is_token_required_by_goal(world, token : LocationInfo):
@@ -404,7 +438,7 @@ def is_token_required_by_goal(world, token : LocationInfo):
 def create_locations(world: "ShtHWorld", regions: Dict[str, Region]):
     (clear_locations, mission_locations, end_location,
      enemysanity_locations, checkpointsanity_locations, charactersanity_locations,
-     token_locations) = GetAllLocationInfo()
+     token_locations, keysanity_locations) = GetAllLocationInfo()
 
     for location in clear_locations:
         if LEVEL_ID_TO_LEVEL[location.stageId] in world.options.excluded_stages:
@@ -424,8 +458,9 @@ def create_locations(world: "ShtHWorld", regions: Dict[str, Region]):
                 continue
             if LEVEL_ID_TO_LEVEL[location.stageId] in world.options.excluded_stages:
                 continue
-            percentage_matcher = floor(location.count * 100 / location.total)
-            if percentage_matcher <= percentage:
+
+            max_required = Utils.getRequiredCount(location.total, percentage, round_method=floor)
+            if location.count <= max_required :
                 within_region = regions[Regions.stage_id_to_region(location.stageId)]
                 completion_location = ShadowTheHedgehogLocation(world.player, location.name, location.locationId, within_region)
                 within_region.locations.append(completion_location)
@@ -435,8 +470,8 @@ def create_locations(world: "ShtHWorld", regions: Dict[str, Region]):
         for enemy in enemysanity_locations:
             if LEVEL_ID_TO_LEVEL[enemy.stageId] in world.options.excluded_stages:
                 continue
-            percentage_matcher = floor(enemy.count * 100 / enemy.total)
-            if percentage_matcher <= percentage:
+            max_required = Utils.getRequiredCount(enemy.total, percentage, round_method=floor)
+            if enemy.count <= max_required:
                 within_region = regions[Regions.stage_id_to_region(enemy.stageId)]
                 completion_location = ShadowTheHedgehogLocation(world.player, enemy.name, enemy.locationId, within_region)
                 within_region.locations.append(completion_location)
@@ -459,6 +494,14 @@ def create_locations(world: "ShtHWorld", regions: Dict[str, Region]):
                                                             within_region)
             within_region.locations.append(completion_location)
 
+    if world.options.key_sanity:
+        for key in keysanity_locations:
+            if LEVEL_ID_TO_LEVEL[key.stageId] in world.options.excluded_stages:
+                continue
+            within_region = regions[Regions.stage_id_to_region(key.stageId)]
+            completion_location = ShadowTheHedgehogLocation(world.player, key.name, key.locationId, within_region)
+            within_region.locations.append(completion_location)
+
     for token in token_locations:
         goal_required = is_token_required_by_goal(world, token)
         if not goal_required:
@@ -479,7 +522,7 @@ def count_locations(world):
     count = 0
     (mission_clear_locations, mission_locations, end_location,
      enemysanity_locations, checkpointsanity_locations,
-     charactersanity_locations, token_locations ) = GetAllLocationInfo()
+     charactersanity_locations, token_locations, keysanity_locations ) = GetAllLocationInfo()
 
     mission_clear_locations = [ mc for mc in mission_clear_locations if Levels.LEVEL_ID_TO_LEVEL[mc.stageId]
                                 not in world.options.excluded_stages]
@@ -495,6 +538,9 @@ def count_locations(world):
 
     charactersanity_locations = [ ml for ml in charactersanity_locations if ml.other in world.available_characters ]
 
+    keysanity_locations = [ks for ks in keysanity_locations if Levels.LEVEL_ID_TO_LEVEL[ks.stageId]
+                             not in world.options.excluded_stages]
+
     count += len(mission_clear_locations)
 
     if world.options.objective_sanity:
@@ -502,15 +548,15 @@ def count_locations(world):
         for location in mission_locations:
             if not world.options.enemy_objective_sanity and (location.name == "Soldier" or location.name == "Alien"):
                 continue
-            percentage_matcher = floor(location.count * 100 / location.total)
-            if percentage_matcher <= percentage:
+            max_required = Utils.getRequiredCount(location.total, percentage, round_method=floor)
+            if location.count <= max_required:
                 count += 1
 
     if world.options.enemy_sanity:
         percentage = world.options.enemy_sanity_percentage.value
         for enemy in enemysanity_locations:
-            percentage_matcher = floor(enemy.count * 100 / enemy.total)
-            if percentage_matcher <= percentage:
+            max_required = Utils.getRequiredCount(enemy.total, percentage, round_method=floor)
+            if enemy.count <= max_required:
                 count += 1
 
     if world.options.checkpoint_sanity:
@@ -518,6 +564,9 @@ def count_locations(world):
 
     if world.options.character_sanity:
         count += len(charactersanity_locations)
+
+    if world.options.key_sanity:
+        count += len(keysanity_locations)
 
     count += len(end_location)
 
