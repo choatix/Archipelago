@@ -718,6 +718,12 @@ class TmTutorMoves(Toggle):
     """
     display_name = "Randomize TM/Tutor Moves"
 
+class RequiredTmTutorMoves(OptionSet):
+    """
+    Forces TM moves to be the moves in this list.
+    """
+    display_name = "Required TM/Tutor Move"
+    valid_keys = sorted(data.moves.keys())
 
 class ReusableTmsTutors(Toggle):
     """
@@ -897,6 +903,7 @@ class PokemonFRLGOptions(PerGameCommonOptions):
     hm_compatibility: HmCompatibility
     tm_tutor_compatibility: TmTutorCompatibility
     tm_tutor_moves: TmTutorMoves
+    required_tm_tutor_moves: RequiredTmTutorMoves
 
     reusable_tm_tutors: ReusableTmsTutors
     min_catch_rate: MinCatchRate

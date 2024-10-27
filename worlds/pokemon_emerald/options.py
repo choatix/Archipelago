@@ -496,6 +496,12 @@ class MoveBlacklist(OptionSet):
     display_name = "Move Blacklist"
     valid_keys = sorted(data.move_labels.keys())
 
+class RequiredTmTutorMoves(OptionSet):
+    """
+    Forces TM moves to be the moves in this list.
+    """
+    display_name = "Required TM/Tutor Move"
+    valid_keys = sorted(data.move_labels.keys())
 
 class HmCompatibility(NamedRange):
     """
@@ -847,6 +853,7 @@ class PokemonEmeraldOptions(PerGameCommonOptions):
     tm_tutor_moves: TmTutorMoves
     reusable_tms_tutors: ReusableTmsTutors
     move_blacklist: MoveBlacklist
+    required_tm_tutor_moves: RequiredTmTutorMoves
 
     min_catch_rate: MinCatchRate
     guaranteed_catch: GuaranteedCatch

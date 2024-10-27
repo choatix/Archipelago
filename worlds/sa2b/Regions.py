@@ -1812,7 +1812,6 @@ def handle_level_gate_regions(multiworld: MultiWorld, player: int, names: dict[s
     conditions = lambda x: True
 
     level_name = shuffleable_regions[gates[gate_index].gate_levels[level]]
-    print("level name is", level_name)
 
     if level_name == "Final Chase":
         conditions = lambda state : state.has(ItemName.shadow_ancient_light, player)
