@@ -156,7 +156,7 @@ class SonicAdventureDXWorld(World):
 
     def fill_slot_data(self) -> Dict[str, Any]:
         return {
-            "ModVersion": 87,
+            "ModVersion": 90,
             "Goal": self.options.goal.value,
             "LogicLevel": self.options.logic_level.value,
             "EmblemsPercentage": self.options.emblems_percentage.value,
