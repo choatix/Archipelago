@@ -424,6 +424,20 @@ class BuyonTrapWeight(BaseTrapWeight):
     display_name = "Buyon Trap Weight"
 
 
+class ReverseTrapWeight(BaseTrapWeight):
+    """
+    Likelihood of receiving a trap that reverses your controls.
+    """
+    display_name = "Reverse Controls Trap Weight"
+
+
+class GravityTrapWeight(BaseTrapWeight):
+    """
+    Likelihood of receiving a trap that increments your gravity.
+    """
+    display_name = "Gravity Trap Weight"
+
+
 @dataclass
 class SonicAdventureDXOptions(PerGameCommonOptions):
     goal: Goal
@@ -493,6 +507,8 @@ class SonicAdventureDXOptions(PerGameCommonOptions):
     spring_trap_weight: SpringTrapWeight
     police_trap_weight: PoliceTrapWeight
     buyon_trap_weight: BuyonTrapWeight
+    reverse_trap_weight: ReverseTrapWeight
+    gravity_trap_weight: GravityTrapWeight
 
 
 sadx_option_groups = [
@@ -566,7 +582,9 @@ sadx_option_groups = [
         IceTrapWeight,
         SpringTrapWeight,
         PoliceTrapWeight,
-        BuyonTrapWeight
+        BuyonTrapWeight,
+        ReverseTrapWeight,
+        GravityTrapWeight
     ]),
 
 ]
