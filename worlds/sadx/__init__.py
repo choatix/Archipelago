@@ -230,6 +230,11 @@ class SonicAdventureDXWorld(World):
             "GammaActionStageMissions": self.options.gamma_action_stage_missions.value,
             "BigActionStageMissions": self.options.big_action_stage_missions.value,
 
-            "JunkFillPercentage": self.options.junk_fill_percentage.value
+            "JunkFillPercentage": self.options.junk_fill_percentage.value,
+
+            "ReverseControlTrapDuration": self.options.reverse_trap_duration.value,
+            "TrapsOnAdventureFields": self.options.traps_and_filler_on_adventure_fields.value,
+            "TrapsOnBossFights": self.options.traps_and_filler_on_boss_fights.value,
+            "TrapsOnPerfectChaosFight": self.options.traps_and_filler_on_perfect_chaos_fight.value
 
         }

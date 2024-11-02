@@ -438,6 +438,34 @@ class GravityTrapWeight(BaseTrapWeight):
     display_name = "Gravity Trap Weight"
 
 
+class ReverseControlTrapDuration(Range):
+    """
+    How many seconds the reverse control trap will last. If set to 0, the trap will last until you die or change level.
+    """
+    display_name = "Reverse Control Trap Duration"
+    range_start = 0
+    range_end = 60
+    default = 10
+
+
+class TrapsAndFillerOnAdventureFields(DefaultOnToggle):
+    """If enabled, traps and filler can activate in the adventure field."""
+    display_name = "Traps and filler on Adventure Fields"
+
+
+class TrapsAndFillerOnBossFights(DefaultOnToggle):
+    """If enabled, traps and filler can activate during boss fights."""
+    display_name = "Traps and filler on Boss Fights"
+
+
+class TrapsAndFillerOnPerfectChaosFight(Toggle):
+    """
+    If enabled, traps and filler can activate during the Perfect Chaos fight.
+    Keep in mind that enemy traps will subtract rings from the player.
+    """
+    display_name = "Traps and filler on Perfect Chaos Fight"
+
+
 @dataclass
 class SonicAdventureDXOptions(PerGameCommonOptions):
     goal: Goal
@@ -509,6 +537,11 @@ class SonicAdventureDXOptions(PerGameCommonOptions):
     buyon_trap_weight: BuyonTrapWeight
     reverse_trap_weight: ReverseTrapWeight
     gravity_trap_weight: GravityTrapWeight
+
+    reverse_trap_duration: ReverseControlTrapDuration
+    traps_and_filler_on_adventure_fields: TrapsAndFillerOnAdventureFields
+    traps_and_filler_on_boss_fights: TrapsAndFillerOnBossFights
+    traps_and_filler_on_perfect_chaos_fight: TrapsAndFillerOnPerfectChaosFight
 
 
 sadx_option_groups = [
@@ -584,7 +617,11 @@ sadx_option_groups = [
         PoliceTrapWeight,
         BuyonTrapWeight,
         ReverseTrapWeight,
-        GravityTrapWeight
+        GravityTrapWeight,
+        ReverseControlTrapDuration,
+        TrapsAndFillerOnAdventureFields,
+        TrapsAndFillerOnBossFights,
+        TrapsAndFillerOnPerfectChaosFight
     ]),
 
 ]
