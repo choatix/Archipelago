@@ -110,6 +110,22 @@ class LevelEntrancePlando(OptionDict):
          for area in level_areas})
 
 
+class SendDeathLinkChance(Range):
+    """When dying, the chance of sending a death link to another player."""
+    display_name = "Send Death Link Chance"
+    range_start = 1
+    range_end = 100
+    default = 100
+
+
+class ReceiveDeathLinkChance(Range):
+    """When receiving a death link, the chance of dying."""
+    display_name = "Receive Death Link Chance"
+    range_start = 1
+    range_end = 100
+    default = 100
+
+
 class RingLink(Toggle):
     """
     Whether your in-level ring gain/loss is linked to other players.
@@ -480,6 +496,8 @@ class SonicAdventureDXOptions(PerGameCommonOptions):
     level_entrance_plando: LevelEntrancePlando
 
     death_link: DeathLink
+    send_death_link_chance: SendDeathLinkChance
+    receive_death_link_chance: ReceiveDeathLinkChance
     ring_link: RingLink
     casinopolis_ring_link: CasinopolisRingLink
     hard_ring_link: HardRingLink
@@ -556,6 +574,8 @@ sadx_option_groups = [
         GuaranteedLevel,
         EntranceRandomizer,
         LevelEntrancePlando,
+        SendDeathLinkChance,
+        ReceiveDeathLinkChance,
         RingLink,
         CasinopolisRingLink,
         HardRingLink,

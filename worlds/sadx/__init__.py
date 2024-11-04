@@ -156,7 +156,7 @@ class SonicAdventureDXWorld(World):
 
     def fill_slot_data(self) -> Dict[str, Any]:
         return {
-            "ModVersion": 90,
+            "ModVersion": 88,
             "Goal": self.options.goal.value,
             "LogicLevel": self.options.logic_level.value,
             "EmblemsPercentage": self.options.emblems_percentage.value,
@@ -195,6 +195,8 @@ class SonicAdventureDXWorld(World):
             "GammaLifeSanity": self.options.gamma_life_sanity.value,
 
             "DeathLink": self.options.death_link.value,
+            "SendDeathLinkChance": self.options.send_death_link_chance.value,
+            "ReceiveDeathLinkChance": self.options.receive_death_link_chance.value,
             "RingLink": self.options.ring_link.value,
             "CasinopolisRingLink": self.options.casinopolis_ring_link.value,
             "HardRingLink": self.options.hard_ring_link.value,
