@@ -292,6 +292,11 @@ class FieldEmblemsChecks(DefaultOnToggle):
     display_name = "Field Emblems Checks"
 
 
+class SecretChaoEggs(DefaultOnToggle):
+    """Determines whether getting the 3 secret chao eggs grants checks (3 Locations)."""
+    display_name = "Secret Chao Egg Checks"
+
+
 class MissionChecks(Toggle):
     """Determines whether completing missions grants checks (60 Locations)."""
     display_name = "Enable Mission Checks"
@@ -530,6 +535,7 @@ class SonicAdventureDXOptions(PerGameCommonOptions):
     unify_egg_hornet: UnifyEggHornet
 
     field_emblems_checks: FieldEmblemsChecks
+    chao_egg_checks: SecretChaoEggs
     mission_mode_checks: MissionChecks
     auto_start_missions: AutoStartMissions
     mission_blacklist: MissionBlackList
@@ -613,6 +619,7 @@ sadx_option_groups = [
     ]),
     OptionGroup("Extra locations", [
         FieldEmblemsChecks,
+        SecretChaoEggs,
         MissionChecks,
         AutoStartMissions,
         MissionBlackList,

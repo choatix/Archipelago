@@ -7,7 +7,7 @@ from .Enums import Goal, LevelMission
 from .Locations import get_location_by_name, level_location_table, upgrade_location_table, sub_level_location_table, \
     LocationInfo, life_capsule_location_table, boss_location_table, mission_location_table, field_emblem_location_table
 from .Logic import LevelLocation, UpgradeLocation, SubLevelLocation, EmblemLocation, CharacterUpgrade, \
-    LifeCapsuleLocation, BossFightLocation, MissionLocation
+    LifeCapsuleLocation, BossFightLocation, MissionLocation, chao_egg_location_table, ChaoEggLocation
 from .Names import ItemName
 from .Regions import get_region_name
 
@@ -74,6 +74,13 @@ def add_mission_rules(self, location_name: str, mission: MissionLocation):
         add_rule(location, lambda state, item=need: state.has(item, self.player))
 
 
+def add_egg_rules(self, location_name: str, egg: ChaoEggLocation):
+    location = self.multiworld.get_location(location_name, self.player)
+    add_rule(location, lambda state: any(
+        state.can_reach_region(get_region_name(character, egg.area), self.player) for character in
+        egg.characters if character in get_playable_characters(self.options)))
+
+
 def calculate_rules(self, location: LocationInfo):
     if location is None:
         return
@@ -98,6 +105,9 @@ def calculate_rules(self, location: LocationInfo):
     for mission in mission_location_table:
         if location["id"] == mission.locationId:
             add_mission_rules(self, location["name"], mission)
+    for egg in chao_egg_location_table:
+        if location["id"] == egg.locationId:
+            add_egg_rules(self, location["name"], egg)
 
 
 def create_sadx_rules(self, needed_emblems: int) -> LocationDistribution:

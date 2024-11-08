@@ -46,6 +46,12 @@ class Boss:
     E101mkII = "E-101 mkII"
 
 
+class Chao:
+    GoldEgg = "Gold Chao Egg"
+    SilverEgg = "Silver Chao Egg"
+    BlackEgg = "Black Chao Egg"
+
+
 class Groups:
     UpgradePoints = "Upgrade Points"
     FieldEmblems = "Field Emblems"

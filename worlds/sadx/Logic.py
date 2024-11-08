@@ -145,6 +145,15 @@ class BossFightLocation:
     unified: bool
 
 
+@dataclass
+class ChaoEggLocation:
+    locationId: int
+    eggName: str
+    area: Area
+    characters: List[Character]
+    requirements: List[str]
+
+
 area_connections: Dict[Tuple[Character, Area, Area], Tuple[List[str], List[str], List[str]]] = {
     (Character.Sonic, Area.Hotel, Area.EmeraldCoast): ([], [], []),
     (Character.Sonic, Area.MysticRuinsMain, Area.WindyValley): (
@@ -906,4 +915,11 @@ boss_location_table: List[BossFightLocation] = [
                       LocationName.Boss.Chaos6, True),
     BossFightLocation(780, Area.EggCarrierMain, [Character.Gamma], LocationName.Boss.E101mkII, False),
     BossFightLocation(790, Area.EggCarrierMain, [Character.Amy], LocationName.Boss.Zero, False),
+]
+
+chao_egg_location_table: List[ChaoEggLocation] = [
+    ChaoEggLocation(900, LocationName.Chao.GoldEgg, Area.StationSquareMain, EVERYONE, [ItemName.KeyItem.HotelKeys]),
+    ChaoEggLocation(901, LocationName.Chao.SilverEgg, Area.MysticRuinsMain, EVERYONE, [ItemName.KeyItem.HotelKeys]),
+    ChaoEggLocation(902, LocationName.Chao.BlackEgg, Area.EggCarrierMain,
+                    [Character.Amy, Character.Gamma, Character.Big], [ItemName.KeyItem.HotelKeys]),
 ]

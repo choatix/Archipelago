@@ -10,7 +10,8 @@
       {"name": "Mission 8 (Big)"},
       {"name": "Mission 29 (Big)"},
       {"name": "Burger Shop Emblem"},
-      {"name": "City Hall Emblem"}
+      {"name": "City Hall Emblem"},
+      {"name": "Gold Chao Egg"}
     ],
     "map_locations": [{"map": "all_maps", "x": 650, "y": 600}]
   },
@@ -67,7 +68,8 @@
       {"name": "Sky Chase Act 1 (Sub-Level - Mission A)"},
       {"name": "Tails' Workshop Emblem"},
       {"name": "Egg Hornet Boss Fight"},
-      {"name": "Chaos 4 Boss Fight"}
+      {"name": "Chaos 4 Boss Fight"},
+      {"name": "Silver Chao Egg"}
     ],
     "map_locations": [{"map": "all_maps", "x": 1700, "y": 450}]
   },
@@ -129,7 +131,8 @@
       {"name": "Spinning Platform Emblem"},
       {"name": "Hidden Bed Emblem"},
       {"name": "Main Platform Emblem"},
-      {"name": "Chaos 6 Boss Fight"}
+      {"name": "Chaos 6 Boss Fight"},
+      {"name": "Black Chao Egg"}
     ],
     "map_locations": [{"map": "all_maps", "x": 3150, "y": 427}]
   },

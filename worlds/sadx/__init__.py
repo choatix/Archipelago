@@ -103,6 +103,7 @@ class SonicAdventureDXWorld(World):
                 self.options.unify_egg_hornet.value = passthrough["UnifyEggHornet"]
 
                 self.options.field_emblems_checks.value = passthrough["FieldEmblemChecks"]
+                self.options.chao_egg_checks.value = passthrough["SecretChaoEggs"]
                 self.options.mission_mode_checks.value = passthrough["MissionModeChecks"]
                 self.options.auto_start_missions.value = passthrough["AutoStartMissions"]
 
@@ -156,7 +157,7 @@ class SonicAdventureDXWorld(World):
 
     def fill_slot_data(self) -> Dict[str, Any]:
         return {
-            "ModVersion": 88,
+            "ModVersion": 90,
             "Goal": self.options.goal.value,
             "LogicLevel": self.options.logic_level.value,
             "EmblemsPercentage": self.options.emblems_percentage.value,
@@ -181,6 +182,7 @@ class SonicAdventureDXWorld(World):
             "RandomStartingLocation": self.options.random_starting_location.value,
             "RandomStartingLocationPerCharacter": self.options.random_starting_location_per_character.value,
             "FieldEmblemChecks": self.options.field_emblems_checks.value,
+            "SecretChaoEggs": self.options.chao_egg_checks.value,
             "MissionModeChecks": self.options.mission_mode_checks.value,
             "AutoStartMissions": self.options.auto_start_missions.value,
             "MissionBlackList": {int(mission): int(mission) for mission in self.options.mission_blacklist.value},

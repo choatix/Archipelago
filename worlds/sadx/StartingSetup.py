@@ -9,7 +9,7 @@ from .CharacterUtils import get_playable_characters, are_character_upgrades_rand
 from .Enums import Character, Area, SubLevel, pascal_to_space, level_areas
 from .Locations import level_location_table, upgrade_location_table, sub_level_location_table, \
     field_emblem_location_table, boss_location_table, life_capsule_location_table, mission_location_table
-from .Logic import area_connections
+from .Logic import area_connections, chao_egg_location_table
 from .Names import ItemName
 from .Options import SonicAdventureDXOptions
 
@@ -179,6 +179,10 @@ def get_possible_starting_area_information(character: Character, area: Area, opt
                 continue
             if (mission.character == character and mission.cardArea == area
                     and mission.objectiveArea == area and not mission.get_logic_items(options)):
+                return {area: [None]}
+    if options.chao_egg_checks:
+        for egg in chao_egg_location_table:
+            if character in egg.characters and egg.area == area and not egg.requirements:
                 return {area: [None]}
 
 
