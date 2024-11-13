@@ -131,7 +131,7 @@ def create_sadx_rules(self, needed_emblems: int) -> LocationDistribution:
         self.random.shuffle(level_location_list)
         num_locations = max(1, math.ceil(len(level_location_list) * self.options.levels_percentage.value / 100))
         for location in level_location_list[:num_locations]:
-            add_rule(perfect_chaos_fight, lambda state: location.can_reach(state))
+            add_rule(perfect_chaos_fight, lambda state, loc=location: loc.can_reach(state))
             levels_for_perfect_chaos += 1
         if levels_for_perfect_chaos == 0:
             raise OptionError("SADX Error: You need to add action stages in the configuration to use levels as goal.")
@@ -147,7 +147,7 @@ def create_sadx_rules(self, needed_emblems: int) -> LocationDistribution:
         self.random.shuffle(mission_location_list)
         num_locations = max(1, math.ceil(len(mission_location_list) * self.options.mission_percentage.value / 100))
         for location in mission_location_list[:num_locations]:
-            add_rule(perfect_chaos_fight, lambda state: location.can_reach(state))
+            add_rule(perfect_chaos_fight, lambda state, loc=location: loc.can_reach(state))
             missions_for_perfect_chaos += 1
         if missions_for_perfect_chaos == 0:
             raise OptionError("SADX Error: You need to add more missions in the configuration to use mission as goal.")
