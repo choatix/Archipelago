@@ -13,7 +13,7 @@ from . import Options, Rules, Regions
 
 #from . import Macros
 
-VERSION: Tuple[int, int, int] = (0, 0, 2)
+VERSION: Tuple[int, int, int] = (0, 0, 6)
 
 
 def run_client():
@@ -107,7 +107,7 @@ class ShtHWorld(World):
 
         elif self.options.exceeding_items_filler == Options.ExceedingItemsFiller.option_off and \
             location_count < item_count:
-            raise OptionError("Invalid count of items present.")
+            raise OptionError("Invalid count of items present:"+str(location_count)+" vs "+str(item_count))
 
         if self.options.objective_sanity.value and self.options.force_objective_sanity_chance > 0\
                 and self.options.force_objective_sanity_max > 0:

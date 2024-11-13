@@ -123,6 +123,7 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
         id, name = Levels.GetLevelCompletionNames(clear.stageId, clear.alignmentId)
         try:
             level_rule = lambda state: True
+            rule_change = False
 
             req_rule = lambda state: True
             if clear.requirements is not None:
@@ -132,6 +133,7 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
                     if req_rule is not None:
                         level_rule = lambda state, r_rule=req_rule, l_rule=level_rule: (
                                 req_rule(state) and l_rule(state))
+                        rule_change = True
 
             if clear.getDistribution() is not None:
                 for region_id in clear.getDistribution().keys():
@@ -139,6 +141,7 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
                     new_rule = lambda state, r_region=required_region: state.can_reach_region(r_region, player)
                     current_rule = level_rule
                     level_rule = lambda state, l_rule=level_rule, n_rule=new_rule, c_rule=current_rule: n_rule(state) and c_rule(state) and l_rule(state)
+                    rule_change = True
 
                 if clear.requirement_count is not None:
                     percentage = world.options.objective_percentage.value
@@ -176,9 +179,13 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
                     # Does this work as an AND or an OR?
                     level_rule = lambda state, l_rule=level_rule, n_rule=new_rule: l_rule(state) and n_rule(state)
                     add_rule(location, level_rule)
+                    rule_change = True
+                elif rule_change:
+                    add_rule(location, level_rule)
+
             else:
                 location = multiworld.get_location(name, player)
-                if level_rule:
+                if rule_change:
                     add_rule(location, level_rule)
 
             associated_tokens = [t for t in world.token_locations if
@@ -186,7 +193,7 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
                                  t.stageId == clear.stageId]
             for token in associated_tokens:
                 location = multiworld.get_location(token.name, player)
-                if level_rule:
+                if rule_change:
                     add_rule(location, level_rule)
                 allocated_item = GetRelevantTokenItem(token)
                 if allocated_item is None:
