@@ -1,4 +1,5 @@
 import asyncio
+import time
 import traceback
 from dataclasses import dataclass
 from math import ceil
@@ -10,7 +11,8 @@ import Utils
 from BaseClasses import ItemClassification
 from CommonClient import ClientCommandProcessor, CommonContext, get_base_parser, gui_enabled, logger, server_loop
 from NetUtils import ClientStatus
-from . import Levels, Items, Locations, Junk, Utils as ShadowUtils
+from worlds.shadow_the_hedgehog.Options import WeaponsanityHold
+from . import Levels, Items, Locations, Junk, Utils as ShadowUtils, Weapons
 from .Levels import *
 from .Locations import GetStageInformation, GetAlignmentsForStage, \
     GetStageEnemysanityInformation, MissionClearLocations
@@ -80,32 +82,30 @@ CHECKPOINT_FLAGS = [0x80575FFC, 0x80576018, 0x80576034, 0x80576050,
                     0x8057606C, 0x80576088, 0x805760A4, 0x805760C0]
 
 CURRENT_STAGE_BASE_KEYSANITY_ADDRESS = 0x8057fb80
-KEY_IDENTIFIERS = [0x5F, 0x60, 0x61, 0x62, 0x63] # At least for Iron Jungle
-
 KEY_IDENTIFIER_BY_STAGE = \
 {
-    STAGE_WESTOPOLIS: [0x3F, 0x40, 0x3C, 0x3D, 0x3E],
-    STAGE_DIGITAL_CIRCUIT: [0x40, 0x3E, 0x3C, 0x3F, 0x3D],
-    STAGE_GLYPHIC_CANYON: [0x60, 0x62, 0x5F, 0x63, 0x61],
-    STAGE_LETHAL_HIGHWAY: [0x3F, 0x3C, 0x3E, 0x3D, 0x40],
-    STAGE_CRYPTIC_CASTLE: [0x3D, 0x3C, 0x3E, 0x3F, 0x40],
-    STAGE_PRISON_ISLAND: [0x3C, 0x3D, 0x3E, 0x3F, 0x40],
-    STAGE_CIRCUS_PARK: [0x3D, 0x3C, 0x3E, 0x3F, 0x40],
-    STAGE_CENTRAL_CITY: [0x3C, 0x3D, 0x40, 0x3F, 0x3E],
-    STAGE_THE_DOOM: [0xC9, 0xCA, 0xCB, 0xCC, 0x05],
-    STAGE_SKY_TROOPS: [0x62, 0x61, 0x5F, 0x60, 0x63],
-    STAGE_MAD_MATRIX: [0x3E, 0x3C, 0x40, 0x3F, 0x3D],
-    STAGE_DEATH_RUINS: [0x02, 0x04, 0x05, 0x03, 0x01],
-    STAGE_THE_ARK: [0x4, 0x1, 0x2, 0x5, 0x3],
-    STAGE_AIR_FLEET: [0x5F, 0x61, 0x60, 0x62, 0x63],
-    STAGE_IRON_JUNGLE: [0x5F, 0x60, 0x61, 0x62, 0x63],
-    STAGE_SPACE_GADGET: [0x4, 0x3, 0x5, 0x1, 0x2],
-    STAGE_LOST_IMPACT: [0x4, 0x1, 0x2, 0x3, 0x5],
-    STAGE_GUN_FORTRESS: [0x63, 0x60, 0x61, 0x62, 0x5F],
-    STAGE_BLACK_COMET: [0x60, 0x61, 0x62, 0x5F, 0x63],
-    STAGE_LAVA_SHELTER: [0x5F, 0x61, 0x62, 0x63, 0x60],
-    STAGE_COSMIC_FALL: [0x05, 0x03, 0x04, 0x01, 0x02],
-    STAGE_FINAL_HAUNT: [0x60, 0x62, 0x5F, 0x61, 0x63],
+    STAGE_WESTOPOLIS:       [0x3F, 0x40, 0x3C, 0x3D, 0x3E], #Ordered
+    STAGE_DIGITAL_CIRCUIT:  [0x3C, 0x40, 0x3D, 0x3E, 0x3F], #Ordered
+    STAGE_GLYPHIC_CANYON:   [0x5F, 0x60, 0x61, 0x62, 0x63], #Ordered
+    STAGE_LETHAL_HIGHWAY:   [0x3F, 0x3C, 0x3E, 0x3D, 0x40], #Ordered
+    STAGE_CRYPTIC_CASTLE:   [0x3E, 0x3D, 0x3C, 0x40, 0x3F], #Ordered, dark then neutral
+    STAGE_PRISON_ISLAND:    [0x3D, 0x3C, 0x3E, 0x3F, 0x40], #Ordered
+    STAGE_CIRCUS_PARK:      [0x40, 0x3C, 0x3D, 0x3E, 0x3F], #Ordered
+    STAGE_CENTRAL_CITY:     [0x3E, 0x3C, 0x3F, 0x3D, 0x40], #Ordered, by dark mission
+    STAGE_THE_DOOM:         [0xC9, 0xCA, 0xCB, 0xCC, 0x05], #Ordered
+    STAGE_SKY_TROOPS:       [0x5F, 0x60, 0x61, 0x62, 0x63], #Ordered
+    STAGE_MAD_MATRIX:       [0x3C, 0x40, 0x3E, 0x3F, 0x3D], #Ordered - C/Y/G/R/R
+    STAGE_DEATH_RUINS:      [0x01, 0x02, 0x03, 0x04, 0x05], #Ordered
+    STAGE_THE_ARK:          [0x04, 0x01, 0x02, 0x05, 0x03], #Ordered
+    STAGE_AIR_FLEET:        [0x5F, 0x60, 0x61, 0x62, 0x63], #Ordered
+    STAGE_IRON_JUNGLE:      [0x5F, 0x60, 0x61, 0x62, 0x63], #Ordered checkpoint order
+    STAGE_SPACE_GADGET:     [0x04, 0x01, 0x02, 0x03, 0x05], #Ordered Dark first
+    STAGE_LOST_IMPACT:      [0x03, 0x04, 0x05, 0x01, 0x02], #Ordered
+    STAGE_GUN_FORTRESS:     [0x5F, 0x60, 0x61, 0x62, 0x63], #Ordered
+    STAGE_BLACK_COMET:      [0x60, 0x5F, 0x61, 0x62, 0x63], #Ordered
+    STAGE_LAVA_SHELTER:     [0x5F, 0x60, 0x61, 0x62, 0x63], #Ordered, dark first
+    STAGE_COSMIC_FALL:      [0x03, 0x04, 0x05, 0x01, 0x02], #Ordered
+    STAGE_FINAL_HAUNT:      [0x5F, 0x60, 0x61, 0x62, 0x63], #Ordered
 }
 
 #STAGE_TO_UNLOCK_ADDRESS = \
@@ -128,6 +128,14 @@ KEY_IDENTIFIER_BY_STAGE = \
 #        (STAGE_GLYPHIC_CANYON, Levels.MISSION_ALIGNMENT_NEUTRAL): 0x80576BE0 + (SAVE_STRUCTURE_DETAILS.Size * 2) + 4 + (2 * 24),
 #        (STAGE_GLYPHIC_CANYON, Levels.MISSION_ALIGNMENT_HERO): 0x80576BE0 + (SAVE_STRUCTURE_DETAILS.Size * 2) + 4 + (2 * 24),
 #    }
+
+DARK_GAUGE_ADDRESS = 0x805766D4
+HERO_GAUGE_ADDRESS = 0x805766C8
+RINGS_ADDRESS = 0x8057670C
+
+SPECIAL_WEAPONS_ADDRESS = 0x80578068
+CURRENT_WEAPON_ID_ADDRESS = 0x805766F8
+CURRENT_AMMO_ADDRESS = 0x80576700
 
 def GetStageUnlockAddresses():
     unlock_addresses = {}
@@ -178,6 +186,7 @@ ADDRESS_WEAPONS_BYTES = 0x80578068
 ADDRESS_LAST_CUTSCENE = 0x805EF2A0
 ADDRESS_EXPERT_MODE_UNLOCK = 0x80578021
 CUTSCENE_BUFFER = 0x805F7A2A
+ADDRESS_MISSION_ALIGNMENT = 0x80575F1F
 
 
 DEFAULT_SEARCH_INDEX = (16 * 6) + 8
@@ -304,11 +313,26 @@ class ShTHContext(CommonContext):
         self.required_objective_tokens = 0
         self.requires_emeralds = True
         self.key_sanity = False
+        self.enemy_sanity = False
+        self.enemy_objective_sanity = False
+        self.weapon_sanity_unlock = False
+        self.weapon_sanity_hold_option = 0
+        self.vehicle_logic = False
+        self.level_buffer = None
+        self.ring_link = False
+
+        self.hero_gauge_buffer = 0
+        self.dark_gauge_buffer = 0
+        self.junk_delay = 0
 
         self.tokens = []
         self.emeralds = []
+        self.restart = False
 
-
+        self.game_tags = []
+        self.previous_rings = None
+        self.ring_link_rings = 0
+        self.instance_id = time.time()
 
         # Name of the current stage as read from the game's memory. Sent to trackers whenever its value changes to
         # facilitate automatically switching to the map of the current stage.
@@ -339,7 +363,7 @@ class ShTHContext(CommonContext):
     def restoreState(self):
         (mission_clear_locations, mission_locations, end_location, enemy_locations, \
             checkpointsanity_locations, charactersanity_locations,
-         token_locations, keysanity_locations) = Locations.GetAllLocationInfo()
+         token_locations, keysanity_locations, weaponsanity_locations) = Locations.GetAllLocationInfo()
 
         if self.character_sanity:
             characters = []
@@ -360,18 +384,28 @@ class ShTHContext(CommonContext):
         print("on_package", cmd, args)
         if cmd == "Connected":
             slot_data = args["slot_data"]
+
+            if "check_level" in slot_data:
+                self.level_buffer = slot_data["check_level"]
+
             if "objective_sanity" in slot_data:
                 self.objective_sanity = slot_data["objective_sanity"]
+
             if "objective_percentage" in slot_data:
                 self.objective_percentage = slot_data["objective_percentage"]
+
             if "objective_item_percentage" in slot_data:
                 self.objective_item_percentage = slot_data["objective_item_percentage"]
+
             if "checkpoint_sanity" in slot_data:
                 self.checkpoint_sanity = slot_data["checkpoint_sanity"]
+
             if "character_sanity" in slot_data:
                 self.character_sanity = slot_data["character_sanity"]
+
             if "key_sanity" in slot_data:
                 self.key_sanity = slot_data["key_sanity"]
+
             if "required_mission_tokens" in slot_data:
                 self.required_mission_tokens = slot_data["required_mission_tokens"]
 
@@ -390,10 +424,25 @@ class ShTHContext(CommonContext):
             if "requires_emeralds" in slot_data:
                 self.requires_emeralds = slot_data["requires_emeralds"]
 
-            #self.checked_locations = args["checked_locations"]
+            if "enemy_sanity" in slot_data:
+                self.enemy_sanity = slot_data["enemy_sanity"]
+
+            if "enemy_objective_sanity" in slot_data:
+                self.enemy_objective_sanity = slot_data["enemy_objective_sanity"]
+
+            if "weapon_sanity_hold" in slot_data:
+                self.weapon_sanity_hold_option = slot_data["weapon_sanity_hold"]
+
+            if "weapon_sanity_unlock" in slot_data:
+                self.weapon_sanity_unlock = slot_data["weapon_sanity_unlock"]
+
+            if "vehicle_logic" in slot_data:
+                self.vehicle_logic = slot_data["vehicle_logic"]
+
+            if "ring_link" in slot_data:
+                self.ring_link = slot_data["ring_link"]
+
             self.restoreState()
-
-
             self.awaiting_server = False
 
             #self.items_received_2 = []
@@ -415,6 +464,14 @@ class ShTHContext(CommonContext):
             self.items_to_handle.sort(key=lambda v: v[1])
             print(self.items_to_handle)
         elif cmd == "Retrieved":
+            pass
+        elif cmd == "Bounced":
+            if "tags" in args:
+                related_tags = args["tags"]
+                if "RingLink" in related_tags:
+                    handle_received_rings(self, args["data"])
+
+            print(cmd, args)
             pass
             #requested_keys_dict = args["keys"]
             # Read the connected slot's dictionary (used as a set) of visited stages.
@@ -458,7 +515,7 @@ async def check_save_loaded(ctx):
     loaded = True
     mission_clear_locations, mission_locations, end_location, enemy_locations,\
         checkpointsanity_locations, charactersanity_locations,\
-        token_locations, keysanity_locations = Locations.GetAllLocationInfo()
+        token_locations, keysanity_locations, weaponsanity_locations = Locations.GetAllLocationInfo()
 
     # TODO: Check for newly obtained instead of all
 
@@ -547,10 +604,11 @@ async def check_save_loaded(ctx):
 
 
         else:
+            pass
             # TODO: Make it as to not write this constantly
-            set_to = 0
-            set_last_way_bytes = set_to.to_bytes(1, byteorder='big')
-            dolphin_memory_engine.write_bytes(ADDRESS_LAST_STORY_OPTION, set_last_way_bytes)
+            #set_to = 0
+            #set_last_way_bytes = set_to.to_bytes(1, byteorder='big')
+            #dolphin_memory_engine.write_bytes(ADDRESS_LAST_STORY_OPTION, set_last_way_bytes)
 
         finished = False
 
@@ -624,7 +682,7 @@ def is_mission_completable(ctx, stage, alignment):
         return False
     clear = relevant_clears[0]
 
-    if clear.requirement_count is None:
+    if clear.requirement_count is None or not ctx.objective_sanity:
         return True
 
     required_count = ShadowUtils.getRequiredCount(clear.requirement_count, ctx.objective_item_percentage, round_method=ceil)
@@ -658,12 +716,16 @@ def complete_completable_levels(ctx):
         # Check if mission is available
         # Check if mission is clearable
 
+        mission_complete_locations = [ l for l in location_dict.values() if l.stageId == mission.stageId and
+                               l.location_type == Locations.LOCATION_TYPE_MISSION_CLEAR
+                               and l.locationId in ctx.checked_locations ]
+
         other_locations = [ l for l in remaining_locations if location_dict[l].stageId == mission.stageId and
                             location_dict[l].location_type != Locations.LOCATION_TYPE_MISSION_CLEAR and
                             location_dict[l].location_type != Locations.LOCATION_TYPE_TOKEN
                             ]
 
-        if len(other_locations) == 0:
+        if len(mission_complete_locations) > 0 and len(other_locations) == 0:
             new_clears.append(mission.locationId)
             # Mark as completed!
             pass
@@ -672,7 +734,15 @@ def complete_completable_levels(ctx):
         if mission.locationId in auto_clears and auto_clears[mission.locationId].locationId in ctx.checked_locations:
             new_clears.append(mission.locationId)
 
+    token_clears = []
+    for clear in new_clears:
+        clear_data = location_dict[clear]
+        token_locations = [l for l in remaining_locations if location_dict[l].stageId == clear_data.stageId and \
+                            clear_data.alignmentId == location_dict[l].alignmentId and
+                           location_dict[l].location_type == Locations.LOCATION_TYPE_TOKEN ]
+        token_clears.extend(token_locations)
 
+    new_clears.extend(token_clears)
     return new_clears
 
 
@@ -721,8 +791,16 @@ async def check_level_status(ctx):
                 new_count = 0
 
             address = GetStageUnlockAddresses()[level]
-            new_bytes = new_count.to_bytes(4, byteorder='big')
-            dolphin_memory_engine.write_bytes(address, new_bytes)
+            current_value_bytes = dolphin_memory_engine.read_bytes(address, 4)
+            current_value = int.from_bytes(current_value_bytes, byteorder='big')
+
+            if ctx.level_buffer is not None and ctx.level_buffer == level:
+                if current_value != 0:
+                    continue
+
+            if current_value != new_count:
+                new_bytes = new_count.to_bytes(4, byteorder='big')
+                dolphin_memory_engine.write_bytes(address, new_bytes)
 
     found_emerald_items = [
         unlock for unlock in ctx.items_to_handle if unlock[0].item in info
@@ -802,35 +880,266 @@ COMPLETE_FLAG_OFF_SET = 1
 COMPLETE_FLAG_READY = 2
 COMPLETE_FLAG_ON_SET = 3
 
+async def disable_weapon(ctx):
+    current_dark_gauge_bytes = dolphin_memory_engine.read_bytes(DARK_GAUGE_ADDRESS, 4)
+    current_dark_gauge = int.from_bytes(current_dark_gauge_bytes, byteorder="big")
+    time.sleep(0.05)
+
+    current_dark_gauge_bytes = dolphin_memory_engine.read_bytes(DARK_GAUGE_ADDRESS, 4)
+    current_dark_gauge2 = int.from_bytes(current_dark_gauge_bytes, byteorder="big")
+
+    current_hero_gauge_bytes = dolphin_memory_engine.read_bytes(HERO_GAUGE_ADDRESS, 4)
+    current_hero_gauge = int.from_bytes(current_hero_gauge_bytes, byteorder="big")
+    time.sleep(0.05)
+
+    current_hero_gauge_bytes = dolphin_memory_engine.read_bytes(HERO_GAUGE_ADDRESS, 4)
+    current_hero_gauge2 = int.from_bytes(current_hero_gauge_bytes, byteorder="big")
+
+    print("add hero gauge:", ctx.hero_gauge_buffer, current_hero_gauge)
+    ctx.hero_gauge_buffer += current_hero_gauge
+    ctx.dark_gauge_buffer += current_dark_gauge
+
+    ctx.junk_delay += 25
+
+    new_bytes = int(0).to_bytes(4, byteorder='big')
+    dolphin_memory_engine.write_bytes(DARK_GAUGE_ADDRESS, new_bytes)
+
+    new_bytes = int(0).to_bytes(4, byteorder='big')
+    dolphin_memory_engine.write_bytes(HERO_GAUGE_ADDRESS, new_bytes)
+
+    # Sleep not preferable, required to ensure game processes end of dark/hero gauge in case of active power Shadow
+    # Which would then not drop the weapon!
+
+    if current_hero_gauge2 < current_hero_gauge or \
+        current_dark_gauge2 < current_dark_gauge:
+        time.sleep(0.5)
+
+    new_bytes = int(0).to_bytes(4, byteorder='big')
+    dolphin_memory_engine.write_bytes(CURRENT_AMMO_ADDRESS, new_bytes)
+
+
+async def check_weapons(ctx):
+    info = Items.GetItemLookupDict()
+
+    weapons_to_handle = [unlock for unlock in ctx.items_to_handle if unlock[0].item in info and \
+         info[unlock[0].item].type == "Weapon"]
+
+    newly_handled = []
+    newly_handled.extend(weapons_to_handle)
+
+    mission_clear_locations, mission_locations, end_location, enemysanity_locations, \
+        checkpointsanity_locations, charactersanity_locations, \
+        token_locations, keysanity_locations, weaponsanity_locations = Locations.GetAllLocationInfo()
+
+    messages = []
+
+    weapon_dict = Weapons.GetWeaponDict()
+    special_weapons_info = Items.GetSpecialWeapons()
+    if len(weapons_to_handle) > 0:
+        special_weapons = [ info[unlock[0].item] for unlock in ctx.handled if unlock[0].item in info \
+             and info[unlock[0].item].type == "Weapon" and
+                    Weapons.WeaponAttributes.SPECIAL in weapon_dict[info[unlock[0].item].name].attributes ]
+
+        special_weapons_new = [info[unlock[0].item] for unlock in weapons_to_handle if unlock[0].item in info \
+                           and info[unlock[0].item].type == "Weapon" and
+                           Weapons.WeaponAttributes.SPECIAL in weapon_dict[info[unlock[0].item].name].attributes]
+
+        special_weapons.extend(special_weapons_new)
+
+        weapon_value = [ 0,0,0,0,0,0,0,0,0,0,0 ]
+        i = 0
+        for special_weapon in special_weapons_info:
+            matching = [ w for w in special_weapons if w.name == special_weapon.name or
+                         w.name == "Weapon:"+special_weapon.name ]
+            if len(matching) >= 1:
+                weapon_value[i] = 1
+            if len(matching) >= 2 and i+1 < len(weapon_value):
+                weapon_value[i+1] = 1
+            i += 2
+
+        weapon_value.reverse()
+
+        weapon_value_write = int("".join([ str(w) for w in weapon_value]),2)
+        new_bytes = weapon_value_write.to_bytes(2, byteorder='big')
+        dolphin_memory_engine.write_bytes(SPECIAL_WEAPONS_ADDRESS, new_bytes)
+
+        remove = []
+        for r in newly_handled:
+            ctx.handled.append(r)
+            remove.append(r)
+
+        for r in remove:
+            ctx.items_to_handle.remove(r)
+
+    if ctx.weapon_sanity_unlock or ctx.weapon_sanity_hold_option > 0:
+        current_weapon_bytes = dolphin_memory_engine.read_bytes(CURRENT_WEAPON_ID_ADDRESS, 4)
+        current_weapon_id = int.from_bytes(current_weapon_bytes, byteorder="big")
+
+        weapon_dict = Weapons.GetWeaponDict()
+        special_weapons_lower = []
+        for special in special_weapons_info:
+            if special.name in weapon_dict and Weapons.WeaponAttributes.SPECIAL in weapon_dict[special.name].attributes \
+                    and special.name != "Shadow Rifle":
+                special_weapons_lower.append(weapon_dict[special.name].game_id - 1)
+                pass
+            elif ("Weapon:" + special.name in weapon_dict and Weapons.WeaponAttributes.SPECIAL in
+                  weapon_dict["Weapon:" + special.name].attributes and special.name != "Shadow Rifle"):
+                special_weapons_lower.append(weapon_dict["Weapon:" + special.name].game_id - 1)
+                pass
+
+        if len([l for l in special_weapons_lower if l == current_weapon_id]) > 0:
+            current_weapon_id = current_weapon_id + 1
+
+        if ctx.weapon_sanity_unlock:
+            allowed_weapons = [weapon_dict[info[unlock[0].item].name] for unlock in ctx.handled if unlock[0].item in info and \
+                                 info[unlock[0].item].type == "Weapon"]
+
+            allowed_weapons_by_id = {}
+            for a in allowed_weapons:
+                allowed_weapons_by_id[a.game_id] = a
+
+            valid_weapon_ids = [ weapon.game_id for weapon in weapon_dict.values() ]
+            if current_weapon_id == 0:
+                current_weapon_id = None
+            elif current_weapon_id not in valid_weapon_ids:
+                logger.error("Unknown weapon held by player:"+str(current_weapon_id))
+                current_weapon_id = None
+            elif current_weapon_id not in allowed_weapons_by_id.keys():
+                await disable_weapon(ctx)
+
+                if ctx.weapon_sanity_hold_option == WeaponsanityHold.option_unlocked:
+                    current_weapon_id = None
+
+        if current_weapon_id is not None and ctx.weapon_sanity_hold_option in \
+                (WeaponsanityHold.option_unlocked, WeaponsanityHold.option_on):
+            weapon_dict = Weapons.GetWeaponDictById()
+
+            current_weapon = weapon_dict[current_weapon_id]
+            weapon_locations = [ l.locationId for l in weaponsanity_locations if l.other == current_weapon.name and \
+                                 l.locationId not in ctx.handled ]
+            messages.extend(weapon_locations)
+
+            pass
+
+
+    if len(messages) > 0:
+        # ctx.locations_checked = messages
+        message = [{"cmd": 'LocationChecks', "locations": messages}]
+        await ctx.send_msgs(message)
+
+def get_last_index_storage_location(ctx):
+    if ctx.level_buffer is None:
+        return None
+    return [ l[1] for l in GetStageUnlockAddresses().items() if l[0] == ctx.level_buffer ][0]
+
+def get_last_index(ctx):
+    decided_last_index_address = get_last_index_storage_location(ctx)
+
+    current_potential_bytes = dolphin_memory_engine.read_bytes(decided_last_index_address, 4)
+    current_potential = int.from_bytes(current_potential_bytes[1:3], byteorder="big")
+
+    return current_potential
+
+
+def set_last_index(ctx, new_value):
+    decided_last_index_address = get_last_index_storage_location(ctx)
+
+    current_potential_bytes = list(dolphin_memory_engine.read_bytes(decided_last_index_address, 4))
+    bytes_to_manip = list(new_value.to_bytes(2, byteorder="big"))
+    current_potential_bytes[1] = bytes_to_manip[0]
+    current_potential_bytes[2] = bytes_to_manip[1]
+    potential_bytes = bytes(current_potential_bytes)
+    dolphin_memory_engine.write_bytes(decided_last_index_address, potential_bytes)
+
+
+async def handle_ring_link(ctx, level, death):
+    ring_link = False
+    old_tags = ctx.game_tags.copy()
+    if ctx.ring_link:
+        if "RingLink" not in ctx.game_tags:
+            ctx.game_tags.append("RingLink")
+        ring_link = True
+    else:
+        ctx.game_tags = []
+    if old_tags != ctx.game_tags and ctx.server and not ctx.server.socket.closed:
+        await ctx.send_msgs([{"cmd": "ConnectUpdate", "tags": ctx.game_tags}])
+
+    if level is None or not ring_link:
+        ctx.previous_rings = None
+        return
+
+    difference = 0
+    if not death:
+        previous = ctx.previous_rings
+        current_rings_bytes = dolphin_memory_engine.read_bytes(RINGS_ADDRESS, 4)
+        current_rings = int.from_bytes(current_rings_bytes, byteorder="big")
+
+
+        if current_rings == 0 and ctx.previous_rings is not None and ctx.previous_rings > 20:
+            # count as death scenario rather
+            pass
+        elif ctx.previous_rings is None:
+            ctx.previous_rings = current_rings
+        else:
+            ctx.previous_rings = current_rings
+            difference = current_rings - previous
+            if difference != 0:
+                print("ring diff=", difference)
+
+    if difference != 0:
+        msg = {
+            "cmd": "Bounce",
+            "slots": [ctx.slot],
+            "data": {
+                "time":  time.time(),
+                "source": ctx.instance_id,
+                "amount": difference
+            },
+            "tags": ctx.game_tags
+        }
+
+        await ctx.send_msgs([msg])
+
+def handle_received_rings(ctx, data):
+    amount = data["amount"]
+    source = data["source"]
+
+    if source == ctx.instance_id:
+        return
+
+    ctx.ring_link_rings += amount
+    ctx.previous_rings = None
+
 
 async def check_junk(ctx, current_level):
     info = Items.GetItemLookupDict()
 
+    if ctx.junk_delay > 0:
+        ctx.junk_delay -= 1
+        return
+
+    last_index = get_last_index(ctx)
+
     filler = [(unlock,info[unlock[0].item]) for unlock in ctx.items_to_handle if unlock[0].item in info and \
-        info[unlock[0].item].classification == ItemClassification.filler ]
+        info[unlock[0].item].classification == ItemClassification.filler and unlock[1] > last_index ]
+
+    latest_index = None
+
+    if len(filler) > 0:
+        latest_index = max([ u[0][1] for u in filler])
 
     filler_nothing = [ f for f in filler if f[1].name == Junk.NothingJunk]
     filler_gauge_dark = [ f for f in filler if f[1].type == "gauge" and f[1].alignmentId == MISSION_ALIGNMENT_DARK]
     filler_gauge_hero = [ f for f in filler if f[1].type == "gauge" and f[1].alignmentId == MISSION_ALIGNMENT_HERO]
     filler_rings = [ f for f in filler if f[1].type == "rings"]
 
-    useful = [(unlock, info[unlock[0].item]) for unlock in ctx.items_to_handle if unlock[0].item in info and \
-              info[unlock[0].item].classification == ItemClassification.useful]
-
-    filler_weapons = [ f for f in useful if f[1].type == "SpecialWeapon"]
-
-    DARK_GAUGE_ADDRESS = 0x805766D4
-    HERO_GAUGE_ADDRESS = 0x805766C8
-    RINGS_ADDRESS = 0x8057670C
-    WEAPONS_ADDRESS = 0x80578068
 
     newly_handled = []
     newly_handled.extend([f[0] for f in filler_nothing])
-    newly_handled.extend([f[0] for f in filler_weapons])
 
     RING_LIMIT = 999
     GAUGE_LIMIT = 30000
-    if len(filler_rings) > 0:
+    if (len(filler_rings) > 0 and current_level != Levels.STAGE_CIRCUS_PARK) or ctx.ring_link_rings != 0:
         current_rings_bytes = dolphin_memory_engine.read_bytes(RINGS_ADDRESS, 4)
         current_rings = int.from_bytes(current_rings_bytes, byteorder="big")
         rings_changed = False
@@ -844,73 +1153,62 @@ async def check_junk(ctx, current_level):
             newly_handled.append(ringJunk[0])
             rings_changed = True
 
+        if ctx.ring_link_rings != 0 and ctx.ring_link_rings is not None:
+            rings_changed = True
+            current_rings += ctx.ring_link_rings
+            if current_rings < 0:
+                current_rings = 0
+            ctx.ring_link_rings = 0
+
         if rings_changed:
             new_bytes = current_rings.to_bytes(4, byteorder='big')
             dolphin_memory_engine.write_bytes(RINGS_ADDRESS, new_bytes)
 
     if len(filler_gauge_hero) > 0:
+        for gaugeJunk in filler_gauge_hero:
+            print("add hero gauge:", ctx.hero_gauge_buffer, gaugeJunk[1].value)
+            ctx.hero_gauge_buffer += gaugeJunk[1].value
+            newly_handled.append(gaugeJunk[0])
+
+    if ctx.hero_gauge_buffer > 0:
+
         current_hero_gauge_bytes = dolphin_memory_engine.read_bytes(HERO_GAUGE_ADDRESS, 4)
         current_hero_gauge = int.from_bytes(current_hero_gauge_bytes, byteorder="big")
-        gauge_changed = False
-        for gaugeJunk in filler_gauge_hero:
-            if current_hero_gauge >= GAUGE_LIMIT:
-                break
-            if current_hero_gauge + gaugeJunk[1].value >= GAUGE_LIMIT:
-                continue
 
-            current_hero_gauge += gaugeJunk[1].value
-            newly_handled.append(gaugeJunk[0])
-            gauge_changed = True
+        increase = GAUGE_LIMIT - current_hero_gauge
+        if ctx.hero_gauge_buffer < increase:
+            increase = ctx.hero_gauge_buffer
 
-        if gauge_changed:
-            new_bytes = current_hero_gauge.to_bytes(4, byteorder='big')
-            dolphin_memory_engine.write_bytes(HERO_GAUGE_ADDRESS, new_bytes)
+        if ctx.hero_gauge_buffer > 1000 and increase < 1000:
+            print("gauge diff too small", ctx.hero_gauge_buffer, increase)
+            return
+
+        print("gauge diff", ctx.hero_gauge_buffer, increase)
+        ctx.hero_gauge_buffer -= increase
+
+        new_hero_value = current_hero_gauge + increase
+        print("new hero", new_hero_value)
+        new_bytes = new_hero_value.to_bytes(4, byteorder='big')
+        dolphin_memory_engine.write_bytes(HERO_GAUGE_ADDRESS, new_bytes)
 
     if len(filler_gauge_dark) > 0:
+        for gaugeJunk in filler_gauge_dark:
+            ctx.dark_gauge_buffer += gaugeJunk[1].value
+            newly_handled.append(gaugeJunk[0])
+
+    if ctx.dark_gauge_buffer > 0:
         current_dark_gauge_bytes = dolphin_memory_engine.read_bytes(DARK_GAUGE_ADDRESS, 4)
         current_dark_gauge = int.from_bytes(current_dark_gauge_bytes, byteorder="big")
-        gauge_changed = False
-        for gaugeJunk in filler_gauge_dark:
-            if current_dark_gauge >= GAUGE_LIMIT:
-                break
-            if current_dark_gauge + gaugeJunk[1].value >= GAUGE_LIMIT:
-                continue
 
-            current_dark_gauge += gaugeJunk[1].value
-            newly_handled.append(gaugeJunk[0])
-            gauge_changed = True
+        increase = GAUGE_LIMIT - current_dark_gauge
+        if ctx.dark_gauge_buffer < increase:
+            increase = ctx.dark_gauge_buffer
 
-        if gauge_changed:
-            new_bytes = current_dark_gauge.to_bytes(4, byteorder='big')
-            dolphin_memory_engine.write_bytes(DARK_GAUGE_ADDRESS, new_bytes)
+        ctx.dark_gauge_buffer -= increase
 
-    # TODO: Weapons handling
-    # Check which weapons we have from all our junk items
-    if len(filler_weapons) > 0:
-        weapons = [ info[unlock[0].item] for unlock in ctx.handled if unlock[0].item in info \
-             and info[unlock[0].item].type == "SpecialWeapon"]
-
-        weapons.extend([ f[1] for f in filler_weapons ])
-
-        special_weapons = Items.GetSpecialWeapons()
-        weapon_value = [ 0,0,0,0,0,0,0,0,0,0,0 ]
-        i = 0
-        for special_weapon in special_weapons:
-            matching = [ w for w in weapons if w.name == special_weapon.name ]
-            if len(matching) >= 1:
-                weapon_value[i] = 1
-            if len(matching) >= 2 and i+1 < len(weapon_value):
-                weapon_value[i+1] = 1
-            i += 2
-
-        weapon_value.reverse()
-
-        weapon_value_write = int("".join([ str(w) for w in weapon_value]),2)
-        new_bytes = weapon_value_write.to_bytes(2, byteorder='big')
-        dolphin_memory_engine.write_bytes(WEAPONS_ADDRESS, new_bytes)
-
-        pass
-
+        new_dark_value = current_dark_gauge + increase
+        new_bytes = new_dark_value.to_bytes(4, byteorder='big')
+        dolphin_memory_engine.write_bytes(DARK_GAUGE_ADDRESS, new_bytes)
 
     remove = []
     for r in newly_handled:
@@ -919,6 +1217,9 @@ async def check_junk(ctx, current_level):
 
     for r in remove:
         ctx.items_to_handle.remove(r)
+
+    if latest_index is not None:
+        set_last_index(ctx, latest_index)
 
 
 async def update_level_behaviour(ctx, current_level, death):
@@ -929,25 +1230,27 @@ async def update_level_behaviour(ctx, current_level, death):
     # Set initial value (to level of value from server)
     # If higher than previous value, recognise as check and reduce by 1
 
-    ADDRESS_MISSION_ALIGNMENT = 0x80575F1F
+
 
     # Add handle for first load of level, when state is blank
 
     info = Items.GetItemLookupDict()
     mission_clear_locations, mission_locations, end_location, enemysanity_locations,\
         checkpointsanity_locations, charactersanity_locations,\
-        token_locations, keysanity_locations = Locations.GetAllLocationInfo()
+        token_locations, keysanity_locations, weaponsanity_locations = Locations.GetAllLocationInfo()
 
     handle_count = 0
 
-    if death:
-        if len(ctx.checkpoint_snapshots) > 0:
+    if death or ctx.restart:
+        if len(ctx.checkpoint_snapshots) > 0 and not ctx.restart:
             last_snapshot = ctx.checkpoint_snapshots[-1][1]
             ctx.level_state = deepcopy(last_snapshot)
         else:
             ctx.level_state = {}
             pass
+        ctx.restart = False
 
+    await check_weapons(ctx)
     await check_junk(ctx, current_level)
 
     if len(ctx.level_state.keys()) == 0:
@@ -1141,7 +1444,7 @@ async def update_level_behaviour(ctx, current_level, death):
         if hero_count >= heroMaxAdjusted:
             hero_max_hit = True
 
-        if set_max_up:
+        if set_max_up and hero_address_total is not None:
             new_count = hero_count_max
             new_bytes = new_count.to_bytes(hero_address_size, byteorder='big')
             dolphin_memory_engine.write_bytes(hero_address_total, new_bytes)
@@ -1180,7 +1483,7 @@ async def update_level_behaviour(ctx, current_level, death):
         if dark_count >= darkMaxAdjusted:
             dark_max_hit = True
 
-        if set_max_up:
+        if set_max_up and dark_address_total is not None:
             #dark_total_address = dark_address - 16
             #if dark_address == ADDRESS_SOLIDER_COUNT:
             #
@@ -1212,7 +1515,8 @@ async def update_level_behaviour(ctx, current_level, death):
     gun_progress = False
     egg_progress = False
 
-    enemysanity = True
+    enemysanity = ctx.enemy_sanity
+    objective_enemysanity = ctx.enemy_objective_sanity
 
     if hero_address is not None:
         current_bytes = dolphin_memory_engine.read_bytes(hero_address, hero_address_size)
@@ -1381,7 +1685,8 @@ async def update_level_behaviour(ctx, current_level, death):
 
         if (max_checkpoint == 0 and len(ctx.level_state.keys()) > 0 and
                 len(ctx.checkpoint_snapshots) > 1):
-            print("Restart detected, reinitialise state")
+            print("Detected a restart!")
+            ctx.restart = True
             ctx.level_state = {}
             ctx.checkpoint_snapshots = []
 
@@ -1408,25 +1713,29 @@ async def update_level_behaviour(ctx, current_level, death):
                         messages.extend(locations)
 
     if ctx.key_sanity and current_level in KEY_IDENTIFIER_BY_STAGE:
-        key_addresses = GetKeysanityAddresses()
-        state_key_index = ctx.level_state["key_index"]
-        if state_key_index < len(key_addresses):
-            current_key_bytes = dolphin_memory_engine.read_bytes(key_addresses[state_key_index], 4)
-            current_key_data = int.from_bytes(current_key_bytes, byteorder='big')
-            if current_key_data != 0xFFFFFFFF:
-                ctx.level_state["key_index"] = state_key_index + 1
 
-                key_options = KEY_IDENTIFIER_BY_STAGE[current_level]
-                if current_key_data in key_options:
-                    key_index = key_options.index(current_key_data)
-                    key_locations = [k for k in keysanity_locations if k.stageId == current_level and k.count == key_index]
-                    if len(key_locations) == 0:
-                        print("Unable to find location associated")
-                    messages.extend([k.locationId for k in key_locations])
-                else:
-                    logger.error("Unknown key object:", current_level, key_options, current_key_data)
-                    key_locations = [k for k in keysanity_locations if k.stageId == current_level and k.count == state_key_index]
-                    messages.extend([k.locationId for k in key_locations])
+        key_addresses = GetKeysanityAddresses()
+        if "key_index" in ctx.level_state:
+            state_key_index = ctx.level_state["key_index"]
+            if state_key_index < len(key_addresses):
+                current_key_bytes = dolphin_memory_engine.read_bytes(key_addresses[state_key_index], 4)
+                current_key_data = int.from_bytes(current_key_bytes, byteorder='big')
+                if current_key_data != 0xFFFFFFFF:
+                    ctx.level_state["key_index"] = state_key_index + 1
+
+                    key_options = KEY_IDENTIFIER_BY_STAGE[current_level]
+                    if current_key_data in key_options:
+                        key_index = key_options.index(current_key_data)
+                        key_locations = [k for k in keysanity_locations if k.stageId == current_level and k.count == key_index]
+                        if len(key_locations) == 0:
+                            print("Unable to find location associated")
+                        messages.extend([k.locationId for k in key_locations])
+                    else:
+                        logger.error("Unknown key object:", current_level, key_options, current_key_data)
+                        key_locations = [k for k in keysanity_locations if k.stageId == current_level and k.count == state_key_index]
+                        messages.extend([k.locationId for k in key_locations])
+            else:
+                ctx.restart = True
 
 
 
@@ -1476,6 +1785,8 @@ async def check_death(ctx: ShTHContext):
     elif life_count < ctx.lives:
         ctx.lives = life_count
         print("Detected a death!")
+        current_rings_bytes = dolphin_memory_engine.read_bytes(RINGS_ADDRESS, 4)
+        print(current_rings_bytes)
         return True
 
     return False
@@ -1508,12 +1819,14 @@ async def dolphin_sync_task(ctx: ShTHContext):
                     continue
 
                 if True:
+                    death = await check_death(ctx)
                     level = await check_level_status(ctx)
                     if level is not None:
-                        death = await check_death(ctx)
                         await update_level_behaviour(ctx,level, death)
                     else:
                         ctx.lives = 0
+
+                    await handle_ring_link(ctx, level, death)
 
 
                 await asyncio.sleep(0.1)
