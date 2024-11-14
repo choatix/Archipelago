@@ -177,6 +177,12 @@ class RingLink(Toggle):
     """
     display_name = "Ring Link"
 
+class AutoClearMissions(DefaultOnToggle):
+    """
+        Set automatic clears for missions once objective criteria is achieved.
+    """
+    display_name = "Auto Clear Missions"
+
 @dataclass
 class ShadowTheHedgehogOptions(PerGameCommonOptions):
     #goal: Goal
@@ -206,9 +212,9 @@ class ShadowTheHedgehogOptions(PerGameCommonOptions):
     weapon_sanity_hold: WeaponsanityHold
     vehicle_logic: VehicleLogic
     exceeding_items_filler: ExceedingItemsFiller
-
     enable_gauge_items: GaugeFiller
     ring_link: RingLink
+    auto_clear_missions: AutoClearMissions
 
 
 

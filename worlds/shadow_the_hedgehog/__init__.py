@@ -13,7 +13,7 @@ from . import Options, Rules, Regions
 
 #from . import Macros
 
-VERSION: Tuple[int, int, int] = (0, 0, 6)
+VERSION: Tuple[int, int, int] = (0, 0, 7)
 
 
 def run_client():
@@ -81,8 +81,12 @@ class ShtHWorld(World):
     def set_rules(self):
         Rules.set_rules(self.multiworld, self, self.player)
 
+    def check_invalid_configurations(self):
+        if self.options.auto_clear_missions and not self.options.objective_sanity:
+            raise OptionError("Cannot auto clear missions alongside not objective sanity.")
+
     def generate_early(self):
-        # Choose first level here; pass into regions
+        self.check_invalid_configurations()
 
         # Set maximum of levels required
         # Exclude missions listed in exclude_locations
@@ -187,7 +191,8 @@ class ShtHWorld(World):
             "weapon_sanity_unlock": self.options.weapon_sanity_unlock.value,
             "weapon_sanity_hold": self.options.weapon_sanity_hold.value,
             "vehicle_logic": self.options.vehicle_logic.value,
-            "ring_link": self.options.ring_link.value
+            "ring_link": self.options.ring_link.value,
+            "auto_clear_missions": self.options.auto_clear_missions.value
         }
 
 

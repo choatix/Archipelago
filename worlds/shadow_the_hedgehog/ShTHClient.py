@@ -81,6 +81,8 @@ CHECKPOINT_MAX_FLAG_ADDRESS = 0x80575FBF
 CHECKPOINT_FLAGS = [0x80575FFC, 0x80576018, 0x80576034, 0x80576050,
                     0x8057606C, 0x80576088, 0x805760A4, 0x805760C0]
 
+is_paused_address = 0x805EE1DC
+
 CURRENT_STAGE_BASE_KEYSANITY_ADDRESS = 0x8057fb80
 KEY_IDENTIFIER_BY_STAGE = \
 {
@@ -168,6 +170,8 @@ def GetStageClearAddresses():
     return clear_addresses
 
 
+def writeBytes(addr, data):
+    dolphin_memory_engine.write_bytes(addr, data)
 
 ADDRESS_ALIEN_COUNT = 0x8057FB54
 #ADDRESS_ALIEN_COUNT_BUT = 0x8057FB55
@@ -358,7 +362,7 @@ class ShTHContext(CommonContext):
             logger.info("Awaiting connection to Dolphin to get player information")
             return
         logger.info("Auth complete, connecting")
-        r = await self.send_connect()
+        await self.send_connect()
 
     def restoreState(self):
         (mission_clear_locations, mission_locations, end_location, enemy_locations, \
@@ -441,6 +445,9 @@ class ShTHContext(CommonContext):
 
             if "ring_link" in slot_data:
                 self.ring_link = slot_data["ring_link"]
+
+            if "auto_clear_missions" in slot_data:
+                self.auto_clear_missions = slot_data["auto_clear_missions"]
 
             self.restoreState()
             self.awaiting_server = False
@@ -593,14 +600,14 @@ async def check_save_loaded(ctx):
         if set_last_way:
             set_to = 1
             set_last_way_bytes = set_to.to_bytes(1, byteorder='big')
-            dolphin_memory_engine.write_bytes(ADDRESS_LAST_STORY_OPTION, set_last_way_bytes)
+            writeBytes(ADDRESS_LAST_STORY_OPTION, set_last_way_bytes)
 
             # Review
             for cutscene in range(0, 16):
                 buffer_address_cutscene = CUTSCENE_BUFFER + (8 * cutscene)
                 to_write = 0
                 set_blank = to_write.to_bytes(4, byteorder='big')
-                dolphin_memory_engine.write_bytes(buffer_address_cutscene, set_blank)
+                writeBytes(buffer_address_cutscene, set_blank)
 
 
         else:
@@ -608,7 +615,7 @@ async def check_save_loaded(ctx):
             # TODO: Make it as to not write this constantly
             #set_to = 0
             #set_last_way_bytes = set_to.to_bytes(1, byteorder='big')
-            #dolphin_memory_engine.write_bytes(ADDRESS_LAST_STORY_OPTION, set_last_way_bytes)
+            #writeBytes(ADDRESS_LAST_STORY_OPTION, set_last_way_bytes)
 
         finished = False
 
@@ -800,7 +807,7 @@ async def check_level_status(ctx):
 
             if current_value != new_count:
                 new_bytes = new_count.to_bytes(4, byteorder='big')
-                dolphin_memory_engine.write_bytes(address, new_bytes)
+                writeBytes(address, new_bytes)
 
     found_emerald_items = [
         unlock for unlock in ctx.items_to_handle if unlock[0].item in info
@@ -848,7 +855,10 @@ async def check_level_status(ctx):
             # Reset the level state when not in a level
             if len(ctx.level_state) != 0 or force_retry:
                 ctx.level_state = {}
-                new_messages = complete_completable_levels(ctx)
+                if ctx.auto_clear_missions:
+                    new_messages = complete_completable_levels(ctx)
+                else:
+                    new_messages = []
                 if len(new_messages) > 0:
                     message = [{"cmd": 'LocationChecks', "locations": new_messages}]
                     await ctx.send_msgs(message)
@@ -881,6 +891,12 @@ COMPLETE_FLAG_READY = 2
 COMPLETE_FLAG_ON_SET = 3
 
 async def disable_weapon(ctx):
+    current_paused_data = dolphin_memory_engine.read_bytes(is_paused_address, 1)
+    currently_paused = int.from_bytes(current_paused_data, byteorder='big') == 1
+    
+    if currently_paused:
+        return
+    
     current_dark_gauge_bytes = dolphin_memory_engine.read_bytes(DARK_GAUGE_ADDRESS, 4)
     current_dark_gauge = int.from_bytes(current_dark_gauge_bytes, byteorder="big")
     time.sleep(0.05)
@@ -902,10 +918,10 @@ async def disable_weapon(ctx):
     ctx.junk_delay += 25
 
     new_bytes = int(0).to_bytes(4, byteorder='big')
-    dolphin_memory_engine.write_bytes(DARK_GAUGE_ADDRESS, new_bytes)
+    writeBytes(DARK_GAUGE_ADDRESS, new_bytes)
 
     new_bytes = int(0).to_bytes(4, byteorder='big')
-    dolphin_memory_engine.write_bytes(HERO_GAUGE_ADDRESS, new_bytes)
+    writeBytes(HERO_GAUGE_ADDRESS, new_bytes)
 
     # Sleep not preferable, required to ensure game processes end of dark/hero gauge in case of active power Shadow
     # Which would then not drop the weapon!
@@ -915,7 +931,7 @@ async def disable_weapon(ctx):
         time.sleep(0.5)
 
     new_bytes = int(0).to_bytes(4, byteorder='big')
-    dolphin_memory_engine.write_bytes(CURRENT_AMMO_ADDRESS, new_bytes)
+    writeBytes(CURRENT_AMMO_ADDRESS, new_bytes)
 
 
 async def check_weapons(ctx):
@@ -961,7 +977,7 @@ async def check_weapons(ctx):
 
         weapon_value_write = int("".join([ str(w) for w in weapon_value]),2)
         new_bytes = weapon_value_write.to_bytes(2, byteorder='big')
-        dolphin_memory_engine.write_bytes(SPECIAL_WEAPONS_ADDRESS, new_bytes)
+        writeBytes(SPECIAL_WEAPONS_ADDRESS, new_bytes)
 
         remove = []
         for r in newly_handled:
@@ -1049,7 +1065,7 @@ def set_last_index(ctx, new_value):
     current_potential_bytes[1] = bytes_to_manip[0]
     current_potential_bytes[2] = bytes_to_manip[1]
     potential_bytes = bytes(current_potential_bytes)
-    dolphin_memory_engine.write_bytes(decided_last_index_address, potential_bytes)
+    writeBytes(decided_last_index_address, potential_bytes)
 
 
 async def handle_ring_link(ctx, level, death):
@@ -1162,7 +1178,7 @@ async def check_junk(ctx, current_level):
 
         if rings_changed:
             new_bytes = current_rings.to_bytes(4, byteorder='big')
-            dolphin_memory_engine.write_bytes(RINGS_ADDRESS, new_bytes)
+            writeBytes(RINGS_ADDRESS, new_bytes)
 
     if len(filler_gauge_hero) > 0:
         for gaugeJunk in filler_gauge_hero:
@@ -1181,15 +1197,14 @@ async def check_junk(ctx, current_level):
 
         if ctx.hero_gauge_buffer > 1000 and increase < 1000:
             print("gauge diff too small", ctx.hero_gauge_buffer, increase)
-            return
+        else:
+            print("gauge diff", ctx.hero_gauge_buffer, increase)
+            ctx.hero_gauge_buffer -= increase
 
-        print("gauge diff", ctx.hero_gauge_buffer, increase)
-        ctx.hero_gauge_buffer -= increase
-
-        new_hero_value = current_hero_gauge + increase
-        print("new hero", new_hero_value)
-        new_bytes = new_hero_value.to_bytes(4, byteorder='big')
-        dolphin_memory_engine.write_bytes(HERO_GAUGE_ADDRESS, new_bytes)
+            new_hero_value = current_hero_gauge + increase
+            print("new hero", new_hero_value)
+            new_bytes = new_hero_value.to_bytes(4, byteorder='big')
+            writeBytes(HERO_GAUGE_ADDRESS, new_bytes)
 
     if len(filler_gauge_dark) > 0:
         for gaugeJunk in filler_gauge_dark:
@@ -1204,11 +1219,14 @@ async def check_junk(ctx, current_level):
         if ctx.dark_gauge_buffer < increase:
             increase = ctx.dark_gauge_buffer
 
-        ctx.dark_gauge_buffer -= increase
+        if ctx.dark_gauge_buffer > 1000 and increase < 1000:
+            print("gauge diff too small", ctx.dark_gauge_buffer, increase)
+        else:
+            ctx.dark_gauge_buffer -= increase
 
-        new_dark_value = current_dark_gauge + increase
-        new_bytes = new_dark_value.to_bytes(4, byteorder='big')
-        dolphin_memory_engine.write_bytes(DARK_GAUGE_ADDRESS, new_bytes)
+            new_dark_value = current_dark_gauge + increase
+            new_bytes = new_dark_value.to_bytes(4, byteorder='big')
+            writeBytes(DARK_GAUGE_ADDRESS, new_bytes)
 
     remove = []
     for r in newly_handled:
@@ -1447,12 +1465,12 @@ async def update_level_behaviour(ctx, current_level, death):
         if set_max_up and hero_address_total is not None:
             new_count = hero_count_max
             new_bytes = new_count.to_bytes(hero_address_size, byteorder='big')
-            dolphin_memory_engine.write_bytes(hero_address_total, new_bytes)
+            writeBytes(hero_address_total, new_bytes)
 
         if handle_count > 0 and hero_write is not None and ctx.objective_sanity:
             new_count = hero_write
             new_bytes = new_count.to_bytes(hero_address_size, byteorder='big')
-            dolphin_memory_engine.write_bytes(hero_address, new_bytes)
+            writeBytes(hero_address, new_bytes)
 
     if darkInfo is not None and darkInfo.requirement_count is not None:
         dark_count = ctx.level_state["dark_count"]
@@ -1496,12 +1514,12 @@ async def update_level_behaviour(ctx, current_level, death):
 
             new_count = dark_count_max
             new_bytes = new_count.to_bytes(dark_address_size, byteorder='big')
-            dolphin_memory_engine.write_bytes(dark_address_total, new_bytes)
+            writeBytes(dark_address_total, new_bytes)
 
         if handle_count > 0 and dark_write is not None and ctx.objective_sanity:
             new_count = dark_write
             new_bytes = new_count.to_bytes(dark_address_size, byteorder='big')
-            dolphin_memory_engine.write_bytes(dark_address, new_bytes)
+            writeBytes(dark_address, new_bytes)
 
     ## Handle new events
 
@@ -1543,13 +1561,14 @@ async def update_level_behaviour(ctx, current_level, death):
         if hero_address is not None and hero_write is not None and restore_hero:
             new_count = expected_hero_value
             new_bytes = new_count.to_bytes(4, byteorder='big')
-            dolphin_memory_engine.write_bytes(hero_address, new_bytes)
+            writeBytes(hero_address, new_bytes)
 
     if dark_address is not None:
         current_bytes = dolphin_memory_engine.read_bytes(dark_address, dark_address_size)
         current_count = int.from_bytes(current_bytes, byteorder='big')
 
         if expected_dark_value is not None and current_count > expected_dark_value:
+            print("dark count increased --", current_count, expected_dark_value)
             valid_compare_count = darkInfo.requirement_count + 2
             if ctx.level_state["dark_progress"] > darkInfo.requirement_count:
                 valid_compare_count = ctx.level_state["dark_progress"] + 2
@@ -1570,7 +1589,7 @@ async def update_level_behaviour(ctx, current_level, death):
         if dark_address is not None and dark_write is not None and restore_dark:
             new_count = expected_dark_value
             new_bytes = new_count.to_bytes(4, byteorder='big')
-            dolphin_memory_engine.write_bytes(dark_address, new_bytes)
+            writeBytes(dark_address, new_bytes)
 
     if enemysanity and hero_address != ADDRESS_ALIEN_COUNT and alienInfo is not None:
         alien_count = ctx.level_state["alien_progress"]
@@ -1621,31 +1640,39 @@ async def update_level_behaviour(ctx, current_level, death):
         # Signal archipelago a check has been made
         if hero_progress:
             progress_locations = [ l.locationId for l in mission_locations if l.alignmentId == Levels.MISSION_ALIGNMENT_HERO and \
-                l.stageId == current_level and l.count <= ctx.level_state["hero_progress"] ]
+                l.stageId == current_level and l.count <= ctx.level_state["hero_progress"] and l.locationId not in ctx.checked_locations ]
             messages.extend(progress_locations)
 
         if dark_progress:
             progress_locations = [ l.locationId for l in mission_locations if l.alignmentId == Levels.MISSION_ALIGNMENT_DARK and \
-                l.stageId == current_level and l.count <= ctx.level_state["dark_progress"] ]
-            messages.extend(progress_locations)
+                l.stageId == current_level and l.count <= ctx.level_state["dark_progress"]
+                                   and l.locationId not in ctx.checked_locations]
+            if len(progress_locations) > 0:
+                messages.extend(progress_locations)
 
         if alien_progress:
             progress_locations = [l.locationId for l in enemysanity_locations if
                                   l.alignmentId == Locations.ENEMY_CLASS_ALIEN and \
-                                  l.stageId == current_level and l.count <= ctx.level_state["alien_progress"]]
-            messages.extend(progress_locations)
+                                  l.stageId == current_level and l.count <= ctx.level_state["alien_progress"]
+                                  and l.locationId not in ctx.checked_locations]
+            if len(progress_locations) > 0:
+                messages.extend(progress_locations)
 
         if gun_progress:
             progress_locations = [l.locationId for l in enemysanity_locations if
                                   l.alignmentId == Locations.ENEMY_CLASS_GUN and \
-                                  l.stageId == current_level and l.count <= ctx.level_state["gun_progress"]]
-            messages.extend(progress_locations)
+                                  l.stageId == current_level and l.count <= ctx.level_state["gun_progress"]
+                                  and l.locationId not in ctx.checked_locations]
+            if len(progress_locations) > 0:
+                messages.extend(progress_locations)
 
         if egg_progress:
             progress_locations = [l.locationId for l in enemysanity_locations if
                                   l.alignmentId == Locations.ENEMY_CLASS_EGG and \
-                                  l.stageId == current_level and l.count <= ctx.level_state["egg_progress"]]
-            messages.extend(progress_locations)
+                                  l.stageId == current_level and l.count <= ctx.level_state["egg_progress"]
+                                  and l.locationId not in ctx.checked_locations]
+            if len(progress_locations) > 0:
+                messages.extend(progress_locations)
 
     if ctx.character_sanity:
         for character in CharacterAddresses:
@@ -1672,7 +1699,7 @@ async def update_level_behaviour(ctx, current_level, death):
                 relevantChar = relevantCharData[0]
                 new_value = 1
                 new_bytes = new_value.to_bytes(1, byteorder='big')
-                dolphin_memory_engine.write_bytes(relevantChar.met_address, new_bytes)
+                writeBytes(relevantChar.met_address, new_bytes)
 
         ctx.level_state["characters_set"] = True
 
@@ -1734,8 +1761,6 @@ async def update_level_behaviour(ctx, current_level, death):
                         logger.error("Unknown key object:", current_level, key_options, current_key_data)
                         key_locations = [k for k in keysanity_locations if k.stageId == current_level and k.count == state_key_index]
                         messages.extend([k.locationId for k in key_locations])
-            else:
-                ctx.restart = True
 
 
 
@@ -1744,7 +1769,7 @@ async def update_level_behaviour(ctx, current_level, death):
 
     # If an objective is currently completable then check for pause state, etc
 
-    is_paused_address = 0x805EE1DC
+
     button_menu_address = 0x8056ED4F
     is_back_button = 0x20
 
@@ -1814,7 +1839,7 @@ async def dolphin_sync_task(ctx: ShTHContext):
 
                 if not await check_save_loaded(ctx):
                     # Reset give item array while not in game.
-                    #dolphin_memory_engine.write_bytes(GIVE_ITEM_ARRAY_ADDR, bytes([0xFF] * ctx.len_give_item_array))
+                    #writeBytes(GIVE_ITEM_ARRAY_ADDR, bytes([0xFF] * ctx.len_give_item_array))
                     await asyncio.sleep(0.1)
                     continue
 

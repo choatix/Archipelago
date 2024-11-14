@@ -143,7 +143,7 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
                     level_rule = lambda state, l_rule=level_rule, n_rule=new_rule, c_rule=current_rule: n_rule(state) and c_rule(state) and l_rule(state)
                     rule_change = True
 
-                if clear.requirement_count is not None:
+                if clear.requirement_count is not None and world.options.objective_sanity:
                     percentage = world.options.objective_percentage.value
                     max_required = Utils.getRequiredCount(clear.requirement_count, percentage, round_method=floor)
                     total = 1
@@ -167,7 +167,6 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
 
                         if count > max_required:
                             break
-
 
             if clear.requirement_count is not None:
                 location = multiworld.get_location(name, player)

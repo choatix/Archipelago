@@ -72,7 +72,7 @@ def create_regions(world: "ShtHWorld") -> Dict[str, Region]:
             pass
 
     first_regions = world.random.sample(stage_regions, world.options.starting_stages.value)
-    #first_regions.extend([ s for s in stage_regions if s.name == stage_id_to_region(Levels.STAGE_GUN_FORTRESS) ])
+    #first_regions.extend([ s for s in stage_regions if s.name == stage_id_to_region(Levels.STAGE_THE_DOOM) ])
     world.first_regions = [ region_to_stage_id[region] for region in first_regions]
 
     regions["Menu"] = Region("Menu", world.player, world.multiworld)
