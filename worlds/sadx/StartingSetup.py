@@ -1,4 +1,5 @@
 import collections
+import logging
 import re
 from dataclasses import dataclass, field
 from typing import List, Optional, TextIO
@@ -40,7 +41,9 @@ def generate_early_sadx(world: World, options: SonicAdventureDXOptions) -> Start
     possible_characters = get_playable_characters(options)
     world.random.shuffle(possible_characters)
     if not possible_characters:
-        raise OptionError("SADX Error: You need at least one playable character.")
+        logging.warning("SADX warning: Zero playable characters in settings, enabling Sonic as a failsafe.")
+        options.playable_sonic.value = True
+        possible_characters = get_playable_characters(options)
 
     if options.entrance_randomizer:
         fixed_areas = {Area[re.sub(r' ', '', area)]: Area[re.sub(r' ', '', dest)]
