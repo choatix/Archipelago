@@ -133,8 +133,6 @@ def create_sadx_rules(self, needed_emblems: int) -> LocationDistribution:
         for location in level_location_list[:num_locations]:
             add_rule(perfect_chaos_fight, lambda state, loc=location: loc.can_reach(state))
             levels_for_perfect_chaos += 1
-        if levels_for_perfect_chaos == 0:
-            raise OptionError("SADX Error: You need to add action stages in the configuration to use levels as goal.")
 
     if self.options.goal.value in {Goal.Missions, Goal.MissionsAndEmeraldHunt}:
         mission_location_list = []
@@ -149,8 +147,6 @@ def create_sadx_rules(self, needed_emblems: int) -> LocationDistribution:
         for location in mission_location_list[:num_locations]:
             add_rule(perfect_chaos_fight, lambda state, loc=location: loc.can_reach(state))
             missions_for_perfect_chaos += 1
-        if missions_for_perfect_chaos == 0:
-            raise OptionError("SADX Error: You need to add more missions in the configuration to use mission as goal.")
 
     if self.options.goal.value in {Goal.EmeraldHunt, Goal.LevelsAndEmeraldHunt, Goal.EmblemsAndEmeraldHunt,
                                    Goal.MissionsAndEmeraldHunt}:

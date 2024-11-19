@@ -6,8 +6,9 @@ from typing import List, Optional, TextIO
 
 from Options import OptionError
 from worlds.AutoWorld import World
-from .CharacterUtils import get_playable_characters, are_character_upgrades_randomized, is_level_playable
-from .Enums import Character, Area, SubLevel, pascal_to_space, level_areas
+from .CharacterUtils import get_playable_characters, are_character_upgrades_randomized, is_level_playable, \
+    is_character_playable
+from .Enums import Character, Area, SubLevel, pascal_to_space, level_areas, LevelMission, Goal
 from .Locations import level_location_table, upgrade_location_table, sub_level_location_table, \
     field_emblem_location_table, boss_location_table, life_capsule_location_table, mission_location_table
 from .Logic import area_connections, chao_egg_location_table
@@ -40,10 +41,42 @@ def generate_early_sadx(world: World, options: SonicAdventureDXOptions) -> Start
     starter_setup = StarterSetup()
     possible_characters = get_playable_characters(options)
     world.random.shuffle(possible_characters)
+
     if not possible_characters:
-        logging.warning("SADX warning: Zero playable characters in settings, enabling Sonic as a failsafe.")
+        logging.warning(" -- SADX warning: Zero playable characters in settings. enabling Sonic as a failsafe.")
         options.playable_sonic.value = True
         possible_characters = get_playable_characters(options)
+
+    if options.goal.value in {Goal.Levels, Goal.LevelsAndEmeraldHunt}:
+        level_quantity = 0
+        for level in level_location_table:
+            if is_level_playable(level, options) and level.levelMission == LevelMission.C:
+                level_quantity += 1
+        if level_quantity == 0:
+            options.sonic_action_stage_missions.value = 1
+            options.tails_action_stage_missions.value = 1
+            options.knuckles_action_stage_missions.value = 1
+            options.amy_action_stage_missions.value = 1
+            options.big_action_stage_missions.value = 1
+            options.gamma_action_stage_missions.value = 1
+            logging.warning(
+                " -- SADX warning: No action stages enabled with levels as goal. Enabling all characters levels as a failsafe")
+
+    if options.goal.value in {Goal.Missions, Goal.MissionsAndEmeraldHunt}:
+        if not options.mission_mode_checks.value:
+            logging.warning(
+                " -- SADX warning: Missions are enabled but mission mode checks are disabled. Enabling mission mode checks.")
+            options.mission_mode_checks.value = True
+
+        mission_quantity = 0
+        for mission in mission_location_table:
+            if str(mission.missionNumber) in options.mission_blacklist.value:
+                continue
+            if is_character_playable(mission.character, options):
+                mission_quantity += 1
+        if mission_quantity == 0:
+            raise OptionError(
+                " -- SADX Error: You need to add more missions in the settings to use mission as goal. Either add more characters or remove missions from the blacklist.")
 
     if options.entrance_randomizer:
         fixed_areas = {Area[re.sub(r' ', '', area)]: Area[re.sub(r' ', '', dest)]
