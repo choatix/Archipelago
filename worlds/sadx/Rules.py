@@ -1,6 +1,5 @@
 import math
 
-from Options import OptionError
 from worlds.generic.Rules import add_rule
 from .CharacterUtils import get_playable_characters, is_level_playable, is_character_playable
 from .Enums import Goal, LevelMission

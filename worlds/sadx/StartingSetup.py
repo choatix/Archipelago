@@ -38,45 +38,11 @@ class StarterSetup:
 
 
 def generate_early_sadx(world: World, options: SonicAdventureDXOptions) -> StarterSetup:
+    validate_settings(options)
+
     starter_setup = StarterSetup()
     possible_characters = get_playable_characters(options)
     world.random.shuffle(possible_characters)
-
-    if not possible_characters:
-        logging.warning(" -- SADX warning: Zero playable characters in settings. enabling Sonic as a failsafe.")
-        options.playable_sonic.value = True
-        possible_characters = get_playable_characters(options)
-
-    if options.goal.value in {Goal.Levels, Goal.LevelsAndEmeraldHunt}:
-        level_quantity = 0
-        for level in level_location_table:
-            if is_level_playable(level, options) and level.levelMission == LevelMission.C:
-                level_quantity += 1
-        if level_quantity == 0:
-            options.sonic_action_stage_missions.value = 1
-            options.tails_action_stage_missions.value = 1
-            options.knuckles_action_stage_missions.value = 1
-            options.amy_action_stage_missions.value = 1
-            options.big_action_stage_missions.value = 1
-            options.gamma_action_stage_missions.value = 1
-            logging.warning(
-                " -- SADX warning: No action stages enabled with levels as goal. Enabling all characters levels as a failsafe")
-
-    if options.goal.value in {Goal.Missions, Goal.MissionsAndEmeraldHunt}:
-        if not options.mission_mode_checks.value:
-            logging.warning(
-                " -- SADX warning: Missions are enabled but mission mode checks are disabled. Enabling mission mode checks.")
-            options.mission_mode_checks.value = True
-
-        mission_quantity = 0
-        for mission in mission_location_table:
-            if str(mission.missionNumber) in options.mission_blacklist.value:
-                continue
-            if is_character_playable(mission.character, options):
-                mission_quantity += 1
-        if mission_quantity == 0:
-            raise OptionError(
-                " -- SADX Error: You need to add more missions in the settings to use mission as goal. Either add more characters or remove missions from the blacklist.")
 
     if options.entrance_randomizer:
         fixed_areas = {Area[re.sub(r' ', '', area)]: Area[re.sub(r' ', '', dest)]
@@ -127,6 +93,41 @@ def generate_early_sadx(world: World, options: SonicAdventureDXOptions) -> Start
             starter_setup.charactersWithArea.append(CharacterArea(character, area))
 
     return starter_setup
+
+
+def validate_settings(options):
+    if not get_playable_characters(options):
+        logging.warning(" -- SADX warning: Zero playable characters in settings. enabling Sonic as a failsafe.")
+        options.playable_sonic.value = True
+    if options.goal.value in {Goal.Levels, Goal.LevelsAndEmeraldHunt}:
+        level_quantity = 0
+        for level in level_location_table:
+            if is_level_playable(level, options) and level.levelMission == LevelMission.C:
+                level_quantity += 1
+        if level_quantity == 0:
+            options.sonic_action_stage_missions.value = 1
+            options.tails_action_stage_missions.value = 1
+            options.knuckles_action_stage_missions.value = 1
+            options.amy_action_stage_missions.value = 1
+            options.big_action_stage_missions.value = 1
+            options.gamma_action_stage_missions.value = 1
+            logging.warning(
+                " -- SADX warning: No action stages enabled with levels as goal. Enabling all characters levels as a failsafe")
+    if options.goal.value in {Goal.Missions, Goal.MissionsAndEmeraldHunt}:
+        if not options.mission_mode_checks.value:
+            logging.warning(
+                " -- SADX warning: Missions are enabled but mission mode checks are disabled. Enabling mission mode checks.")
+            options.mission_mode_checks.value = True
+
+        mission_quantity = 0
+        for mission in mission_location_table:
+            if str(mission.missionNumber) in options.mission_blacklist.value:
+                continue
+            if is_character_playable(mission.character, options):
+                mission_quantity += 1
+        if mission_quantity == 0:
+            raise OptionError(
+                " -- SADX Error: You need to add more missions in the settings to use mission as goal. Either add more characters or remove missions from the blacklist.")
 
 
 def get_possible_starting_areas(world, character: Character, level_mapping: dict[Area, Area], guaranteed_level: bool) -> \
