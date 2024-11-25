@@ -8,7 +8,7 @@ from Options import OptionError
 from worlds.AutoWorld import World
 from .CharacterUtils import get_playable_characters, are_character_upgrades_randomized, is_level_playable, \
     is_character_playable
-from .Enums import Character, Area, SubLevel, pascal_to_space, level_areas, LevelMission, Goal
+from .Enums import Character, Area, SubLevel, pascal_to_space, level_areas, LevelMission
 from .Locations import level_location_table, upgrade_location_table, sub_level_location_table, \
     field_emblem_location_table, boss_location_table, life_capsule_location_table, mission_location_table
 from .Logic import area_connections, chao_egg_location_table
@@ -99,7 +99,11 @@ def validate_settings(options):
     if not get_playable_characters(options):
         logging.warning(" -- SADX warning: Zero playable characters in settings. enabling Sonic as a failsafe.")
         options.playable_sonic.value = True
-    if options.goal.value in {Goal.Levels, Goal.LevelsAndEmeraldHunt}:
+    if not options.goal_requires_levels and not options.goal_requires_missions and not options.goal_requires_emblems and not options.goal_requires_chaos_emeralds:
+        logging.warning(" -- SADX warning: No goal requirement set. Enabling action stages requirement as a failsafe.")
+        options.goal_requires_levels.value = True
+
+    if options.goal_requires_levels.value:
         level_quantity = 0
         for level in level_location_table:
             if is_level_playable(level, options) and level.levelMission == LevelMission.C:
@@ -113,7 +117,7 @@ def validate_settings(options):
             options.gamma_action_stage_missions.value = 1
             logging.warning(
                 " -- SADX warning: No action stages enabled with levels as goal. Enabling all characters levels as a failsafe")
-    if options.goal.value in {Goal.Missions, Goal.MissionsAndEmeraldHunt}:
+    if options.goal_requires_missions.value:
         if not options.mission_mode_checks.value:
             logging.warning(
                 " -- SADX warning: Missions are enabled but mission mode checks are disabled. Enabling mission mode checks.")

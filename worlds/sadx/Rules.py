@@ -2,7 +2,7 @@ import math
 
 from worlds.generic.Rules import add_rule
 from .CharacterUtils import get_playable_characters, is_level_playable, is_character_playable
-from .Enums import Goal, LevelMission
+from .Enums import LevelMission
 from .Locations import get_location_by_name, level_location_table, upgrade_location_table, sub_level_location_table, \
     LocationInfo, life_capsule_location_table, boss_location_table, mission_location_table, field_emblem_location_table
 from .Logic import LevelLocation, UpgradeLocation, SubLevelLocation, EmblemLocation, CharacterUpgrade, \
@@ -118,10 +118,10 @@ def create_sadx_rules(self, needed_emblems: int) -> LocationDistribution:
     perfect_chaos_fight = self.multiworld.get_location("Perfect Chaos Fight", self.player)
     perfect_chaos_fight.place_locked_item(self.create_item(ItemName.Progression.ChaosPeace))
 
-    if self.options.goal.value in {Goal.Emblems, Goal.EmblemsAndEmeraldHunt}:
+    if self.options.goal_requires_emblems.value:
         add_rule(perfect_chaos_fight, lambda state: state.has(ItemName.Progression.Emblem, self.player, needed_emblems))
 
-    if self.options.goal.value in {Goal.Levels, Goal.LevelsAndEmeraldHunt}:
+    if self.options.goal_requires_levels.value:
         level_location_list = []
         for level in level_location_table:
             if is_level_playable(level, self.options) and level.levelMission == LevelMission.C:
@@ -133,7 +133,7 @@ def create_sadx_rules(self, needed_emblems: int) -> LocationDistribution:
             add_rule(perfect_chaos_fight, lambda state, loc=location: loc.can_reach(state))
             levels_for_perfect_chaos += 1
 
-    if self.options.goal.value in {Goal.Missions, Goal.MissionsAndEmeraldHunt}:
+    if self.options.goal_requires_missions.value:
         mission_location_list = []
         for mission in mission_location_table:
             if str(mission.missionNumber) in self.options.mission_blacklist.value:
@@ -147,8 +147,7 @@ def create_sadx_rules(self, needed_emblems: int) -> LocationDistribution:
             add_rule(perfect_chaos_fight, lambda state, loc=location: loc.can_reach(state))
             missions_for_perfect_chaos += 1
 
-    if self.options.goal.value in {Goal.EmeraldHunt, Goal.LevelsAndEmeraldHunt, Goal.EmblemsAndEmeraldHunt,
-                                   Goal.MissionsAndEmeraldHunt}:
+    if self.options.goal_requires_chaos_emeralds.value:
         add_rule(perfect_chaos_fight, lambda state: state.has(ItemName.Progression.WhiteEmerald, self.player))
         add_rule(perfect_chaos_fight, lambda state: state.has(ItemName.Progression.RedEmerald, self.player))
         add_rule(perfect_chaos_fight, lambda state: state.has(ItemName.Progression.CyanEmerald, self.player))

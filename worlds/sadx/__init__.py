@@ -4,7 +4,7 @@ from typing import Dict, Any
 from BaseClasses import Tutorial
 from worlds.AutoWorld import WebWorld, World
 from .CharacterUtils import get_playable_characters
-from .Enums import Character, SADX_BASE_ID, Goal, Area, remove_character_suffix, pascal_to_space
+from .Enums import Character, SADX_BASE_ID, Area, remove_character_suffix, pascal_to_space
 from .ItemPool import create_sadx_items, get_item_names, ItemDistribution
 from .Items import SonicAdventureDXItem, group_item_table, item_name_to_info
 from .Locations import all_location_table, group_location_table
@@ -69,11 +69,14 @@ class SonicAdventureDXWorld(World):
                                                     for original, randomized in passthrough["LevelEntranceMap"].items()}
 
                 # Options synchronization, needed for weighted values
-                self.options.goal.value = passthrough["Goal"]
-                self.options.logic_level.value = passthrough["LogicLevel"]
-                self.options.emblems_percentage.value = passthrough["EmblemsPercentage"]
+                self.options.goal_requires_levels.value = passthrough["GoalRequiresLevels"]
                 self.options.levels_percentage.value = passthrough["LevelsPercentage"]
+                self.options.goal_requires_chaos_emeralds.value = passthrough["GoalRequiresChaosEmeralds"]
+                self.options.goal_requires_emblems.value = passthrough["GoalRequiresEmblems"]
+                self.options.emblems_percentage.value = passthrough["EmblemsPercentage"]
+                self.options.goal_requires_missions.value = passthrough["GoalRequiresMissions"]
                 self.options.mission_percentage.value = passthrough["MissionsPercentage"]
+                self.options.logic_level.value = passthrough["LogicLevel"]
                 self.options.entrance_randomizer.value = passthrough["EntranceRandomizer"]
 
                 self.options.playable_sonic.value = passthrough["PlayableSonic"]
@@ -158,11 +161,14 @@ class SonicAdventureDXWorld(World):
     def fill_slot_data(self) -> Dict[str, Any]:
         return {
             "ModVersion": 90,
-            "Goal": self.options.goal.value,
-            "LogicLevel": self.options.logic_level.value,
-            "EmblemsPercentage": self.options.emblems_percentage.value,
+            "GoalRequiresLevels": self.options.goal_requires_levels.value,
             "LevelsPercentage": self.options.levels_percentage.value,
+            "GoalRequiresChaosEmeralds": self.options.goal_requires_chaos_emeralds.value,
+            "GoalRequiresEmblems": self.options.goal_requires_emblems.value,
+            "EmblemsPercentage": self.options.emblems_percentage.value,
+            "GoalRequiresMissions": self.options.goal_requires_missions.value,
             "MissionsPercentage": self.options.mission_percentage.value,
+            "LogicLevel": self.options.logic_level.value,
             "EmblemsForPerfectChaos": self.item_distribution.emblem_count_progressive,
             "LevelForPerfectChaos": self.location_distribution.levels_for_perfect_chaos,
             "MissionForPerfectChaos": self.location_distribution.missions_for_perfect_chaos,
