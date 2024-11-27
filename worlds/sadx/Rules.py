@@ -12,9 +12,10 @@ from .Regions import get_region_name
 
 
 class LocationDistribution:
-    def __init__(self, levels_for_perfect_chaos=0, missions_for_perfect_chaos=0):
+    def __init__(self, levels_for_perfect_chaos=0, missions_for_perfect_chaos=0, bosses_for_perfect_chaos=0):
         self.levels_for_perfect_chaos = levels_for_perfect_chaos
         self.missions_for_perfect_chaos = missions_for_perfect_chaos
+        self.bosses_for_perfect_chaos = bosses_for_perfect_chaos
 
 
 def add_level_rules(self, location_name: str, level: LevelLocation):
@@ -112,6 +113,7 @@ def calculate_rules(self, location: LocationInfo):
 def create_sadx_rules(self, needed_emblems: int) -> LocationDistribution:
     levels_for_perfect_chaos = 0
     missions_for_perfect_chaos = 0
+    bosses_for_perfect_chaos = 0
     for ap_location in self.multiworld.get_locations(self.player):
         calculate_rules(self, get_location_by_name(ap_location.name))
 
@@ -147,6 +149,17 @@ def create_sadx_rules(self, needed_emblems: int) -> LocationDistribution:
             add_rule(perfect_chaos_fight, lambda state, loc=location: loc.can_reach(state))
             missions_for_perfect_chaos += 1
 
+    if self.options.goal_requires_bosses.value:
+        bosses_location_list = []
+        for ap_location in self.multiworld.get_locations(self.player):
+            location = get_location_by_name(ap_location.name)
+            for boss_fight in boss_location_table:
+                if location["id"] == boss_fight.locationId:
+                    bosses_location_list.append(self.multiworld.get_location(boss_fight.get_boss_name(), self.player))
+        for boss_location in bosses_location_list:
+            add_rule(perfect_chaos_fight, lambda state, loc=boss_location: loc.can_reach(state))
+            bosses_for_perfect_chaos += 1
+
     if self.options.goal_requires_chaos_emeralds.value:
         add_rule(perfect_chaos_fight, lambda state: state.has(ItemName.Progression.WhiteEmerald, self.player))
         add_rule(perfect_chaos_fight, lambda state: state.has(ItemName.Progression.RedEmerald, self.player))
@@ -161,4 +174,5 @@ def create_sadx_rules(self, needed_emblems: int) -> LocationDistribution:
     return LocationDistribution(
         levels_for_perfect_chaos=levels_for_perfect_chaos,
         missions_for_perfect_chaos=missions_for_perfect_chaos,
+        bosses_for_perfect_chaos=bosses_for_perfect_chaos,
     )

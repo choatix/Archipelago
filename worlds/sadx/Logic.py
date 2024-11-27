@@ -144,6 +144,12 @@ class BossFightLocation:
     boss: Boss
     unified: bool
 
+    def get_boss_name(self) -> str:
+        if self.unified:
+            return f"{self.boss} Boss Fight"
+        else:
+            return f"{self.boss} Boss Fight ({self.characters[0].name})"
+
 
 @dataclass
 class ChaoEggLocation:

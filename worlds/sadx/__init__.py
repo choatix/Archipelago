@@ -76,6 +76,7 @@ class SonicAdventureDXWorld(World):
                 self.options.emblems_percentage.value = passthrough["EmblemsPercentage"]
                 self.options.goal_requires_missions.value = passthrough["GoalRequiresMissions"]
                 self.options.mission_percentage.value = passthrough["MissionsPercentage"]
+                self.options.goal_requires_bosses.value = passthrough["GoalRequiresBosses"]
                 self.options.logic_level.value = passthrough["LogicLevel"]
                 self.options.entrance_randomizer.value = passthrough["EntranceRandomizer"]
 
@@ -168,10 +169,12 @@ class SonicAdventureDXWorld(World):
             "EmblemsPercentage": self.options.emblems_percentage.value,
             "GoalRequiresMissions": self.options.goal_requires_missions.value,
             "MissionsPercentage": self.options.mission_percentage.value,
+            "GoalRequiresBosses": self.options.goal_requires_bosses.value,
             "LogicLevel": self.options.logic_level.value,
             "EmblemsForPerfectChaos": self.item_distribution.emblem_count_progressive,
             "LevelForPerfectChaos": self.location_distribution.levels_for_perfect_chaos,
             "MissionForPerfectChaos": self.location_distribution.missions_for_perfect_chaos,
+            "BossesForPerfectChaos": self.location_distribution.bosses_for_perfect_chaos,
             "StartingCharacter": self.starter_setup.character.value,
             "StartingItem": self.starter_setup.item,
             "StartingArea": self.starter_setup.area.value,

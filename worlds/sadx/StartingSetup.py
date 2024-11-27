@@ -99,7 +99,8 @@ def validate_settings(options):
     if not get_playable_characters(options):
         logging.warning(" -- SADX warning: Zero playable characters in settings. enabling Sonic as a failsafe.")
         options.playable_sonic.value = True
-    if not options.goal_requires_levels and not options.goal_requires_missions and not options.goal_requires_emblems and not options.goal_requires_chaos_emeralds:
+    if (not options.goal_requires_levels and not options.goal_requires_missions and not options.goal_requires_emblems
+            and not options.goal_requires_chaos_emeralds and not options.goal_requires_bosses):
         logging.warning(" -- SADX warning: No goal requirement set. Enabling action stages requirement as a failsafe.")
         options.goal_requires_levels.value = True
 
@@ -120,8 +121,13 @@ def validate_settings(options):
     if options.goal_requires_missions.value:
         if not options.mission_mode_checks.value:
             logging.warning(
-                " -- SADX warning: Missions are enabled but mission mode checks are disabled. Enabling mission mode checks.")
+                " -- SADX warning: Missions as goal requirements are enabled but mission mode checks are disabled. Enabling mission mode checks.")
             options.mission_mode_checks.value = True
+    if options.goal_requires_bosses.value:
+        if not options.boss_checks.value:
+            logging.warning(
+                " -- SADX warning: Bosses as goal requirements are enabled but mission mode checks are disabled. Enabling mission mode checks.")
+            options.boss_checks.value = True
 
         mission_quantity = 0
         for mission in mission_location_table:

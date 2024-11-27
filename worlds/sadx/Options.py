@@ -57,6 +57,11 @@ class MissionPercentage(Range):
     default = 100
 
 
+class GoalRequiresBosses(Toggle):
+    """If enabled, you have to beat all the bosses to unlock the last fight."""
+    display_name = "Goal Requires Bosses"
+
+
 class LogicLevel(Choice):
     """
     Determines the logic the randomizer will use.
@@ -496,6 +501,7 @@ class SonicAdventureDXOptions(PerGameCommonOptions):
     emblems_percentage: EmblemPercentage
     goal_requires_missions: GoalRequiresMissions
     mission_percentage: MissionPercentage
+    goal_requires_bosses: GoalRequiresBosses
 
     logic_level: LogicLevel
     random_starting_location: RandomStartingLocation
@@ -581,6 +587,7 @@ sadx_option_groups = [
         EmblemPercentage,
         GoalRequiresMissions,
         MissionPercentage,
+        GoalRequiresBosses,
         LogicLevel,
         RandomStartingLocation,
         RandomStartingLocationPerCharacter,

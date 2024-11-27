@@ -52,11 +52,7 @@ def get_location_from_life_capsule() -> List[LocationInfo]:
 def get_location_from_boss() -> List[LocationInfo]:
     locations: List[LocationInfo] = []
     for boss_fight in boss_location_table:
-        if boss_fight.unified:
-            location_name: str = f"{boss_fight.boss} Boss Fight"
-        else:
-            location_name: str = f"{boss_fight.boss} Boss Fight ({boss_fight.characters[0].name})"
-
+        location_name = boss_fight.get_boss_name()
         locations += [{"id": boss_fight.locationId, "name": location_name}]
     return locations
 
