@@ -107,6 +107,11 @@ class SonicAdventureDXWorld(World):
                 self.options.unify_egg_hornet.value = passthrough["UnifyEggHornet"]
 
                 self.options.field_emblems_checks.value = passthrough["FieldEmblemChecks"]
+                self.options.random_starting_location.value = passthrough["RandomStartingLocation"]
+                self.options.random_starting_location_per_character.value = passthrough["RandomStartingLocationPerCharacter"]
+                self.options.guaranteed_level.value = passthrough["GuaranteedLevel"]
+                self.options.guaranteed_starting_checks.value = passthrough["GuaranteedStartingChecks"]
+
                 self.options.chao_egg_checks.value = passthrough["SecretChaoEggs"]
                 self.options.mission_mode_checks.value = passthrough["MissionModeChecks"]
                 self.options.auto_start_missions.value = passthrough["AutoStartMissions"]
@@ -190,6 +195,8 @@ class SonicAdventureDXWorld(World):
 
             "RandomStartingLocation": self.options.random_starting_location.value,
             "RandomStartingLocationPerCharacter": self.options.random_starting_location_per_character.value,
+            "GuaranteedLevel": self.options.guaranteed_level.value,
+            "GuaranteedStartingChecks": self.options.guaranteed_starting_checks.value,
             "FieldEmblemChecks": self.options.field_emblems_checks.value,
             "SecretChaoEggs": self.options.chao_egg_checks.value,
             "MissionModeChecks": self.options.mission_mode_checks.value,

@@ -91,6 +91,14 @@ class GuaranteedLevel(Toggle):
     display_name = "Guaranteed Level Access"
 
 
+class GuaranteedStartingChecks(Range):
+    """Ensures at least this many checks in your starting location if possible."""
+    display_name = "Guaranteed Starting Checks"
+    range_start = 1
+    range_end = 10
+    default = 2
+
+
 class EntranceRandomizer(Toggle):
     """
     Randomizes the entrances to action stages.
@@ -507,6 +515,7 @@ class SonicAdventureDXOptions(PerGameCommonOptions):
     random_starting_location: RandomStartingLocation
     random_starting_location_per_character: RandomStartingLocationPerCharacter
     guaranteed_level: GuaranteedLevel
+    guaranteed_starting_checks: GuaranteedStartingChecks
     entrance_randomizer: EntranceRandomizer
     level_entrance_plando: LevelEntrancePlando
 
@@ -592,6 +601,7 @@ sadx_option_groups = [
         RandomStartingLocation,
         RandomStartingLocationPerCharacter,
         GuaranteedLevel,
+        GuaranteedStartingChecks,
         EntranceRandomizer,
         LevelEntrancePlando,
         SendDeathLinkChance,
