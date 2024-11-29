@@ -13,8 +13,6 @@ from . import Options, Rules, Regions
 
 #from . import Macros
 
-VERSION: Tuple[int, int, int] = (0, 0, 7)
-
 
 def run_client():
     print("Running ShTHClient")
@@ -69,6 +67,7 @@ class ShtHWorld(World):
         self.first_regions = []
         self.available_characters = []
         self.available_weapons = []
+        self.available_levels = []
         self.token_locations = []
         self.required_tokens = {}
         self.excess_item_count = 0
@@ -84,6 +83,10 @@ class ShtHWorld(World):
     def check_invalid_configurations(self):
         if self.options.auto_clear_missions and not self.options.objective_sanity:
             raise OptionError("Cannot auto clear missions alongside not objective sanity.")
+
+        if (self.options.weapon_sanity_hold == Options.WeaponsanityHold.option_unlocked
+                and not self.options.weapon_sanity_unlock):
+            raise OptionError("Cannot use unlock mode for weapons without weaponsanity lock.")
 
     def generate_early(self):
         self.check_invalid_configurations()
@@ -101,10 +104,14 @@ class ShtHWorld(World):
         item_count = Items.CountItems(self) - self.options.starting_stages
         location_count = Locations.count_locations(self)
 
+        if self.options.objective_item_percentage_available < self.options.objective_item_percentage:
+            raise OptionError("Invalid available percentage versus requirement")
+
         if self.options.exceeding_items_filler == Options.ExceedingItemsFiller.option_minimise:
             if item_count > location_count:
-                potential_downgrades = GetPotentialDowngradeItems(self)
-                if len(potential_downgrades) < item_count - location_count:
+                print("item_count=", item_count, "location_count=", location_count)
+                potential_downgrades, removals = GetPotentialDowngradeItems(self)
+                if len(potential_downgrades) < item_count - location_count - len(removals):
                     c = item_count - location_count - len(potential_downgrades)
                     raise OptionError("Not enough locations to fill even with downgrades::"+str(c))
                 self.excess_item_count = item_count - location_count
@@ -143,10 +150,11 @@ class ShtHWorld(World):
         Locations.create_locations(self, regions)
         self.multiworld.regions.extend(regions.values())
 
-        for first_region in self.first_regions:
-            stage_item = Items.GetStageUnlockItem(first_region)
-            self.options.start_inventory.value[stage_item] = 1
-            self.multiworld.push_precollected(self.create_item(stage_item))
+        if self.options.level_progression != self.options.level_progression.option_story:
+            for first_region in self.first_regions:
+                stage_item = Items.GetStageUnlockItem(first_region)
+                self.options.start_inventory.value[stage_item] = 1
+                self.multiworld.push_precollected(self.create_item(stage_item))
 
         #self.multiworld.start_inventory
 
@@ -192,7 +200,12 @@ class ShtHWorld(World):
             "weapon_sanity_hold": self.options.weapon_sanity_hold.value,
             "vehicle_logic": self.options.vehicle_logic.value,
             "ring_link": self.options.ring_link.value,
-            "auto_clear_missions": self.options.auto_clear_missions.value
+            "auto_clear_missions": self.options.auto_clear_missions.value,
+            "story_mode_available": self.options.level_progression != Options.LevelProgression.option_select,
+            "select_mode_available": self.options.level_progression != Options.LevelProgression.option_story,
+            "required_client_version": ShadowUtils.GetVersionString(),
+            "enemy_sanity_percentage": self.options.enemy_sanity_percentage.value,
+            "percent_overrides": self.options.percent_overrides.value
         }
 
 
