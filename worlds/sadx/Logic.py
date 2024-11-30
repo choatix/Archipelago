@@ -931,15 +931,15 @@ boss_location_table: List[BossFightLocation] = [
 ]
 
 chao_egg_location_table: List[ChaoEggLocation] = [
-    ChaoEggLocation(900, LocationName.Chao.GoldEgg, Area.StationSquareMain, EVERYONE, [ItemName.KeyItem.HotelKeys]),
-    ChaoEggLocation(901, LocationName.Chao.SilverEgg, Area.MysticRuinsMain, EVERYONE, [ItemName.KeyItem.HotelKeys]),
+    ChaoEggLocation(900, LocationName.Chao.GoldEgg, Area.Hotel, EVERYONE, [ItemName.KeyItem.HotelKeys]),
+    ChaoEggLocation(901, LocationName.Chao.SilverEgg, Area.MysticRuinsMain, EVERYONE, []),
     ChaoEggLocation(902, LocationName.Chao.BlackEgg, Area.EggCarrierMain,
-                    [Character.Amy, Character.Gamma, Character.Big], [ItemName.KeyItem.HotelKeys]),
+                    [Character.Amy, Character.Gamma, Character.Big], []),
 ]
 chao_race_location_table: List[ChaoRaceLocation] = [
-    ChaoRaceLocation(905, LocationName.Chao.PearlCourse, Area.StationSquareMain),
-    ChaoRaceLocation(906, LocationName.Chao.AmethystCourse, Area.StationSquareMain),
-    ChaoRaceLocation(907, LocationName.Chao.SapphireCourse, Area.StationSquareMain),
-    ChaoRaceLocation(908, LocationName.Chao.RubyCourse, Area.StationSquareMain),
-    ChaoRaceLocation(909, LocationName.Chao.EmeraldCourse, Area.StationSquareMain),
+    ChaoRaceLocation(905, LocationName.Chao.PearlCourse, Area.Hotel),
+    ChaoRaceLocation(906, LocationName.Chao.AmethystCourse, Area.Hotel),
+    ChaoRaceLocation(907, LocationName.Chao.SapphireCourse, Area.Hotel),
+    ChaoRaceLocation(908, LocationName.Chao.RubyCourse, Area.Hotel),
+    ChaoRaceLocation(909, LocationName.Chao.EmeraldCourse, Area.Hotel),
 ]
