@@ -62,6 +62,11 @@ class GoalRequiresBosses(Toggle):
     display_name = "Goal Requires Bosses"
 
 
+class GoalRequiresChaoRaces(Toggle):
+    """If enabled, you have to beat all the chao races to unlock the last fight."""
+    display_name = "Goal Requires Chao Races"
+
+
 class LogicLevel(Choice):
     """
     Determines the logic the randomizer will use.
@@ -526,6 +531,7 @@ class SonicAdventureDXOptions(PerGameCommonOptions):
     goal_requires_missions: GoalRequiresMissions
     mission_percentage: MissionPercentage
     goal_requires_bosses: GoalRequiresBosses
+    goal_requires_chao_races: GoalRequiresChaoRaces
 
     logic_level: LogicLevel
     random_starting_location: RandomStartingLocation
@@ -615,6 +621,7 @@ sadx_option_groups = [
         GoalRequiresMissions,
         MissionPercentage,
         GoalRequiresBosses,
+        GoalRequiresChaoRaces,
         LogicLevel,
         RandomStartingLocation,
         RandomStartingLocationPerCharacter,

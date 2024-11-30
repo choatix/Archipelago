@@ -7,7 +7,7 @@ from .Locations import get_location_by_name, level_location_table, upgrade_locat
     LocationInfo, life_capsule_location_table, boss_location_table, mission_location_table, field_emblem_location_table
 from .Logic import LevelLocation, UpgradeLocation, SubLevelLocation, EmblemLocation, CharacterUpgrade, \
     LifeCapsuleLocation, BossFightLocation, MissionLocation, chao_egg_location_table, ChaoEggLocation, \
-    chao_race_location_table, ChaoRaceLocation
+    chao_race_location_table
 from .Names import ItemName
 from .Regions import get_region_name
 
@@ -178,6 +178,11 @@ def create_sadx_rules(self, needed_emblems: int) -> LocationDistribution:
         for boss_location in bosses_location_list:
             add_rule(perfect_chaos_fight, lambda state, loc=boss_location: loc.can_reach(state))
             bosses_for_perfect_chaos += 1
+
+    if self.options.goal_requires_chao_races.value:
+        for chao_race in chao_race_location_table:
+            chao_race_location = self.multiworld.get_location(chao_race.name, self.player)
+            add_rule(perfect_chaos_fight, lambda state, loc=chao_race_location: loc.can_reach(state))
 
     if self.options.goal_requires_chaos_emeralds.value:
         add_rule(perfect_chaos_fight, lambda state: state.has(ItemName.Progression.WhiteEmerald, self.player))
