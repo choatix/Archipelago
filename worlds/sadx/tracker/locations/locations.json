@@ -10,7 +10,7 @@
       {"name": "Mission 8 (Big)"},
       {"name": "Mission 29 (Big)"},
       {"name": "Burger Shop Emblem"},
-      {"name": "City Hall Emblem"},
+      {"name": "City Hall Emblem"}
     ],
     "map_locations": [{"map": "all_maps", "x": 650, "y": 600}]
   },
