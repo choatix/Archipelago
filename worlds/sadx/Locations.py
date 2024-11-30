@@ -106,6 +106,8 @@ group_location_table: Dict[str, List[str]] = {
     LocationName.Groups.LifeCapsules: [location["name"] for location in get_location_from_life_capsule()],
     LocationName.Groups.Bosses: [location["name"] for location in get_location_from_boss()],
     LocationName.Groups.Missions: [location["name"] for location in get_location_from_mission()],
+    LocationName.Groups.ChaoEggs: [location["name"] for location in get_location_from_eggs()],
+    LocationName.Groups.ChaoRaces: [location["name"] for location in get_location_from_races()],
     pascal_to_space(Area.EmeraldCoast.name): get_location_name_by_level(pascal_to_space(Area.EmeraldCoast.name)),
     pascal_to_space(Area.WindyValley.name): get_location_name_by_level(pascal_to_space(Area.WindyValley.name)),
     pascal_to_space(Area.Casinopolis.name): get_location_name_by_level(pascal_to_space(Area.Casinopolis.name)),

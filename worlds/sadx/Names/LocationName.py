@@ -65,3 +65,5 @@ class Groups:
     Bosses = "Bosses"
     LifeCapsules = "Life Capsules"
     Missions = "Missions"
+    ChaoEggs = "Chao Eggs"
+    ChaoRaces = "Chao Races"
