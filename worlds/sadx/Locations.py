@@ -3,7 +3,8 @@ from typing import List, TypedDict, Dict
 from BaseClasses import Location, Region
 from .Enums import Area, pascal_to_space, SADX_BASE_ID
 from .Logic import level_location_table, upgrade_location_table, sub_level_location_table, field_emblem_location_table, \
-    life_capsule_location_table, boss_location_table, mission_location_table, chao_egg_location_table
+    life_capsule_location_table, boss_location_table, mission_location_table, chao_egg_location_table, \
+    chao_race_location_table
 from .Names import LocationName
 
 
@@ -71,6 +72,13 @@ def get_location_from_eggs() -> List[LocationInfo]:
     return locations
 
 
+def get_location_from_races() -> List[LocationInfo]:
+    locations: List[LocationInfo] = []
+    for race in chao_race_location_table:
+        locations += [{"id": race.locationId, "name": race.name}]
+    return locations
+
+
 all_location_table: List[LocationInfo] = (
         get_location_from_level() +
         get_location_from_upgrade() +
@@ -80,6 +88,7 @@ all_location_table: List[LocationInfo] = (
         get_location_from_boss() +
         get_location_from_mission() +
         get_location_from_eggs() +
+        get_location_from_races() +
         [{"id": 9, "name": "Perfect Chaos Fight"}]
 )
 

@@ -111,20 +111,28 @@ def validate_settings(options):
         logging.warning(" -- SADX warning: No goal requirement set. Enabling action stages requirement as a failsafe.")
         options.goal_requires_levels.value = True
 
-    if options.goal_requires_levels.value:
-        level_quantity = 0
+    if options.goal_requires_levels.value or options.chao_races_checks:
+        levels_available = False
         for level in level_location_table:
             if is_level_playable(level, options) and level.levelMission == LevelMission.C:
-                level_quantity += 1
-        if level_quantity == 0:
+                levels_available = True
+        if not levels_available:
             options.sonic_action_stage_missions.value = 1
             options.tails_action_stage_missions.value = 1
             options.knuckles_action_stage_missions.value = 1
             options.amy_action_stage_missions.value = 1
             options.big_action_stage_missions.value = 1
             options.gamma_action_stage_missions.value = 1
-            logging.warning(
-                " -- SADX warning: No action stages enabled with levels as goal. Enabling all characters levels as a failsafe")
+            if options.goal_requires_levels.value and not options.chao_races_checks:
+                logging.warning(
+                    " -- SADX warning: No action stages enabled with levels as goal. Enabling all characters levels as a failsafe")
+            elif not options.goal_requires_levels.value and options.chao_races_checks:
+                logging.warning(
+                    " -- SADX warning: No action stages enabled with chao races as checks. Enabling all characters levels as a failsafe")
+            else:
+                logging.warning(
+                    " -- SADX warning: No action stages enabled with chao races and levels as goal. Enabling all characters levels as a failsafe")
+
     if options.goal_requires_missions.value:
         if not options.mission_mode_checks.value:
             logging.warning(

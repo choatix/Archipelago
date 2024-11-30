@@ -6,7 +6,8 @@ from .Enums import LevelMission
 from .Locations import get_location_by_name, level_location_table, upgrade_location_table, sub_level_location_table, \
     LocationInfo, life_capsule_location_table, boss_location_table, mission_location_table, field_emblem_location_table
 from .Logic import LevelLocation, UpgradeLocation, SubLevelLocation, EmblemLocation, CharacterUpgrade, \
-    LifeCapsuleLocation, BossFightLocation, MissionLocation, chao_egg_location_table, ChaoEggLocation
+    LifeCapsuleLocation, BossFightLocation, MissionLocation, chao_egg_location_table, ChaoEggLocation, \
+    chao_race_location_table, ChaoRaceLocation
 from .Names import ItemName
 from .Regions import get_region_name
 
@@ -81,6 +82,21 @@ def add_egg_rules(self, location_name: str, egg: ChaoEggLocation):
         egg.characters if character in get_playable_characters(self.options)))
 
 
+def add_race_rules(self, location_name: str):
+    location = self.multiworld.get_location(location_name, self.player)
+
+    level_location_list = []
+    for level in level_location_table:
+        if is_level_playable(level, self.options) and level.levelMission == LevelMission.C:
+            level_location_list.append(self.multiworld.get_location(level.get_level_name(), self.player))
+
+    self.random.shuffle(level_location_list)
+    num_locations = max(1, math.ceil(
+        len(level_location_list) * self.options.chao_races_levels_to_access_percentage.value / 100))
+    for level_location in level_location_list[:num_locations]:
+        add_rule(location, lambda state, loc=level_location: loc.can_reach(state))
+
+
 def calculate_rules(self, location: LocationInfo):
     if location is None:
         return
@@ -108,6 +124,9 @@ def calculate_rules(self, location: LocationInfo):
     for egg in chao_egg_location_table:
         if location["id"] == egg.locationId:
             add_egg_rules(self, location["name"], egg)
+    for race in chao_race_location_table:
+        if location["id"] == race.locationId:
+            add_race_rules(self, location["name"])
 
 
 def create_sadx_rules(self, needed_emblems: int) -> LocationDistribution:

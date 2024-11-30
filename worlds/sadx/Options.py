@@ -310,6 +310,22 @@ class SecretChaoEggs(DefaultOnToggle):
     display_name = "Secret Chao Egg Checks"
 
 
+class ChaoRacesChecks(DefaultOnToggle):
+    """Determines whether winning the chao races grants checks (5 Locations)."""
+    display_name = "Chao Races Checks"
+
+
+class ChaoRacesLevelsToAccessPercentage(Range):
+    """
+    Percentage of the available levels accessible for the chao races to be in logic.
+    Higher values means races are required later in the game.
+    """
+    display_name = "Level Access Percentage for Chao Races"
+    range_start = 25
+    range_end = 100
+    default = 100
+
+
 class MissionChecks(Toggle):
     """Determines whether completing missions grants checks (60 Locations)."""
     display_name = "Enable Mission Checks"
@@ -555,6 +571,8 @@ class SonicAdventureDXOptions(PerGameCommonOptions):
 
     field_emblems_checks: FieldEmblemsChecks
     chao_egg_checks: SecretChaoEggs
+    chao_races_checks: ChaoRacesChecks
+    chao_races_levels_to_access_percentage: ChaoRacesLevelsToAccessPercentage
     mission_mode_checks: MissionChecks
     auto_start_missions: AutoStartMissions
     mission_blacklist: MissionBlackList
@@ -644,6 +662,8 @@ sadx_option_groups = [
     OptionGroup("Extra locations", [
         FieldEmblemsChecks,
         SecretChaoEggs,
+        ChaoRacesChecks,
+        ChaoRacesLevelsToAccessPercentage,
         MissionChecks,
         AutoStartMissions,
         MissionBlackList,

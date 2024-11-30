@@ -113,6 +113,8 @@ class SonicAdventureDXWorld(World):
                 self.options.guaranteed_starting_checks.value = passthrough["GuaranteedStartingChecks"]
 
                 self.options.chao_egg_checks.value = passthrough["SecretChaoEggs"]
+                self.options.chao_races_checks.value = passthrough["ChaoRacesChecks"]
+                self.options.chao_races_levels_to_access_percentage.value = passthrough["ChaoRacesLevelsToAccessPercentage"]
                 self.options.mission_mode_checks.value = passthrough["MissionModeChecks"]
                 self.options.auto_start_missions.value = passthrough["AutoStartMissions"]
 
@@ -199,6 +201,8 @@ class SonicAdventureDXWorld(World):
             "GuaranteedStartingChecks": self.options.guaranteed_starting_checks.value,
             "FieldEmblemChecks": self.options.field_emblems_checks.value,
             "SecretChaoEggs": self.options.chao_egg_checks.value,
+            "ChaoRacesChecks": self.options.chao_races_checks.value,
+            "ChaoRacesLevelsToAccessPercentage": self.options.chao_races_levels_to_access_percentage.value,
             "MissionModeChecks": self.options.mission_mode_checks.value,
             "AutoStartMissions": self.options.auto_start_missions.value,
             "MissionBlackList": {int(mission): int(mission) for mission in self.options.mission_blacklist.value},

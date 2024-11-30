@@ -50,6 +50,11 @@ class Chao:
     GoldEgg = "Gold Chao Egg"
     SilverEgg = "Silver Chao Egg"
     BlackEgg = "Black Chao Egg"
+    PearlCourse = "Pearl Course"
+    AmethystCourse = "Amethyst Course"
+    SapphireCourse = "Sapphire Course"
+    RubyCourse = "Ruby Course"
+    EmeraldCourse = "Emerald Course"
 
 
 class Groups:
