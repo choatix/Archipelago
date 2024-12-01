@@ -80,6 +80,8 @@ def add_egg_rules(self, location_name: str, egg: ChaoEggLocation):
     add_rule(location, lambda state: any(
         state.can_reach_region(get_region_name(character, egg.area), self.player) for character in
         egg.characters if character in get_playable_characters(self.options)))
+    add_rule(location, lambda state, egg_requirements=egg.requirements: any(
+        all(state.has(item, self.player) for item in requirement_group) for requirement_group in egg_requirements))
 
 
 def add_race_rules(self, location_name: str):

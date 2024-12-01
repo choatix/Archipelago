@@ -10,7 +10,8 @@
       {"name": "Mission 8 (Big)"},
       {"name": "Mission 29 (Big)"},
       {"name": "Burger Shop Emblem"},
-      {"name": "City Hall Emblem"}
+      {"name": "City Hall Emblem"},
+      {"name": "Gold Chao Egg"}
     ],
     "map_locations": [{"map": "all_maps", "x": 650, "y": 600}]
   },
@@ -29,7 +30,6 @@
       {"name": "Mission 10 (Tails)"},
       {"name": "Chaos 2 Boss Fight (Knuckles)"},
       {"name": "Mission 14 (Big)"},
-      {"name": "Gold Chao Egg"},
       {"name": "Pearl Course"},
       {"name": "Amethyst Course"},
       {"name": "Sapphire Course"},
