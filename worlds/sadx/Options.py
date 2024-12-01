@@ -315,7 +315,7 @@ class SecretChaoEggs(DefaultOnToggle):
     display_name = "Secret Chao Egg Checks"
 
 
-class ChaoRacesChecks(DefaultOnToggle):
+class ChaoRacesChecks(Toggle):
     """Determines whether winning the chao races grants checks (5 Locations)."""
     display_name = "Chao Races Checks"
 
