@@ -11,7 +11,7 @@ import Utils
 from BaseClasses import ItemClassification
 from CommonClient import ClientCommandProcessor, CommonContext, get_base_parser, gui_enabled, logger, server_loop
 from NetUtils import ClientStatus
-from worlds.shadow_the_hedgehog.Options import WeaponsanityHold
+from .Options import WeaponsanityHold
 from . import Levels, Items, Locations, Junk, Utils as ShadowUtils, Weapons, Story
 from .Levels import *
 from .Locations import GetStageInformation, GetAlignmentsForStage, \
@@ -429,11 +429,12 @@ def GetStageClearAddresses():
 
 
 def writeBytes(addr, data):
+    print("write=", addr, data)
     dolphin_memory_engine.write_bytes(addr, data)
 
 ADDRESS_ALIEN_COUNT = 0x8057FB54
 #ADDRESS_ALIEN_COUNT_BUT = 0x8057FB55
-ADDRESS_SOLIDER_COUNT = 0x8057FB4C
+ADDRESS_SOLDIER_COUNT = 0x8057FB4C
 ADDRESS_EGG_COUNT = 0x8057FB50
 
 #ADDRESS_SEARCH_STANDARD = 0x8052B74C
@@ -460,7 +461,7 @@ DEFAULT_TOTAL_INDEX = (16 * 5) + 8
 
 
 StageAlignmentAddresses = [
-    StageAlignmentAddress(STAGE_WESTOPOLIS, Levels.MISSION_ALIGNMENT_DARK, ADDRESS_SOLIDER_COUNT),
+    StageAlignmentAddress(STAGE_WESTOPOLIS, Levels.MISSION_ALIGNMENT_DARK, ADDRESS_SOLDIER_COUNT),
     StageAlignmentAddress(STAGE_WESTOPOLIS, Levels.MISSION_ALIGNMENT_HERO, ADDRESS_ALIEN_COUNT),
 
     StageAlignmentAddress(STAGE_DIGITAL_CIRCUIT, Levels.MISSION_ALIGNMENT_DARK, None),
@@ -472,15 +473,15 @@ StageAlignmentAddresses = [
     StageAlignmentAddress(STAGE_CRYPTIC_CASTLE, Levels.MISSION_ALIGNMENT_HERO, None),
     StageAlignmentAddress(STAGE_CRYPTIC_CASTLE, Levels.MISSION_ALIGNMENT_DARK, None),
 
-    StageAlignmentAddress(STAGE_PRISON_ISLAND, Levels.MISSION_ALIGNMENT_DARK, ADDRESS_SOLIDER_COUNT),
+    StageAlignmentAddress(STAGE_PRISON_ISLAND, Levels.MISSION_ALIGNMENT_DARK, ADDRESS_SOLDIER_COUNT),
     StageAlignmentAddress(STAGE_PRISON_ISLAND, Levels.MISSION_ALIGNMENT_HERO, None),
 
-    StageAlignmentAddress(STAGE_CIRCUS_PARK, Levels.MISSION_ALIGNMENT_DARK, ADDRESS_SOLIDER_COUNT),
+    StageAlignmentAddress(STAGE_CIRCUS_PARK, Levels.MISSION_ALIGNMENT_DARK, ADDRESS_SOLDIER_COUNT),
 
     StageAlignmentAddress(STAGE_CENTRAL_CITY, Levels.MISSION_ALIGNMENT_DARK, None),
     StageAlignmentAddress(STAGE_CENTRAL_CITY, Levels.MISSION_ALIGNMENT_HERO, None),
 
-    StageAlignmentAddress(STAGE_THE_DOOM, Levels.MISSION_ALIGNMENT_DARK, ADDRESS_SOLIDER_COUNT),
+    StageAlignmentAddress(STAGE_THE_DOOM, Levels.MISSION_ALIGNMENT_DARK, ADDRESS_SOLDIER_COUNT),
     StageAlignmentAddress(STAGE_THE_DOOM, Levels.MISSION_ALIGNMENT_HERO, None),
 
     StageAlignmentAddress(STAGE_SKY_TROOPS, Levels.MISSION_ALIGNMENT_DARK, None),
@@ -496,7 +497,7 @@ StageAlignmentAddresses = [
     StageAlignmentAddress(STAGE_AIR_FLEET, Levels.MISSION_ALIGNMENT_DARK, None),
     StageAlignmentAddress(STAGE_AIR_FLEET, Levels.MISSION_ALIGNMENT_HERO, ADDRESS_ALIEN_COUNT),
 
-    StageAlignmentAddress(STAGE_IRON_JUNGLE, Levels.MISSION_ALIGNMENT_DARK, ADDRESS_SOLIDER_COUNT,),
+    StageAlignmentAddress(STAGE_IRON_JUNGLE, Levels.MISSION_ALIGNMENT_DARK, ADDRESS_SOLDIER_COUNT,),
     StageAlignmentAddress(STAGE_IRON_JUNGLE, Levels.MISSION_ALIGNMENT_HERO, None),
 
     StageAlignmentAddress(STAGE_SPACE_GADGET, Levels.MISSION_ALIGNMENT_DARK, None),
@@ -505,7 +506,7 @@ StageAlignmentAddresses = [
 
     StageAlignmentAddress(STAGE_GUN_FORTRESS, Levels.MISSION_ALIGNMENT_DARK, None),
 
-    StageAlignmentAddress(STAGE_BLACK_COMET, Levels.MISSION_ALIGNMENT_DARK, ADDRESS_SOLIDER_COUNT),
+    StageAlignmentAddress(STAGE_BLACK_COMET, Levels.MISSION_ALIGNMENT_DARK, ADDRESS_SOLDIER_COUNT),
 
     StageAlignmentAddress(STAGE_LAVA_SHELTER, Levels.MISSION_ALIGNMENT_DARK, None),
 
@@ -601,7 +602,8 @@ class ShTHContext(CommonContext):
         self.previous_rings = None
         self.ring_link_rings = 0
         self.instance_id = time.time()
-        self.debug_logging = True
+        self.debug_logging = False
+        self.info_logging = True
         self.last_level = None
         self.last_weapon = None
 
@@ -953,14 +955,15 @@ async def check_save_loaded(ctx):
                 to_write = 0
                 set_blank = to_write.to_bytes(4, byteorder='big')
                 writeBytes(buffer_address_cutscene, set_blank)
-
-
         else:
-            pass
-            # TODO: Make it as to not write this constantly
-            #set_to = 0
-            #set_last_way_bytes = set_to.to_bytes(1, byteorder='big')
-            #writeBytes(ADDRESS_LAST_STORY_OPTION, set_last_way_bytes)
+            last_way_available_bytes = dolphin_memory_engine.read_bytes(ADDRESS_LAST_STORY_OPTION, 1)
+            is_last_way_available = int.from_bytes(last_way_available_bytes, byteorder='big')
+
+            if is_last_way_available:
+                logger.error("Last Way disabled, not yet meeting goal criteria.")
+                set_to = 0
+                set_last_way_bytes = set_to.to_bytes(1, byteorder='big')
+                writeBytes(ADDRESS_LAST_STORY_OPTION, set_last_way_bytes)
 
         finished = False
 
@@ -1090,6 +1093,8 @@ def is_mission_completable(ctx, stage, alignment):
     relevant_clears = [ mc for mc in MissionClearLocations if mc.alignmentId == alignment and mc.stageId == stage]
     info = Items.GetItemLookupDict()
 
+
+
     if stage in Levels.BOSS_STAGES:
         return True
 
@@ -1172,6 +1177,24 @@ def complete_completable_levels(ctx):
     new_clears.extend(token_clears)
     return new_clears
 
+
+ADDRESS_WATCHED_CUTSCENES = 0x805780AC
+
+def check_cheats():
+    current_value_bytes = dolphin_memory_engine.read_bytes(ADDRESS_WATCHED_CUTSCENES, 4)
+    current_value = int.from_bytes(current_value_bytes, byteorder='big')
+
+    new_value = 0xFFFFFFFF
+    if current_value != new_value:
+        new_bytes = new_value.to_bytes(4, byteorder='big')
+        writeBytes(ADDRESS_WATCHED_CUTSCENES, new_bytes)
+
+    current_value_bytes = dolphin_memory_engine.read_bytes(ADDRESS_WATCHED_CUTSCENES+4, 4)
+    current_value = int.from_bytes(current_value_bytes, byteorder='big')
+
+    if current_value != new_value:
+        new_bytes = new_value.to_bytes(4, byteorder='big')
+        writeBytes(ADDRESS_WATCHED_CUTSCENES+4, new_bytes)
 
 
 # When not in a level, check the level
@@ -1316,7 +1339,7 @@ async def check_level_status(ctx):
 
             #    return None
 
-            if ctx.debug_logging and current_level != ctx.last_level and current_level in Levels.LEVEL_ID_TO_LEVEL:
+            if ctx.info_logging and current_level != ctx.last_level and current_level in Levels.LEVEL_ID_TO_LEVEL:
                 logger.info("Now in level: %s", Levels.LEVEL_ID_TO_LEVEL[current_level])
                 ctx.last_level = current_level
 
@@ -2047,12 +2070,12 @@ async def update_level_behaviour(ctx, current_level, death):
 
         if expected_hero_value is not None and current_count > expected_hero_value:
             if ctx.debug_logging:
-                logger.info("Hero count increased:%d %d", current_count, expected_hero_value)
+                logger.debug("Hero count increased:%d %d", current_count, expected_hero_value)
             valid_compare_count = heroInfo.requirement_count + 2
             if ctx.level_state["hero_progress"] > heroInfo.requirement_count:
                 valid_compare_count = ctx.level_state["hero_progress"] + 2
             if current_count > valid_compare_count:
-                if ctx.debug_logging:
+                if ctx.info_logging:
                     logger.error("invalid value read for hero count:%d %d",current_count, valid_compare_count)
             new_count = (current_count - expected_hero_value)
             ctx.level_state["hero_progress"] += new_count
@@ -2065,7 +2088,7 @@ async def update_level_behaviour(ctx, current_level, death):
         #elif expected_hero_value > current_count >= 0:
         #    ctx.level_state["hero_progress"] = current_count
 
-        if hero_address is not None and hero_write is not None and restore_hero:
+        if hero_address is not None and hero_write is not None and restore_hero and current_count != expected_hero_value:
             new_count = expected_hero_value
             new_bytes = new_count.to_bytes(4, byteorder='big')
             writeBytes(hero_address, new_bytes)
@@ -2081,7 +2104,7 @@ async def update_level_behaviour(ctx, current_level, death):
             if ctx.level_state["dark_progress"] > darkInfo.requirement_count:
                 valid_compare_count = ctx.level_state["dark_progress"] + 2
             if current_count > valid_compare_count:
-                if ctx.debug_logging:
+                if ctx.error_logging:
                     logger.error("invalid value read for dark count: %d %d",current_count, valid_compare_count)
             else:
                 new_count = (current_count - expected_dark_value)
@@ -2089,13 +2112,13 @@ async def update_level_behaviour(ctx, current_level, death):
                 dark_progress = True
                 if not ctx.objective_sanity:
                     ctx.level_state["dark_count"] += new_count
-                if enemysanity and dark_address == ADDRESS_SOLIDER_COUNT:
+                if enemysanity and dark_address == ADDRESS_SOLDIER_COUNT:
                     ctx.level_state["gun_progress"] += new_count
                     gun_progress = True
         #elif expected_dark_value > current_count >= 0:
         #    ctx.level_state["dark_progress"] = current_count
 
-        if dark_address is not None and dark_write is not None and restore_dark:
+        if dark_address is not None and dark_write is not None and restore_dark and current_count != expected_dark_value:
             new_count = expected_dark_value
             new_bytes = new_count.to_bytes(4, byteorder='big')
             writeBytes(dark_address, new_bytes)
@@ -2108,21 +2131,21 @@ async def update_level_behaviour(ctx, current_level, death):
 
         if current_count > alien_count:
             if current_count > alienInfo.total_count + 2:
-                if ctx.debug_logging:
+                if ctx.info_logging:
                     logger.error("Error with alien count: %d %d", current_count, alienInfo.total_count + 2)
             ctx.level_state["alien_progress"] += (current_count - alien_count)
             alien_progress = True
 
-    if enemysanity and dark_address != ADDRESS_SOLIDER_COUNT and gunInfo is not None:
+    if enemysanity and dark_address != ADDRESS_SOLDIER_COUNT and gunInfo is not None:
         gun_count = ctx.level_state["gun_progress"]
 
-        current_bytes = dolphin_memory_engine.read_bytes(ADDRESS_SOLIDER_COUNT, gun_address_size)
+        current_bytes = dolphin_memory_engine.read_bytes(ADDRESS_SOLDIER_COUNT, gun_address_size)
         current_count = int.from_bytes(current_bytes, byteorder='big')
 
         if current_count > gun_count:
             print("gun count increased --", current_count, gun_count)
             if current_count > gunInfo.total_count + 2:
-                if ctx.debug_logging:
+                if ctx.info_logging:
                     logger.error("Error with gun count: %d %d", current_count, gunInfo.total_count + 2)
             ctx.level_state["gun_progress"] += (current_count - gun_count)
             gun_progress = True
@@ -2136,7 +2159,7 @@ async def update_level_behaviour(ctx, current_level, death):
         if current_count > egg_count:
             print("egg count increased --", current_count, egg_count)
             if current_count > eggInfo.total_count + 2:
-                if ctx.debug_logging:
+                if ctx.info_logging:
                     logger.error("Error with egg count: %d %d", current_count, eggInfo.total_count + 2)
             ctx.level_state["egg_progress"] += (current_count - egg_count)
             egg_progress = True
@@ -2250,7 +2273,7 @@ async def update_level_behaviour(ctx, current_level, death):
                 active.append(i + 1)
         max_active = max(active) if len(active) > 0 else 0
         if max_active != max_checkpoint:
-            if ctx.debug_logging:
+            if ctx.info_logging:
                 logger.error("Checkpoint data not valid %d %d", max_active, max_checkpoint)
         else:
             active_snapshots = [x[0] for x in ctx.checkpoint_snapshots]
@@ -2373,6 +2396,7 @@ async def dolphin_sync_task(ctx: ShTHContext):
                 if True:
                     death = await check_death(ctx)
                     level = await check_level_status(ctx)
+                    check_cheats()
                     if level is not None:
                         await update_level_behaviour(ctx,level, death)
                     else:

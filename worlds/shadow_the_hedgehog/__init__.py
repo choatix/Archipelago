@@ -9,7 +9,8 @@ from .Levels import GetLevelCompletionNames
 from .Items import *
 from .Locations import *
 
-from . import Options, Rules, Regions
+from . import Options, Rules, Regions, Utils as ShadowUtils
+
 
 #from . import Macros
 
@@ -63,6 +64,8 @@ class ShtHWorld(World):
     options_dataclass = Options.ShadowTheHedgehogOptions
     options: Options.ShadowTheHedgehogOptions
 
+    item_name_groups = Items.get_item_groups()
+
     def __init__(self, *args, **kwargs):
         self.first_regions = []
         self.available_characters = []
@@ -88,6 +91,58 @@ class ShtHWorld(World):
                 and not self.options.weapon_sanity_unlock):
             raise OptionError("Cannot use unlock mode for weapons without weaponsanity lock.")
 
+        if self.options.level_progression == Options.LevelProgression.option_select and \
+            self.options.starting_stages == 0:
+            raise OptionError("Cannot start select mode with 0 starting stages")
+
+    def calculate_object_discrepancies(self):
+
+        override_settings = self.options.percent_overrides
+        percentage = self.options.enemy_sanity_percentage.value
+        objective_percentage = self.options.objective_percentage.value
+        for stage in ALL_STAGES:
+
+            related_clears = [ c for c in MissionClearLocations if c.stageId == stage]
+            related_es = [ e for e in EnemySanityLocations if e.stageId == stage ]
+
+            for clear in related_clears:
+                clear_class = None
+                alignment_id = None
+                key_prefix = None
+
+                if clear.mission_object_name == "Alien":
+                    clear_class = ENEMY_CLASS_ALIEN
+                    alignment_id = MISSION_ALIGNMENT_HERO
+                    key_prefix = "EA"
+                elif clear.mission_object_name == "Soldier":
+                    clear_class = ENEMY_CLASS_GUN
+                    alignment_id = MISSION_ALIGNMENT_DARK
+                    key_prefix = "EG"
+
+                if clear_class is not None:
+                    aliens = [ r for r in related_es if r.enemyClass == clear_class ]
+                    if len(aliens) == 0:
+                        continue
+
+                    aliens = aliens[0]
+
+                    override_total_complete = ShadowUtils.getOverwriteRequiredCount(override_settings, stage,
+                                                                           alignment_id, ShadowUtils.TYPE_ID_COMPLETION)
+                    max_required_complete = ShadowUtils.getRequiredCount(clear.requirement_count, objective_percentage,
+                                                                override=override_total_complete, round_method=floor)
+
+                    d_count = aliens.total_count - max_required_complete
+
+                    if d_count > 0:
+                        override_total = ShadowUtils.getOverwriteRequiredCount(override_settings, stage,
+                                                                               alignment_id, ShadowUtils.TYPE_ID_ENEMY)
+                        max_required = ShadowUtils.getRequiredCount(aliens.total_count, percentage,
+                                                              override=override_total, round_method=floor)
+
+                        if max_required > max_required_complete:
+                            key = key_prefix + "." + Levels.LEVEL_ID_TO_LEVEL[stage]
+                            override_settings.value[key] = (max_required_complete * 100) / aliens.total_count
+                            print("Had to adjust key for {key}".format(key=key))
     def generate_early(self):
         self.check_invalid_configurations()
 
@@ -119,6 +174,9 @@ class ShtHWorld(World):
         elif self.options.exceeding_items_filler == Options.ExceedingItemsFiller.option_off and \
             location_count < item_count:
             raise OptionError("Invalid count of items present:"+str(location_count)+" vs "+str(item_count))
+
+        if not self.options.objective_sanity.value and self.options.enemy_sanity:
+            self.calculate_object_discrepancies()
 
         if self.options.objective_sanity.value and self.options.force_objective_sanity_chance > 0\
                 and self.options.force_objective_sanity_max > 0:

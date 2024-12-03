@@ -447,7 +447,7 @@ BossClearLocations = \
 EnemySanityLocations = \
 [
     EnemySanityLocation(STAGE_WESTOPOLIS, ENEMY_CLASS_ALIEN, 45, "Black Arm"),
-    EnemySanityLocation(STAGE_WESTOPOLIS, ENEMY_CLASS_GUN, 36, "GUN"),
+    EnemySanityLocation(STAGE_WESTOPOLIS, ENEMY_CLASS_GUN, 36, "GUN Soldier"),
 
     EnemySanityLocation(STAGE_DIGITAL_CIRCUIT, ENEMY_CLASS_GUN, 46, "GUN Soldier"),
     EnemySanityLocation(STAGE_DIGITAL_CIRCUIT, ENEMY_CLASS_ALIEN, 17, "Black Arm"),
@@ -962,7 +962,7 @@ def create_locations(world: "ShtHWorld", regions: Dict[str, Region]):
                 continue
 
             override_total = ShadowUtils.getOverwriteRequiredCount(override_settings, location.stageId,
-                                                                   location.alignmentId, ShadowUtils.TYPE_ID_ENEMY)
+                                                                   location.alignmentId, ShadowUtils.TYPE_ID_OBJECTIVE)
 
             max_required = Utils.getRequiredCount(location.total, percentage,
                                                   override=override_total, round_method=floor)

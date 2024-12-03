@@ -255,7 +255,15 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
             pass
 
     for boss in BossClearLocations:
+        if boss.stageId not in world.available_levels:
+            continue
+
+        boss_id, boss_name = Locations.GetBossLocationName(boss.name, boss.stageId)
+        location = multiworld.get_location(boss_name, player)
+
         if boss.requirements is not None:
+            if boss.stageId not in world.available_levels:
+                continue
             lr = LevelRegion(boss.stageId, None, boss.requirements)
             lr.setLogicType(boss.logicType)
             req_rule = handle_path_rules(world.options, player, lr)

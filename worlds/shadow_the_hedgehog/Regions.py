@@ -43,7 +43,7 @@ def early_region_checks(world):
         if Levels.LEVEL_ID_TO_LEVEL[level] in world.options.excluded_stages:
             continue
 
-        if world.options.level_progression == world.options.level_progression.option_story:
+        if world.options.level_progression != world.options.level_progression.option_select:
             story_routes_to_stage = [ s for s in Story.StoryMode if
                                       s.end_stage_id == level
                                       and
@@ -65,7 +65,8 @@ def early_region_checks(world):
             if len(ending_story_routes) > 0:
                 world.available_levels.append(level)
 
-        else:
+        elif world.options.level_progression == world.options.level_progression == world.options.level_progression.option_select\
+                and level not in Levels.BOSS_STAGES and level not in Levels.BANNED_AVAILABLE_STAGES:
             world.available_levels.append(level)
 
 
@@ -93,6 +94,7 @@ def create_regions(world: "ShtHWorld") -> Dict[str, Region]:
 
     stage_regions = []
     region_to_stage_id = {}
+    possible_first_regions = []
     for level_id in stages:
         if level_id not in world.available_levels:
             print("Level not available:", Levels.LEVEL_ID_TO_LEVEL[level_id])
@@ -101,6 +103,8 @@ def create_regions(world: "ShtHWorld") -> Dict[str, Region]:
         new_region = Region(base_region_name, world.player, world.multiworld)
         regions[base_region_name] = new_region
         stage_regions.append(new_region)
+        if level_id not in Levels.BOSS_STAGES and level_id not in Levels.BANNED_AVAILABLE_STAGES:
+            possible_first_regions.append(new_region)
         region_to_stage_id[new_region] = level_id
 
         for additional_region in [ r for r in Levels.INDIVIDUAL_LEVEL_REGIONS if r.stageId == level_id]:
@@ -118,7 +122,7 @@ def create_regions(world: "ShtHWorld") -> Dict[str, Region]:
                     new_story_region, new_region)
 
     if world.options.level_progression != world.options.level_progression.option_story:
-        first_regions = world.random.sample(stage_regions, world.options.starting_stages.value)
+        first_regions = world.random.sample(possible_first_regions, world.options.starting_stages.value)
         world.first_regions = [ region_to_stage_id[region] for region in first_regions]
 
     if world.options.level_progression != world.options.level_progression.option_select:
@@ -209,9 +213,26 @@ def connect_by_story_mode(multiworld: MultiWorld, world: "ShThWorld", player: in
                                                                                            path.alignment_id)
                 bf_rule = lambda state, bn=boss_completion_location_name: state.can_reach_location(bn, player)
 
-                connect(world.player, "Boss Entrance_" + str(order.index(path)) + str(path.start_stage_id) + "/" +
+                boss_end_entrance = connect(world.player, "Boss Entrance_" + str(order.index(path)) + str(path.start_stage_id) + "/" +
                     str(path.end_stage_id), start_region, boss_region,
                                         rule=bf_rule)
+
+                multiworld.register_indirect_condition(start_region, boss_end_entrance)
+                base_region_name = stage_id_to_region(path.start_stage_id)
+                base_story_region_name = stage_id_to_story_region(path.start_stage_id)
+                base_region = world.get_region(base_region_name)
+                base_story_region = world.get_region(base_story_region_name)
+                multiworld.register_indirect_condition(base_region, boss_end_entrance)
+                multiworld.register_indirect_condition(base_story_region, boss_end_entrance)
+
+                extra_level_regions = [l for l in Levels.INDIVIDUAL_LEVEL_REGIONS if l.stageId == path.start_stage_id]
+
+                for region in extra_level_regions:
+                    level_region_name = stage_id_to_region(region.stageId, region.regionIndex)
+                    region_to_add = world.get_region(level_region_name)
+                    if boss_end_entrance is not None:
+                        multiworld.register_indirect_condition(region_to_add, boss_end_entrance)
+
 
             continue
 
@@ -229,13 +250,20 @@ def connect_by_story_mode(multiworld: MultiWorld, world: "ShThWorld", player: in
         # get all regions associated to the stage and register as indirect
         # Because the condition can lead to complications due to breadth-first search
 
-        level_regions = [ l for l in Levels.INDIVIDUAL_LEVEL_REGIONS if l.stageId == path.start_stage_id ]
+        extra_level_regions = [ l for l in Levels.INDIVIDUAL_LEVEL_REGIONS if l.stageId == path.start_stage_id ]
 
         base_rule = lambda state,n=completion_location_name: state.can_reach_location(n, player)
         boss_entrance = None
         if boss_region is not None:
             boss_entrance = connect(world.player, "Boss Entrance_"+str(order.index(path)) + str(path.start_stage_id) + "/" +
                     str(path.end_stage_id), start_region, boss_region, rule=base_rule)
+            multiworld.register_indirect_condition(start_region, boss_entrance)
+            base_region_name = stage_id_to_region(path.start_stage_id)
+            base_story_region_name = stage_id_to_story_region(path.start_stage_id)
+            base_region = world.get_region(base_region_name)
+            base_story_region = world.get_region(base_story_region_name)
+            multiworld.register_indirect_condition(base_region, boss_entrance)
+            multiworld.register_indirect_condition(base_story_region, boss_entrance)
 
         if boss_rule is not None:
             modified_rule = lambda state, r_rule=base_rule, b_rule=boss_rule: (r_rule(state) and b_rule(state))
@@ -245,7 +273,7 @@ def connect_by_story_mode(multiworld: MultiWorld, world: "ShThWorld", player: in
         new_entrance = connect(world.player, "Story Entrance_"+str(order.index(path)) + str(path.start_stage_id) + "/" +
                     str(path.end_stage_id), start_region, end_region, rule=modified_rule)
 
-        for region in level_regions:
+        for region in extra_level_regions:
             level_region_name = stage_id_to_region(region.stageId, region.regionIndex)
             region_to_add = world.get_region(level_region_name)
             multiworld.register_indirect_condition(region_to_add, new_entrance)

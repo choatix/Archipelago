@@ -8,7 +8,7 @@ VERSION: Tuple[int, int, int] = (0, 0, 8)
 TYPE_ID_ENEMY = 0
 TYPE_ID_OBJECTIVE = 1
 TYPE_ID_COMPLETION = 2
-TYPE_ID_AVAILABLE =3
+TYPE_ID_AVAILABLE = 3
 
 def GetVersionString():
     return f"{VERSION[0]}.{VERSION[1]}.{VERSION[2]}"
