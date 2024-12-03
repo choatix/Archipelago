@@ -1,5 +1,6 @@
 #from __future__ import annotations
 import copy
+import typing
 from dataclasses import dataclass
 from math import floor, ceil
 from typing import List, Optional
@@ -10,7 +11,7 @@ from worlds.AutoWorld import World
 from . import Locations, Weapons, Vehicle, Utils as ShadowUtils, Options
 from .Levels import LEVEL_ID_TO_LEVEL, ALL_STAGES, MISSION_ALIGNMENT_DARK, \
     MISSION_ALIGNMENT_HERO, MISSION_ALIGNMENT_NEUTRAL, ITEM_TOKEN_TYPE_STANDARD, ITEM_TOKEN_TYPE_FINAL, \
-    ITEM_TOKEN_TYPE_OBJECTIVE, ITEM_TOKEN_TYPE_ALIGNMENT, BOSS_STAGES
+    ITEM_TOKEN_TYPE_OBJECTIVE, ITEM_TOKEN_TYPE_ALIGNMENT, BOSS_STAGES, BANNED_AVAILABLE_STAGES
 from .Locations import MissionClearLocations, GetAlignmentsForStage
 
 BASE_ID = 1743800000
@@ -43,7 +44,7 @@ class Progression:
     CyanEmerald = "Cyan Chaos Emerald"
     PurpleEmerald = "Purple Chaos Emerald"
     GreenEmerald = "Green Chaos Emerald"
-    YellowEmerald = "Damn Fourth Chaos Emerald"
+    YellowEmerald = "Yellow Chaos Emerald"
     BlueEmerald = "Blue Chaos Emerald"
 
     StandardHeroToken = "Hero Token"
@@ -134,7 +135,7 @@ def PopulateLevelUnlockItems():
     level_unlock_items = []
     count = ITEM_ID_START_AT_LEVEL
     for stageId in ALL_STAGES:
-        if stageId in BOSS_STAGES:
+        if stageId in BOSS_STAGES or stageId in BANNED_AVAILABLE_STAGES:
             continue
         item = ItemInfo(count, GetStageUnlockItem(stageId), ItemClassification.progression, stageId=stageId,
                         alignmentId=None, type="level_unlock", value=None)
@@ -478,6 +479,8 @@ def GetPotentialDowngradeItems(world, mw_stage_items=None):
         max_available = ShadowUtils.getRequiredCount(lookup.requirement_count, percentage_available,
                                                      override=override_available, round_method=ceil)
         if indexer[item_lookup.name] > max_available:
+            print("Removal of item:", item.name, indexer[item_lookup.name], override_total, override_available,
+                  max_required, max_available)
             to_remove.append(item)
         elif indexer[item_lookup.name] > max_required:
             potential_downgrade.append(item)
@@ -512,10 +515,9 @@ def PopulateItemPool(world : World, first_regions):
         override_total = ShadowUtils.getOverwriteRequiredCount(override_settings, item.stageId,
                                                                item.alignmentId, ShadowUtils.TYPE_ID_COMPLETION)
 
+        lookup = [x for x in MissionClearLocations
+                  if x.stageId == item.stageId and x.alignmentId == item.alignmentId][0]
         if override_total is not None and override_total > 100:
-            lookup = [x for x in MissionClearLocations
-                      if x.stageId == item.stageId and x.alignmentId == item.alignmentId][0]
-
             max_required = ShadowUtils.getRequiredCount(lookup.requirement_count, None,
                                                         override=override_total, round_method=ceil)
 
@@ -524,10 +526,9 @@ def PopulateItemPool(world : World, first_regions):
                 stage_objective_items.append(i_item)
 
 
+
     mw_stage_items = [ShadowTheHedgehogItem(s, world.player) for s in stage_objective_items if
                       s.stageId in world.available_levels]
-
-
 
     potential_downgrade = []
     to_remove = []
@@ -537,17 +538,16 @@ def PopulateItemPool(world : World, first_regions):
     elif world.excess_item_count > 0:
         downgrade_count = world.excess_item_count
 
-    if downgrade_count > 0:
-        potential_downgrade, to_remove = GetPotentialDowngradeItems(world,mw_stage_items)
-
+    potential_downgrade, to_remove = GetPotentialDowngradeItems(world,mw_stage_items)
     if downgrade_count > len(potential_downgrade):
         downgrade_count = len(potential_downgrade)
 
-    for downgrade in potential_downgrade:
-        if potential_downgrade.index(downgrade) > downgrade_count:
-            break
+    if downgrade_count > 0:
+        for downgrade in potential_downgrade:
+            if potential_downgrade.index(downgrade) > downgrade_count:
+                break
 
-        downgrade.classification = ItemClassification.useful
+            downgrade.classification = ItemClassification.useful
 
     for remove in to_remove:
         mw_stage_items.remove(remove)
@@ -555,7 +555,7 @@ def PopulateItemPool(world : World, first_regions):
     weapon_dict = Weapons.GetWeaponDict()
     special_weapon_extras = [w for w in weapon_items if
                              Weapons.WeaponAttributes.SPECIAL in weapon_dict[w.name].attributes and
-                             w.name != 'Shadow Rifle']
+                             w.name != 'Shadow Rifle' and w.name != 'Weapon:Shadow Rifle']
 
     weapon_items.extend(special_weapon_extras)
     mw_weapon_items = [ ShadowTheHedgehogItem(w, world.player) for w in weapon_items ]
@@ -610,5 +610,17 @@ def PopulateItemPool(world : World, first_regions):
     if world.options.vehicle_logic:
         world.multiworld.itempool += mw_vehicle_items
 
+def get_item_groups():
+    (emerald_items, key_items, level_unlock_items, stage_objective_items,
+     junk_items, token_items, weapon_items, vehicle_items) = GetAllItemInfo()
 
+    item_groups: typing.Dict[str, list] = {
+        "Chaos Emeralds": [ e.name for e in emerald_items],
+        "Stage Items": [e.name for e in level_unlock_items],
+        "Weapons": [e.name for e in weapon_items],
+        "Vehicles": [e.name for e in vehicle_items],
+        "Vacuums": [w.name for w in weapon_items if "Vacuum" in w.name ]
+    }
+
+    return item_groups
 

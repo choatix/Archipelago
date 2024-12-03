@@ -142,7 +142,7 @@ class EnemySanityPercentage(Range):
 class StartingStages(Range):
     """Determines the number of stages that start unlocked."""
     display_name = "Starting Stages"
-    range_start = 1
+    range_start = 0
     range_end = 22
     default = 1
 
