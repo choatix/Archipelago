@@ -144,6 +144,28 @@ class BossFightLocation:
     boss: Boss
     unified: bool
 
+    def get_boss_name(self) -> str:
+        if self.unified:
+            return f"{self.boss} Boss Fight"
+        else:
+            return f"{self.boss} Boss Fight ({self.characters[0].name})"
+
+
+@dataclass
+class ChaoEggLocation:
+    locationId: int
+    eggName: str
+    area: Area
+    characters: List[Character]
+    requirements: List[List[str]]
+
+
+@dataclass
+class ChaoRaceLocation:
+    locationId: int
+    name: str
+    area: Area
+
 
 area_connections: Dict[Tuple[Character, Area, Area], Tuple[List[str], List[str], List[str]]] = {
     (Character.Sonic, Area.Hotel, Area.EmeraldCoast): ([], [], []),
@@ -151,12 +173,12 @@ area_connections: Dict[Tuple[Character, Area, Area], Tuple[List[str], List[str],
         [ItemName.KeyItem.WindStone], [ItemName.KeyItem.WindStone], [ItemName.KeyItem.WindStone]),
     (Character.Sonic, Area.Casino, Area.Casinopolis): ([ItemName.Sonic.LightShoes], [ItemName.Sonic.LightShoes], []),
     (Character.Sonic, Area.AngelIsland, Area.IceCap): (
-        [ItemName.KeyItem.IceStone, ItemName.KeyItem.CasinoKeys, ItemName.KeyItem.Train],
-        [ItemName.KeyItem.IceStone, ItemName.KeyItem.CasinoKeys, ItemName.KeyItem.Train],
-        [ItemName.KeyItem.IceStone, ItemName.KeyItem.CasinoKeys, ItemName.KeyItem.Train]),
+        [ItemName.KeyItem.IceStone, ItemName.KeyItem.CasinoKeys, ItemName.KeyItem.Train, ItemName.KeyItem.Dynamite],
+        [ItemName.KeyItem.IceStone, ItemName.KeyItem.CasinoKeys, ItemName.KeyItem.Train, ItemName.KeyItem.Dynamite],
+        [ItemName.KeyItem.IceStone, ItemName.KeyItem.CasinoKeys, ItemName.KeyItem.Train, ItemName.KeyItem.Dynamite]),
     (Character.Sonic, Area.TwinkleParkLobby, Area.TwinklePark): ([], [], []),
     (Character.Sonic, Area.StationSquareMain, Area.SpeedHighway): (
-        [ItemName.KeyItem.EmployeeCard], [ItemName.KeyItem.EmployeeCard], [ItemName.KeyItem.EmployeeCard]),
+        [ItemName.KeyItem.EmployeeCard], [ItemName.KeyItem.EmployeeCard], []),
     (Character.Sonic, Area.AngelIsland, Area.RedMountain): (
         [ItemName.Sonic.LightShoes, ItemName.Sonic.AncientLight],
         [ItemName.Sonic.LightShoes, ItemName.Sonic.AncientLight],
@@ -170,9 +192,9 @@ area_connections: Dict[Tuple[Character, Area, Area], Tuple[List[str], List[str],
         [ItemName.KeyItem.WindStone], [ItemName.KeyItem.WindStone], [ItemName.KeyItem.WindStone]),
     (Character.Tails, Area.Casino, Area.Casinopolis): ([], [], []),
     (Character.Tails, Area.AngelIsland, Area.IceCap): (
-        [ItemName.KeyItem.IceStone, ItemName.KeyItem.CasinoKeys, ItemName.KeyItem.Train],
-        [ItemName.KeyItem.IceStone, ItemName.KeyItem.CasinoKeys, ItemName.KeyItem.Train],
-        [ItemName.KeyItem.IceStone, ItemName.KeyItem.CasinoKeys, ItemName.KeyItem.Train]),
+        [ItemName.KeyItem.IceStone, ItemName.KeyItem.CasinoKeys, ItemName.KeyItem.Train, ItemName.KeyItem.Dynamite],
+        [ItemName.KeyItem.IceStone, ItemName.KeyItem.CasinoKeys, ItemName.KeyItem.Train, ItemName.KeyItem.Dynamite],
+        [ItemName.KeyItem.IceStone, ItemName.KeyItem.CasinoKeys, ItemName.KeyItem.Train, ItemName.KeyItem.Dynamite]),
     (Character.Tails, Area.TwinkleParkLobby, Area.TwinklePark): ([], [], []),
     (Character.Tails, Area.StationSquareMain, Area.SpeedHighway): (
         [ItemName.KeyItem.EmployeeCard], [ItemName.KeyItem.EmployeeCard], [ItemName.KeyItem.EmployeeCard]),
@@ -186,14 +208,17 @@ area_connections: Dict[Tuple[Character, Area, Area], Tuple[List[str], List[str],
         [ItemName.KeyItem.WindStone], [ItemName.KeyItem.WindStone], [ItemName.KeyItem.WindStone]),
     (Character.Knuckles, Area.Casino, Area.Casinopolis): ([], [], []),
     (Character.Knuckles, Area.AngelIsland, Area.IceCap): (
-        [ItemName.KeyItem.IceStone], [ItemName.KeyItem.IceStone], [ItemName.KeyItem.IceStone]),
+        [ItemName.KeyItem.IceStone, ItemName.KeyItem.Dynamite], [ItemName.KeyItem.IceStone, ItemName.KeyItem.Dynamite],
+        [ItemName.KeyItem.IceStone, ItemName.KeyItem.Dynamite]),
     (Character.Knuckles, Area.TwinkleParkLobby, Area.TwinklePark): ([], [], []),
     (Character.Knuckles, Area.StationSquareMain, Area.SpeedHighway): ([], [], []),
     (Character.Knuckles, Area.AngelIsland, Area.RedMountain): (
-        [ItemName.Knuckles.ShovelClaw], [ItemName.Knuckles.ShovelClaw], [ItemName.Knuckles.ShovelClaw]),
+        [ItemName.Knuckles.ShovelClaw, ItemName.KeyItem.Dynamite],
+        [ItemName.Knuckles.ShovelClaw, ItemName.KeyItem.Dynamite],
+        [ItemName.Knuckles.ShovelClaw, ItemName.KeyItem.Dynamite]),
     (Character.Knuckles, Area.EggCarrierMain, Area.SkyDeck): ([], [], []),
     (Character.Knuckles, Area.Jungle, Area.LostWorld): (
-        [ItemName.Knuckles.ShovelClaw], [ItemName.Knuckles.ShovelClaw], [ItemName.Knuckles.ShovelClaw]),
+        [ItemName.Knuckles.ShovelClaw], [ItemName.Knuckles.ShovelClaw], []),
     (Character.Knuckles, Area.Jungle, Area.FinalEgg): ([], [], []),
     (Character.Knuckles, Area.EggCarrierMain, Area.HotShelter): ([], [], []),
     (Character.Amy, Area.Hotel, Area.EmeraldCoast): ([], [], []),
@@ -201,7 +226,8 @@ area_connections: Dict[Tuple[Character, Area, Area], Tuple[List[str], List[str],
         [ItemName.KeyItem.WindStone], [ItemName.KeyItem.WindStone], [ItemName.KeyItem.WindStone]),
     (Character.Amy, Area.Casino, Area.Casinopolis): ([], [], []),
     (Character.Amy, Area.AngelIsland, Area.IceCap): (
-        [ItemName.KeyItem.IceStone], [ItemName.KeyItem.IceStone], [ItemName.KeyItem.IceStone]),
+        [ItemName.KeyItem.IceStone, ItemName.KeyItem.Dynamite], [ItemName.KeyItem.IceStone, ItemName.KeyItem.Dynamite],
+        [ItemName.KeyItem.IceStone, ItemName.KeyItem.Dynamite]),
     (Character.Amy, Area.TwinkleParkLobby, Area.TwinklePark): ([], [], []),
     (Character.Amy, Area.StationSquareMain, Area.SpeedHighway): (
         [ItemName.KeyItem.EmployeeCard], [ItemName.KeyItem.EmployeeCard], [ItemName.KeyItem.EmployeeCard]),
@@ -215,9 +241,9 @@ area_connections: Dict[Tuple[Character, Area, Area], Tuple[List[str], List[str],
         [ItemName.KeyItem.WindStone], [ItemName.KeyItem.WindStone], [ItemName.KeyItem.WindStone]),
     (Character.Big, Area.Casino, Area.Casinopolis): ([], [], []),
     (Character.Big, Area.AngelIsland, Area.IceCap): (
-        [ItemName.KeyItem.IceStone, ItemName.KeyItem.StationKeys, ItemName.KeyItem.Train],
-        [ItemName.KeyItem.IceStone, ItemName.KeyItem.StationKeys, ItemName.KeyItem.Train],
-        [ItemName.KeyItem.IceStone, ItemName.KeyItem.StationKeys, ItemName.KeyItem.Train]),
+        [ItemName.KeyItem.IceStone, ItemName.KeyItem.StationKeys, ItemName.KeyItem.Train, ItemName.KeyItem.Dynamite],
+        [ItemName.KeyItem.IceStone, ItemName.KeyItem.StationKeys, ItemName.KeyItem.Train, ItemName.KeyItem.Dynamite],
+        [ItemName.KeyItem.IceStone, ItemName.KeyItem.StationKeys, ItemName.KeyItem.Train, ItemName.KeyItem.Dynamite]),
     (Character.Big, Area.TwinkleParkLobby, Area.TwinklePark): ([], [], []),
     (Character.Big, Area.StationSquareMain, Area.SpeedHighway): (
         [ItemName.KeyItem.EmployeeCard], [ItemName.KeyItem.EmployeeCard], [ItemName.KeyItem.EmployeeCard]),
@@ -230,8 +256,11 @@ area_connections: Dict[Tuple[Character, Area, Area], Tuple[List[str], List[str],
     (Character.Gamma, Area.MysticRuinsMain, Area.WindyValley): (
         [ItemName.KeyItem.WindStone], [ItemName.KeyItem.WindStone], [ItemName.KeyItem.WindStone]),
     (Character.Gamma, Area.Casino, Area.Casinopolis): ([], [], []),
-    (Character.Gamma, Area.AngelIsland, Area.IceCap): (
-        [ItemName.KeyItem.IceStone], [ItemName.KeyItem.IceStone], [ItemName.KeyItem.IceStone]),
+    (Character.Gamma, Area.AngelIsland, Area.IceCap): ([ItemName.KeyItem.IceStone,
+                                                        ItemName.KeyItem.Dynamite], [ItemName.KeyItem.IceStone,
+                                                                                     ItemName.KeyItem.Dynamite],
+                                                       [ItemName.KeyItem.IceStone,
+                                                        ItemName.KeyItem.Dynamite]),
     (Character.Gamma, Area.TwinkleParkLobby, Area.TwinklePark): ([], [], []),
     (Character.Gamma, Area.StationSquareMain, Area.SpeedHighway): (
         [ItemName.KeyItem.EmployeeCard], [ItemName.KeyItem.EmployeeCard], [ItemName.KeyItem.EmployeeCard]),
@@ -287,7 +316,7 @@ area_connections: Dict[Tuple[Character, Area, Area], Tuple[List[str], List[str],
     (Character.Tails, Area.Station, Area.StationSquareMain): (
         [ItemName.KeyItem.StationKeys], [ItemName.KeyItem.StationKeys], [ItemName.KeyItem.StationKeys]),
     (Character.Tails, Area.StationSquareMain, Area.Hotel): (
-        [ItemName.KeyItem.HotelKeys], [ItemName.KeyItem.HotelKeys], [ItemName.KeyItem.HotelKeys]),
+        [ItemName.KeyItem.HotelKeys], [ItemName.KeyItem.HotelKeys], []),
     (Character.Tails, Area.Hotel, Area.StationSquareMain): (
         [ItemName.KeyItem.HotelKeys], [ItemName.KeyItem.HotelKeys], [ItemName.KeyItem.HotelKeys]),
     (Character.Tails, Area.Station, Area.Casino): (
@@ -343,8 +372,7 @@ area_connections: Dict[Tuple[Character, Area, Area], Tuple[List[str], List[str],
         [ItemName.KeyItem.TwinkleParkTicket], [ItemName.KeyItem.TwinkleParkTicket],
         [ItemName.KeyItem.TwinkleParkTicket]),
     (Character.Knuckles, Area.TwinkleParkLobby, Area.StationSquareMain): (
-        [ItemName.KeyItem.TwinkleParkTicket], [ItemName.KeyItem.TwinkleParkTicket],
-        [ItemName.KeyItem.TwinkleParkTicket]),
+        [ItemName.KeyItem.TwinkleParkTicket], [ItemName.KeyItem.TwinkleParkTicket], []),
     (Character.Knuckles, Area.MysticRuinsMain, Area.AngelIsland): (
         [ItemName.KeyItem.Dynamite], [ItemName.KeyItem.Dynamite], [ItemName.KeyItem.Dynamite]),
     (Character.Knuckles, Area.AngelIsland, Area.MysticRuinsMain): (
@@ -424,8 +452,7 @@ area_connections: Dict[Tuple[Character, Area, Area], Tuple[List[str], List[str],
         [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys]),
     (Character.Big, Area.StationSquareMain, Area.TwinkleParkLobby): ([], [], []),
     (Character.Big, Area.TwinkleParkLobby, Area.StationSquareMain): (
-        [ItemName.KeyItem.TwinkleParkTicket], [ItemName.KeyItem.TwinkleParkTicket],
-        [ItemName.KeyItem.TwinkleParkTicket]),
+        [ItemName.KeyItem.TwinkleParkTicket], [ItemName.KeyItem.TwinkleParkTicket], []),
     (Character.Big, Area.MysticRuinsMain, Area.AngelIsland): (
         [ItemName.KeyItem.Dynamite], [ItemName.KeyItem.Dynamite], [ItemName.KeyItem.Dynamite]),
     (Character.Big, Area.AngelIsland, Area.MysticRuinsMain): (
@@ -466,8 +493,7 @@ area_connections: Dict[Tuple[Character, Area, Area], Tuple[List[str], List[str],
         [ItemName.KeyItem.TwinkleParkTicket], [ItemName.KeyItem.TwinkleParkTicket],
         [ItemName.KeyItem.TwinkleParkTicket]),
     (Character.Gamma, Area.TwinkleParkLobby, Area.StationSquareMain): (
-        [ItemName.KeyItem.TwinkleParkTicket], [ItemName.KeyItem.TwinkleParkTicket],
-        [ItemName.KeyItem.TwinkleParkTicket]),
+        [ItemName.KeyItem.TwinkleParkTicket], [ItemName.KeyItem.TwinkleParkTicket], []),
     (Character.Gamma, Area.MysticRuinsMain, Area.AngelIsland): (
         [ItemName.KeyItem.Dynamite], [ItemName.KeyItem.Dynamite], [ItemName.KeyItem.Dynamite]),
     (Character.Gamma, Area.AngelIsland, Area.MysticRuinsMain): (
@@ -819,8 +845,7 @@ mission_location_table: List[MissionLocation] = [
                     [ItemName.KeyItem.IceStone, ItemName.KeyItem.CasinoKeys, ItemName.KeyItem.Train],
                     [ItemName.KeyItem.IceStone, ItemName.KeyItem.CasinoKeys, ItemName.KeyItem.Train]),
     MissionLocation(821, Area.Jungle, Area.FinalEgg, Character.Gamma, 21, [], [], []),
-    MissionLocation(822, Area.Hotel, Area.EmeraldCoast, Character.Big, 22, [ItemName.Big.LifeBelt],
-                    [ItemName.Big.LifeBelt], [ItemName.Big.LifeBelt]),
+    MissionLocation(822, Area.Hotel, Area.EmeraldCoast, Character.Big, 22, [], [], []),
     MissionLocation(823, Area.TwinkleParkLobby, Area.TwinklePark, Character.Sonic, 23, [], [], []),
     MissionLocation(824, Area.Casino, Area.Casinopolis, Character.Tails, 24, [], [], []),
     MissionLocation(825, Area.StationSquareMain, Area.Casinopolis, Character.Knuckles, 25, [], [], []),
@@ -903,4 +928,21 @@ boss_location_table: List[BossFightLocation] = [
                       LocationName.Boss.Chaos6, True),
     BossFightLocation(780, Area.EggCarrierMain, [Character.Gamma], LocationName.Boss.E101mkII, False),
     BossFightLocation(790, Area.EggCarrierMain, [Character.Amy], LocationName.Boss.Zero, False),
+]
+
+chao_egg_location_table: List[ChaoEggLocation] = [
+    ChaoEggLocation(900, LocationName.Chao.GoldEgg, Area.StationSquareMain, EVERYONE,
+                    [[ItemName.KeyItem.HotelKeys], [ItemName.KeyItem.StationKeys, ItemName.KeyItem.CasinoKeys]]),
+    ChaoEggLocation(901, LocationName.Chao.SilverEgg, Area.MysticRuinsMain, [Character.Sonic, Character.Tails,
+                                                                             Character.Knuckles, Character.Amy,
+                                                                             Character.Big], []),
+    ChaoEggLocation(902, LocationName.Chao.BlackEgg, Area.EggCarrierMain,
+                    [Character.Amy, Character.Gamma, Character.Big], []),
+]
+chao_race_location_table: List[ChaoRaceLocation] = [
+    ChaoRaceLocation(905, LocationName.Chao.PearlCourse, Area.Hotel),
+    ChaoRaceLocation(906, LocationName.Chao.AmethystCourse, Area.Hotel),
+    ChaoRaceLocation(907, LocationName.Chao.SapphireCourse, Area.Hotel),
+    ChaoRaceLocation(908, LocationName.Chao.RubyCourse, Area.Hotel),
+    ChaoRaceLocation(909, LocationName.Chao.EmeraldCourse, Area.Hotel),
 ]
