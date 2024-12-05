@@ -70,16 +70,38 @@ class ObjectivePercentage(Range):
     range_end = 100
     default = 100
 
-class ObjectiveItemPercentage(Range):
+class EnemyObjectivePercentage(Range):
+    """When playing Objective Sanity, determine the percentage of items required to finish stages for enemy objectives."""
+    display_name = "Enemy Objective Percentage"
+    range_start = 1
+    range_end = 100
+    default = 100
+
+class ObjectiveCompletionPercentage(Range):
     """When playing Objective Sanity, determine the percentage of items required to finish stages."""
+    display_name = "Objective Completion Percentage"
+    range_start = 1
+    range_end = 100
+    default = 100
+
+class ObjectiveCompletionEnemyPercentage(Range):
+    """When playing Enemy Objective Sanity, determine the percentage of items required to finish stages."""
+    display_name = "Objective Completion Enemy Percentage"
+    range_start = 1
+    range_end = 100
+    default = 100
+
+
+class ObjectiveItemPercentageAvailable(Range):
+    """When playing Objective Sanity, determine the percentage of items required to finish stages left in the pool."""
     display_name = "Objective Item Percentage"
     range_start = 1
     range_end = 100
     default = 100
 
-class ObjectiveItemPercentageAvailable(Range):
-    """When playing Objective Sanity, determine the percentage of items required to finish stages left in the pool."""
-    display_name = "Objective Item Percentage"
+class ObjectiveItemEnemyPercentageAvailable(Range):
+    """When playing Objective Sanity, determine the percentage of items for enemy objectives required to finish stages left in the pool."""
+    display_name = "Objective Item Enemy Percentage"
     range_start = 1
     range_end = 100
     default = 100
@@ -213,6 +235,13 @@ class LogicLevel(Choice):
     option_hard = 2  # Requires skips to traverse regions.
     default = 1
 
+class AllowDangerousPercentage(Toggle):
+    """Allows setting dangerous logic for percentages for objectives"""
+    display_name = "Dangerous Percentage"
+    option_off = 0
+    option_on = 1
+    default = 0
+
 class BossChecks(Toggle):
     """
         Determines if bosses provide checks. On vanilla story mode, bosses will still have to be fought to progress.
@@ -231,8 +260,11 @@ class ShadowTheHedgehogOptions(PerGameCommonOptions):
     goal_objective_missions: GoalObjectiveMissions
     objective_sanity: ObjectiveSanity
     objective_percentage: ObjectivePercentage
-    objective_item_percentage: ObjectiveItemPercentage
+    objective_enemy_percentage: EnemyObjectivePercentage
+    objective_completion_percentage: ObjectiveCompletionPercentage
+    objective_completion_enemy_percentage: ObjectiveCompletionEnemyPercentage
     objective_item_percentage_available: ObjectiveItemPercentageAvailable
+    objective_item_enemy_percentage_available: ObjectiveItemEnemyPercentageAvailable
     enemy_objective_sanity: EnemyObjectiveSanity
     character_sanity: CharacterSanity
     enemy_sanity: Enemysanity
@@ -255,6 +287,8 @@ class ShadowTheHedgehogOptions(PerGameCommonOptions):
     level_progression: LevelProgression
     percent_overrides: PercentOverrides
     logic_level: LogicLevel
+    allow_dangerous_settings: AllowDangerousPercentage
+
     #boss_checks: BossChecks
 
 

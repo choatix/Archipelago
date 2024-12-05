@@ -1,4 +1,5 @@
 import asyncio
+from datetime import datetime, timedelta
 import time
 import traceback
 from dataclasses import dataclass
@@ -125,12 +126,11 @@ class ShTHCommandProcessor(ClientCommandProcessor):
                   and m.alignmentId == MISSION_ALIGNMENT_DARK ]
             if len(dark) > 0:
                 dark = dark[0]
-                override_total = ShadowUtils.getOverwriteRequiredCount(ctx.percent_overrides, dark.stageId,
-                                                                       dark.alignmentId,
-                                                                       ShadowUtils.TYPE_ID_OBJECTIVE)
 
-                required_count = ShadowUtils.getRequiredCount(dark.requirement_count, ctx.objective_percentage,
-                                                          override=override_total, round_method=floor)
+                required_count = ShadowUtils.getMaxRequired(
+                    ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_OBJECTIVE_ENEMY,
+                                                              dark.mission_object_name, ctx),
+                    dark.requirement_count,dark.stageId, dark.alignmentId, ctx.override_settings)
 
                 associated_locations = [ x.locationId for x in mission_locations if x.alignmentId == dark.alignmentId and
                   x.stageId == dark.stageId and x.count <= required_count ]
@@ -144,11 +144,17 @@ class ShTHCommandProcessor(ClientCommandProcessor):
                   and m.alignmentId == MISSION_ALIGNMENT_HERO ]
             if len(dark) > 0:
                 dark = dark[0]
-                override_total = ShadowUtils.getOverwriteRequiredCount(ctx.percent_overrides, dark.stageId,
-                                                                       dark.alignmentId,
-                                                                       ShadowUtils.TYPE_ID_OBJECTIVE)
-                required_count = ShadowUtils.getRequiredCount(dark.requirement_count, ctx.objective_percentage,
-                                                          override=override_total, round_method=floor)
+                is_enemy_objective = False
+                if "Soldier" in dark.name or "Alien" in dark.name:
+                    is_enemy_objective = True
+
+                if not ctx.options.enemy_objective_sanity and is_enemy_objective:
+                    return 0, 0
+
+                required_count = ShadowUtils.getMaxRequired(
+                    ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_OBJECTIVE,
+                                                              dark.mission_object_name, ctx),
+                    dark.requirement_count, dark.stageId, dark.alignmentId, ctx.override_settings)
 
                 associated_locations = [x.locationId for x in mission_locations if x.alignmentId == dark.alignmentId and
                                         x.stageId == dark.stageId and x.count <= required_count]
@@ -161,12 +167,11 @@ class ShTHCommandProcessor(ClientCommandProcessor):
                   and m.alignmentId == MISSION_ALIGNMENT_DARK ]
             if len(dark) > 0:
                 dark = dark[0]
-                override_total = ShadowUtils.getOverwriteRequiredCount(ctx.percent_overrides, dark.stageId,
-                                                                       dark.alignmentId,
-                                                                       ShadowUtils.TYPE_ID_COMPLETION)
 
-                required_count = ShadowUtils.getRequiredCount(dark.requirement_count, ctx.objective_percentage,
-                                                          override=override_total, round_method=floor)
+                required_count = ShadowUtils.getMaxRequired(
+                    ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_COMPLETION,
+                                                              dark.mission_object_name, ctx),
+                    dark.requirement_count, dark.stageId, dark.alignmentId, ctx.override_settings)
 
                 remaining_count = required_count - len([unlock for unlock in ctx.handled if unlock[0].item in info and \
                      info[unlock[0].item].stageId == stage
@@ -183,12 +188,11 @@ class ShTHCommandProcessor(ClientCommandProcessor):
                   and m.alignmentId == MISSION_ALIGNMENT_HERO ]
             if len(dark) > 0:
                 dark = dark[0]
-                override_total = ShadowUtils.getOverwriteRequiredCount(ctx.percent_overrides, dark.stageId,
-                                                                       dark.alignmentId,
-                                                                       ShadowUtils.TYPE_ID_COMPLETION)
 
-                required_count = ShadowUtils.getRequiredCount(dark.requirement_count, ctx.objective_percentage,
-                                                          override=override_total, round_method=floor)
+                required_count = ShadowUtils.getMaxRequired(
+                    ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_COMPLETION,
+                                                              dark.mission_object_name, ctx),
+                    dark.requirement_count, dark.stageId, dark.alignmentId, ctx.override_settings)
 
                 remaining_count = required_count - len([unlock for unlock in ctx.handled if unlock[0].item in info and \
                                                         info[unlock[0].item].stageId == stage
@@ -200,11 +204,10 @@ class ShTHCommandProcessor(ClientCommandProcessor):
                   and m.enemyClass == Locations.ENEMY_CLASS_GUN ]
             if len(dark) > 0:
                 dark = dark[0]
-                override_total = ShadowUtils.getOverwriteRequiredCount(ctx.percent_overrides, dark.stageId,
-                                                                       dark.enemyClass,
-                                                                       ShadowUtils.TYPE_ID_ENEMY)
-                required_count = ShadowUtils.getRequiredCount(dark.total_count, ctx.enemy_sanity_percentage,
-                                                          override=override_total, round_method=ceil)
+                required_count = ShadowUtils.getMaxRequired(
+                    ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_ENEMY,
+                                                              dark.mission_object_name, ctx),
+                    dark.requirement_count, dark.stageId, dark.alignmentId, ctx.override_settings)
 
                 associated_locations = [x.locationId for x in enemysanity_locations if
                                         x.alignmentId == dark.enemyClass and
@@ -218,11 +221,10 @@ class ShTHCommandProcessor(ClientCommandProcessor):
                      and m.enemyClass == Locations.ENEMY_CLASS_EGG ]
             if len(dark) > 0:
                 dark = dark[0]
-                override_total = ShadowUtils.getOverwriteRequiredCount(ctx.percent_overrides, dark.stageId,
-                                                                       dark.enemyClass,
-                                                                       ShadowUtils.TYPE_ID_ENEMY)
-                required_count = ShadowUtils.getRequiredCount(dark.total_count, ctx.enemy_sanity_percentage,
-                                                              override=override_total, round_method=ceil)
+                required_count = ShadowUtils.getMaxRequired(
+                    ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_ENEMY,
+                                                              dark.mission_object_name, ctx),
+                    dark.requirement_count, dark.stageId, dark.alignmentId, ctx.override_settings)
                 associated_locations = [x.locationId for x in enemysanity_locations if
                                         x.alignmentId == dark.enemyClass and
                                         x.stageId == dark.stageId and x.count <= required_count]
@@ -235,11 +237,10 @@ class ShTHCommandProcessor(ClientCommandProcessor):
                     and m.enemyClass == Locations.ENEMY_CLASS_ALIEN]
             if len(dark) > 0:
                 dark = dark[0]
-                override_total = ShadowUtils.getOverwriteRequiredCount(ctx.percent_overrides, dark.stageId,
-                                                                       dark.enemyClass,
-                                                                       ShadowUtils.TYPE_ID_ENEMY)
-                required_count = ShadowUtils.getRequiredCount(dark.total_count, ctx.enemy_sanity_percentage,
-                                                              override=override_total, round_method=ceil)
+                required_count = ShadowUtils.getMaxRequired(
+                    ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_ENEMY,
+                                                              dark.mission_object_name, ctx),
+                    dark.requirement_count,dark.stageId, dark.alignmentId, ctx.override_settings)
                 associated_locations = [x.locationId for x in enemysanity_locations if x.alignmentId == dark.enemyClass and
                                         x.stageId == dark.stageId and x.count <= required_count]
 
@@ -549,6 +550,7 @@ class ShTHContext(CommonContext):
 
     def __init__(self, server_address, password):
         super().__init__(server_address, password)
+        self.override_settings = []
         self.dolphin_sync_task: Optional[asyncio.Task] = None
         self.dolphin_status = CONNECTION_INITIAL_STATUS
         self.awaiting_rom = False
@@ -592,6 +594,13 @@ class ShTHContext(CommonContext):
 
         self.hero_gauge_buffer = 0
         self.dark_gauge_buffer = 0
+        self.hero_cooldown = None
+        self.dark_cooldown = None
+        self.hero_max_meter = 0
+        self.dark_max_meter = 0
+        self.hero_gauge_last = 0
+        self.dark_gauge_last = 0
+
         self.junk_delay = 0
 
         self.tokens = []
@@ -606,6 +615,13 @@ class ShTHContext(CommonContext):
         self.info_logging = True
         self.last_level = None
         self.last_weapon = None
+
+        self.objective_completion_enemy_percentage = 100
+        self.objective_completion_percentage = 100
+        self.objective_enemy_percentage = 100
+        self.objective_item_available = 100
+        self.objective_item_enemy_available = 100
+
 
         # Name of the current stage as read from the game's memory. Sent to trackers whenever its value changes to
         # facilitate automatically switching to the map of the current stage.
@@ -767,8 +783,23 @@ class ShTHContext(CommonContext):
             if "enemy_sanity_percentage" in slot_data:
                 self.enemy_sanity_percentage = slot_data["enemy_sanity_percentage"]
 
-            if "percent_overrides" in slot_data:
-                self.percent_overrides = slot_data["percent_overrides"]
+            if "override_settings" in slot_data:
+                self.override_settings = slot_data["override_settings"]
+
+            if "objective_completion_enemy_percentage" in slot_data:
+                self.objective_completion_enemy_percentage = slot_data["objective_completion_enemy_percentage"]
+
+            if "objective_completion_percentage" in slot_data:
+                self.objective_completion_percentage = slot_data["objective_completion_percentage"]
+
+            if "objective_enemy_percentage" in slot_data:
+                self.objective_enemy_percentage = slot_data["objective_enemy_percentage"]
+
+            if "objective_item_available" in slot_data:
+                self.objective_item_available = slot_data["objective_item_available"]
+
+            if "objective_item_enemy_available" in slot_data:
+                self.objective_item_available = slot_data["objective_item_enemy_available"]
 
             self.restoreState()
             self.awaiting_server = False
@@ -1101,8 +1132,6 @@ def is_mission_completable(ctx, stage, alignment):
     if not is_level_accessible(ctx, stage):
         return False
 
-
-
     if len(relevant_clears) == 0:
         return False
     clear = relevant_clears[0]
@@ -1110,18 +1139,16 @@ def is_mission_completable(ctx, stage, alignment):
     if clear.requirement_count is None or not ctx.objective_sanity:
         return True
 
-    override_total = ShadowUtils.getOverwriteRequiredCount(ctx.percent_overrides, stage,
-                                                           alignment,
-                                                           ShadowUtils.TYPE_ID_COMPLETION)
-
-    required_count = ShadowUtils.getRequiredCount(clear.requirement_count, ctx.objective_item_percentage,
-                                                  override=override_total, round_method=ceil)
+    max_required = ShadowUtils.getMaxRequired(
+        ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_COMPLETION,
+                                                  clear.mission_object_name, ctx), clear.requirement_count,
+        stage, alignment, ctx.override_settings)
 
     i = [item for item in ctx.items_received if item.item in info and \
          info[item.item].stageId == stage and info[item.item].type == "level_object"
          and info[item.item].alignmentId == alignment]
 
-    if len(i) >= required_count:
+    if len(i) >= max_required:
         return True
 
     return False
@@ -1690,6 +1717,13 @@ async def check_junk(ctx, current_level):
             ctx.hero_gauge_buffer += gaugeJunk[1].value
             newly_handled.append(gaugeJunk[0])
 
+
+    if ctx.hero_max_meter > 0:
+        ctx.hero_max_meter -= 10
+
+    if ctx.dark_max_meter > 0:
+        ctx.dark_max_meter -= 10
+
     if ctx.hero_gauge_buffer > 0:
 
         current_hero_gauge_bytes = dolphin_memory_engine.read_bytes(HERO_GAUGE_ADDRESS, 4)
@@ -1699,16 +1733,35 @@ async def check_junk(ctx, current_level):
         if ctx.hero_gauge_buffer < increase:
             increase = ctx.hero_gauge_buffer
 
-        if ctx.hero_gauge_buffer > 1000 and increase < 1000:
-            print("gauge diff too small", ctx.hero_gauge_buffer, increase)
+        if increase > 1000:
+            increase = 1000
+
+        now = datetime.now()
+
+        if ctx.hero_cooldown is not None and now > ctx.hero_cooldown:
+            ctx.hero_cooldown = None
+
+        if ctx.hero_cooldown is not None:
+            pass
+        elif ctx.hero_gauge_buffer > 100 and increase < 100 \
+            and ctx.hero_gauge_last == current_hero_gauge:
+            pass
         else:
-            print("gauge diff", ctx.hero_gauge_buffer, increase)
+            print("gauge diff", ctx.hero_gauge_buffer, increase, ctx.hero_max_meter)
             ctx.hero_gauge_buffer -= increase
+
+            ctx.hero_max_meter += increase
+            if ctx.hero_max_meter > 60000:
+                cooldown_until = now + timedelta(seconds=75)
+                ctx.hero_cooldown = cooldown_until
+                ctx.hero_max_meter = 0
 
             new_hero_value = current_hero_gauge + increase
             print("new hero", new_hero_value)
             new_bytes = new_hero_value.to_bytes(4, byteorder='big')
             writeBytes(HERO_GAUGE_ADDRESS, new_bytes)
+
+        ctx.hero_gauge_last = current_hero_gauge
 
     if len(filler_gauge_dark) > 0:
         for gaugeJunk in filler_gauge_dark:
@@ -1723,14 +1776,35 @@ async def check_junk(ctx, current_level):
         if ctx.dark_gauge_buffer < increase:
             increase = ctx.dark_gauge_buffer
 
-        if ctx.dark_gauge_buffer > 1000 and increase < 1000:
-            print("gauge diff too small", ctx.dark_gauge_buffer, increase)
+        if increase > 1000:
+            increase = 1000
+
+        now = datetime.now()
+
+        if ctx.dark_cooldown is not None and now > ctx.dark_cooldown:
+            ctx.dark_cooldown = None
+
+        if ctx.dark_cooldown is not None:
+            pass
+        elif ctx.dark_gauge_buffer > 100 and increase < 100 and \
+                ctx.dark_gauge_last == current_dark_gauge:
+            pass
         else:
+            ctx.dark_max_meter += increase
+            print("gauge diff", ctx.dark_gauge_buffer, increase, ctx.dark_max_meter)
+
+            if ctx.dark_max_meter > 60000:
+                cooldown_until = now + timedelta(seconds=75)
+                ctx.dark_cooldown = cooldown_until
+                ctx.dark_max_meter = 0
+
             ctx.dark_gauge_buffer -= increase
 
             new_dark_value = current_dark_gauge + increase
             new_bytes = new_dark_value.to_bytes(4, byteorder='big')
             writeBytes(DARK_GAUGE_ADDRESS, new_bytes)
+
+        ctx.dark_gauge_last = current_dark_gauge
 
     remove = []
     for r in newly_handled:
@@ -1942,12 +2016,10 @@ async def update_level_behaviour(ctx, current_level, death):
         hero_count = ctx.level_state["hero_count"]
         heroMax = heroInfo.requirement_count
 
-        override_total = ShadowUtils.getOverwriteRequiredCount(ctx.percent_overrides, current_level,
-                                                               MISSION_ALIGNMENT_HERO,
-                                                               ShadowUtils.TYPE_ID_COMPLETION)
-
-        heroMaxAdjusted = ShadowUtils.getRequiredCount(heroMax, ctx.objective_item_percentage,
-                                                       override=override_total, round_method=ceil)
+        heroMaxAdjusted = ShadowUtils.getMaxRequired(
+            ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_COMPLETION,
+                                                      heroInfo.mission_object_name, ctx), heroInfo.requirement_count,
+            current_level, MISSION_ALIGNMENT_HERO, ctx.override_settings)
 
         difference_over = heroMaxAdjusted - heroInfo.requirement_count
         if difference_over < 0:
@@ -1993,12 +2065,11 @@ async def update_level_behaviour(ctx, current_level, death):
         dark_count = ctx.level_state["dark_count"]
         dark_write = dark_count
         darkMax = darkInfo.requirement_count
-        override_total = ShadowUtils.getOverwriteRequiredCount(ctx.percent_overrides, current_level,
-                                                               MISSION_ALIGNMENT_DARK,
-                                                               ShadowUtils.TYPE_ID_COMPLETION)
 
-        darkMaxAdjusted = ShadowUtils.getRequiredCount(darkMax, ctx.objective_item_percentage,
-                                                       override=override_total, round_method=ceil)
+        darkMaxAdjusted = ShadowUtils.getMaxRequired(
+            ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_COMPLETION,
+                                                      darkInfo.mission_object_name, ctx), darkInfo.requirement_count,
+            current_level, MISSION_ALIGNMENT_DARK, ctx.override_settings)
 
         difference_over = darkMaxAdjusted - darkInfo.requirement_count
         if difference_over < 0:
@@ -2430,9 +2501,10 @@ async def dolphin_sync_task(ctx: ShTHContext):
                     await ctx.disconnect()
                     await asyncio.sleep(5)
                     continue
-        except Exception:
+        except Exception as e:
+            logger.error(e)
             dolphin_memory_engine.un_hook()
-            logger.info("Connection to Dolphin failed, attempting again in 5 seconds...")
+            logger.info("Connection to Dolphin failed with exception, attempting again in 5 seconds...")
             logger.error(traceback.format_exc())
             ctx.dolphin_status = CONNECTION_LOST_STATUS
             await ctx.disconnect(True)
