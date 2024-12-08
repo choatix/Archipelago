@@ -212,7 +212,8 @@ class ShtHWorld(World):
                 raise OptionError("Dangerous objective value set!")
 
             if max_required_available < max_required_completion:
-                raise OptionError("Stage specific variables uncompletable")
+                raise OptionError(f"Stage specific variables uncompletable for stage:{Levels.LEVEL_ID_TO_LEVEL[missionClear.stageId]}"
+                                  f"with {max_required_available} and {max_required_completion}")
 
         for enemy in Locations.EnemySanityLocations:
             max_required_enemy = ShadowUtils.getMaxRequired(
@@ -293,8 +294,8 @@ class ShtHWorld(World):
             "objective_enemy_percentage": self.options.objective_enemy_percentage.value,
             "objective_completion_percentage": self.options.objective_completion_percentage.value,
             "objective_completion_enemy_percentage": self.options.objective_completion_enemy_percentage.value,
-            "objective_item_available": self.options.objective_item_percentage_available.value,
-            "objective_item_enemy_available": self.options.objective_item_enemy_percentage_available.value,
+            "objective_item_percentage_available": self.options.objective_item_percentage_available.value,
+            "objective_item_enemy_percentage_available": self.options.objective_item_enemy_percentage_available.value,
             "enemy_sanity_percentage": self.options.enemy_sanity_percentage.value,
 
             "checkpoint_sanity": self.options.checkpoint_sanity.value,

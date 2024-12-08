@@ -306,9 +306,8 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
 
                 rule = lambda state: True
 
-                if world.options.weapon_sanity_unlock:
-                    if (Weapons.WeaponAttributes.SPECIAL in weapon.attributes or
-                            world.options.weapon_sanity_hold == 1):
+                if (world.options.weapon_sanity_unlock and world.options.weapon_sanity_hold == 1) or \
+                    Weapons.WeaponAttributes.SPECIAL in weapon.attributes:
                         rule = lambda state, w=weapon.name: state.has(w, player)
 
                 region_stage = world.get_region(stage_id_to_region(stage, region_index))

@@ -75,7 +75,7 @@ class EnemyObjectivePercentage(Range):
     display_name = "Enemy Objective Percentage"
     range_start = 1
     range_end = 100
-    default = 100
+    default = 90
 
 class ObjectiveCompletionPercentage(Range):
     """When playing Objective Sanity, determine the percentage of items required to finish stages."""
@@ -89,21 +89,21 @@ class ObjectiveCompletionEnemyPercentage(Range):
     display_name = "Objective Completion Enemy Percentage"
     range_start = 1
     range_end = 100
-    default = 100
+    default = 90
 
 
 class ObjectiveItemPercentageAvailable(Range):
     """When playing Objective Sanity, determine the percentage of items required to finish stages left in the pool."""
     display_name = "Objective Item Percentage"
     range_start = 1
-    range_end = 100
+    range_end = 1000
     default = 100
 
 class ObjectiveItemEnemyPercentageAvailable(Range):
     """When playing Objective Sanity, determine the percentage of items for enemy objectives required to finish stages left in the pool."""
     display_name = "Objective Item Enemy Percentage"
     range_start = 1
-    range_end = 100
+    range_end = 1000
     default = 100
 
 class EnemyObjectiveSanity(DefaultOnToggle):
@@ -201,7 +201,7 @@ class ExceedingItemsFiller(Choice):
     option_off = 0  # Never convert exceeding items into filler
     option_minimise = 1  # Minimise exceeding items into filler
     option_always = 2  # Always mark exceeding items as filler
-    default = 1
+    default = option_minimise
 
 class RingLink(Toggle):
     """
@@ -221,7 +221,7 @@ class LevelProgression(Choice):
     option_select = 0  # All stages will be unlocked through unlocks to Select Mode
     option_story = 1  # All stages will only be unlocked through story mode progression
     option_both = 2  # Stages can be unlocked through story mode progression or unlocked for Select Mode
-    default = 0
+    default = option_select
 
 class PercentOverrides(OptionDict):
     """List of provided keys to dictate percentage based overrides."""
@@ -233,14 +233,14 @@ class LogicLevel(Choice):
     option_easy = 0  # Logic adds in easier elements for completion
     option_normal = 1  # Standard logic
     option_hard = 2  # Requires skips to traverse regions.
-    default = 1
+    default = option_normal
 
 class AllowDangerousPercentage(Toggle):
     """Allows setting dangerous logic for percentages for objectives"""
     display_name = "Dangerous Percentage"
     option_off = 0
     option_on = 1
-    default = 0
+    default = option_off
 
 class BossChecks(Toggle):
     """
