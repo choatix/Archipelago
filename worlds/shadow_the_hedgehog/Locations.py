@@ -419,7 +419,10 @@ MissionClearLocations = [
         {
             1: 1
         }
-    )
+    ),
+
+    MissionClearLocation(STAGE_THE_LAST_WAY, MISSION_ALIGNMENT_NEUTRAL, None, None)
+
 ]
 
 BossClearLocations = \
@@ -440,7 +443,8 @@ BossClearLocations = \
     BossClearLocation(BOSS_BLACK_DOOM_CF),
     BossClearLocation(BOSS_EGG_DEALER_CF),
     BossClearLocation(BOSS_DIABLON_FH),
-    BossClearLocation(BOSS_BLACK_DOOM_FH)
+    BossClearLocation(BOSS_BLACK_DOOM_FH),
+    BossClearLocation(BOSS_DEVIL_DOOM)
 ]
 
 
@@ -953,9 +957,7 @@ def create_locations(world: "ShtHWorld", regions: Dict[str, Region]):
 
     override_settings = world.options.percent_overrides
 
-    if world.options.objective_sanity.value:
-        objective_percentage = world.options.objective_percentage.value
-        objective_percentage_enemy = world.options.objective_enemy_percentage.value
+    if world.options.objective_sanity:
         for location in mission_locations:
             if location.stageId not in world.available_levels:
                 continue
@@ -1012,6 +1014,8 @@ def create_locations(world: "ShtHWorld", regions: Dict[str, Region]):
         region_name = Regions.stage_id_to_region(boss.stageId)
         if region_name not in regions:
             continue
+        if boss.stageId == BOSS_DEVIL_DOOM:
+            continue
         within_region = regions[region_name]
         completion_location = ShadowTheHedgehogLocation(world.player, boss.name, boss.locationId,
                                                         within_region)
@@ -1028,7 +1032,7 @@ def create_locations(world: "ShtHWorld", regions: Dict[str, Region]):
                                                             within_region)
             within_region.locations.append(completion_location)
 
-    if world.options.weapon_sanity_hold.value > 0 :
+    if world.options.weapon_sanity_hold > 0 :
         for weapon in weaponsanity_locations:
             region_name = Regions.weapon_name_to_region(weapon.other)
             if region_name not in regions:
@@ -1087,9 +1091,6 @@ def count_locations(world):
     count += len(mission_clear_locations)
 
     if world.options.objective_sanity:
-        objective_percentage = world.options.objective_percentage.value
-        objective_percentage_enemy = world.options.objective_enemy_percentage.value
-
         for location in mission_locations:
 
             max_required = ShadowUtils.getMaxRequired(
@@ -1121,7 +1122,7 @@ def count_locations(world):
     if world.options.key_sanity:
         count += len(keysanity_locations)
 
-    count += len(boss_locations)
+    count += len(boss_locations) - 1 # Devil Doom Boss
 
     if world.options.weapon_sanity_hold > 0:
         count += len(weaponsanity_locations)

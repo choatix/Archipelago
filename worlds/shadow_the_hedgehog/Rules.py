@@ -117,7 +117,7 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
     token_assignments = {}
 
     if world.options.level_progression != LevelProgression.option_select:
-        Regions.connect_by_story_mode(multiworld, world, player, Story.StoryMode)
+        Regions.connect_by_story_mode(multiworld, world, player, world.shuffled_story_mode)
 
     for additional_level_region in Levels.INDIVIDUAL_LEVEL_REGIONS:
         if additional_level_region.stageId not in world.available_levels:
@@ -257,6 +257,9 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
 
     for boss in BossClearLocations:
         if boss.stageId not in world.available_levels:
+            continue
+
+        if boss.stageId == Levels.BOSS_DEVIL_DOOM:
             continue
 
         boss_id, boss_name = Locations.GetBossLocationName(boss.name, boss.stageId)

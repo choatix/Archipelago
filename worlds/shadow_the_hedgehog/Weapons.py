@@ -67,9 +67,9 @@ def GetRuleByWeaponRequirement(player, req, stage, regions):
 
 WEAPON_INFO = [
     WeaponInfo(0x1, "Pistol",
-               [Levels.STAGE_WESTOPOLIS,Levels.STAGE_LETHAL_HIGHWAY, Levels.STAGE_CENTRAL_CITY,
-                Levels.STAGE_THE_DOOM, Levels.STAGE_DEATH_RUINS, Levels.STAGE_LOST_IMPACT,
-                Levels.BOSS_BLACK_BULL_DR, Levels.BOSS_DIABLON_GF],
+               [Levels.STAGE_WESTOPOLIS,Levels.STAGE_LETHAL_HIGHWAY, Levels.STAGE_PRISON_ISLAND,
+                Levels.STAGE_CENTRAL_CITY, Levels.STAGE_THE_DOOM, Levels.STAGE_DEATH_RUINS,
+                Levels.STAGE_LOST_IMPACT, Levels.BOSS_BLACK_BULL_DR, Levels.BOSS_DIABLON_GF],
                [WeaponAttributes.SHOT]),
     WeaponInfo(0x2, "Sub Machine Gun",
                [Levels.STAGE_WESTOPOLIS,

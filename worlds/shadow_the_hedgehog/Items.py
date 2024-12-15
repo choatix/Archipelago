@@ -11,7 +11,7 @@ from worlds.AutoWorld import World
 from . import Locations, Weapons, Vehicle, Utils as ShadowUtils, Options
 from .Levels import LEVEL_ID_TO_LEVEL, ALL_STAGES, MISSION_ALIGNMENT_DARK, \
     MISSION_ALIGNMENT_HERO, MISSION_ALIGNMENT_NEUTRAL, ITEM_TOKEN_TYPE_STANDARD, ITEM_TOKEN_TYPE_FINAL, \
-    ITEM_TOKEN_TYPE_OBJECTIVE, ITEM_TOKEN_TYPE_ALIGNMENT, BOSS_STAGES, BANNED_AVAILABLE_STAGES
+    ITEM_TOKEN_TYPE_OBJECTIVE, ITEM_TOKEN_TYPE_ALIGNMENT, BOSS_STAGES, LAST_STORY_STAGES
 from .Locations import MissionClearLocations, GetAlignmentsForStage
 
 BASE_ID = 1743800000
@@ -135,7 +135,7 @@ def PopulateLevelUnlockItems():
     level_unlock_items = []
     count = ITEM_ID_START_AT_LEVEL
     for stageId in ALL_STAGES:
-        if stageId in BOSS_STAGES or stageId in BANNED_AVAILABLE_STAGES:
+        if stageId in BOSS_STAGES or stageId in LAST_STORY_STAGES:
             continue
         item = ItemInfo(count, GetStageUnlockItem(stageId), ItemClassification.progression, stageId=stageId,
                         alignmentId=None, type="level_unlock", value=None)
@@ -395,6 +395,7 @@ def ChooseJunkItems(random, junk, options, junk_count):
             junk_items.append(g_item_dark)
             junk_items.append(g_item_hero)
             junk_distribution[total] = c
+            junk_distribution[total+1] = c
             total += 2
 
     for r,c in RingAmounts.items():
@@ -572,6 +573,7 @@ def PopulateItemPool(world : World, first_regions):
     for remove in to_remove:
         mw_stage_items.remove(remove)
 
+
     weapon_dict = Weapons.GetWeaponDict()
     special_weapon_extras = [w for w in weapon_items if
                              Weapons.WeaponAttributes.SPECIAL in weapon_dict[w.name].attributes and
@@ -585,6 +587,17 @@ def PopulateItemPool(world : World, first_regions):
     mw_weapon_special_only.extend(mw_weapon_special_only_dupes)
 
     mw_vehicle_items = [ ShadowTheHedgehogItem(w, world.player) for w in vehicle_items ]
+
+    if world.options.weapon_sanity_unlock and \
+        world.options.weapon_sanity_hold != Options.WeaponsanityHold.option_unlocked:
+        for weapon in mw_weapon_items:
+            matching_w = [ w for w in Weapons.WEAPON_INFO if w.name == weapon.name ]
+            if len(matching_w) == 0:
+                continue
+
+            if len(matching_w[0].attributes) == 0:
+                weapon.classification = ItemClassification.filler
+                #print(weapon.name, "is now filler")
 
     item_count = (len(mw_level_unlock_items) + len(mw_stage_items) + 1) # end item
     if world.options.goal_chaos_emeralds:
