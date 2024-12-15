@@ -1,5 +1,5 @@
 import random
-from typing import ClassVar, Tuple
+from typing import ClassVar, Tuple, Any
 from BaseClasses import  Tutorial
 from Options import OptionError
 from worlds.AutoWorld import WebWorld
@@ -9,7 +9,7 @@ from .Levels import GetLevelCompletionNames
 from .Items import *
 from .Locations import *
 
-from . import Options, Rules, Regions, Utils as ShadowUtils
+from . import Options, Rules, Regions, Utils as ShadowUtils, Story
 
 
 def run_client():
@@ -63,7 +63,7 @@ class ShtHWorld(World):
 
     item_name_groups = Items.get_item_groups()
 
-    def __init__(self, *args, **kwargs):
+    def reinitialise(self):
         self.first_regions = []
         self.available_characters = []
         self.available_weapons = []
@@ -71,9 +71,13 @@ class ShtHWorld(World):
         self.token_locations = []
         self.required_tokens = {}
         self.excess_item_count = 0
+        self.shuffled_story_mode = None
 
         for token in TOKENS:
             self.required_tokens[token] = 0
+
+    def __init__(self, *args, **kwargs):
+        self.reinitialise()
 
         super(ShtHWorld, self).__init__(*args, **kwargs)
 
@@ -95,8 +99,6 @@ class ShtHWorld(World):
     def calculate_object_discrepancies(self):
 
         override_settings = self.options.percent_overrides
-        percentage = self.options.enemy_sanity_percentage.value
-        objective_percentage = self.options.objective_percentage.value
         for stage in ALL_STAGES:
 
             related_clears = [ c for c in MissionClearLocations if c.stageId == stage]
@@ -150,6 +152,42 @@ class ShtHWorld(World):
                             print("Had to adjust key for {key}".format(key=key))
     def generate_early(self):
         self.check_invalid_configurations()
+        self.shuffled_story_mode = Story.GetStoryMode(self)
+
+        if hasattr(self.multiworld, "re_gen_passthrough"):
+            if "Shadow The Hedgehog" in self.multiworld.re_gen_passthrough:
+                self.reinitialise()
+                passthrough = self.multiworld.re_gen_passthrough["Shadow The Hedgehog"]
+
+                self.options.objective_sanity = passthrough["objective_sanity"]
+                self.options.objective_percentage.value = passthrough["objective_percentage"]
+                self.options.objective_enemy_percentage = passthrough["objective_enemy_percentage"]
+                self.options.objective_completion_percentage = passthrough["objective_completion_percentage"]
+                self.options.objective_completion_enemy_percentage = passthrough["objective_completion_enemy_percentage"]
+                self.options.objective_item_percentage_available = passthrough["objective_item_percentage_available"]
+                self.options.objective_item_enemy_percentage_available = passthrough["objective_item_enemy_percentage_available"]
+                self.options.enemy_sanity_percentage = passthrough["enemy_sanity_percentage"]
+                self.options.checkpoint_sanity = passthrough["checkpoint_sanity"]
+                self.options.character_sanity = passthrough["character_sanity"]
+                self.options.required_mission_tokens = passthrough["required_mission_tokens"]
+                self.options.required_hero_tokens = passthrough["required_hero_tokens"]
+                self.options.required_dark_tokens = passthrough["required_dark_tokens"]
+                self.options.required_final_tokens = passthrough["required_final_tokens"]
+                self.options.required_objective_tokens = passthrough["required_objective_tokens"]
+                self.options.requires_emeralds = passthrough["requires_emeralds"]
+                self.options.key_sanity = passthrough["key_sanity"]
+                self.options.enemy_sanity = passthrough["enemy_sanity"]
+                self.options.objective_enemy_sanity = passthrough["objective_enemy_sanity"]
+                self.options.weapon_sanity_unlock = passthrough["weapon_sanity_unlock"]
+                self.options.weapon_sanity_hold = passthrough["weapon_sanity_hold"]
+                self.options.vehicle_logic = passthrough["vehicle_logic"]
+                self.options.percent_overrides = passthrough["override_settings"]
+                self.options.level_progression = passthrough["level_progression"]
+                self.options.excluded_stages = passthrough["excluded_stages"]
+                self.options.logic_level = passthrough["logic_level"]
+
+                self.shuffled_story_mode = Story.StringToStory(passthrough["shuffled_story_mode"])
+
 
         # Set maximum of levels required
         # Exclude missions listed in exclude_locations
@@ -224,10 +262,10 @@ class ShtHWorld(World):
             if max_required_enemy > enemy.total_count and not self.options.allow_dangerous_settings:
                 raise OptionError("Dangerous enemy value set!")
 
-        if not self.options.objective_sanity.value and self.options.enemy_sanity:
+        if not self.options.objective_sanity and self.options.enemy_sanity:
             self.calculate_object_discrepancies()
 
-        if self.options.objective_sanity.value and self.options.force_objective_sanity_chance > 0\
+        if self.options.objective_sanity and self.options.force_objective_sanity_chance > 0\
                 and self.options.force_objective_sanity_max > 0:
             for locationData in Locations.MissionClearLocations:
                 if locationData.requirement_count is None:
@@ -245,7 +283,7 @@ class ShtHWorld(World):
                     continue
 
                 r = self.multiworld.random.randrange(0, 100)
-                if r > 100 - self.options.force_objective_sanity_chance.value:
+                if r > 100 - self.options.force_objective_sanity_chance:
                     #print("Make priority location:", completion_location_name)
                     self.options.priority_locations.value.add(completion_location_name)
                     mission_counter += 1
@@ -257,16 +295,24 @@ class ShtHWorld(World):
         Locations.create_locations(self, regions)
         self.multiworld.regions.extend(regions.values())
 
-        if self.options.level_progression != self.options.level_progression.option_story:
+        if self.options.level_progression != Options.LevelProgression.option_story:
             for first_region in self.first_regions:
                 stage_item = Items.GetStageUnlockItem(first_region)
                 self.options.start_inventory.value[stage_item] = 1
                 self.multiworld.push_precollected(self.create_item(stage_item))
 
-        #self.multiworld.start_inventory
 
-    #def create_item(self, item: str) -> ShadowTheHedgehogItem:
-    #    return ShadowTheHedgehogItem(item, self.player)
+
+    @staticmethod
+    def interpret_slot_data(slot_data: Dict[str, Any]) -> Dict[str, Any]:
+        # returning slot_data so it regens, giving it back in multiworld.re_gen_passthrough
+        # we are using re_gen_passthrough over modifying the world here due to complexities with ER
+
+        if "shuffled_story_mode" in slot_data:
+            pass
+            #self.shuffled_story_mode = Story.StringToStory(slot_data["shuffled_story_mode"])
+
+        return slot_data
 
     def create_item(self, name: str) -> "ShadowTheHedgehogItem":
         info = Items.GetItemByName(name)
@@ -285,6 +331,11 @@ class ShtHWorld(World):
         return res
 
     def fill_slot_data(self):
+        story_string = Story.StoryToString(self.shuffled_story_mode)
+        print(story_string)
+        Story.StringToStory(story_string)
+
+
         slot_data = {
             "check_level": None if len(self.first_regions) == 0 else self.first_regions[0],
             "first_levels": self.first_regions,
@@ -319,6 +370,12 @@ class ShtHWorld(World):
             "select_mode_available": self.options.level_progression != Options.LevelProgression.option_story,
             "required_client_version": ShadowUtils.GetVersionString(),
             "override_settings": self.options.percent_overrides.value,
+            "shuffled_story_mode": Story.StoryToString(self.shuffled_story_mode),
+            "level_progression": self.options.level_progression.value,
+            "excluded_stages": self.options.excluded_stages.value,
+            "logic_level": self.options.logic_level.value,
+            "enable_gauge_items": self.options.enable_gauge_items.value,
+            "exceeding_items_filler": self.options.exceeding_items_filler.value
         }
 
         return slot_data

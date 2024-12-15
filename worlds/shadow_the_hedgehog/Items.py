@@ -11,7 +11,7 @@ from worlds.AutoWorld import World
 from . import Locations, Weapons, Vehicle, Utils as ShadowUtils, Options
 from .Levels import LEVEL_ID_TO_LEVEL, ALL_STAGES, MISSION_ALIGNMENT_DARK, \
     MISSION_ALIGNMENT_HERO, MISSION_ALIGNMENT_NEUTRAL, ITEM_TOKEN_TYPE_STANDARD, ITEM_TOKEN_TYPE_FINAL, \
-    ITEM_TOKEN_TYPE_OBJECTIVE, ITEM_TOKEN_TYPE_ALIGNMENT, BOSS_STAGES, BANNED_AVAILABLE_STAGES
+    ITEM_TOKEN_TYPE_OBJECTIVE, ITEM_TOKEN_TYPE_ALIGNMENT, BOSS_STAGES, LAST_STORY_STAGES
 from .Locations import MissionClearLocations, GetAlignmentsForStage
 
 BASE_ID = 1743800000
@@ -135,7 +135,7 @@ def PopulateLevelUnlockItems():
     level_unlock_items = []
     count = ITEM_ID_START_AT_LEVEL
     for stageId in ALL_STAGES:
-        if stageId in BOSS_STAGES or stageId in BANNED_AVAILABLE_STAGES:
+        if stageId in BOSS_STAGES or stageId in LAST_STORY_STAGES:
             continue
         item = ItemInfo(count, GetStageUnlockItem(stageId), ItemClassification.progression, stageId=stageId,
                         alignmentId=None, type="level_unlock", value=None)
@@ -589,7 +589,7 @@ def PopulateItemPool(world : World, first_regions):
     mw_vehicle_items = [ ShadowTheHedgehogItem(w, world.player) for w in vehicle_items ]
 
     if world.options.weapon_sanity_unlock and \
-        world.options.weapon_sanity_hold != world.options.weapon_sanity_hold.option_unlocked:
+        world.options.weapon_sanity_hold != Options.WeaponsanityHold.option_unlocked:
         for weapon in mw_weapon_items:
             matching_w = [ w for w in Weapons.WEAPON_INFO if w.name == weapon.name ]
             if len(matching_w) == 0:

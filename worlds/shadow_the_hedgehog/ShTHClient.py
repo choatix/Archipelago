@@ -103,9 +103,8 @@ class ShTHCommandProcessor(ClientCommandProcessor):
             arguments = self.parse_args(args)
             if 's' in arguments:
                 stage = arguments['s']
-            success = self.ctx.set_story_mode(stage)
-            if not success:
-                logger.error("This stage is not available")
+            self.ctx.set_story_mode(stage)
+
 
 
     def get_required_and_active_count(self, ctx, stage, type):
@@ -623,6 +622,8 @@ class ShTHContext(CommonContext):
         self.current_stage_name: str = ""
         self.level_keys = []
         self.key_restore_complete = False
+        self.shuffled_story_mode = Story.DefaultStoryMode
+        self.successful_shuffle = False
 
     async def disconnect(self, allow_autoreconnect: bool = False):
         self.auth = None
@@ -798,6 +799,9 @@ class ShTHContext(CommonContext):
             if "objective_item_enemy_percentage_available" in slot_data:
                 self.objective_item_enemy_percentage_available = slot_data["objective_item_enemy_percentage_available"]
 
+            if "shuffled_story_mode" in slot_data:
+                self.shuffled_story_mode = Story.StringToStory(slot_data["shuffled_story_mode"])
+
             self.restoreState()
             self.awaiting_server = False
 
@@ -864,11 +868,15 @@ class ShTHContext(CommonContext):
                 stageId = int(stage)
             else:
                 level_by_name = {v: k for k, v in Levels.LEVEL_ID_TO_LEVEL.items()}
-                if stage in level_by_name:
-                    stageId = level_by_name[stage]
+                level_by_name_easy = [ name.upper().replace(" ","") for name in level_by_name]
+                if stage.upper().replace(" ","") in level_by_name_easy:
+                    stageId = level_by_name_easy[stage]
+                else:
+                    logger.error("Unknown stage provided", stage)
+                    return False
 
         if not is_level_accessible(self, stageId, story=True):
-            return False
+            logger.error("Level is not accessible", stage)
 
         story_block = Levels.STAGE_TO_STORY_BLOCK[stageId]
 
@@ -880,6 +888,8 @@ class ShTHContext(CommonContext):
         story_step = story_counter + ((count+1) * 4)
         stage_bytes = story_block.to_bytes(4, byteorder='big')
         writeBytes(story_step, stage_bytes)
+
+        logger.info("Stage available. Please select continue.")
 
         return True
 
@@ -1099,7 +1109,7 @@ def is_level_accessible(ctx, stageId, story=False):
 
     if ctx.story_mode_available:
         mission_locations = Locations.MissionClearLocations
-        storyMode = Story.StoryMode
+        storyMode = ctx.shuffled_story_mode
         checking = [stageId]
         checked = []
         success = False
@@ -1172,7 +1182,7 @@ def complete_completable_levels(ctx):
     new_clears = []
     uncleared_stages = [ location_dict[l] for l in remaining_locations
                          if location_dict[l].location_type == Locations.LOCATION_TYPE_MISSION_CLEAR ]
-    story = Story.StoryMode
+    story = Story.DefaultStoryMode
     for mission in uncleared_stages:
 
         if mission.stageId in Levels.BOSS_STAGES:
@@ -1236,6 +1246,59 @@ def complete_completable_levels(ctx):
 
 
 ADDRESS_WATCHED_CUTSCENES = 0x805780AC
+ADDRESS_STORY_ROUTE = 0x804C4BA8
+
+
+def check_story(ctx):
+    story_mode = ctx.shuffled_story_mode
+    if ctx.successful_shuffle:
+        return
+    for story in story_mode:
+        if story.start_stage_id is not None and story.end_stage_id is not None:
+            index = Levels.ALL_STAGES.index(story.start_stage_id)
+            base_pointer = ADDRESS_STORY_ROUTE + (20*4 * index)
+            write_pointer = None
+            if story.alignment_id == MISSION_ALIGNMENT_DARK:
+                write_pointer = base_pointer + (7*4)
+            elif story.alignment_id == MISSION_ALIGNMENT_NEUTRAL:
+                write_pointer = base_pointer + (10*4)
+            elif story.alignment_id == MISSION_ALIGNMENT_HERO:
+                write_pointer = base_pointer + (13*4)
+
+            boss_write_pointer = None
+            if story.boss is not None:
+                boss_index = Levels.ALL_STAGES.index(story.boss)
+                boss_base_pointer = ADDRESS_STORY_ROUTE + (20 * 4 * boss_index)
+                if story.alignment_id == MISSION_ALIGNMENT_DARK:
+                    boss_write_pointer = boss_base_pointer + (7 * 4)
+                elif story.alignment_id == MISSION_ALIGNMENT_NEUTRAL:
+                    boss_write_pointer = boss_base_pointer + (10 * 4)
+                elif story.alignment_id == MISSION_ALIGNMENT_HERO:
+                    boss_write_pointer = boss_base_pointer + (13 * 4)
+
+            # if there is a boss in the way, we need to write the boss in instead
+            # but need to write to locations to the boss
+
+            if write_pointer is not None and boss_write_pointer is None:
+                story_block = Levels.STAGE_TO_STORY_BLOCK[story.end_stage_id]
+                new_bytes = story_block.to_bytes(4, byteorder='big')
+                writeBytes(write_pointer, new_bytes)
+            elif write_pointer is not None and boss_write_pointer is not None:
+                story_block = Levels.STAGE_TO_STORY_BLOCK[story.boss]
+                new_bytes = story_block.to_bytes(4, byteorder='big')
+                writeBytes(write_pointer, new_bytes)
+
+                story_block = Levels.STAGE_TO_STORY_BLOCK[story.end_stage_id]
+                new_bytes = story_block.to_bytes(4, byteorder='big')
+                writeBytes(boss_write_pointer, new_bytes)
+
+            else:
+                print("Whoops?")
+
+
+    ctx.successful_shuffle = True
+
+
 
 def check_cheats():
     current_value_bytes = dolphin_memory_engine.read_bytes(ADDRESS_WATCHED_CUTSCENES, 4)
@@ -2599,6 +2662,7 @@ async def dolphin_sync_task(ctx: ShTHContext):
                     continue
 
                 if True:
+                    check_story(ctx)
                     death = await check_death(ctx)
                     level = await check_level_status(ctx)
                     check_cheats()

@@ -122,11 +122,11 @@ class Doorsanity(Toggle):
     """Determines whether key door sanity is enabled."""
     display_name = "Door Sanity"
 
-class Checkpointsanity(Toggle):
+class Checkpointsanity(DefaultOnToggle):
     """Determines whether checkpoint sanity is enabled."""
     display_name = "Checkpoint Sanity"
 
-class CharacterSanity(Toggle):
+class CharacterSanity(DefaultOnToggle):
     """Determines if character checks are enabled"""
     display_name = "Character Sanity"
 
@@ -248,6 +248,23 @@ class BossChecks(Toggle):
     """
     display_name = "Boss Checks"
 
+class StoryShuffle(Choice):
+    """
+    Determines method for shuffling story stages
+    """
+    display_name = "Story Shuffle"
+    option_off = 0  # Story stages will be in vanilla order
+    option_test = 1
+    option_test2 = 2
+    option_test3 = 3
+    default = option_off
+
+class IncludeLastStoryShuffle(Toggle):
+    """
+        Determines whether to include Last Way / Devil Doom in the story shuffle
+    """
+    display_name = "Include Last Story"
+
 @dataclass
 class ShadowTheHedgehogOptions(PerGameCommonOptions):
     #goal: Goal
@@ -288,6 +305,8 @@ class ShadowTheHedgehogOptions(PerGameCommonOptions):
     percent_overrides: PercentOverrides
     logic_level: LogicLevel
     allow_dangerous_settings: AllowDangerousPercentage
+    story_shuffle: StoryShuffle
+    include_last_way_shuffle: IncludeLastStoryShuffle
 
     #boss_checks: BossChecks
 

@@ -2,7 +2,7 @@ import typing
 from typing import Dict
 
 from BaseClasses import Region, Entrance, MultiWorld
-from . import Levels, Items, Weapons, Story, GetLevelCompletionNames, Locations
+from . import Levels, Items, Weapons, Story, GetLevelCompletionNames, Locations, Options
 from .Options import LevelProgression
 from .Story import PathInfo
 
@@ -44,14 +44,14 @@ def early_region_checks(world):
 
     available_story_stages = []
 
-    story_sorted_stages = Story.StoryToOrder()
+    story_sorted_stages = Story.StoryToOrder(world.shuffled_story_mode)
 
     for level in story_sorted_stages:
         if Levels.LEVEL_ID_TO_LEVEL[level] in world.options.excluded_stages:
             continue
 
-        if world.options.level_progression != world.options.level_progression.option_select:
-            story_routes_to_stage = [ s for s in Story.StoryMode if
+        if world.options.level_progression != Options.LevelProgression.option_select:
+            story_routes_to_stage = [ s for s in world.shuffled_story_mode if
                                       s.end_stage_id == level
                                       and
                                       ((s.start_stage_id is None) or
@@ -69,15 +69,15 @@ def early_region_checks(world):
                         world.available_levels.append(story_route.boss)
                         break
 
-            ending_story_routes = [ s for s in Story.StoryMode if
-                                    s.end_stage_id is None and s.start_stage_id in world.available_levels
-                                    and s.boss is not None and s.boss == level]
-            if len(ending_story_routes) > 0:
+            stage_as_boss = [ s for s in world.shuffled_story_mode if s.boss == level and
+                              s.start_stage_id in world.available_levels and level not in available_story_stages]
+            if len(stage_as_boss) > 0:
                 world.available_levels.append(level)
 
-        if world.options.level_progression != world.options.level_progression.option_story\
-                and level not in Levels.BOSS_STAGES and level not in Levels.BANNED_AVAILABLE_STAGES\
-                and level not in world.available_levels:
+        if (world.options.level_progression != Options.LevelProgression.option_story\
+                and level not in Levels.BOSS_STAGES and
+                (level not in Levels.LAST_STORY_STAGES and not world.options.include_last_way_shuffle)
+                and level not in world.available_levels):
             world.available_levels.append(level)
 
 
@@ -108,13 +108,13 @@ def create_regions(world: "ShtHWorld") -> Dict[str, Region]:
     possible_first_regions = []
     for level_id in stages:
         if level_id not in world.available_levels:
-            #print("Level not available:", Levels.LEVEL_ID_TO_LEVEL[level_id])
+            print("Level not available:", Levels.LEVEL_ID_TO_LEVEL[level_id])
             continue
         base_region_name = stage_id_to_region(level_id, 0)
         new_region = Region(base_region_name, world.player, world.multiworld)
         regions[base_region_name] = new_region
         stage_regions.append(new_region)
-        if level_id not in Levels.BOSS_STAGES and level_id not in Levels.BANNED_AVAILABLE_STAGES:
+        if level_id not in Levels.BOSS_STAGES and level_id not in Levels.LAST_STORY_STAGES:
             possible_first_regions.append(new_region)
         region_to_stage_id[new_region] = level_id
 
@@ -132,12 +132,12 @@ def create_regions(world: "ShtHWorld") -> Dict[str, Region]:
             connect(world.player, "stage-access:"+Levels.LEVEL_ID_TO_LEVEL[level_id],
                     new_story_region, new_region)
 
-    if world.options.level_progression != world.options.level_progression.option_story:
+    if world.options.level_progression != Options.LevelProgression.option_story:
         first_regions = world.random.sample(possible_first_regions, world.options.starting_stages.value)
         world.first_regions = [ region_to_stage_id[region] for region in first_regions]
 
-    if world.options.level_progression != world.options.level_progression.option_select:
-        stage_ids = [ start.end_stage_id for start in Story.StoryMode if start.start_stage_id is None ]
+    if world.options.level_progression != Options.LevelProgression.option_select:
+        stage_ids = [ start.end_stage_id for start in world.shuffled_story_mode if start.start_stage_id is None ]
         world.first_regions.extend(stage_ids)
         pass
 
