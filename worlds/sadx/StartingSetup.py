@@ -163,8 +163,9 @@ def validate_settings(options):
 def get_possible_starting_areas(world, character: Character, level_mapping: dict[Area, Area], guaranteed_level: bool) -> \
         dict[Area, List[Optional[str]]]:
     possible_starting_areas = {}
-    for area in {Area.StationSquareMain, Area.Station, Area.Hotel, Area.Casino, Area.TwinkleParkLobby,
-                 Area.MysticRuinsMain, Area.AngelIsland, Area.Jungle, Area.EggCarrierMain}:
+    areas = [Area.StationSquareMain, Area.Station, Area.Hotel, Area.Casino, Area.TwinkleParkLobby,
+             Area.MysticRuinsMain, Area.AngelIsland, Area.Jungle, Area.EggCarrierMain]
+    for area in areas:
         possible_list_for_area = get_possible_starting_area_information(character, area, world.options, level_mapping,
                                                                         guaranteed_level)
         if possible_list_for_area:
