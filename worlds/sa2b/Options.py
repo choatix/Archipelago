@@ -1248,7 +1248,7 @@ class SA2BOptions(PerGameCommonOptions):
     black_market_slots: BlackMarketSlots
     black_market_unlock_costs: BlackMarketUnlockCosts
     black_market_price_multiplier: BlackMarketPriceMultiplier
-    black_market_price_multiplier_min: BlackMarketPriceMultiplier
+    black_market_price_multiplier_min: BlackMarketPriceMultiplierMin
     chao_race_difficulty: ChaoRaceDifficulty
     chao_karate_difficulty: ChaoKarateDifficulty
     chao_stadium_checks: ChaoStadiumChecks

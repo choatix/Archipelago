@@ -7,7 +7,7 @@ from worlds.generic.Rules import add_rule
 from . import Items, Levels, LEVEL_ID_TO_LEVEL, CharacterToLevel, ITEM_TOKEN_TYPE_FINAL, \
     MISSION_ALIGNMENT_DARK, MISSION_ALIGNMENT_HERO, ITEM_TOKEN_TYPE_OBJECTIVE, \
     ITEM_TOKEN_TYPE_STANDARD, ITEM_TOKEN_TYPE_ALIGNMENT, Utils, REGION_RESTRICTION_TYPES, Weapons, Regions, LevelRegion, \
-    GetLevelObjectNames, Vehicle, Story, Options, Locations
+    GetLevelObjectNames, Vehicle, Story, Options, Locations, ITEM_TOKEN_TYPE_BOSS, ITEM_TOKEN_TYPE_FINAL_BOSS
 from .Items import ShadowTheHedgehogItem, GetLevelTokenItems
 from .Locations import MissionClearLocations, LocationInfo, BossClearLocations
 from .Options import LevelProgression
@@ -31,6 +31,10 @@ def GetRelevantTokenItem(token: LocationInfo):
             level_token_items = [ t for t in level_token_items if t.alignmentId == MISSION_ALIGNMENT_DARK]
         elif token.alignmentId == MISSION_ALIGNMENT_HERO:
             level_token_items = [ t for t in level_token_items if t.alignmentId == MISSION_ALIGNMENT_HERO]
+    elif token.other == ITEM_TOKEN_TYPE_BOSS:
+        level_token_items = [t for t in level_token_items if t.value == ITEM_TOKEN_TYPE_BOSS]
+    elif token.other == ITEM_TOKEN_TYPE_FINAL_BOSS:
+        level_token_items = [t for t in level_token_items if t.value == ITEM_TOKEN_TYPE_FINAL_BOSS]
 
     if len(level_token_items) == 0:
         return None
@@ -112,6 +116,32 @@ def handle_path_rules(options, player, additional_level_region):
 
     return rule
 
+
+def lock_warp_items(multiworld, world, player):
+    (clear_locations, mission_locations, end_location,
+     enemysanity_locations, checkpointsanity_locations, charactersanity_locations,
+     token_locations, keysanity_locations, weaponsanity_locations, boss_locations,
+     warp_locations) = Locations.GetAllLocationInfo()
+
+    warpItemInfos = Items.PopulateLevelWarpPoints()
+
+    for warp in warp_locations:
+        if warp.stageId in Levels.LAST_STORY_STAGES and not world.options.include_last_way_shuffle:
+            continue
+
+        if warp.stageId in Levels.BOSS_STAGES and world.options.level_progression == Options.LevelProgression.option_select:
+            continue
+
+        if warp.stageId not in world.available_levels:
+            continue
+
+        location = multiworld.get_location(warp.name, player)
+        i = [ w for w in warpItemInfos if w.stageId == warp.stageId][0]
+        mw_token_item = ShadowTheHedgehogItem(i, player)
+        location.place_locked_item(
+            mw_token_item)
+
+
 def set_rules(multiworld: MultiWorld, world: World, player: int):
 
     token_assignments = {}
@@ -149,6 +179,7 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
                     base_region, new_region, rule)
 
     override_settings = world.options.percent_overrides
+    lock_warp_items(multiworld, world, world.player)
     for clear in MissionClearLocations:
 
         if clear.stageId not in world.available_levels:
@@ -234,7 +265,8 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
 
             associated_tokens = [t for t in world.token_locations if
                                  t.alignmentId == clear.alignmentId and
-                                 t.stageId == clear.stageId]
+                                 t.stageId == clear.stageId and t.other != ITEM_TOKEN_TYPE_BOSS]
+
             for token in associated_tokens:
                 location = multiworld.get_location(token.name, player)
                 if rule_change:
@@ -276,6 +308,21 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
                 boss_id, boss_name = Locations.GetBossLocationName(boss.name, boss.stageId)
                 location = multiworld.get_location(boss_name, player)
                 add_rule(location, boss_rule)
+
+        # TODO: Lock tokens
+
+        associated_tokens = [t for t in world.token_locations if
+                             t.stageId == boss.stageId and
+                             (t.other == ITEM_TOKEN_TYPE_BOSS or t.other == ITEM_TOKEN_TYPE_FINAL_BOSS)]
+        for token in associated_tokens:
+            allocated_item = GetRelevantTokenItem(token)
+            if allocated_item.name not in token_assignments:
+                token_assignments[allocated_item.name] = []
+            token_location = multiworld.get_location(token.name, player)
+            token_assignments[allocated_item.name].append(location)
+            mw_token_item = ShadowTheHedgehogItem(allocated_item, world.player)
+            token_location.place_locked_item(
+                mw_token_item)
 
     for character,stages in CharacterToLevel.items():
         if character in world.available_characters:
@@ -339,9 +386,22 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
     if world.options.goal_objective_missions > 0:
         tokens = get_token_count(world, Items.Progression.ObjectiveToken, token_assignments, world.options.goal_objective_missions)
         goal_has.append(tokens)
+    if world.options.goal_bosses > 0:
+        tokens = get_token_count(world, Items.Progression.BossToken, token_assignments, world.options.goal_bosses)
+        goal_has.append(tokens)
+    if world.options.goal_final_bosses > 0:
+        tokens = get_token_count(world, Items.Progression.FinalBossToken, token_assignments, world.options.goal_final_bosses)
+        goal_has.append(tokens)
+    if world.options.include_last_way_shuffle:
+        pass
 
     e.access_rule = lambda state, g_has=goal_has: len([ x for x in g_has if state.has(x[0], player, count=x[1]) ]) == len(g_has)
 
+    if world.options.include_last_way_shuffle and world.options.story_shuffle == Options.StoryShuffle.option_chaos:
+
+        # handle requirement that DD must be found in the level shuffle!
+        devil_doom_story_region = Regions.stage_id_to_story_region(Levels.BOSS_DEVIL_DOOM)
+        e.access_rule = lambda state, er=e.access_rule : er(state) and state.can_reach_region(devil_doom_story_region, player)
 
         #e.access_rule = lambda state, : state.has(, player) and state.has(emeralds[1].name, player) \
         #        and state.has(emeralds[2].name, player) and state.has(emeralds[3].name, player) \

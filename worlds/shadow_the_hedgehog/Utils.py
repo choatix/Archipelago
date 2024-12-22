@@ -136,4 +136,6 @@ def getMaxRequired(type_default_percentage, total:int, stageId:int, alignmentId:
     override_total = getOverwriteRequiredCount(override_settings, stageId, alignmentId, type_value)
     max_required = getRequiredCount(total, default_percentage, override=override_total, round_method=round_method)
 
+    #print(f"max required:{max_required}, total:{total}, alignment:{alignmentId}, stage:{stageId}")
+
     return max_required

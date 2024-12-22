@@ -39,9 +39,83 @@ valid_game_bytes = [
     bytes(SHADOW_THE_HEDGEHOG_GAME_ID_RELOADED, "utf-8")
 ]
 
+@dataclass
+class CharacterAddress:
+    name: str
+    met_address: int
+
 class GAME_ADDRESSES:
     STORY_MODE_COUNTER = 0x80576988
+    westopolis_save_info_base_address = 0x80576BE0
+    ADDRESS_ALIEN_COUNT = 0x8057FB54
+    ADDRESS_SOLDIER_COUNT = 0x8057FB4C
+    ADDRESS_EGG_COUNT = 0x8057FB50
 
+    ADDRESS_MISSION_MANAGER = 0x80575EF8
+
+    ADDRESS_LAST_STORY_OPTION = 0x80578020
+    ADDRESS_WEAPONS_BYTES = 0x80578068
+    ADDRESS_LAST_CUTSCENE = 0x805EF2A0
+    ADDRESS_EXPERT_MODE_UNLOCK = 0x80578021
+    CUTSCENE_BUFFER = 0x805F7A2A
+    ADDRESS_MISSION_ALIGNMENT = 0x80575F1F
+
+    DARK_GAUGE_ADDRESS = 0x805766D4
+    HERO_GAUGE_ADDRESS = 0x805766C8
+    RINGS_ADDRESS = 0x8057670C
+
+    SPECIAL_WEAPONS_ADDRESS = 0x80578068
+    SPECIAL_WEAPONS_ADDRESS_APPROVED = 0x80579FC4
+    CURRENT_WEAPON_ID_ADDRESS = 0x805766F8
+    CURRENT_AMMO_ADDRESS = 0x80576700
+
+    ADDRESS_WATCHED_CUTSCENES = 0x805780AC
+    ADDRESS_STORY_ROUTE = 0x804C4BA8
+
+    ADDRESS_CURRENT_LEVEL = 0x805EF95A
+    ADDRESS_SELECT_LEVEL = 0x80584722
+    ADDRESS_LOADING_MAYBE = 0x80570B26
+
+    ADDRESS_LEVEL_STATUS = 0x80575F80
+    button_menu_address = 0x8056ED4F
+
+    CHECKPOINT_MAX_FLAG_ADDRESS = 0x80575FBF
+    CHECKPOINT_FLAGS = [0x80575FFC, 0x80576018, 0x80576034, 0x80576050,
+                        0x8057606C, 0x80576088, 0x805760A4, 0x805760C0]
+
+    is_paused_address = 0x805EE1DC
+    boss_save_info_base_address = 0x80577499
+    CURRENT_STAGE_BASE_KEYSANITY_ADDRESS = 0x8057fb80
+    LIVES_ADDRESS = 0x80576704
+
+    CharacterAddresses = [
+        CharacterAddress("Sonic", 0x8057D77B),
+        CharacterAddress("Tails", 0x8057D77F),
+        CharacterAddress("Knuckles", 0x8057D783),
+        CharacterAddress("Amy", 0x8057D787),
+        CharacterAddress("Eggman", 0x8057D7A3),
+        CharacterAddress("Rouge", 0x8057D78B),
+        CharacterAddress("Omega", 0x8057D78F),
+        CharacterAddress("Doom", 0x8057D7A7),
+        CharacterAddress("Espio", 0x8057D797),
+        CharacterAddress("Charmy", 0x8057D79F),
+        CharacterAddress("Vector", 0x8057D793),
+        CharacterAddress("Maria", 0x8057D79B),
+    ]
+
+    FIRST_STORY_MODE_STAGE_ADDRESS = 0x802D2131
+
+class LevelStatusOptions:
+    NotInLevel = 0x01
+    Loading = 0x02
+    Active = 0x03
+    InCutscene = 0x04
+    Paused = 0x05
+    Finish = 0x06
+    MenuOption = 0x07
+    Death = 0x09
+    Saving = 0x0A
+    Other = 0x10
 
 class ShTHCommandProcessor(ClientCommandProcessor):
     def __init__(self, ctx: CommonContext):
@@ -86,7 +160,7 @@ class ShTHCommandProcessor(ClientCommandProcessor):
     def _cmd_weapons(self, *args):
         """Prints the current weapons to the client."""
         if isinstance(self.ctx, ShTHContext):
-            print(args)
+            #print(args)
             stage = None
             arguments = self.parse_args(args)
             if 'c' in arguments:
@@ -105,6 +179,17 @@ class ShTHCommandProcessor(ClientCommandProcessor):
                 stage = arguments['s']
             self.ctx.set_story_mode(stage)
 
+    def _cmd_token(self, *args):
+        if isinstance(self.ctx, ShTHContext):
+            stage = None
+            arguments = self.parse_args(args)
+            if 's' in arguments:
+                stage = arguments['s']
+            token_dict = self.get_required_tokens(self.ctx)
+            if token_dict is None:
+                logger.error("Unable to work out tokens")
+            else:
+                logger.info("\n".join([ f"{s[0]}={s[1]}/{s[2]}" for s in token_dict]))
 
 
     def get_required_and_active_count(self, ctx, stage, type):
@@ -116,7 +201,7 @@ class ShTHCommandProcessor(ClientCommandProcessor):
         (mission_clear_locations, mission_locations, end_location,
          enemysanity_locations, checkpointsanity_locations,
          charactersanity_locations, token_locations, keysanity_locations,
-         weaponsanity_locations, boss_locations) = Locations.GetAllLocationInfo()
+         weaponsanity_locations, boss_locations, warp_locations) = Locations.GetAllLocationInfo()
 
         info = Items.GetItemLookupDict()
 
@@ -242,27 +327,78 @@ class ShTHCommandProcessor(ClientCommandProcessor):
         return required_count, remaining_count
 
 
+    def get_required_tokens(self, ctx):
+        token_requirements = []
+
+        if ctx.requires_emeralds:
+            token_requirements.append(("Chaos Emeralds", len(ctx.emeralds), 7))
+
+        if ctx.required_mission_tokens > 0:
+            token_requirements.append(("Mission Tokens",
+                                       len([t for t in ctx.tokens if
+                                            t[1].name == Items.Progression.StandardMissionToken]),
+                                       ctx.required_mission_tokens))
+
+        if ctx.required_dark_tokens > 0:
+            token_requirements.append(("Dark Tokens",
+                                       len([t for t in ctx.tokens if
+                                            t[1].name == Items.Progression.StandardDarkToken]),
+                                       ctx.required_dark_tokens))
+
+        if ctx.required_hero_tokens > 0:
+            token_requirements.append(("Hero Tokens",
+                                       len([t for t in ctx.tokens if
+                                            t[1].name == Items.Progression.StandardHeroToken]),
+                                       ctx.required_hero_tokens))
+
+        if ctx.required_objective_tokens > 0:
+            token_requirements.append(("Objective Tokens",
+                                       len([t for t in ctx.tokens if
+                                            t[1].name == Items.Progression.ObjectiveToken]),
+                                       ctx.required_objective_tokens))
+
+        if ctx.required_final_tokens > 0:
+            token_requirements.append(("Final Tokens",
+                                       len([t for t in ctx.tokens if
+                                            t[1].name == Items.Progression.FinalToken]),
+                                       ctx.required_final_tokens))
+
+        if ctx.required_boss_tokens > 0:
+            token_requirements.append(("Boss Tokens",
+                                       len([t for t in ctx.tokens if
+                                            t[1].name == Items.Progression.BossToken]),
+                                       ctx.required_boss_tokens))
+
+        if ctx.required_final_boss_tokens > 0:
+            token_requirements.append(("Final Boss Tokens",
+                                       len([t for t in ctx.tokens if
+                                            t[1].name == Items.Progression.FinalBossToken]),
+                                       ctx.required_final_boss_tokens))
+
+        return token_requirements
+
 
     def _cmd_sanity(self, *args):
         """Prints the current weapons to the client."""
         if isinstance(self.ctx, ShTHContext):
             arguments = self.parse_args(args, value=False)
-            print(arguments)
-            valid_types = ['dark', 'hero', 'gun', 'egg', 'alien', 'darkclear', 'heroclear']
-            enemy_sanities = ['gun', 'alien', 'egg']
-            objective_sanities = ['dark', 'hero']
-            for type in valid_types:
-                if type in arguments:
-                    if type in enemy_sanities and not self.ctx.enemy_sanity:
-                        break
-                    if type in objective_sanities and not self.ctx.objective_sanity:
-                        break
-                    count,remaining = self.get_required_and_active_count(self.ctx, self.ctx.last_level, type)
-                    if count > 0:
-                        logger.info("%s amount required is: %d", type.capitalize(), count)
-                        logger.info("%s amount of checks undone is: %d", type.capitalize(), remaining)
-                    break
-
+            #print(arguments)
+            if self.ctx.last_level is None:
+                logger.info("You must be in a stage to use the sanity command.")
+            else:
+                valid_types = ['dark', 'hero', 'gun', 'egg', 'alien', 'darkclear', 'heroclear']
+                enemy_sanities = ['gun', 'alien', 'egg']
+                objective_sanities = ['dark', 'hero']
+                for type in valid_types:
+                    if type in arguments:
+                        if type in enemy_sanities and not self.ctx.enemy_sanity:
+                            break
+                        if type in objective_sanities and not self.ctx.objective_sanity:
+                            break
+                        count,remaining = self.get_required_and_active_count(self.ctx, self.ctx.last_level, type)
+                        if count > 0:
+                            logger.info("%s amount required is: %d", type.capitalize(), count)
+                            logger.info("%s amount of checks undone is: %d", type.capitalize(), remaining)
 
 
 @dataclass
@@ -304,15 +440,9 @@ class SAVE_STRUCTURE_BOSS_DETAILS:
 
     Size = 96
 
-westopolis_save_info_base_address = 0x80576BE0
 
-CHECKPOINT_MAX_FLAG_ADDRESS = 0x80575FBF
-CHECKPOINT_FLAGS = [0x80575FFC, 0x80576018, 0x80576034, 0x80576050,
-                    0x8057606C, 0x80576088, 0x805760A4, 0x805760C0]
 
-is_paused_address = 0x805EE1DC
 
-CURRENT_STAGE_BASE_KEYSANITY_ADDRESS = 0x8057fb80
 KEY_IDENTIFIER_BY_STAGE = \
 {
     STAGE_WESTOPOLIS:       [0x3F, 0x40, 0x3C, 0x3D, 0x3E], #Ordered
@@ -337,43 +467,15 @@ KEY_IDENTIFIER_BY_STAGE = \
     STAGE_LAVA_SHELTER:     [0x5F, 0x60, 0x61, 0x62, 0x63], #Ordered, dark first
     STAGE_COSMIC_FALL:      [0x03, 0x04, 0x05, 0x01, 0x02], #Ordered
     STAGE_FINAL_HAUNT:      [0x5F, 0x60, 0x61, 0x62, 0x63], #Ordered
+    STAGE_THE_LAST_WAY:     [0x5F, 0x60, 0x61, 0x62, 0x63], #Ordered
 }
 
-#STAGE_TO_UNLOCK_ADDRESS = \
-#{
-#    STAGE_WESTOPOLIS: 0x80576BE0,
-#    STAGE_DIGITAL_CIRCUIT: 0x80576BE0 + (1 * SAVE_STRUCTURE_DETAILS.Size),
-#    STAGE_GLYPHIC_CANYON: 0x80576BE0 + (2 * SAVE_STRUCTURE_DETAILS.Size)
-#}
-
-#STAGE_CLEAR_ADDRESSES = \
-#    {
-#        (STAGE_WESTOPOLIS, Levels.MISSION_ALIGNMENT_DARK) : 0x80576BE0 + 4,
-#        (STAGE_WESTOPOLIS, Levels.MISSION_ALIGNMENT_NEUTRAL): 0x80576BE0 + 4+(1*24),
-#        (STAGE_WESTOPOLIS, Levels.MISSION_ALIGNMENT_HERO): 0x80576BE0 + 4+(2*24),#
-#
-#        (STAGE_DIGITAL_CIRCUIT, Levels.MISSION_ALIGNMENT_DARK): 0x80576BE0 + (SAVE_STRUCTURE_DETAILS.Size * 1) + 4,
-#        (STAGE_DIGITAL_CIRCUIT, Levels.MISSION_ALIGNMENT_HERO): 0x80576BE0 + (SAVE_STRUCTURE_DETAILS.Size * 1) + 4 + (2 * 24),#
-#
- #       (STAGE_GLYPHIC_CANYON, Levels.MISSION_ALIGNMENT_DARK): 0x80576BE0 + (SAVE_STRUCTURE_DETAILS.Size * 2) + 4 + (2 * 24),
-#        (STAGE_GLYPHIC_CANYON, Levels.MISSION_ALIGNMENT_NEUTRAL): 0x80576BE0 + (SAVE_STRUCTURE_DETAILS.Size * 2) + 4 + (2 * 24),
-#        (STAGE_GLYPHIC_CANYON, Levels.MISSION_ALIGNMENT_HERO): 0x80576BE0 + (SAVE_STRUCTURE_DETAILS.Size * 2) + 4 + (2 * 24),
-#    }
-
-DARK_GAUGE_ADDRESS = 0x805766D4
-HERO_GAUGE_ADDRESS = 0x805766C8
-RINGS_ADDRESS = 0x8057670C
-
-SPECIAL_WEAPONS_ADDRESS = 0x80578068
-SPECIAL_WEAPONS_ADDRESS_APPROVED = 0x80579FC4
-CURRENT_WEAPON_ID_ADDRESS = 0x805766F8
-CURRENT_AMMO_ADDRESS = 0x80576700
 
 def GetStageUnlockAddresses():
     unlock_addresses = {}
 
     for stage in Levels.ALL_STAGES:
-        unlock_addresses[stage] = (westopolis_save_info_base_address +
+        unlock_addresses[stage] = (GAME_ADDRESSES.westopolis_save_info_base_address +
                                                    (SAVE_STRUCTURE_DETAILS.Size * Levels.ALL_STAGES.index(stage)))
 
     return unlock_addresses
@@ -382,26 +484,14 @@ def GetKeysanityAddresses():
     unlock_addresses = []
 
     for i in range(0, 5):
-        unlock_addresses.append(CURRENT_STAGE_BASE_KEYSANITY_ADDRESS + (i*0x4))
+        unlock_addresses.append(GAME_ADDRESSES.CURRENT_STAGE_BASE_KEYSANITY_ADDRESS + (i*0x4))
 
     return unlock_addresses
 
-#def GetStageClearAddresses():
-#    westopolis_save_info_base_address = 0x80576BE0
-##
-#    clear_addresses = {}#
-#
-#    for stage in Levels.ALL_STAGES:
-#        stage_alignments = GetAlignmentsForStage(stage)
-#        for alignment in stage_alignments:
-#            clear_addresses[(stage, alignment)] = (westopolis_save_info_base_address +
-#                                                   (SAVE_STRUCTURE_DETAILS.Size * Levels.ALL_STAGES.index(stage)) + (alignment * 24)) + 4
-#
-#    return clear_addresses
 
 def GetStageClearAddresses():
-    westopolis_save_info_base_address = 0x80576BE0
-    boss_save_info_base_address = 0x80577499
+
+
 
     clear_addresses = {}
     stage_index = 0
@@ -411,11 +501,11 @@ def GetStageClearAddresses():
         if stage not in Levels.BOSS_STAGES:
             stage_alignments = GetAlignmentsForStage(stage)
             for alignment in stage_alignments:
-                clear_addresses[(stage, alignment)] = (westopolis_save_info_base_address +
+                clear_addresses[(stage, alignment)] = (GAME_ADDRESSES.westopolis_save_info_base_address +
                                                        (SAVE_STRUCTURE_DETAILS.Size * stage_index) + (alignment * 24)) + 4
             stage_index += 1
         else:
-            clear_addresses[(stage, None)] = (boss_save_info_base_address +
+            clear_addresses[(stage, None)] = (GAME_ADDRESSES.boss_save_info_base_address +
                                               (SAVE_STRUCTURE_BOSS_DETAILS.Size * boss_index)) + 3
             boss_index += 1
 
@@ -423,59 +513,40 @@ def GetStageClearAddresses():
 
 
 def writeBytes(addr, data):
-    print("write=", addr, data)
+    #print("write=", addr, data)
     dolphin_memory_engine.write_bytes(addr, data)
 
-ADDRESS_ALIEN_COUNT = 0x8057FB54
-#ADDRESS_ALIEN_COUNT_BUT = 0x8057FB55
-ADDRESS_SOLDIER_COUNT = 0x8057FB4C
-ADDRESS_EGG_COUNT = 0x8057FB50
 
-#ADDRESS_SEARCH_STANDARD = 0x8052B74C
-#ADDRESS_MISSION_HERO_POINTER = 0x80575F04
-#ADDRESS_MISSION_DARK_POINTER = 0x805F0E44
-
-ADDRESS_MISSION_MANAGER = 0x80575EF8
-
-
-ADDRESS_LAST_STORY_OPTION = 0x80578020
-ADDRESS_WEAPONS_BYTES = 0x80578068
-ADDRESS_LAST_CUTSCENE = 0x805EF2A0
-ADDRESS_EXPERT_MODE_UNLOCK = 0x80578021
-CUTSCENE_BUFFER = 0x805F7A2A
-ADDRESS_MISSION_ALIGNMENT = 0x80575F1F
-
-
-DEFAULT_SEARCH_INDEX = (16 * 6) + 8
-SECONDARY_SEARCH_INDEX = (16 * 16) + 8
-CC_HERO_INDEX = (30 * 16) + 4
-PI_TD_HERO_INDEX = (16 * 6) + 4
-DEFAULT_TOTAL_INDEX_HERO = (16 * 5) + 4
-DEFAULT_TOTAL_INDEX = (16 * 5) + 8
+#DEFAULT_SEARCH_INDEX = (16 * 6) + 8
+#SECONDARY_SEARCH_INDEX = (16 * 16) + 8
+#CC_HERO_INDEX = (30 * 16) + 4
+#PI_TD_HERO_INDEX = (16 * 6) + 4
+#DEFAULT_TOTAL_INDEX_HERO = (16 * 5) + 4
+#DEFAULT_TOTAL_INDEX = (16 * 5) + 8
 
 
 StageAlignmentAddresses = [
-    StageAlignmentAddress(STAGE_WESTOPOLIS, Levels.MISSION_ALIGNMENT_DARK, ADDRESS_SOLDIER_COUNT),
-    StageAlignmentAddress(STAGE_WESTOPOLIS, Levels.MISSION_ALIGNMENT_HERO, ADDRESS_ALIEN_COUNT),
+    StageAlignmentAddress(STAGE_WESTOPOLIS, Levels.MISSION_ALIGNMENT_DARK, GAME_ADDRESSES.ADDRESS_SOLDIER_COUNT),
+    StageAlignmentAddress(STAGE_WESTOPOLIS, Levels.MISSION_ALIGNMENT_HERO, GAME_ADDRESSES.ADDRESS_ALIEN_COUNT),
 
     StageAlignmentAddress(STAGE_DIGITAL_CIRCUIT, Levels.MISSION_ALIGNMENT_DARK, None),
 
     StageAlignmentAddress(STAGE_LETHAL_HIGHWAY, Levels.MISSION_ALIGNMENT_HERO, None),
 
     StageAlignmentAddress(STAGE_GLYPHIC_CANYON, Levels.MISSION_ALIGNMENT_DARK, None),
-    StageAlignmentAddress(STAGE_GLYPHIC_CANYON, Levels.MISSION_ALIGNMENT_HERO, ADDRESS_ALIEN_COUNT),
+    StageAlignmentAddress(STAGE_GLYPHIC_CANYON, Levels.MISSION_ALIGNMENT_HERO, GAME_ADDRESSES.ADDRESS_ALIEN_COUNT),
     StageAlignmentAddress(STAGE_CRYPTIC_CASTLE, Levels.MISSION_ALIGNMENT_HERO, None),
     StageAlignmentAddress(STAGE_CRYPTIC_CASTLE, Levels.MISSION_ALIGNMENT_DARK, None),
 
-    StageAlignmentAddress(STAGE_PRISON_ISLAND, Levels.MISSION_ALIGNMENT_DARK, ADDRESS_SOLDIER_COUNT),
+    StageAlignmentAddress(STAGE_PRISON_ISLAND, Levels.MISSION_ALIGNMENT_DARK, GAME_ADDRESSES.ADDRESS_SOLDIER_COUNT),
     StageAlignmentAddress(STAGE_PRISON_ISLAND, Levels.MISSION_ALIGNMENT_HERO, None),
 
-    StageAlignmentAddress(STAGE_CIRCUS_PARK, Levels.MISSION_ALIGNMENT_DARK, ADDRESS_SOLDIER_COUNT),
+    StageAlignmentAddress(STAGE_CIRCUS_PARK, Levels.MISSION_ALIGNMENT_DARK, GAME_ADDRESSES.ADDRESS_SOLDIER_COUNT),
 
     StageAlignmentAddress(STAGE_CENTRAL_CITY, Levels.MISSION_ALIGNMENT_DARK, None),
     StageAlignmentAddress(STAGE_CENTRAL_CITY, Levels.MISSION_ALIGNMENT_HERO, None),
 
-    StageAlignmentAddress(STAGE_THE_DOOM, Levels.MISSION_ALIGNMENT_DARK, ADDRESS_SOLDIER_COUNT),
+    StageAlignmentAddress(STAGE_THE_DOOM, Levels.MISSION_ALIGNMENT_DARK, GAME_ADDRESSES.ADDRESS_SOLDIER_COUNT),
     StageAlignmentAddress(STAGE_THE_DOOM, Levels.MISSION_ALIGNMENT_HERO, None),
 
     StageAlignmentAddress(STAGE_SKY_TROOPS, Levels.MISSION_ALIGNMENT_DARK, None),
@@ -484,23 +555,23 @@ StageAlignmentAddresses = [
     StageAlignmentAddress(STAGE_MAD_MATRIX, Levels.MISSION_ALIGNMENT_DARK, None),
     StageAlignmentAddress(STAGE_MAD_MATRIX, Levels.MISSION_ALIGNMENT_HERO, None),
 
-    StageAlignmentAddress(STAGE_DEATH_RUINS, Levels.MISSION_ALIGNMENT_HERO, ADDRESS_ALIEN_COUNT),
+    StageAlignmentAddress(STAGE_DEATH_RUINS, Levels.MISSION_ALIGNMENT_HERO, GAME_ADDRESSES.ADDRESS_ALIEN_COUNT),
 
     StageAlignmentAddress(STAGE_THE_ARK, Levels.MISSION_ALIGNMENT_DARK, None),
 
     StageAlignmentAddress(STAGE_AIR_FLEET, Levels.MISSION_ALIGNMENT_DARK, None),
-    StageAlignmentAddress(STAGE_AIR_FLEET, Levels.MISSION_ALIGNMENT_HERO, ADDRESS_ALIEN_COUNT),
+    StageAlignmentAddress(STAGE_AIR_FLEET, Levels.MISSION_ALIGNMENT_HERO, GAME_ADDRESSES.ADDRESS_ALIEN_COUNT),
 
-    StageAlignmentAddress(STAGE_IRON_JUNGLE, Levels.MISSION_ALIGNMENT_DARK, ADDRESS_SOLDIER_COUNT,),
+    StageAlignmentAddress(STAGE_IRON_JUNGLE, Levels.MISSION_ALIGNMENT_DARK, GAME_ADDRESSES.ADDRESS_SOLDIER_COUNT,),
     StageAlignmentAddress(STAGE_IRON_JUNGLE, Levels.MISSION_ALIGNMENT_HERO, None),
 
     StageAlignmentAddress(STAGE_SPACE_GADGET, Levels.MISSION_ALIGNMENT_DARK, None),
 
-    StageAlignmentAddress(STAGE_LOST_IMPACT, Levels.MISSION_ALIGNMENT_HERO, ADDRESS_ALIEN_COUNT),
+    StageAlignmentAddress(STAGE_LOST_IMPACT, Levels.MISSION_ALIGNMENT_HERO, GAME_ADDRESSES.ADDRESS_ALIEN_COUNT),
 
     StageAlignmentAddress(STAGE_GUN_FORTRESS, Levels.MISSION_ALIGNMENT_DARK, None),
 
-    StageAlignmentAddress(STAGE_BLACK_COMET, Levels.MISSION_ALIGNMENT_DARK, ADDRESS_SOLDIER_COUNT),
+    StageAlignmentAddress(STAGE_BLACK_COMET, Levels.MISSION_ALIGNMENT_DARK, GAME_ADDRESSES.ADDRESS_SOLDIER_COUNT),
 
     StageAlignmentAddress(STAGE_LAVA_SHELTER, Levels.MISSION_ALIGNMENT_DARK, None),
 
@@ -509,25 +580,9 @@ StageAlignmentAddresses = [
     StageAlignmentAddress(STAGE_FINAL_HAUNT, Levels.MISSION_ALIGNMENT_DARK, None)
 ]
 
-@dataclass
-class CharacterAddress:
-    name: str
-    met_address: int
 
-CharacterAddresses = [
-    CharacterAddress("Sonic", 0x8057D77B),
-    CharacterAddress("Tails", 0x8057D77F),
-    CharacterAddress("Knuckles", 0x8057D783),
-    CharacterAddress("Amy", 0x8057D787),
-    CharacterAddress("Eggman", 0x8057D7A3),
-    CharacterAddress("Rouge", 0x8057D78B),
-    CharacterAddress("Omega", 0x8057D78F),
-    CharacterAddress("Doom", 0x8057D7A7),
-    CharacterAddress("Espio", 0x8057D797),
-    CharacterAddress("Charmy", 0x8057D79F),
-    CharacterAddress("Vector", 0x8057D793),
-    CharacterAddress("Maria", 0x8057D79B),
-]
+
+
 
 def GetStageAlignmentAddress(stage_id, alignment_id):
     i = [ n for n in StageAlignmentAddresses if n.stageId == stage_id and n.alignmentId == alignment_id]
@@ -569,6 +624,8 @@ class ShTHContext(CommonContext):
         self.required_dark_tokens = 0
         self.required_final_tokens = 0
         self.required_objective_tokens = 0
+        self.required_boss_tokens = 0
+        self.required_final_boss_tokens = 0
         self.requires_emeralds = True
         self.key_sanity = False
         self.enemy_sanity = False
@@ -604,12 +661,14 @@ class ShTHContext(CommonContext):
         self.previous_rings = None
         self.ring_link_rings = 0
         self.instance_id = time.time()
-        self.debug_logging = False
+        self.debug_logging = True
         self.error_logging = False
         self.info_logging = True
         self.last_level = None
         self.last_weapon = None
+        self.boss_delay = 0
         self.last_accessible_levels = []
+        self.level_status = None
 
         self.objective_completion_enemy_percentage = 100
         self.objective_completion_percentage = 100
@@ -624,6 +683,7 @@ class ShTHContext(CommonContext):
         self.key_restore_complete = False
         self.shuffled_story_mode = Story.DefaultStoryMode
         self.successful_shuffle = False
+        self.include_last_way_shuffle = False
 
     async def disconnect(self, allow_autoreconnect: bool = False):
         self.auth = None
@@ -685,11 +745,12 @@ class ShTHContext(CommonContext):
     def restoreState(self):
         (mission_clear_locations, mission_locations, end_location, enemy_locations, \
             checkpointsanity_locations, charactersanity_locations,
-         token_locations, keysanity_locations, weaponsanity_locations, boss_locations) = Locations.GetAllLocationInfo()
+         token_locations, keysanity_locations, weaponsanity_locations, boss_locations,
+         warp_locations) = Locations.GetAllLocationInfo()
 
         if self.character_sanity:
             characters = []
-            for character in CharacterAddresses:
+            for character in GAME_ADDRESSES.CharacterAddresses:
                 characterName = character.name
                 charLocation = [char for char in charactersanity_locations if char.other == characterName]
                 if len(charLocation) > 0:
@@ -741,6 +802,12 @@ class ShTHContext(CommonContext):
 
             if "required_objective_tokens" in slot_data:
                 self.required_objective_tokens = slot_data["required_objective_tokens"]
+
+            if "required_boss_tokens" in slot_data:
+                self.required_boss_tokens = slot_data["required_boss_tokens"]
+
+            if "required_final_boss_tokens" in slot_data:
+                self.required_final_boss_tokens = slot_data["required_final_boss_tokens"]
 
             if "requires_emeralds" in slot_data:
                 self.requires_emeralds = slot_data["requires_emeralds"]
@@ -801,6 +868,9 @@ class ShTHContext(CommonContext):
 
             if "shuffled_story_mode" in slot_data:
                 self.shuffled_story_mode = Story.StringToStory(slot_data["shuffled_story_mode"])
+
+            if "include_last_way_shuffle" in slot_data:
+                self.include_last_way_shuffle = slot_data["include_last_way_shuffle"]
 
             self.restoreState()
             self.awaiting_server = False
@@ -868,11 +938,15 @@ class ShTHContext(CommonContext):
                 stageId = int(stage)
             else:
                 level_by_name = {v: k for k, v in Levels.LEVEL_ID_TO_LEVEL.items()}
-                level_by_name_easy = [ name.upper().replace(" ","") for name in level_by_name]
-                if stage.upper().replace(" ","") in level_by_name_easy:
-                    stageId = level_by_name_easy[stage]
+                level_by_name_easy_keys = [ (name.upper().replace(" ",""),name) for name in level_by_name]
+                level_by_name_easy = {}
+                for keys in level_by_name_easy_keys:
+                    level_by_name_easy[keys[0]] = level_by_name[keys[1]]
+                stage_easy = stage.upper().replace(" ", "")
+                if stage_easy in level_by_name_easy:
+                    stageId = level_by_name_easy[stage_easy]
                 else:
-                    logger.error("Unknown stage provided", stage)
+                    logger.error("Unknown stage provided", stage_easy)
                     return False
 
         if not is_level_accessible(self, stageId, story=True):
@@ -904,7 +978,8 @@ async def check_save_loaded(ctx):
     loaded = True
     mission_clear_locations, mission_locations, end_location, enemy_locations,\
         checkpointsanity_locations, charactersanity_locations,\
-        token_locations, keysanity_locations, weaponsanity_locations, boss_locations = Locations.GetAllLocationInfo()
+        token_locations, keysanity_locations, weaponsanity_locations, boss_locations,\
+        warp_locations = Locations.GetAllLocationInfo()
 
     # TODO: Check for newly obtained instead of all
 
@@ -966,48 +1041,19 @@ async def check_save_loaded(ctx):
 
         # decide settings for goal
 
-        set_last_way = True
+        set_last_way = IsEndGameEnabled(ctx)
 
-        if ctx.requires_emeralds:
-            if len(ctx.emeralds) != 7:
-                set_last_way = False
-
-        if ctx.required_mission_tokens > 0:
-            if len([ t for t in ctx.tokens if
-                     t[1].name == Items.Progression.StandardMissionToken]) < ctx.required_mission_tokens:
-                set_last_way = False
-
-        if ctx.required_dark_tokens > 0:
-            if len([t for t in ctx.tokens if
-                    t[1].name == Items.Progression.StandardDarkToken]) < ctx.required_dark_tokens:
-                set_last_way = False
-
-        if ctx.required_hero_tokens > 0:
-            if len([t for t in ctx.tokens if
-                    t[1].name == Items.Progression.StandardHeroToken]) < ctx.required_hero_tokens:
-                set_last_way = False
-
-        if ctx.required_objective_tokens > 0:
-            if len([t for t in ctx.tokens if
-                    t[1].name == Items.Progression.ObjectiveToken]) < ctx.required_objective_tokens:
-                set_last_way = False
-
-        if ctx.required_final_tokens > 0:
-            if len([t for t in ctx.tokens if
-                    t[1].name == Items.Progression.FinalToken]) < ctx.required_final_tokens:
-                set_last_way = False
-
-        last_way_available_bytes = dolphin_memory_engine.read_bytes(ADDRESS_LAST_STORY_OPTION, 1)
+        last_way_available_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.ADDRESS_LAST_STORY_OPTION, 1)
         is_last_way_available = int.from_bytes(last_way_available_bytes, byteorder='big')
-        if set_last_way:
+        if set_last_way and not ctx.include_last_way_shuffle:
             if is_last_way_available != 1:
                 set_to = 1
                 set_last_way_bytes = set_to.to_bytes(1, byteorder='big')
-                writeBytes(ADDRESS_LAST_STORY_OPTION, set_last_way_bytes)
+                writeBytes(GAME_ADDRESSES.ADDRESS_LAST_STORY_OPTION, set_last_way_bytes)
 
                 # Review
                 for cutscene in range(0, 16):
-                    buffer_address_cutscene = CUTSCENE_BUFFER + (8 * cutscene)
+                    buffer_address_cutscene = GAME_ADDRESSES.CUTSCENE_BUFFER + (8 * cutscene)
                     to_write = 0
                     set_blank = to_write.to_bytes(4, byteorder='big')
                     writeBytes(buffer_address_cutscene, set_blank)
@@ -1016,7 +1062,7 @@ async def check_save_loaded(ctx):
                 logger.error("Last Way disabled, not yet meeting goal criteria.")
                 set_to = 0
                 set_last_way_bytes = set_to.to_bytes(1, byteorder='big')
-                writeBytes(ADDRESS_LAST_STORY_OPTION, set_last_way_bytes)
+                writeBytes(GAME_ADDRESSES.ADDRESS_LAST_STORY_OPTION, set_last_way_bytes)
 
         finished = False
 
@@ -1025,7 +1071,7 @@ async def check_save_loaded(ctx):
         # If possible, work out how to kick the player out after TLW
         # Or don't let it finish, etc.
 
-        last_cutscene_data = dolphin_memory_engine.read_bytes(ADDRESS_LAST_CUTSCENE, 4)
+        last_cutscene_data = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.ADDRESS_LAST_CUTSCENE, 4)
         last_cutscene_id = int.from_bytes(last_cutscene_data, byteorder='big')
         # Full CGI Cutscenes seem to go to  809F1300, which includes 8201!
         # 926 Is the moment Super Shadow is successful
@@ -1057,6 +1103,49 @@ async def check_save_loaded(ctx):
 
     return loaded
 
+
+def IsEndGameEnabled(ctx):
+    set_last_way = True
+    if ctx.requires_emeralds:
+        if len(ctx.emeralds) != 7:
+            set_last_way = False
+
+    if ctx.required_mission_tokens > 0:
+        if len([t for t in ctx.tokens if
+                t[1].name == Items.Progression.StandardMissionToken]) < ctx.required_mission_tokens:
+            set_last_way = False
+
+    if ctx.required_dark_tokens > 0:
+        if len([t for t in ctx.tokens if
+                t[1].name == Items.Progression.StandardDarkToken]) < ctx.required_dark_tokens:
+            set_last_way = False
+
+    if ctx.required_hero_tokens > 0:
+        if len([t for t in ctx.tokens if
+                t[1].name == Items.Progression.StandardHeroToken]) < ctx.required_hero_tokens:
+            set_last_way = False
+
+    if ctx.required_objective_tokens > 0:
+        if len([t for t in ctx.tokens if
+                t[1].name == Items.Progression.ObjectiveToken]) < ctx.required_objective_tokens:
+            set_last_way = False
+
+    if ctx.required_final_tokens > 0:
+        if len([t for t in ctx.tokens if
+                t[1].name == Items.Progression.FinalToken]) < ctx.required_final_tokens:
+            set_last_way = False
+
+    if ctx.required_boss_tokens > 0:
+        if len([t for t in ctx.tokens if
+                t[1].name == Items.Progression.BossToken]) < ctx.required_boss_tokens:
+            set_last_way = False
+
+    if ctx.required_final_boss_tokens > 0:
+        if len([t for t in ctx.tokens if
+                t[1].name == Items.Progression.FinalBossToken]) < ctx.required_final_boss_tokens:
+            set_last_way = False
+
+    return set_last_way
 
 def HandleLocationAutoclears():
     location_dict = Locations.GetLocationInfoDict()
@@ -1182,7 +1271,11 @@ def complete_completable_levels(ctx):
     new_clears = []
     uncleared_stages = [ location_dict[l] for l in remaining_locations
                          if location_dict[l].location_type == Locations.LOCATION_TYPE_MISSION_CLEAR ]
-    story = Story.DefaultStoryMode
+
+    uncleared_bosses = [location_dict[l].stageId for l in remaining_locations
+                        if location_dict[l].location_type == Locations.LOCATION_TYPE_BOSS]
+
+    story = ctx.shuffled_story_mode
     for mission in uncleared_stages:
 
         if mission.stageId in Levels.BOSS_STAGES:
@@ -1209,6 +1302,14 @@ def complete_completable_levels(ctx):
             for route in routes_to:
                 is_remaining = [ s for s in uncleared_stages
                                  if s.stageId == route.start_stage_id and s.alignmentId == route.alignment_id ]
+
+                if route.boss is not None:
+                    r_boss = [ b for b in Locations.BossClearLocations if b.stageId == route.boss][0]
+                    boss_location_id, boss_location_name = Locations.GetBossLocationName(r_boss.name, r_boss.stageId)
+                    u_bosses = [ b for b in uncleared_bosses if b == boss_location_id]
+                    if len(u_bosses) != 0:
+                        continue
+
                 if len(is_remaining) == 0:
                     available = True
 
@@ -1245,8 +1346,7 @@ def complete_completable_levels(ctx):
     return new_clears
 
 
-ADDRESS_WATCHED_CUTSCENES = 0x805780AC
-ADDRESS_STORY_ROUTE = 0x804C4BA8
+
 
 
 def check_story(ctx):
@@ -1254,9 +1354,9 @@ def check_story(ctx):
     if ctx.successful_shuffle:
         return
     for story in story_mode:
-        if story.start_stage_id is not None and story.end_stage_id is not None:
+        if story.start_stage_id is not None:
             index = Levels.ALL_STAGES.index(story.start_stage_id)
-            base_pointer = ADDRESS_STORY_ROUTE + (20*4 * index)
+            base_pointer = GAME_ADDRESSES.ADDRESS_STORY_ROUTE + (20*4 * index)
             write_pointer = None
             if story.alignment_id == MISSION_ALIGNMENT_DARK:
                 write_pointer = base_pointer + (7*4)
@@ -1268,7 +1368,7 @@ def check_story(ctx):
             boss_write_pointer = None
             if story.boss is not None:
                 boss_index = Levels.ALL_STAGES.index(story.boss)
-                boss_base_pointer = ADDRESS_STORY_ROUTE + (20 * 4 * boss_index)
+                boss_base_pointer = GAME_ADDRESSES.ADDRESS_STORY_ROUTE + (20 * 4 * boss_index)
                 if story.alignment_id == MISSION_ALIGNMENT_DARK:
                     boss_write_pointer = boss_base_pointer + (7 * 4)
                 elif story.alignment_id == MISSION_ALIGNMENT_NEUTRAL:
@@ -1288,12 +1388,18 @@ def check_story(ctx):
                 new_bytes = story_block.to_bytes(4, byteorder='big')
                 writeBytes(write_pointer, new_bytes)
 
-                story_block = Levels.STAGE_TO_STORY_BLOCK[story.end_stage_id]
-                new_bytes = story_block.to_bytes(4, byteorder='big')
-                writeBytes(boss_write_pointer, new_bytes)
-
+                if story.end_stage_id is not None:
+                    story_block = Levels.STAGE_TO_STORY_BLOCK[story.end_stage_id]
+                    new_bytes = story_block.to_bytes(4, byteorder='big')
+                    writeBytes(boss_write_pointer, new_bytes)
+                else:
+                    # Hopefully will end story mode as these are final stages into credits?
+                    pass
             else:
                 print("Whoops?")
+        else:
+            new_bytes = story.end_stage_id.to_bytes(3, byteorder='big')
+            writeBytes(GAME_ADDRESSES.FIRST_STORY_MODE_STAGE_ADDRESS, new_bytes)
 
 
     ctx.successful_shuffle = True
@@ -1301,27 +1407,27 @@ def check_story(ctx):
 
 
 def check_cheats():
-    current_value_bytes = dolphin_memory_engine.read_bytes(ADDRESS_WATCHED_CUTSCENES, 4)
+    current_value_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.ADDRESS_WATCHED_CUTSCENES, 4)
     current_value = int.from_bytes(current_value_bytes, byteorder='big')
 
     new_value = 0xFFFFFFFF
     if current_value != new_value:
         new_bytes = new_value.to_bytes(4, byteorder='big')
-        writeBytes(ADDRESS_WATCHED_CUTSCENES, new_bytes)
+        writeBytes(GAME_ADDRESSES.ADDRESS_WATCHED_CUTSCENES, new_bytes)
 
-    current_value_bytes = dolphin_memory_engine.read_bytes(ADDRESS_WATCHED_CUTSCENES+4, 4)
+    current_value_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.ADDRESS_WATCHED_CUTSCENES+4, 4)
     current_value = int.from_bytes(current_value_bytes, byteorder='big')
 
     if current_value != new_value:
         new_bytes = new_value.to_bytes(4, byteorder='big')
-        writeBytes(ADDRESS_WATCHED_CUTSCENES+4, new_bytes)
+        writeBytes(GAME_ADDRESSES.ADDRESS_WATCHED_CUTSCENES+4, new_bytes)
 
-    current_value_bytes = dolphin_memory_engine.read_bytes(ADDRESS_WATCHED_CUTSCENES + 8, 4)
+    current_value_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.ADDRESS_WATCHED_CUTSCENES + 8, 4)
     current_value = int.from_bytes(current_value_bytes, byteorder='big')
 
     if current_value != new_value:
         new_bytes = new_value.to_bytes(4, byteorder='big')
-        writeBytes(ADDRESS_WATCHED_CUTSCENES + 8, new_bytes)
+        writeBytes(GAME_ADDRESSES.ADDRESS_WATCHED_CUTSCENES + 8, new_bytes)
 
 
 # When not in a level, check the level
@@ -1333,6 +1439,11 @@ async def check_level_status(ctx):
     # Add available levels to save-data
 
     last_accessible_levels = ctx.last_accessible_levels.copy()
+
+    (clear_locations, mission_locations, end_location,
+     enemysanity_locations, checkpointsanity_locations, charactersanity_locations,
+     token_locations, keysanity_locations, weaponsanity_locations, boss_locations,
+     warp_locations) = Locations.GetAllLocationInfo()
 
     # Check mission clears and keys and clear checks from those not known to the server
     info = Items.GetItemLookupDict()
@@ -1420,12 +1531,9 @@ async def check_level_status(ctx):
     force_retry = item_behaviour_changed
 
     #ADDRESS_IN_LEVEL = 0x8057D74A
-    ADDRESS_CURRENT_LEVEL = 0x805EF95A
-    ADDRESS_SELECT_LEVEL = 0x80584722
-    ADDRESS_LOADING_MAYBE = 0x80570B26
 
     if True:
-        current_level_bytes = dolphin_memory_engine.read_bytes(ADDRESS_CURRENT_LEVEL, 2)
+        current_level_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.ADDRESS_CURRENT_LEVEL, 2)
         current_level = int.from_bytes(current_level_bytes, byteorder='big')
 
         if current_level == 0:
@@ -1448,34 +1556,67 @@ async def check_level_status(ctx):
             return None
         else:
 
-            loading_bytes = dolphin_memory_engine.read_bytes(ADDRESS_LOADING_MAYBE, 1)
-            loading_value = int.from_bytes(loading_bytes, byteorder='big')
+            #loading_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.ADDRESS_LOADING_MAYBE, 1)
+            #loading_value = int.from_bytes(loading_bytes, byteorder='big')
 
-            if loading_value == 0:
+            #if loading_value == 0 and current_level != Levels.BOSS_DEVIL_DOOM:
+            #    return None
+
+            level_status_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.ADDRESS_LEVEL_STATUS, 4)
+            level_status_value = int.from_bytes(level_status_bytes, byteorder='big')
+
+            if level_status_value in [LevelStatusOptions.NotInLevel,
+                                      LevelStatusOptions.Loading, LevelStatusOptions.Saving,
+                                      LevelStatusOptions.Other, LevelStatusOptions.MenuOption]:
+                ctx.junk_delay = 0
                 return None
 
-            selected_level_bytes = dolphin_memory_engine.read_bytes(ADDRESS_SELECT_LEVEL, 2)
+            ctx.level_status = level_status_value
+
+            #if level_status_value != LevelStatusOptions.Active and level_status_value != LevelStatusOptions.Paused:
+            #    return None
+
+            selected_level_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.ADDRESS_SELECT_LEVEL, 2)
             selected_level = int.from_bytes(selected_level_bytes, byteorder='big')
 
+            in_story_mode = False
+            if selected_level != current_level and ctx.last_level != current_level:
+                in_story_mode = True
+
             # If select mode only, show error when on assumed story mode
-            if not ctx.story_mode_available and selected_level != current_level and ctx.last_level != current_level:
+            if not ctx.story_mode_available and in_story_mode:
                 ctx.last_level = current_level
                 logger.error("Currently in story mode, your options require playing in Select Mode.")
                 return None
 
-            # Need detection for being in story mode!
-            #if not ctx.select_mode_available and selected_level != 0:
-            #    ctx.last_level = current_level
-            #    logger.error("Currently in select mode, your options require playing in Story Mode.")
-            #    set_to = 0
-            #    remove_last_select_bytes = set_to.to_bytes(2, byteorder='big')
-            #    writeBytes(ADDRESS_SELECT_LEVEL, remove_last_select_bytes)
-
-            #    return None
-
-            if ctx.info_logging and current_level != ctx.last_level and current_level in Levels.LEVEL_ID_TO_LEVEL:
-                logger.info("Now in level: %s", Levels.LEVEL_ID_TO_LEVEL[current_level])
+            if (ctx.last_level is None or current_level != ctx.last_level) and current_level in Levels.LEVEL_ID_TO_LEVEL:
+                if ctx.info_logging and ctx.boss_delay == 0:
+                    logger.info("Now in level: %s", Levels.LEVEL_ID_TO_LEVEL[current_level])
                 ctx.last_level = current_level
+
+                if in_story_mode:
+                    warp_location = [ w for w in warp_locations if w.stageId == current_level]
+                    if len(warp_location) == 1 and warp_location[0].locationId not in ctx.checked_locations:
+                        messages = [warp_location[0].locationId]
+                        message = [{"cmd": 'LocationChecks', "locations": messages}]
+                        await ctx.send_msgs(message)
+
+                    if current_level == BOSS_DEVIL_DOOM and not IsEndGameEnabled(ctx):
+
+                        if ctx.boss_delay == 0:
+                            logger.info("You do not have the required items to fight the final boss")
+                            logger.info("Set rings to 0")
+                            new_rings = 0
+                            new_bytes = new_rings.to_bytes(4, byteorder='big')
+                            writeBytes(GAME_ADDRESSES.RINGS_ADDRESS, new_bytes)
+                            ctx.boss_delay = 3
+                            ctx.last_level = None
+
+                        else:
+                            ctx.boss_delay -= 1
+                            ctx.last_level = None
+
+                        return None
 
                 this_stage_unlock = [unlock for unlock in ctx.handled if unlock[0].item in info and \
                  info[unlock[0].item].stageId == current_level and info[unlock[0].item].type == "level_unlock"]
@@ -1498,23 +1639,21 @@ COMPLETE_FLAG_READY = 2
 COMPLETE_FLAG_ON_SET = 3
 
 async def disable_weapon(ctx):
-    current_paused_data = dolphin_memory_engine.read_bytes(is_paused_address, 1)
-    currently_paused = int.from_bytes(current_paused_data, byteorder='big') == 1
 
-    if currently_paused:
+    if ctx.level_status == LevelStatusOptions.Paused:
         return
 
-    current_dark_gauge_bytes = dolphin_memory_engine.read_bytes(DARK_GAUGE_ADDRESS, 4)
+    current_dark_gauge_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.DARK_GAUGE_ADDRESS, 4)
     current_dark_gauge = int.from_bytes(current_dark_gauge_bytes, byteorder="big")
 
-    current_hero_gauge_bytes = dolphin_memory_engine.read_bytes(HERO_GAUGE_ADDRESS, 4)
+    current_hero_gauge_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.HERO_GAUGE_ADDRESS, 4)
     current_hero_gauge = int.from_bytes(current_hero_gauge_bytes, byteorder="big")
     time.sleep(0.1)
 
-    current_dark_gauge_bytes = dolphin_memory_engine.read_bytes(DARK_GAUGE_ADDRESS, 4)
+    current_dark_gauge_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.DARK_GAUGE_ADDRESS, 4)
     current_dark_gauge2 = int.from_bytes(current_dark_gauge_bytes, byteorder="big")
 
-    current_hero_gauge_bytes = dolphin_memory_engine.read_bytes(HERO_GAUGE_ADDRESS, 4)
+    current_hero_gauge_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.HERO_GAUGE_ADDRESS, 4)
     current_hero_gauge2 = int.from_bytes(current_hero_gauge_bytes, byteorder="big")
 
     # Sleep not preferable, required to ensure game processes end of dark/hero gauge in case of active power Shadow
@@ -1523,10 +1662,10 @@ async def disable_weapon(ctx):
     if current_hero_gauge2 < current_hero_gauge or \
         current_dark_gauge2 < current_dark_gauge:
         new_bytes = int(0).to_bytes(4, byteorder='big')
-        writeBytes(DARK_GAUGE_ADDRESS, new_bytes)
+        writeBytes(GAME_ADDRESSES.DARK_GAUGE_ADDRESS, new_bytes)
 
         new_bytes = int(0).to_bytes(4, byteorder='big')
-        writeBytes(HERO_GAUGE_ADDRESS, new_bytes)
+        writeBytes(GAME_ADDRESSES.HERO_GAUGE_ADDRESS, new_bytes)
 
         time.sleep(0.5)
 
@@ -1536,7 +1675,7 @@ async def disable_weapon(ctx):
         ctx.junk_delay += 25
 
     new_bytes = int(0).to_bytes(4, byteorder='big')
-    writeBytes(CURRENT_AMMO_ADDRESS, new_bytes)
+    writeBytes(GAME_ADDRESSES.CURRENT_AMMO_ADDRESS, new_bytes)
 
 
 def number_to_bit_array(number):
@@ -1576,10 +1715,10 @@ async def handle_special_weapons(ctx, info, weapons_to_handle):
 
     weapon_value_to_write = int("".join([str(w) for w in weapon_value]), 2)
 
-    current_special_weapons = dolphin_memory_engine.read_bytes(SPECIAL_WEAPONS_ADDRESS, 2)
+    current_special_weapons = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.SPECIAL_WEAPONS_ADDRESS, 2)
     current_special_weapons_value = int.from_bytes(current_special_weapons, byteorder="big")
 
-    current_special_weapons_approved = dolphin_memory_engine.read_bytes(SPECIAL_WEAPONS_ADDRESS_APPROVED, 2)
+    current_special_weapons_approved = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.SPECIAL_WEAPONS_ADDRESS_APPROVED, 2)
     current_special_weapons_approved_value = int.from_bytes(current_special_weapons_approved, byteorder="big")
 
     bits = number_to_bit_array(current_special_weapons_approved_value)
@@ -1604,12 +1743,12 @@ async def handle_special_weapons(ctx, info, weapons_to_handle):
 
     if approved_weapon_value_to_write != current_special_weapons_approved_value:
         new_approved_bytes = approved_weapon_value_to_write.to_bytes(2, byteorder='big')
-        writeBytes(SPECIAL_WEAPONS_ADDRESS_APPROVED, new_approved_bytes)
+        writeBytes(GAME_ADDRESSES.SPECIAL_WEAPONS_ADDRESS_APPROVED, new_approved_bytes)
 
     if current_special_weapons_value != weapon_value_to_write:
         new_bytes = weapon_value_to_write.to_bytes(2, byteorder='big')
         logger.info(f"Write special weapons {weapon_value_to_write}")
-        writeBytes(SPECIAL_WEAPONS_ADDRESS, new_bytes)
+        writeBytes(GAME_ADDRESSES.SPECIAL_WEAPONS_ADDRESS, new_bytes)
 
 async def check_weapons(ctx, current_level):
     info = Items.GetItemLookupDict()
@@ -1622,7 +1761,8 @@ async def check_weapons(ctx, current_level):
 
     mission_clear_locations, mission_locations, end_location, enemysanity_locations, \
         checkpointsanity_locations, charactersanity_locations, \
-        token_locations, keysanity_locations, weaponsanity_locations, boss_locations = Locations.GetAllLocationInfo()
+        token_locations, keysanity_locations, weaponsanity_locations, boss_locations,\
+        warp_locations = Locations.GetAllLocationInfo()
 
     messages = []
 
@@ -1640,7 +1780,7 @@ async def check_weapons(ctx, current_level):
             ctx.items_to_handle.remove(r)
 
     if ctx.weapon_sanity_unlock or ctx.weapon_sanity_hold_option > 0:
-        current_weapon_bytes = dolphin_memory_engine.read_bytes(CURRENT_WEAPON_ID_ADDRESS, 4)
+        current_weapon_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.CURRENT_WEAPON_ID_ADDRESS, 4)
         current_weapon_id = int.from_bytes(current_weapon_bytes, byteorder="big")
 
         weapon_dict = Weapons.GetWeaponDict()
@@ -1773,9 +1913,8 @@ async def handle_ring_link(ctx, level, death):
     difference = 0
     if not death:
         previous = ctx.previous_rings
-        current_rings_bytes = dolphin_memory_engine.read_bytes(RINGS_ADDRESS, 4)
+        current_rings_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.RINGS_ADDRESS, 4)
         current_rings = int.from_bytes(current_rings_bytes, byteorder="big")
-
 
         if current_rings == 0 and ctx.previous_rings is not None and ctx.previous_rings > 20:
             # count as death scenario rather
@@ -1785,8 +1924,10 @@ async def handle_ring_link(ctx, level, death):
         else:
             ctx.previous_rings = current_rings
             difference = current_rings - previous
-            if difference != 0:
-                print("ring diff=", difference)
+            #if difference != 0:
+                #print("ring diff=", difference)
+    else:
+        ctx.previous_rings = None
 
     if difference != 0:
         msg = {
@@ -1817,7 +1958,14 @@ async def check_junk(ctx, current_level):
     info = Items.GetItemLookupDict()
 
     if ctx.junk_delay > 0:
-        ctx.junk_delay -= 1
+        if ctx.level_status not in [ LevelStatusOptions.Active, LevelStatusOptions.Paused,
+                                     LevelStatusOptions.InCutscene]:
+            ctx.junk_delay = 0
+        else:
+            ctx.junk_delay -= 1
+            return
+
+    if ctx.level_status != LevelStatusOptions.Active:
         return
 
     last_index = get_last_index(ctx)
@@ -1842,7 +1990,7 @@ async def check_junk(ctx, current_level):
     RING_LIMIT = 999
     GAUGE_LIMIT = 30000
     if (len(filler_rings) > 0 and current_level != Levels.STAGE_CIRCUS_PARK) or ctx.ring_link_rings != 0:
-        current_rings_bytes = dolphin_memory_engine.read_bytes(RINGS_ADDRESS, 4)
+        current_rings_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.RINGS_ADDRESS, 4)
         current_rings = int.from_bytes(current_rings_bytes, byteorder="big")
         rings_changed = False
         for ringJunk in filler_rings:
@@ -1864,11 +2012,11 @@ async def check_junk(ctx, current_level):
 
         if rings_changed:
             new_bytes = current_rings.to_bytes(4, byteorder='big')
-            writeBytes(RINGS_ADDRESS, new_bytes)
+            writeBytes(GAME_ADDRESSES.RINGS_ADDRESS, new_bytes)
 
     if len(filler_gauge_hero) > 0:
         for gaugeJunk in filler_gauge_hero:
-            print("add hero gauge:", ctx.hero_gauge_buffer, gaugeJunk[1].value)
+            #print("add hero gauge:", ctx.hero_gauge_buffer, gaugeJunk[1].value)
             ctx.hero_gauge_buffer += gaugeJunk[1].value
             newly_handled.append(gaugeJunk[0])
 
@@ -1881,7 +2029,7 @@ async def check_junk(ctx, current_level):
 
     if ctx.hero_gauge_buffer > 0:
 
-        current_hero_gauge_bytes = dolphin_memory_engine.read_bytes(HERO_GAUGE_ADDRESS, 4)
+        current_hero_gauge_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.HERO_GAUGE_ADDRESS, 4)
         current_hero_gauge = int.from_bytes(current_hero_gauge_bytes, byteorder="big")
 
         increase = GAUGE_LIMIT - current_hero_gauge
@@ -1902,7 +2050,7 @@ async def check_junk(ctx, current_level):
             and ctx.hero_gauge_last == current_hero_gauge:
             pass
         else:
-            print("gauge diff", ctx.hero_gauge_buffer, increase, ctx.hero_max_meter)
+            #print("gauge diff", ctx.hero_gauge_buffer, increase, ctx.hero_max_meter)
             ctx.hero_gauge_buffer -= increase
 
             ctx.hero_max_meter += increase
@@ -1912,9 +2060,9 @@ async def check_junk(ctx, current_level):
                 ctx.hero_max_meter = 0
 
             new_hero_value = current_hero_gauge + increase
-            print("new hero", new_hero_value)
+            #print("new hero", new_hero_value)
             new_bytes = new_hero_value.to_bytes(4, byteorder='big')
-            writeBytes(HERO_GAUGE_ADDRESS, new_bytes)
+            writeBytes(GAME_ADDRESSES.HERO_GAUGE_ADDRESS, new_bytes)
 
         ctx.hero_gauge_last = current_hero_gauge
 
@@ -1924,7 +2072,7 @@ async def check_junk(ctx, current_level):
             newly_handled.append(gaugeJunk[0])
 
     if ctx.dark_gauge_buffer > 0:
-        current_dark_gauge_bytes = dolphin_memory_engine.read_bytes(DARK_GAUGE_ADDRESS, 4)
+        current_dark_gauge_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.DARK_GAUGE_ADDRESS, 4)
         current_dark_gauge = int.from_bytes(current_dark_gauge_bytes, byteorder="big")
 
         increase = GAUGE_LIMIT - current_dark_gauge
@@ -1946,7 +2094,7 @@ async def check_junk(ctx, current_level):
             pass
         else:
             ctx.dark_max_meter += increase
-            print("gauge diff", ctx.dark_gauge_buffer, increase, ctx.dark_max_meter)
+            #print("gauge diff", ctx.dark_gauge_buffer, increase, ctx.dark_max_meter)
 
             if ctx.dark_max_meter > 60000:
                 cooldown_until = now + timedelta(seconds=75)
@@ -1957,7 +2105,7 @@ async def check_junk(ctx, current_level):
 
             new_dark_value = current_dark_gauge + increase
             new_bytes = new_dark_value.to_bytes(4, byteorder='big')
-            writeBytes(DARK_GAUGE_ADDRESS, new_bytes)
+            writeBytes(GAME_ADDRESSES.DARK_GAUGE_ADDRESS, new_bytes)
 
         ctx.dark_gauge_last = current_dark_gauge
 
@@ -1988,7 +2136,8 @@ async def update_level_behaviour(ctx, current_level, death):
     info = Items.GetItemLookupDict()
     mission_clear_locations, mission_locations, end_location, enemysanity_locations,\
         checkpointsanity_locations, charactersanity_locations,\
-        token_locations, keysanity_locations, weaponsanity_locations, boss_locations = Locations.GetAllLocationInfo()
+        token_locations, keysanity_locations, weaponsanity_locations, boss_locations,\
+        warp_locations = Locations.GetAllLocationInfo()
 
     handle_count = 0
 
@@ -2052,7 +2201,7 @@ async def update_level_behaviour(ctx, current_level, death):
                 dark_count = 0
             ctx.level_state["dark_count"] = dark_count
 
-    current_alignment = dolphin_memory_engine.read_byte(ADDRESS_MISSION_ALIGNMENT)
+    current_alignment = dolphin_memory_engine.read_byte(GAME_ADDRESSES.ADDRESS_MISSION_ALIGNMENT)
 
     i = [unlock for unlock in ctx.items_to_handle if unlock[0].item in info and \
          info[unlock[0].item].stageId == current_level and \
@@ -2101,7 +2250,7 @@ async def update_level_behaviour(ctx, current_level, death):
     restore_dark = False
 
     dark_default_tally_address = None
-    dark_working_1_address_bytes = dolphin_memory_engine.read_bytes(ADDRESS_MISSION_MANAGER + 16, 4)
+    dark_working_1_address_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.ADDRESS_MISSION_MANAGER + 16, 4)
     dark_working_1_address = int.from_bytes(dark_working_1_address_bytes, byteorder="big")
     if dark_working_1_address != 0:
         dark_working_2_address_bytes = dolphin_memory_engine.read_bytes(dark_working_1_address + 12, 4)
@@ -2111,7 +2260,7 @@ async def update_level_behaviour(ctx, current_level, death):
             dark_default_tally_address = dark_address_total + 16
 
     hero_default_tally_address = None
-    hero_working_1_address_bytes = dolphin_memory_engine.read_bytes(ADDRESS_MISSION_MANAGER + 32, 4)
+    hero_working_1_address_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.ADDRESS_MISSION_MANAGER + 32, 4)
     hero_working_1_address = int.from_bytes(hero_working_1_address_bytes, byteorder="big")
     if hero_working_1_address != 0:
         hero_working_2_address_bytes = dolphin_memory_engine.read_bytes(hero_working_1_address + 12, 4)
@@ -2327,7 +2476,7 @@ async def update_level_behaviour(ctx, current_level, death):
             if not ctx.objective_sanity:
                 ctx.level_state["hero_count"] += new_count
             hero_progress = True
-            if enemysanity and hero_address == ADDRESS_ALIEN_COUNT:
+            if enemysanity and hero_address == GAME_ADDRESSES.ADDRESS_ALIEN_COUNT:
                 ctx.level_state["alien_progress"] += new_count
                 alien_progress = True
         #elif expected_hero_value > current_count >= 0:
@@ -2366,7 +2515,7 @@ async def update_level_behaviour(ctx, current_level, death):
                 dark_progress = True
                 if not ctx.objective_sanity:
                     ctx.level_state["dark_count"] += new_count
-                if enemysanity and dark_address == ADDRESS_SOLDIER_COUNT:
+                if enemysanity and dark_address == GAME_ADDRESSES.ADDRESS_SOLDIER_COUNT:
                     ctx.level_state["gun_progress"] += new_count
                     gun_progress = True
         #elif expected_dark_value > current_count >= 0:
@@ -2377,10 +2526,10 @@ async def update_level_behaviour(ctx, current_level, death):
             new_bytes = new_count.to_bytes(4, byteorder='big')
             writeBytes(dark_address, new_bytes)
 
-    if enemysanity and hero_address != ADDRESS_ALIEN_COUNT and alienInfo is not None:
+    if enemysanity and hero_address != GAME_ADDRESSES.ADDRESS_ALIEN_COUNT and alienInfo is not None:
         alien_count = ctx.level_state["alien_progress"]
 
-        current_bytes = dolphin_memory_engine.read_bytes(ADDRESS_ALIEN_COUNT, alien_address_size)
+        current_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.ADDRESS_ALIEN_COUNT, alien_address_size)
         current_count = int.from_bytes(current_bytes, byteorder='big')
 
         if current_count > alien_count:
@@ -2390,31 +2539,31 @@ async def update_level_behaviour(ctx, current_level, death):
             ctx.level_state["alien_progress"] += (current_count - alien_count)
             alien_progress = True
 
-    if enemysanity and dark_address != ADDRESS_SOLDIER_COUNT and gunInfo is not None:
+    if enemysanity and dark_address != GAME_ADDRESSES.ADDRESS_SOLDIER_COUNT and gunInfo is not None:
         gun_count = ctx.level_state["gun_progress"]
 
-        current_bytes = dolphin_memory_engine.read_bytes(ADDRESS_SOLDIER_COUNT, gun_address_size)
+        current_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.ADDRESS_SOLDIER_COUNT, gun_address_size)
         current_count = int.from_bytes(current_bytes, byteorder='big')
 
         if current_count > gun_count:
-            print("gun count increased --", current_count, gun_count)
+            #print("gun count increased --", current_count, gun_count)
             if current_count > gunInfo.total_count + extra_increase:
                 if ctx.info_logging:
-                    logger.error("Error with gun count: %d %d", current_count)
+                    logger.error("Error with gun count: %d %d", current_count, gunInfo.total_count + extra_increase)
             ctx.level_state["gun_progress"] += (current_count - gun_count)
             gun_progress = True
 
-    if enemysanity and hero_address != ADDRESS_EGG_COUNT and eggInfo is not None:
+    if enemysanity and hero_address != GAME_ADDRESSES.ADDRESS_EGG_COUNT and eggInfo is not None:
         egg_count = ctx.level_state["egg_progress"]
 
-        current_bytes = dolphin_memory_engine.read_bytes(ADDRESS_EGG_COUNT, egg_address_size)
+        current_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.ADDRESS_EGG_COUNT, egg_address_size)
         current_count = int.from_bytes(current_bytes, byteorder='big')
 
         if current_count > egg_count:
-            print("egg count increased --", current_count, egg_count)
+            #print("egg count increased --", current_count, egg_count)
             if current_count > eggInfo.total_count + extra_increase:
                 if ctx.info_logging:
-                    logger.error("Error with egg count: %d %d", current_count)
+                    logger.error("Error with egg count: %d %d", current_count, eggInfo.total_count + extra_increase)
             ctx.level_state["egg_progress"] += (current_count - egg_count)
             egg_progress = True
 
@@ -2474,7 +2623,7 @@ async def update_level_behaviour(ctx, current_level, death):
                 logger.error("Egg Progress: no new checks %d", ctx.level_state["egg_progress"])
 
     if ctx.character_sanity:
-        for character in CharacterAddresses:
+        for character in GAME_ADDRESSES.CharacterAddresses:
             if character.name in ctx.characters_met:
                 continue
             characterSet_bytes = dolphin_memory_engine.read_bytes(character.met_address, 1)
@@ -2488,12 +2637,12 @@ async def update_level_behaviour(ctx, current_level, death):
     else:
         if len(ctx.characters_met) == 0:
             ctx.characters_met.extend(
-                [c.name for c in CharacterAddresses]
+                [c.name for c in GAME_ADDRESSES.CharacterAddresses]
             )
 
     if not ctx.level_state["characters_set"]:
         for character in ctx.characters_met:
-            relevantCharData = [c for c in CharacterAddresses if c.name == character]
+            relevantCharData = [c for c in GAME_ADDRESSES.CharacterAddresses if c.name == character]
             if len(relevantCharData) != 0:
                 relevantChar = relevantCharData[0]
                 new_value = 1
@@ -2506,7 +2655,7 @@ async def update_level_behaviour(ctx, current_level, death):
     checkpoint_data_for_stage = [c for c in Locations.CheckpointLocations if c.stageId == current_level]
     if len(checkpoint_data_for_stage) > 0:
         total_count = checkpoint_data_for_stage[0].total_count
-        max_checkpoint_bytes = dolphin_memory_engine.read_bytes(CHECKPOINT_MAX_FLAG_ADDRESS, 1)
+        max_checkpoint_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.CHECKPOINT_MAX_FLAG_ADDRESS, 1)
         max_checkpoint = int.from_bytes(max_checkpoint_bytes, byteorder='big')
 
         if (max_checkpoint == 0 and len(ctx.level_state.keys()) > 0 and
@@ -2520,7 +2669,7 @@ async def update_level_behaviour(ctx, current_level, death):
         active = []
         new = []
         for i in range(0, total_count):
-            addr = CHECKPOINT_FLAGS[i]
+            addr = GAME_ADDRESSES.CHECKPOINT_FLAGS[i]
             checkpoint_status_bytes = dolphin_memory_engine.read_bytes(addr, 1)
             checkpoint_status = int.from_bytes(checkpoint_status_bytes, byteorder='big') == 1
             if checkpoint_status:
@@ -2588,16 +2737,16 @@ async def update_level_behaviour(ctx, current_level, death):
     # If an objective is currently completable then check for pause state, etc
 
 
-    button_menu_address = 0x8056ED4F
+
     is_back_button = 0x20
 
     if ctx.objective_sanity:
         if (dark_max_hit and current_alignment == MISSION_ALIGNMENT_DARK) or \
                 (hero_max_hit and current_alignment == MISSION_ALIGNMENT_HERO):
-            current_paused_data = dolphin_memory_engine.read_bytes(is_paused_address, 1)
+            current_paused_data = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.is_paused_address, 1)
             currently_paused = int.from_bytes(current_paused_data, byteorder='big') == 1
 
-            button_data = dolphin_memory_engine.read_bytes(button_menu_address, 1)
+            button_data = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.button_menu_address, 1)
             button_data_byte = int.from_bytes(button_data, byteorder='big')
             if currently_paused and button_data_byte == is_back_button:
                 if current_alignment == MISSION_ALIGNMENT_DARK:
@@ -2618,9 +2767,13 @@ async def update_level_behaviour(ctx, current_level, death):
 
 
 async def check_death(ctx: ShTHContext):
+    level_status_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.ADDRESS_LEVEL_STATUS, 4)
+    level_status_value = int.from_bytes(level_status_bytes, byteorder='big')
 
-    LIVES_ADDRESS = 0x80576704
-    lives_bytes = dolphin_memory_engine.read_bytes(LIVES_ADDRESS, 4)
+    if level_status_value == LevelStatusOptions.Death:
+        return True
+
+    lives_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.LIVES_ADDRESS, 4)
     life_count = int.from_bytes(lives_bytes, byteorder='big')
 
     if life_count > ctx.lives:
@@ -2629,12 +2782,10 @@ async def check_death(ctx: ShTHContext):
         ctx.lives = life_count
         if ctx.debug_logging:
             logger.error("Detected a death!")
-        current_rings_bytes = dolphin_memory_engine.read_bytes(RINGS_ADDRESS, 4)
+        ctx.current_rings_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.RINGS_ADDRESS, 4)
         return True
 
     return False
-
-
 
 
 async def dolphin_sync_task(ctx: ShTHContext):

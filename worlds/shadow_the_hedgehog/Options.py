@@ -1,7 +1,9 @@
 from dataclasses import dataclass
 from math import ceil
 
-from Options import PerGameCommonOptions, Choice, DefaultOnToggle, Toggle, Range, OptionSet, OptionDict
+from Options import PerGameCommonOptions, Choice, DefaultOnToggle, Toggle, Range, OptionSet, OptionDict, OptionGroup
+
+
 #from . import Levels
 
 
@@ -46,6 +48,25 @@ class GoalObjectiveMissions(Range):
     range_start = 0
     range_end = 100
     default = 0
+
+
+class GoalBosses(Range):
+    """
+        Determines what percentage of bosses are required for completion, rounded up.
+    """
+    display_name = "Goal: Bosses"
+    range_start = 0
+    range_end = 100
+    default = 0
+
+class GoalFinalBosses(Range):
+    """
+        Determines what percentage of final boss missions are required for completion, rounded up.
+    """
+    display_name = "Goal: Bosses"
+    range_start = 0
+    range_end = 100
+    default = 100
 
 class GoalFinalMissions(Range):
     """
@@ -211,7 +232,8 @@ class RingLink(Toggle):
 
 class AutoClearMissions(DefaultOnToggle):
     """
-        Set automatic clears for missions once objective criteria is achieved.
+        Set automatic clears for missions once objective criteria is achieved. When playing story mode, ensure
+        that the player has access to a new stage before autoclearing to improve tracking behaviour.
     """
     display_name = "Auto Clear Missions"
 
@@ -254,9 +276,9 @@ class StoryShuffle(Choice):
     """
     display_name = "Story Shuffle"
     option_off = 0  # Story stages will be in vanilla order
-    option_test = 1
-    option_test2 = 2
-    option_test3 = 3
+    option_basic = 1
+    option_shuffle = 2
+    option_chaos = 3
     default = option_off
 
 class IncludeLastStoryShuffle(Toggle):
@@ -264,6 +286,46 @@ class IncludeLastStoryShuffle(Toggle):
         Determines whether to include Last Way / Devil Doom in the story shuffle
     """
     display_name = "Include Last Story"
+
+
+class SecretStoryProgression(DefaultOnToggle):
+    """
+        Changes behaviour for displaying accessible story stages.
+    """
+    display_name = "Secret Story Progression"
+
+class StoryBossCount(Range):
+    """
+        How many copies of each standard boss to feature through the story chain.
+    """
+    display_name = "Story Boss Count"
+    range_start = 0
+    range_end = 3
+    default = 1
+
+class GuaranteedLevelClear(DefaultOnToggle):
+    """
+        Ensures the first available stage in shuffled story mode is a completable mission out the gate.
+    """
+    display_name = "Guaranteed Level Clear"
+
+class SingleEggDealer(Toggle):
+    """
+        When shuffling story mode, only include a single Egg Dealer of the available 3.
+    """
+    display_name = "Single Egg Dealer"
+
+class SingleBlackDoom(Toggle):
+    """
+        When shuffling story mode, only include a single Black Doom of the available 3.
+    """
+    display_name = "Single Black Doom"
+
+class SingleDiablon(Toggle):
+    """
+        When shuffling story mode, only include a single Sonic & Diablon of the available 3.
+    """
+    display_name = "Single Diablon"
 
 @dataclass
 class ShadowTheHedgehogOptions(PerGameCommonOptions):
@@ -275,6 +337,8 @@ class ShadowTheHedgehogOptions(PerGameCommonOptions):
     goal_hero_missions: GoalHeroMissions
     goal_dark_missions: GoalDarkMissions
     goal_objective_missions: GoalObjectiveMissions
+    goal_bosses: GoalBosses
+    goal_final_bosses: GoalFinalBosses
     objective_sanity: ObjectiveSanity
     objective_percentage: ObjectivePercentage
     objective_enemy_percentage: EnemyObjectivePercentage
@@ -307,8 +371,34 @@ class ShadowTheHedgehogOptions(PerGameCommonOptions):
     allow_dangerous_settings: AllowDangerousPercentage
     story_shuffle: StoryShuffle
     include_last_way_shuffle: IncludeLastStoryShuffle
+    secret_story_progression: SecretStoryProgression
+    story_boss_count: StoryBossCount
+    guaranteed_level_clear: GuaranteedLevelClear
+    single_egg_dealer: SingleEggDealer
+    single_black_doom: SingleBlackDoom
+    single_diablon: SingleDiablon
 
     #boss_checks: BossChecks
 
 
-
+shadow_option_groups = [
+    OptionGroup("Goal",
+        [GoalChaosEmeralds, GoalMissions, GoalFinalMissions,
+         GoalHeroMissions, GoalDarkMissions, GoalObjectiveMissions,
+         GoalBosses]),
+    OptionGroup("Sanities", [ObjectiveSanity, EnemyObjectiveSanity,
+                             CharacterSanity, Enemysanity, Keysanity,
+                             Checkpointsanity, WeaponsanityUnlock, WeaponsanityHold,
+                             VehicleLogic]),
+    OptionGroup("Sanity Config", [ObjectivePercentage, EnemyObjectivePercentage,
+                                  ObjectiveCompletionPercentage, ObjectiveCompletionEnemyPercentage,
+                                  ObjectiveItemPercentageAvailable, ObjectiveItemEnemyPercentageAvailable,
+                                  EnemySanityPercentage, PercentOverrides], True),
+    OptionGroup("Story", [LevelProgression, IncludeLastStoryShuffle, SecretStoryProgression,
+                          StoryBossCount, GuaranteedLevelClear,
+                          SingleDiablon, SingleBlackDoom, SingleEggDealer]),
+    OptionGroup("Junk", [ExceedingItemsFiller, GaugeFiller], True),
+    OptionGroup("Other", [StartingStages, ForceObjectiveSanityChance, ForceObjectiveSanityMax,
+                          ForceObjectiveSanityMaxCounter, ExcludedStages,
+                          AutoClearMissions, AllowDangerousPercentage], True)
+]

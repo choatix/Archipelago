@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from math import floor
 from typing import Dict, Optional
 
+import Options
 from BaseClasses import Location, Region
 from . import Regions, Levels, Utils, Weapons
 from .Levels import *
@@ -24,6 +25,7 @@ LOCATION_TYPE_KEY = 6
 LOCATION_TYPE_OTHER = 7
 LOCATION_TYPE_CHARACTER = 8
 LOCATION_TYPE_BOSS = 9
+LOCATION_TYPE_WARP = 10
 
 @dataclass
 class LocationInfo:
@@ -422,6 +424,11 @@ MissionClearLocations = [
     ),
 
     MissionClearLocation(STAGE_THE_LAST_WAY, MISSION_ALIGNMENT_NEUTRAL, None, None)
+        .setDistribution(
+        {
+            1: 1
+        }
+    )
 
 ]
 
@@ -613,7 +620,16 @@ CheckpointLocations = \
             0: [1,2],
             1: [3,4,5,6,7,8]
         }
-    )
+    ),
+
+    CheckpointLocation(STAGE_THE_LAST_WAY, 7)
+        .setDistribution(
+        {
+            0: [1],
+            1: [2,3,4,5,6,7]
+        }
+    ),
+
 ]
 
 KeyLocations = \
@@ -711,6 +727,15 @@ KeyLocations = \
         }
     )
     .setIndividual(4, 2),
+
+    KeyLocation(STAGE_THE_LAST_WAY)
+        .setDistribution(
+        {
+            0: 1,
+            1: 4
+        }
+    ),
+
 ]
 
 
@@ -796,6 +821,15 @@ def GetAllLocationInfo():
     keysanity_locations = []
     weaponsanity_locations = []
     boss_locations = []
+
+    warp_locations = []
+
+    for level in Levels.ALL_STAGES:
+        location_id, entry_location_name = GetLevelWarpName(level)
+        info = LocationInfo(LOCATION_TYPE_WARP, location_id, entry_location_name,
+                            stageId=level, alignmentId=None, count=None, total=None,
+                            other=None)
+        warp_locations.append(info)
 
     for location in MissionClearLocations:
         location_id, completion_location_name = GetLevelCompletionNames(location.stageId, location.alignmentId)
@@ -892,26 +926,48 @@ def GetAllLocationInfo():
         weaponsanity_locations.append(info)
 
     for boss in BossClearLocations:
+
+        if boss.stageId == BOSS_DEVIL_DOOM:
+            continue
+
         boss_location_id, boss_location_name = GetBossLocationName(boss.name, boss.stageId)
         info = LocationInfo(LOCATION_TYPE_BOSS, boss_location_id, boss_location_name, stageId=boss.stageId,
                             alignmentId=None, count=None, total=None, other=boss.name)
         boss_locations.append(info)
 
+        boss_token_id, boss_token_name = GetBossTokenNames(boss.stageId,
+                                                            Levels.ITEM_TOKEN_TYPE_STANDARD)
+        info = LocationInfo(LOCATION_TYPE_TOKEN, boss_token_id, boss_token_name,
+                            stageId=boss.stageId, alignmentId=None, count=None, total=None,
+                            other=Levels.ITEM_TOKEN_TYPE_BOSS)
+        token_locations.append(info)
+
+        if boss.stageId in Levels.FINAL_BOSSES:
+            boss_token_id, boss_token_name = GetBossTokenNames(boss.stageId,
+                                                               Levels.ITEM_TOKEN_TYPE_FINAL_BOSS)
+            info = LocationInfo(LOCATION_TYPE_TOKEN, boss_token_id, boss_token_name,
+                                stageId=boss.stageId, alignmentId=None, count=None, total=None,
+                                other=Levels.ITEM_TOKEN_TYPE_FINAL_BOSS)
+            token_locations.append(info)
+
     return (mission_clear_locations, mission_locations, progression_locations,
             enemysanity_locations, checkpointsanity_locations, charactersanity_locations,
-            token_locations, keysanity_locations, weaponsanity_locations, boss_locations)
+            token_locations, keysanity_locations, weaponsanity_locations, boss_locations,
+            warp_locations)
 
 
-def is_token_required_by_goal(world, token : LocationInfo):
+def is_token_required_by_goal(options, token : LocationInfo, available_levels):
 
-    goal_dictates_missions = world.options.goal_missions > 0
-    goal_dictates_dark_missions = world.options.goal_dark_missions > 0
-    goal_dictates_hero_missions = world.options.goal_hero_missions > 0
-    goal_dictates_final_missions = world.options.goal_final_missions > 0
-    goal_dictates_neutral_missions = world.options.goal_missions > 0
-    goal_dictates_progression_missions = world.options.goal_objective_missions > 0
+    goal_dictates_missions = options.goal_missions > 0
+    goal_dictates_dark_missions = options.goal_dark_missions > 0
+    goal_dictates_hero_missions = options.goal_hero_missions > 0
+    goal_dictates_final_missions = options.goal_final_missions > 0
+    goal_dictates_neutral_missions = options.goal_missions > 0
+    goal_dictates_progression_missions = options.goal_objective_missions > 0
+    goal_dictates_boss_tokens = options.goal_bosses > 0
+    goal_dictates_final_boss_tokens = options.goal_final_bosses > 0
 
-    if token.stageId not in world.available_levels:
+    if token.stageId not in available_levels:
         return False
 
     if goal_dictates_missions and token.other == ITEM_TOKEN_TYPE_STANDARD:
@@ -935,16 +991,24 @@ def is_token_required_by_goal(world, token : LocationInfo):
     if goal_dictates_progression_missions and token.other == ITEM_TOKEN_TYPE_OBJECTIVE:
         return True
 
+    if goal_dictates_boss_tokens and token.other == ITEM_TOKEN_TYPE_BOSS:
+        return True
+
+    if goal_dictates_final_boss_tokens and token.other == ITEM_TOKEN_TYPE_FINAL_BOSS:
+        return True
+
     return False
 
 
 def create_locations(world: "ShtHWorld", regions: Dict[str, Region]):
     (clear_locations, mission_locations, end_location,
      enemysanity_locations, checkpointsanity_locations, charactersanity_locations,
-     token_locations, keysanity_locations, weaponsanity_locations, boss_locations) = GetAllLocationInfo()
+     token_locations, keysanity_locations, weaponsanity_locations, boss_locations,
+     warp_locations) = GetAllLocationInfo()
 
     for location in clear_locations:
         if location.stageId not in world.available_levels:
+            #print("skip:", location.name, location.stageId)
             continue
         within_region = regions[Regions.stage_id_to_region(location.stageId)]
         completion_location = ShadowTheHedgehogLocation(world.player, location.name, location.locationId, within_region)
@@ -1043,7 +1107,7 @@ def create_locations(world: "ShtHWorld", regions: Dict[str, Region]):
             within_region.locations.append(completion_location)
 
     for token in token_locations:
-        goal_required = is_token_required_by_goal(world, token)
+        goal_required = is_token_required_by_goal(world.options, token, world.available_levels)
         if not goal_required:
             continue
 
@@ -1052,6 +1116,21 @@ def create_locations(world: "ShtHWorld", regions: Dict[str, Region]):
                                                         within_region)
         within_region.locations.append(token_location)
         world.token_locations.append(token)
+
+    for warp in warp_locations:
+        if warp.stageId in Levels.LAST_STORY_STAGES and not world.options.include_last_way_shuffle:
+            continue
+
+        if warp.stageId in Levels.BOSS_STAGES and world.options.level_progression == Options.LevelProgression.option_select:
+            continue
+
+        if warp.stageId not in world.available_levels:
+            continue
+
+        within_region = regions[Regions.stage_id_to_region(warp.stageId)]
+        warp_location = ShadowTheHedgehogLocation(world.player, warp.name, warp.locationId,
+                                                   within_region)
+        within_region.locations.append(warp_location)
 
 
     end_region = regions["FinalStory"]
@@ -1063,7 +1142,7 @@ def count_locations(world):
     (mission_clear_locations, mission_locations, end_location,
      enemysanity_locations, checkpointsanity_locations,
      charactersanity_locations, token_locations, keysanity_locations,
-     weaponsanity_locations, boss_locations) = GetAllLocationInfo()
+     weaponsanity_locations, boss_locations, warp_locations) = GetAllLocationInfo()
 
     mission_clear_locations = [ mc for mc in mission_clear_locations if mc.stageId
                                 in world.available_levels]
@@ -1122,7 +1201,9 @@ def count_locations(world):
     if world.options.key_sanity:
         count += len(keysanity_locations)
 
-    count += len(boss_locations) - 1 # Devil Doom Boss
+    count += len(boss_locations)
+    #if world.options.include_last_way_shuffle and world.options.story_shuffle == Options.StoryShuffle.option_test3:
+    #    count -= 1 # Devil Doom Boss
 
     if world.options.weapon_sanity_hold > 0:
         count += len(weaponsanity_locations)
@@ -1132,6 +1213,66 @@ def count_locations(world):
     return count
 
 
+def IsRegionAutoPassable(combined_regions, distribution):
+
+    if len(combined_regions.keys()) == 0:
+        return False
+
+    known = [0]
+    for i in range(1, max(distribution.keys())+1):
+        ref = [ c for c in combined_regions.items() if c[1] == i]
+        found = False
+        for r in ref:
+            if r[0] in known:
+                found = True
+                break
+        if not found:
+            return False
+
+    return True
+
+
+def GetStagesWithNoRequirements(world):
+    # This should also handle logic level
+
+    logic_level = world.options.logic_level
+
+    combined_regions = {}
+    for i in Levels.INDIVIDUAL_LEVEL_REGIONS:
+        if i.stageId not in combined_regions:
+            combined_regions[i.stageId] = {}
+
+        if i.logicType == Options.LogicLevel.option_easy and \
+            logic_level != Options.LogicLevel.option_easy:
+            for fromRegion in i.fromRegions:
+                combined_regions[i.stageId][fromRegion] = i.regionIndex
+        elif i.logicType == Options.LogicLevel.option_hard and \
+            logic_level == Options.LogicLevel.option_hard:
+            for fromRegion in i.fromRegions:
+                combined_regions[i.stageId][fromRegion] = i.regionIndex
+
+        if not world.options.weapon_sanity_unlock and IsWeaponsanityRestriction(i.restrictionType):
+            for fromRegion in i.fromRegions:
+                combined_regions[i.stageId][fromRegion] = i.regionIndex
+
+        if not world.options.vehicle_logic and IsVeichleSanityRestriction(i.restrictionType):
+            for fromRegion in i.fromRegions:
+                combined_regions[i.stageId][fromRegion] = i.regionIndex
+
+    # Need to handle combined regions
+
+    # Need to limit by items not required
+
+    stages = [m.stageId for m in MissionClearLocations
+              if (m.distribution is None or
+                  (
+                      (len(m.distribution.keys()) == 1 and 0 in m.distribution.keys()) or
+
+                      IsRegionAutoPassable(combined_regions[m.stageId], m.distribution)
+
+                   ))
+              and m.requirement_count is None and m.stageId not in world.options.excluded_stages ]
+    return list(set(stages))
 
 
 
