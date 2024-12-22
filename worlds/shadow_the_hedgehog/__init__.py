@@ -149,7 +149,7 @@ class ShtHWorld(World):
                         if max_required > max_required_complete:
                             key = key_prefix + "." + Levels.LEVEL_ID_TO_LEVEL[stage]
                             override_settings.value[key] = (max_required_complete * 100) / aliens.total_count
-                            print("Had to adjust key for {key}".format(key=key))
+                            #print("Had to adjust key for {key}".format(key=key))
     def generate_early(self):
         self.check_invalid_configurations()
         self.shuffled_story_mode = Story.GetStoryMode(self)
@@ -174,6 +174,8 @@ class ShtHWorld(World):
                 self.options.required_dark_tokens = passthrough["required_dark_tokens"]
                 self.options.required_final_tokens = passthrough["required_final_tokens"]
                 self.options.required_objective_tokens = passthrough["required_objective_tokens"]
+                self.options.required_boss_tokens = passthrough["required_boss_tokens"]
+                self.options.required_final_boss_tokens = passthrough["required_final_boss_tokens"]
                 self.options.requires_emeralds = passthrough["requires_emeralds"]
                 self.options.key_sanity = passthrough["key_sanity"]
                 self.options.enemy_sanity = passthrough["enemy_sanity"]
@@ -185,6 +187,9 @@ class ShtHWorld(World):
                 self.options.level_progression = passthrough["level_progression"]
                 self.options.excluded_stages = passthrough["excluded_stages"]
                 self.options.logic_level = passthrough["logic_level"]
+                self.options.include_last_way_shuffle = passthrough["include_last_way_shuffle"]
+                self.options.story_shuffle = passthrough["story_shuffle"]
+                self.options.story_boss_count = passthrough["story_boss_count"]
 
                 self.shuffled_story_mode = Story.StringToStory(passthrough["shuffled_story_mode"])
 
@@ -212,7 +217,7 @@ class ShtHWorld(World):
 
         if self.options.exceeding_items_filler == Options.ExceedingItemsFiller.option_minimise:
             if item_count > location_count:
-                print("item_count=", item_count, "location_count=", location_count)
+                #print("item_count=", item_count, "location_count=", location_count)
                 potential_downgrades, removals = GetPotentialDowngradeItems(self)
                 if len(potential_downgrades) < item_count - location_count - len(removals):
                     c = item_count - location_count - len(potential_downgrades)
@@ -332,7 +337,7 @@ class ShtHWorld(World):
 
     def fill_slot_data(self):
         story_string = Story.StoryToString(self.shuffled_story_mode)
-        print(story_string)
+        #print(story_string)
         Story.StringToStory(story_string)
 
 
@@ -357,6 +362,8 @@ class ShtHWorld(World):
             "required_dark_tokens": self.required_tokens[Items.Progression.StandardDarkToken],
             "required_final_tokens": self.required_tokens[Items.Progression.FinalToken],
             "required_objective_tokens": self.required_tokens[Items.Progression.ObjectiveToken],
+            "required_boss_tokens": self.required_tokens[Items.Progression.BossToken],
+            "required_final_boss_tokens": self.required_tokens[Items.Progression.FinalBossToken],
             "requires_emeralds": self.options.goal_chaos_emeralds.value,
             "key_sanity": self.options.key_sanity.value,
             "enemy_sanity": self.options.enemy_sanity.value,
@@ -375,7 +382,19 @@ class ShtHWorld(World):
             "excluded_stages": self.options.excluded_stages.value,
             "logic_level": self.options.logic_level.value,
             "enable_gauge_items": self.options.enable_gauge_items.value,
-            "exceeding_items_filler": self.options.exceeding_items_filler.value
+            "exceeding_items_filler": self.options.exceeding_items_filler.value,
+            "include_last_way_shuffle": self.options.include_last_way_shuffle.value,
+            "story_shuffle": self.options.story_shuffle.value,
+            "story_boss_count": self.options.story_boss_count.value
         }
 
         return slot_data
+
+    def write_spoiler(self, spoiler_handle: typing.TextIO):
+        if self.options.story_shuffle != Options.StoryShuffle.option_off:
+            spoiler_handle.write("Shuffled Story Path\n")
+            for stage in self.shuffled_story_mode:
+                text = str(stage)
+                spoiler_handle.writelines(text)
+            spoiler_handle.write("\n")
+

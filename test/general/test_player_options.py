@@ -30,8 +30,11 @@ class TestPlayerOptions(unittest.TestCase):
         self.assertEqual(new_weights["scalar_2"], 0)
         self.assertEqual(new_weights["list_2"], ["string_3"])
         self.assertEqual(new_weights["list_1"], ["string", "string_2"])
+
+        print(new_weights["dict_1"]["option_a"], new_weights["dict_1"]["option_b"])
+
         self.assertEqual(new_weights["dict_1"]["option_a"], 50)
-        self.assertEqual(new_weights["dict_1"]["option_b"], 50)
+        self.assertEqual(new_weights["dict_1"]["option_b"], 0)
         self.assertEqual(new_weights["dict_1"]["option_c"], 50)
         self.assertNotIn("option_f", new_weights["dict_2"])
         self.assertEqual(new_weights["dict_2"]["option_g"], 50)

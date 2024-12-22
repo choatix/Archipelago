@@ -194,8 +194,14 @@ def connect_by_story_mode(multiworld: MultiWorld, world: "ShThWorld", player: in
             start_region = world.get_region("Menu")
             end_region_name = stage_id_to_story_region(path.end_stage_id)
             end_region = world.get_region(end_region_name)
+
+            secret_rule = None
+            if world.options.secret_story_progression and hasattr(multiworld, "re_gen_passthrough"):
+                warp_item = Items.GetStageWarpItem(path.end_stage_id)
+                secret_rule = lambda state, wi=warp_item: state.has(wi, world.player)
+
             connect(world.player, "Base Story Entrance_" + str(order.index(path)) + str(path.start_stage_id) + "/" +
-                    str(path.end_stage_id), start_region, end_region)
+                    str(path.end_stage_id), start_region, end_region, rule=secret_rule)
             continue
 
         # Boss handling before here, because we need to hande bosses
@@ -271,8 +277,20 @@ def connect_by_story_mode(multiworld: MultiWorld, world: "ShThWorld", player: in
         extra_level_regions = [ l for l in Levels.INDIVIDUAL_LEVEL_REGIONS if l.stageId == path.start_stage_id ]
 
         base_rule = lambda state,n=completion_location_name: state.can_reach_location(n, player)
+
+        if world.options.secret_story_progression and hasattr(multiworld, "re_gen_passthrough"):
+            warp_item = Items.GetStageWarpItem(path.end_stage_id)
+            secret_rule = lambda state, wi=warp_item: state.has(wi, world.player)
+            base_rule = lambda state, br=base_rule, sr=secret_rule: br(state) and sr(state)
+
         boss_entrance = None
         if boss_region is not None:
+
+            if world.options.secret_story_progression and hasattr(multiworld, "re_gen_passthrough"):
+                warp_item = Items.GetStageWarpItem(path.boss)
+                secret_rule = lambda state, wi=warp_item: state.has(wi, world.player)
+                base_rule = lambda state, br=base_rule, sr=secret_rule: br(state) and sr(state)
+
             boss_entrance = connect(world.player, "Boss Entrance_"+str(order.index(path)) + str(path.start_stage_id) + "/" +
                     str(path.end_stage_id), start_region, boss_region, rule=base_rule)
             multiworld.register_indirect_condition(start_region, boss_entrance)

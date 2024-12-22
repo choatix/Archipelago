@@ -1,7 +1,8 @@
 import random
 from dataclasses import dataclass
 
-from . import Levels
+from . import Levels, Options, Locations
+
 
 @dataclass
 class PathInfo:
@@ -25,10 +26,10 @@ class PathInfo:
     def __str__(self):
         start = "START" if self.start_stage_id is None else Levels.LEVEL_ID_TO_LEVEL[self.start_stage_id]
         end = "END" if self.end_stage_id is None else Levels.LEVEL_ID_TO_LEVEL[self.end_stage_id]
-        alignment = self.alignment_id
-        boss = "" if self.boss is None else Levels.LEVEL_ID_TO_LEVEL[self.boss] + ">"
+        alignment = Levels.ALIGNMENT_TO_STRING[self.alignment_id] if self.alignment_id is not None else ""
+        boss = "" if self.boss is None else " via " + Levels.LEVEL_ID_TO_LEVEL[self.boss]
 
-        return f"{start} {alignment} > {boss}{end}"
+        return f"{start} {alignment}{boss}>{end}\n"
 
 
 def StoryToOrder(StoryMode):
@@ -62,40 +63,105 @@ def ChaosShuffle(world):
     include_last_way = world.options.include_last_way_shuffle
 
     stages_to_assign = [ l for l in Levels.ALL_STAGES if l not in world.options.excluded_stages and l
-                         not in Levels.BOSS_STAGES and l not in Levels.LAST_STORY_STAGES
-                         and l != Levels.STAGE_WESTOPOLIS]
-
-    if include_last_way:
-        stages_to_assign.append(Levels.STAGE_THE_LAST_WAY)
+                         not in Levels.BOSS_STAGES and l not in Levels.LAST_STORY_STAGES ]
+                         #and l != Levels.STAGE_WESTOPOLIS]
 
     possible_stages = stages_to_assign.copy()
 
-    final_bosses = [boss.boss for boss in ModifiedStoryMode if boss.end_stage_id is None]
+    final_bosses_full = [boss.boss for boss in ModifiedStoryMode if boss.end_stage_id is None]
+    final_bosses = final_bosses_full.copy()
+
+    boss_groups = Levels.BOSS_GROUPING
+    if world.options.single_egg_dealer:
+        options = [ b for b in final_bosses if b in boss_groups["Egg Dealer"]]
+        for o in options:
+            final_bosses.remove(o)
+
+        chosen = world.random.choice(options)
+        final_bosses.append(chosen)
+
+    if world.options.single_black_doom:
+        options = [b for b in final_bosses if b in boss_groups["Black Doom"]]
+        for o in options:
+            final_bosses.remove(o)
+
+        chosen = world.random.choice(options)
+        final_bosses.append(chosen)
+
+    if world.options.single_diablon:
+        options = [b for b in final_bosses if b in boss_groups["Diablon"]]
+        for o in options:
+            final_bosses.remove(o)
+
+        chosen = world.random.choice(options)
+        final_bosses.append(chosen)
+
+
+    # Removes the duplicate Lava Shelter Egg Dealer
+    final_bosses = list(set(final_bosses))
+
+    world.random.shuffle(final_bosses)
+
+    story_boss_stages = [ l for l in Levels.BOSS_STAGES if l not in world.options.excluded_stages and l not in Levels.LAST_STORY_STAGES
+                          and l not in final_bosses_full ]
+
     if include_last_way:
+        stages_to_assign.append(Levels.STAGE_THE_LAST_WAY)
         final_bosses.append(Levels.BOSS_DEVIL_DOOM)
 
-    bosses_to_assign = [ b for b in Levels.BOSS_STAGES if b not in world.options.excluded_stages and b not in final_bosses]
+    bosses_to_assign = []
+    boss_set = story_boss_stages
+    for i in range(0, world.options.story_boss_count):
+        bosses_to_assign.extend(boss_set)
 
     # Potentially duplicate some bosses for more clarity
 
-    steps_to_randomise = [ s for s in ModifiedStoryMode if s.start_stage_id is not None ]
-    steps_to_randomise.append(PathInfo(Levels.STAGE_THE_LAST_WAY, Levels.MISSION_ALIGNMENT_NEUTRAL, None, []))
+    #steps_to_randomise = [ s for s in ModifiedStoryMode if s.start_stage_id is not None ]
+    steps_to_randomise = [s for s in ModifiedStoryMode if s.start_stage_id is not None ]
 
-    untouched_steps = [ s for s in ModifiedStoryMode if s not in steps_to_randomise ]
+    if include_last_way:
+        steps_to_randomise.append(PathInfo(Levels.STAGE_THE_LAST_WAY, Levels.MISSION_ALIGNMENT_NEUTRAL, None, []))
+
+    #untouched_steps = [ s for s in ModifiedStoryMode if s not in steps_to_randomise ]
 
     new_story = []
-    new_story.extend(untouched_steps)
+    #new_story.extend(untouched_steps)
 
     bosses_by_alignment = {}
 
     random.shuffle(steps_to_randomise)
-    for step in steps_to_randomise:
-        if len(final_bosses) > 0:
+
+    steps_to_randomise.insert(0, PathInfo(None, None, None, []))
+
+    SafeStartingStages = Locations.GetStagesWithNoRequirements(world)
+
+    new_steps = []
+    stage_nodes = []
+
+    while len(steps_to_randomise) > 0:
+        step = None
+        boss_possible = False
+        first_step = [ step for step in steps_to_randomise if step.start_stage_id is None ]
+        if len(first_step) == 1:
+            step = first_step[0]
+        else:
+            valid_steps = [ s for s in steps_to_randomise if s.start_stage_id in stage_nodes ]
+            if len(valid_steps) == len(steps_to_randomise):
+                boss_possible = True
+            if len(valid_steps) > 0:
+                step = world.random.choice(valid_steps)
+
+            #step = steps_to_randomise[0]
+
+        if step is None:
+            raise Exception("Unable to work out next step to take!")
+
+        if boss_possible and len(final_bosses) > 0 and step.start_stage_id is not None:
             step.end_stage_id = None
             step.boss = final_bosses.pop()
         else:
             boss_assigned = False
-            if len(bosses_to_assign) > 0:
+            if boss_possible and len(bosses_to_assign) > 0 and step.start_stage_id is not None:
                 possible_boss = random.choice(bosses_to_assign)
 
                 if possible_boss not in bosses_by_alignment:
@@ -110,14 +176,22 @@ def ChaosShuffle(world):
             if not boss_assigned:
                 step.boss = None
 
-            if len(stages_to_assign) > 0:
+            if world.options.guaranteed_level_clear and step.start_stage_id is None:
+                step.end_stage_id = random.choice(SafeStartingStages)
+                stages_to_assign.remove(step.end_stage_id)
+            elif len(stages_to_assign) > 0:
                 step.end_stage_id = stages_to_assign.pop()
                 if step.end_stage_id == step.start_stage_id:
                     stages_to_assign.append(step.end_stage_id)
             else:
                 step.end_stage_id = random.choice(possible_stages)
 
-    new_story.extend(steps_to_randomise)
+        steps_to_randomise.remove(step)
+        new_steps.append(step)
+        if step.end_stage_id not in stage_nodes:
+            stage_nodes.append(step.end_stage_id)
+
+    new_story.extend(new_steps)
 
     return new_story
 
@@ -142,9 +216,7 @@ def ShuffleStoryMode(world):
             index = story_base.index(step.end_stage_id)
             new_stage = story_stages[index]
             step.end_stage_id = new_stage
-            print("")
 
-    print(ModifiedStoryMode)
     return ModifiedStoryMode
 
 
@@ -157,11 +229,11 @@ def GenerateStoryMode(world):
     return ModifiedStoryMode
 
 def GetStoryMode(world):
-    if world.options.story_shuffle == 1:
+    if world.options.story_shuffle == Options.StoryShuffle.option_basic:
         return GenerateStoryMode(world)
-    elif world.options.story_shuffle == 2:
+    elif world.options.story_shuffle == Options.StoryShuffle.option_shuffle:
         return ShuffleStoryMode(world)
-    elif world.options.story_shuffle == 3:
+    elif world.options.story_shuffle == Options.StoryShuffle.option_chaos:
         return ChaosShuffle(world)
     else:
         return DefaultStoryMode
