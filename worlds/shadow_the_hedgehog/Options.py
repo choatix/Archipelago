@@ -66,7 +66,7 @@ class GoalFinalBosses(Range):
     display_name = "Goal: Bosses"
     range_start = 0
     range_end = 100
-    default = 100
+    default = 0
 
 class GoalFinalMissions(Range):
     """

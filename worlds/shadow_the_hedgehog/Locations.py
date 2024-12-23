@@ -1000,7 +1000,7 @@ def is_token_required_by_goal(options, token : LocationInfo, available_levels):
     return False
 
 
-def create_locations(world: "ShtHWorld", regions: Dict[str, Region]):
+def create_locations(world, regions: Dict[str, Region]):
     (clear_locations, mission_locations, end_location,
      enemysanity_locations, checkpointsanity_locations, charactersanity_locations,
      token_locations, keysanity_locations, weaponsanity_locations, boss_locations,

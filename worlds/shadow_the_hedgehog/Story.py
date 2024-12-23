@@ -137,6 +137,9 @@ def ChaosShuffle(world):
 
     new_steps = []
     stage_nodes = []
+    first_stage = None
+
+    force_path = None #[0, Levels.MISSION_ALIGNMENT_HERO, Levels.BOSS_DEVIL_DOOM]
 
     while len(steps_to_randomise) > 0:
         step = None
@@ -156,7 +159,18 @@ def ChaosShuffle(world):
         if step is None:
             raise Exception("Unable to work out next step to take!")
 
-        if boss_possible and len(final_bosses) > 0 and step.start_stage_id is not None:
+        if force_path is not None and step.start_stage_id == force_path[0] and \
+            step.alignment_id == force_path[1]:
+            if force_path[2] in Levels.BOSS_STAGES and not boss_possible:
+                continue
+            else:
+                if force_path[2] in Levels.BOSS_STAGES and (
+                        force_path[2] in final_bosses_full or force_path[2] == Levels.BOSS_DEVIL_DOOM):
+                    step.end_stage_id = None
+                    step.boss = force_path[2]
+                    pass
+
+        elif boss_possible and len(final_bosses) > 0 and step.start_stage_id is not None:
             step.end_stage_id = None
             step.boss = final_bosses.pop()
         else:
@@ -179,6 +193,9 @@ def ChaosShuffle(world):
             if world.options.guaranteed_level_clear and step.start_stage_id is None:
                 step.end_stage_id = random.choice(SafeStartingStages)
                 stages_to_assign.remove(step.end_stage_id)
+                first_stage = step.end_stage_id
+                if force_path is not None and force_path[0] == 0:
+                    force_path[0] = first_stage
             elif len(stages_to_assign) > 0:
                 step.end_stage_id = stages_to_assign.pop()
                 if step.end_stage_id == step.start_stage_id:

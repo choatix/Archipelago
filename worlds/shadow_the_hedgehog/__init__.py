@@ -42,9 +42,6 @@ class ShtHWebWorld(WebWorld):
     ]
 
 class ShtHWorld(World):
-    """
-    TODO
-    """
 
     #options_dataclass = ShThOptions
     #options: ShThOptions
