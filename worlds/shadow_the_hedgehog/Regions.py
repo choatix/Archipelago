@@ -99,7 +99,7 @@ def early_region_checks(world):
 
         world.available_weapons.append(weapon.name)
 
-def create_regions(world: "ShtHWorld") -> Dict[str, Region]:
+def create_regions(world) -> Dict[str, Region]:
     regions: Dict[str, Region] = {}
     stages = Levels.ALL_STAGES
 
@@ -188,7 +188,7 @@ def create_regions(world: "ShtHWorld") -> Dict[str, Region]:
 
     return regions
 
-def connect_by_story_mode(multiworld: MultiWorld, world: "ShThWorld", player: int, order: typing.List[PathInfo]):
+def connect_by_story_mode(multiworld: MultiWorld, world, player: int, order: typing.List[PathInfo]):
     for path in order:
         if path.start_stage_id is None:
             start_region = world.get_region("Menu")

@@ -661,8 +661,8 @@ class ShTHContext(CommonContext):
         self.previous_rings = None
         self.ring_link_rings = 0
         self.instance_id = time.time()
-        self.debug_logging = True
-        self.error_logging = False
+        self.debug_logging = False
+        self.error_logging = True
         self.info_logging = True
         self.last_level = None
         self.last_weapon = None
@@ -684,6 +684,7 @@ class ShTHContext(CommonContext):
         self.shuffled_story_mode = Story.DefaultStoryMode
         self.successful_shuffle = False
         self.include_last_way_shuffle = False
+        self.dead = False
 
     async def disconnect(self, allow_autoreconnect: bool = False):
         self.auth = None
@@ -1603,9 +1604,15 @@ async def check_level_status(ctx):
 
                     if current_level == BOSS_DEVIL_DOOM and not IsEndGameEnabled(ctx):
 
+                        if level_status_value != LevelStatusOptions.Active:
+                            ctx.boss_delay = 1
+                            ctx.last_level = None
+                            return None
+
                         if ctx.boss_delay == 0:
                             logger.info("You do not have the required items to fight the final boss")
                             logger.info("Set rings to 0")
+                            #time.sleep(5)
                             new_rings = 0
                             new_bytes = new_rings.to_bytes(4, byteorder='big')
                             writeBytes(GAME_ADDRESSES.RINGS_ADDRESS, new_bytes)
@@ -2736,8 +2743,6 @@ async def update_level_behaviour(ctx, current_level, death):
 
     # If an objective is currently completable then check for pause state, etc
 
-
-
     is_back_button = 0x20
 
     if ctx.objective_sanity:
@@ -2771,7 +2776,12 @@ async def check_death(ctx: ShTHContext):
     level_status_value = int.from_bytes(level_status_bytes, byteorder='big')
 
     if level_status_value == LevelStatusOptions.Death:
+        if ctx.dead:
+            return False
+        ctx.dead = True
         return True
+
+    ctx.dead = False
 
     lives_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.LIVES_ADDRESS, 4)
     life_count = int.from_bytes(lives_bytes, byteorder='big')
@@ -2856,6 +2866,7 @@ async def dolphin_sync_task(ctx: ShTHContext):
             logger.info("Connection to Dolphin failed with exception, attempting again in 5 seconds...")
             logger.error(traceback.format_exc())
             ctx.dolphin_status = CONNECTION_LOST_STATUS
+            ctx.successful_shuffle = False
             await ctx.disconnect(True)
             await asyncio.sleep(5)
             continue
