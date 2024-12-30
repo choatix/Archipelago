@@ -74,27 +74,29 @@ def ChaosShuffle(world):
     boss_groups = Levels.BOSS_GROUPING
     if world.options.single_egg_dealer:
         options = [ b for b in final_bosses if b in boss_groups["Egg Dealer"]]
-        for o in options:
-            final_bosses.remove(o)
-
+        if len(options) > 0:
+            for o in options:
+                final_bosses.remove(o)
         chosen = world.random.choice(options)
         final_bosses.append(chosen)
 
     if world.options.single_black_doom:
         options = [b for b in final_bosses if b in boss_groups["Black Doom"]]
-        for o in options:
-            final_bosses.remove(o)
+        if len(options) > 0:
+            for o in options:
+                final_bosses.remove(o)
 
-        chosen = world.random.choice(options)
-        final_bosses.append(chosen)
+            chosen = world.random.choice(options)
+            final_bosses.append(chosen)
 
     if world.options.single_diablon:
         options = [b for b in final_bosses if b in boss_groups["Diablon"]]
-        for o in options:
-            final_bosses.remove(o)
+        if len(options) > 0:
+            for o in options:
+                final_bosses.remove(o)
 
-        chosen = world.random.choice(options)
-        final_bosses.append(chosen)
+            chosen = world.random.choice(options)
+            final_bosses.append(chosen)
 
 
     # Removes the duplicate Lava Shelter Egg Dealer
@@ -109,10 +111,15 @@ def ChaosShuffle(world):
         stages_to_assign.append(Levels.STAGE_THE_LAST_WAY)
         final_bosses.append(Levels.BOSS_DEVIL_DOOM)
 
+    random.shuffle(stages_to_assign)
+
     bosses_to_assign = []
     boss_set = story_boss_stages
     for i in range(0, world.options.story_boss_count):
         bosses_to_assign.extend(boss_set)
+
+    random.shuffle(bosses_to_assign)
+    random.shuffle(final_bosses)
 
     # Potentially duplicate some bosses for more clarity
 

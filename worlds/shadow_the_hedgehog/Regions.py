@@ -235,6 +235,11 @@ def connect_by_story_mode(multiworld: MultiWorld, world, player: int, order: typ
                                                                                            path.alignment_id)
                 bf_rule = lambda state, bn=boss_completion_location_name: state.can_reach_location(bn, player)
 
+                if world.options.secret_story_progression and hasattr(multiworld, "re_gen_passthrough"):
+                    warp_item = Items.GetStageWarpItem(path.boss)
+                    secret_rule = lambda state, wi=warp_item: state.has(wi, world.player)
+                    bf_rule = lambda state, br=bf_rule, sr=secret_rule: br(state) and sr(state)
+
                 boss_end_entrance = connect(world.player, "Boss Entrance_" + str(order.index(path)) + str(path.start_stage_id) + "/" +
                     str(path.end_stage_id), start_region, boss_region,
                                         rule=bf_rule)

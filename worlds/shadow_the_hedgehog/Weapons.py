@@ -195,7 +195,7 @@ WEAPON_INFO = [
 [WeaponAttributes.SHOT]),
     WeaponInfo(0x1B, "Refractor",
                [(Levels.STAGE_BLACK_COMET,1),Levels.STAGE_FINAL_HAUNT,
-                Levels.BOSS_BLACK_DOOM_FH],
+                Levels.BOSS_BLACK_DOOM_FH, Levels.STAGE_THE_LAST_WAY],
 [WeaponAttributes.SHOT, WeaponAttributes.LONG_RANGE]),
     WeaponInfo(0x1E, "Survival Knife",
                [Levels.STAGE_THE_DOOM],

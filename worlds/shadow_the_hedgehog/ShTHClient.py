@@ -1317,6 +1317,15 @@ def complete_completable_levels(ctx):
             if not available:
                 continue
 
+            to_end_boss = [ s for s in story if s.start_stage_id == mission.stageId and s.alignment_id == mission.alignmentId]
+            if len(to_end_boss) == 1:
+                boss = to_end_boss[0]
+                r_boss = [b for b in Locations.BossClearLocations if b.stageId == boss][0]
+                boss_location_id, boss_location_name = Locations.GetBossLocationName(r_boss.name, r_boss.stageId)
+                u_bosses = [b for b in uncleared_bosses if b == boss_location_id]
+                if len(u_bosses) != 0:
+                    continue
+
         mission_complete_locations = [ l for l in location_dict.values() if l.stageId == mission.stageId and
                                l.location_type == Locations.LOCATION_TYPE_MISSION_CLEAR
                                and l.locationId in ctx.checked_locations ]
@@ -1571,6 +1580,15 @@ async def check_level_status(ctx):
                                       LevelStatusOptions.Other, LevelStatusOptions.MenuOption]:
                 ctx.junk_delay = 0
                 return None
+
+            #time.sleep(0.1)
+
+            #level_status_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.ADDRESS_LEVEL_STATUS, 4)
+            #level_status_check = int.from_bytes(level_status_bytes, byteorder='big')
+
+            #if level_status_check != level_status_value:
+            #    logger.error("Level status changed within checking. Ignore.")
+            #    return None
 
             ctx.level_status = level_status_value
 
@@ -2337,7 +2355,7 @@ async def update_level_behaviour(ctx, current_level, death):
         heroMaxAvailable = ShadowUtils.getMaxRequired(
             ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_OBJECTIVE_AVAILABLE,
                                                       heroInfo.mission_object_name, ctx), heroInfo.requirement_count,
-            current_level, MISSION_ALIGNMENT_DARK, ctx.override_settings)
+            current_level, MISSION_ALIGNMENT_HERO, ctx.override_settings)
 
         difference_over = heroMaxAdjusted - heroInfo.requirement_count
         if difference_over < 0:
@@ -2704,9 +2722,8 @@ async def update_level_behaviour(ctx, current_level, death):
             if state_key_index < len(key_addresses):
                 current_key_bytes = dolphin_memory_engine.read_bytes(key_addresses[state_key_index], 4)
                 current_key_data = int.from_bytes(current_key_bytes, byteorder='big')
-                if current_key_data != 0xFFFFFFFF:
+                if current_key_data != 0xFFFFFFFF and current_key_data != 0x0:
                     ctx.level_state["key_index"] = state_key_index + 1
-
                     key_options = KEY_IDENTIFIER_BY_STAGE[current_level]
                     if current_key_data in key_options:
                         ctx.level_keys.append(current_key_data)
@@ -2719,7 +2736,7 @@ async def update_level_behaviour(ctx, current_level, death):
                             messages.extend([k.locationId for k in key_locations])
                     else:
                         if ctx.error_logging:
-                            logger.error("Unknown key object: %d %d %d", current_level, key_options, current_key_data)
+                            logger.error("Unknown key object: %d %s %s", current_level, str(key_options), str(current_key_data))
                         key_locations = [k for k in keysanity_locations if k.stageId == current_level and k.count == state_key_index]
                         messages.extend([k.locationId for k in key_locations])
                 elif not ctx.key_restore_complete:

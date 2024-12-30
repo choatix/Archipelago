@@ -84,8 +84,7 @@ class ObjectiveSanity(DefaultOnToggle):
 class ObjectivePercentage(Range):
     """Sets the objective percentage for each objective.
     When playing objectsanity, this removes the locations for anything after the percentage objective.
-    The remaining items however will still be in the pool.
-    When playing without objectsanity, the requirement to finish is reduced also."""
+    Only affects locations, use available/completion for goal-related effects."""
     display_name = "Objective Percentage"
     range_start = 1
     range_end = 100
@@ -99,7 +98,8 @@ class EnemyObjectivePercentage(Range):
     default = 90
 
 class ObjectiveCompletionPercentage(Range):
-    """When playing Objective Sanity, determine the percentage of items required to finish stages."""
+    """When playing Objective Sanity, determine the percentage of items required to finish stages.
+    When playing non-objective, this is the amount required to complete the stage."""
     display_name = "Objective Completion Percentage"
     range_start = 1
     range_end = 100
@@ -288,7 +288,7 @@ class IncludeLastStoryShuffle(Toggle):
     display_name = "Include Last Story"
 
 
-class SecretStoryProgression(DefaultOnToggle):
+class SecretStoryProgression(Toggle):
     """
         Changes behaviour for displaying accessible story stages.
     """

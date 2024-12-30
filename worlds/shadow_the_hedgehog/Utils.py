@@ -3,7 +3,7 @@ from typing import Tuple
 
 from . import Levels, Locations
 
-VERSION: Tuple[int, int, int] = (0, 0, 9)
+VERSION: Tuple[int, int, int] = (0, 1, 0)
 
 TYPE_ID_ENEMY = 0
 TYPE_ID_OBJECTIVE = 1
@@ -83,12 +83,16 @@ def isEnemyObjectiveLocation(name):
 # TODO: Needs to work with percentage as well...
 def getObjectiveTypeAndPercentage(base_objective_type, item_name, options):
 
+    if not options.objective_sanity:
+        if base_objective_type in (TYPE_ID_OBJECTIVE_AVAILABLE, TYPE_ID_OBJECTIVE,
+                                   TYPE_ID_OBJECTIVE_ENEMY,
+                                   TYPE_ID_OBJECTIVE_ENEMY_AVAILABLE):
+            return None
+
     if base_objective_type in (TYPE_ID_OBJECTIVE_AVAILABLE, TYPE_ID_OBJECTIVE,
                                TYPE_ID_COMPLETION, TYPE_ID_OBJECTIVE_ENEMY,
                                TYPE_ID_OBJECTIVE_ENEMY_AVAILABLE, TYPE_ID_OBJECTIVE_ENEMY_COMPLETION):
-        if not options.objective_sanity:
-            return None
-        elif isEnemyObjectiveLocation(item_name):
+        if isEnemyObjectiveLocation(item_name):
             if not options.enemy_objective_sanity:
                 return None
 
@@ -127,7 +131,8 @@ def getObjectiveTypeAndPercentage(base_objective_type, item_name, options):
 
 def getMaxRequired(type_default_percentage, total:int, stageId:int, alignmentId:int, override_settings):
     if type_default_percentage is None:
-        return 0
+        #print("Type percentage is None: Return 100%")
+        return total
 
     type_value = type_default_percentage[0]
     default_percentage = type_default_percentage[1]
