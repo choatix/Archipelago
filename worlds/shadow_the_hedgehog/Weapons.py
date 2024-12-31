@@ -24,6 +24,7 @@ class WeaponAttributes:
     NOT_AIMABLE = 16
     HEAL = 32
     SPECIAL = 64
+    SHADOW_RIFLE = 128
 
 
 def GetAnyShadowBoxRegions():
@@ -50,7 +51,7 @@ def GetRuleByWeaponRequirement(player, req, stage, regions):
         else:
             regions = p_regions
 
-    matches = [ w for w in WEAPON_INFO if req in w.attributes and
+    matches = [ w for w in WEAPON_INFO if (req is None or req in w.attributes) and
                 len([ a for a in w.available_stages
                   if (type(a) is tuple and a[0] == stage and a[1] in regions)
                   or
@@ -61,7 +62,7 @@ def GetRuleByWeaponRequirement(player, req, stage, regions):
     if len(matches) == 0:
         print("Something wrong here with", req, stage, regions)
 
-    return lambda state, match=matches: state.has_any([m.name for m in matches],player)
+    return lambda state, reqs=matches: state.has_any([m.name for m in reqs],player)
 
 
 
@@ -306,7 +307,7 @@ WEAPON_INFO = [
 [WeaponAttributes.SPECIAL, WeaponAttributes.HEAL]),
     WeaponInfo(0x43, "Shadow Rifle",
                GetAnyShadowBoxRegions(),
-[WeaponAttributes.SPECIAL, WeaponAttributes.SHOT, WeaponAttributes.LONG_RANGE])
+[WeaponAttributes.SPECIAL, WeaponAttributes.SHOT, WeaponAttributes.LONG_RANGE, WeaponAttributes.SHADOW_RIFLE])
 ]
 
 def GetWeaponDict():

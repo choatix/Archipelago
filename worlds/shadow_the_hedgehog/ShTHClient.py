@@ -2,8 +2,6 @@ import asyncio
 from datetime import datetime, timedelta
 import time
 import traceback
-from dataclasses import dataclass
-from math import ceil, floor
 from typing import Any, Dict, Optional
 from copy import deepcopy
 import dolphin_memory_engine
@@ -744,7 +742,7 @@ class ShTHContext(CommonContext):
         await self.send_connect()
 
     def restoreState(self):
-        (mission_clear_locations, mission_locations, end_location, enemy_locations, \
+        (mission_clear_locations, mission_locations, end_location, enemy_locations,
             checkpointsanity_locations, charactersanity_locations,
          token_locations, keysanity_locations, weaponsanity_locations, boss_locations,
          warp_locations) = Locations.GetAllLocationInfo()
@@ -1627,16 +1625,18 @@ async def check_level_status(ctx):
                             ctx.last_level = None
                             return None
 
-                        if ctx.boss_delay == 0:
-                            logger.info("You do not have the required items to fight the final boss")
-                            logger.info("Set rings to 0")
-                            #time.sleep(5)
-                            new_rings = 0
-                            new_bytes = new_rings.to_bytes(4, byteorder='big')
-                            writeBytes(GAME_ADDRESSES.RINGS_ADDRESS, new_bytes)
-                            ctx.boss_delay = 3
-                            ctx.last_level = None
+                        current_rings_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.RINGS_ADDRESS, 4)
+                        current_rings = int.from_bytes(current_rings_bytes, byteorder="big")
 
+                        if ctx.boss_delay == 0:
+                            ctx.last_level = None
+                            if 0 < current_rings < 50:
+                                logger.info("You do not have the required items to fight the final boss")
+                                logger.info("Set rings to 0")
+                                new_rings = 0
+                                new_bytes = new_rings.to_bytes(4, byteorder='big')
+                                writeBytes(GAME_ADDRESSES.RINGS_ADDRESS, new_bytes)
+                                ctx.boss_delay = 3
                         else:
                             ctx.boss_delay -= 1
                             ctx.last_level = None
@@ -1712,8 +1712,24 @@ def number_to_bit_array(number):
 
 
 async def handle_special_weapons(ctx, info, weapons_to_handle):
+    new_messages = []
+
     weapon_dict = Weapons.GetWeaponDict()
     special_weapons_info = Items.GetSpecialWeapons()
+
+    rifle_components = [info[unlock[0].item] for unlock in ctx.handled if unlock[0].item in info \
+                       and info[unlock[0].item].type == "Rifle Component"]
+
+    rifle_components_new = [info[unlock[0].item] for unlock in weapons_to_handle if unlock[0].item in info \
+                           and info[unlock[0].item].type == "Rifle Component"]
+
+    rifle_components.extend(rifle_components_new)
+
+    rifle_complete = True
+    for component in Items.GetRifleComponents():
+        matches = [ c for c in rifle_components if c.name == component.name ]
+        if len(matches) == 0:
+            rifle_complete = False
 
     special_weapons = [info[unlock[0].item] for unlock in ctx.handled if unlock[0].item in info \
                        and info[unlock[0].item].type == "Weapon" and
@@ -1735,6 +1751,11 @@ async def handle_special_weapons(ctx, info, weapons_to_handle):
         if len(matching) >= 2 and i + 1 < len(weapon_value):
             weapon_value[i + 1] = 1
         i += 2
+
+    if rifle_complete:
+        if weapon_value[-1] != 1:
+            new_messages.append(LOCATION_ID_SHADOW_RIFLE_COMPLETE)
+            weapon_value[-1] = 1
 
     weapon_value.reverse()
 
@@ -1775,11 +1796,13 @@ async def handle_special_weapons(ctx, info, weapons_to_handle):
         logger.info(f"Write special weapons {weapon_value_to_write}")
         writeBytes(GAME_ADDRESSES.SPECIAL_WEAPONS_ADDRESS, new_bytes)
 
+    return new_messages
+
 async def check_weapons(ctx, current_level):
     info = Items.GetItemLookupDict()
 
     weapons_to_handle = [unlock for unlock in ctx.items_to_handle if unlock[0].item in info and \
-         info[unlock[0].item].type == "Weapon"]
+         info[unlock[0].item].type == "Weapon" or info[unlock[0].item].type == "Rifle Component"]
 
     newly_handled = []
     newly_handled.extend(weapons_to_handle)
@@ -1791,7 +1814,8 @@ async def check_weapons(ctx, current_level):
 
     messages = []
 
-    await handle_special_weapons(ctx, info, weapons_to_handle)
+    weapon_messages = await handle_special_weapons(ctx, info, weapons_to_handle)
+    messages.extend(weapon_messages)
 
     special_weapons_info = Items.GetSpecialWeapons()
 
@@ -2478,6 +2502,9 @@ async def update_level_behaviour(ctx, current_level, death):
         current_bytes = dolphin_memory_engine.read_bytes(hero_address, hero_address_size)
         current_count = int.from_bytes(current_bytes, byteorder='big')
 
+        if current_count < expected_hero_value:
+            ctx.level_state["hero_progress"] = current_count
+
         if expected_hero_value is not None and current_count > expected_hero_value:
             if ctx.debug_logging:
                 logger.debug("Hero count increased:%d %d", current_count, expected_hero_value)
@@ -2515,6 +2542,9 @@ async def update_level_behaviour(ctx, current_level, death):
     if dark_address is not None:
         current_bytes = dolphin_memory_engine.read_bytes(dark_address, dark_address_size)
         current_count = int.from_bytes(current_bytes, byteorder='big')
+
+        if current_count < expected_dark_value:
+            ctx.level_state["dark_progress"] = current_count
 
         if expected_dark_value is not None and current_count > expected_dark_value:
             if ctx.debug_logging:
@@ -2557,6 +2587,9 @@ async def update_level_behaviour(ctx, current_level, death):
         current_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.ADDRESS_ALIEN_COUNT, alien_address_size)
         current_count = int.from_bytes(current_bytes, byteorder='big')
 
+        if current_count < alien_count:
+            ctx.level_state["alien_progress"] = current_count
+
         if current_count > alien_count:
             if current_count > alienInfo.total_count + extra_increase:
                 if ctx.info_logging:
@@ -2569,6 +2602,9 @@ async def update_level_behaviour(ctx, current_level, death):
 
         current_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.ADDRESS_SOLDIER_COUNT, gun_address_size)
         current_count = int.from_bytes(current_bytes, byteorder='big')
+
+        if current_count < gun_count:
+            ctx.level_state["gun_progress"] = current_count
 
         if current_count > gun_count:
             #print("gun count increased --", current_count, gun_count)
@@ -2583,6 +2619,9 @@ async def update_level_behaviour(ctx, current_level, death):
 
         current_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.ADDRESS_EGG_COUNT, egg_address_size)
         current_count = int.from_bytes(current_bytes, byteorder='big')
+
+        if current_count < egg_count:
+            ctx.level_state["egg_progress"] = current_count
 
         if current_count > egg_count:
             #print("egg count increased --", current_count, egg_count)

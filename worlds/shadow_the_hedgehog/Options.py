@@ -178,7 +178,7 @@ class GaugeFiller(DefaultOnToggle):
 class EnemySanityPercentage(Range):
     """Determines the percentage of enemysanity checks in a stage to be included."""
     display_name = "Enemy Sanity Percentage"
-    range_start = 25
+    range_start = 0
     range_end = 100
     default = 50
 
@@ -257,6 +257,22 @@ class LogicLevel(Choice):
     option_hard = 2  # Requires skips to traverse regions.
     default = option_normal
 
+class BossLogicLevel(Choice):
+    """Determines the boss logic level for playthrough."""
+    display_name = "Boss Logic Level"
+    option_easy = 0  # Logic adds in easier elements for completion
+    option_normal = 1  # Standard logic
+    option_hard = 2  # Requires skips to traverse regions.
+    default = option_normal
+
+class CraftLogicLevel(Choice):
+    """Determines the craft logic level for playthrough."""
+    display_name = "Logic Level"
+    option_easy = 0  # Logic adds in easier elements for completion
+    option_normal = 1  # Standard logic
+    option_hard = 2  # Requires skips to traverse regions.
+    default = option_normal
+
 class AllowDangerousPercentage(Toggle):
     """Allows setting dangerous logic for percentages for objectives"""
     display_name = "Dangerous Percentage"
@@ -327,6 +343,39 @@ class SingleDiablon(Toggle):
     """
     display_name = "Single Diablon"
 
+class RifleComponents(Toggle):
+    """
+        Whether parts are required for the Shadow Rifle to be complete and available.
+    """
+    display_name = "Shadow Rfile Components"
+
+class ObjectiveFrequency(Range):
+    """
+        Frequency of checks for objective checks, i.e. if set to 4, each 4 progress is 1 check.
+    """
+    display_name = "Objective Frequency"
+    range_start = 1
+    range_end = 100
+    default = 100
+
+class EnemyObjectiveFrequency(Range):
+    """
+        Frequency of checks for enemy objective checks as percentage
+    """
+    display_name = "Enemy Objective Frequency"
+    range_start = 1
+    range_end = 100
+    default = 100
+
+class EnemyFrequency(Range):
+    """
+        Frequency of checks for enemy checks, i.e. if set to 4, each 4 progress is 1 check.
+    """
+    display_name = "Enemy Frequency"
+    range_start = 1
+    range_end = 100
+    default = 100
+
 @dataclass
 class ShadowTheHedgehogOptions(PerGameCommonOptions):
     #goal: Goal
@@ -368,6 +417,8 @@ class ShadowTheHedgehogOptions(PerGameCommonOptions):
     level_progression: LevelProgression
     percent_overrides: PercentOverrides
     logic_level: LogicLevel
+    boss_logic_level: BossLogicLevel
+    craft_logic_level: CraftLogicLevel
     allow_dangerous_settings: AllowDangerousPercentage
     story_shuffle: StoryShuffle
     include_last_way_shuffle: IncludeLastStoryShuffle
@@ -377,6 +428,10 @@ class ShadowTheHedgehogOptions(PerGameCommonOptions):
     single_egg_dealer: SingleEggDealer
     single_black_doom: SingleBlackDoom
     single_diablon: SingleDiablon
+    rifle_components: RifleComponents
+    objective_frequency: ObjectiveFrequency
+    enemy_objective_frequency: EnemyObjectiveFrequency
+    enemy_frequency: EnemyFrequency
 
     #boss_checks: BossChecks
 
