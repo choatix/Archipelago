@@ -1355,7 +1355,7 @@ def GetStagesWithNoRequirements(world):
                       IsRegionAutoPassable(combined_regions[m.stageId], m.distribution)
 
                    ))
-              and m.requirement_count is None and m.stageId not in world.options.excluded_stages ]
+              and m.requirement_count is None and Levels.LEVEL_ID_TO_LEVEL[m.stageId] not in world.options.excluded_stages ]
     return list(set(stages))
 
 

@@ -62,7 +62,7 @@ def ChaosShuffle(world):
 
     include_last_way = world.options.include_last_way_shuffle
 
-    stages_to_assign = [ l for l in Levels.ALL_STAGES if l not in world.options.excluded_stages and l
+    stages_to_assign = [ l for l in Levels.ALL_STAGES if Levels.LEVEL_ID_TO_LEVEL[l] not in world.options.excluded_stages and l
                          not in Levels.BOSS_STAGES and l not in Levels.LAST_STORY_STAGES ]
                          #and l != Levels.STAGE_WESTOPOLIS]
 
@@ -104,7 +104,8 @@ def ChaosShuffle(world):
 
     world.random.shuffle(final_bosses)
 
-    story_boss_stages = [ l for l in Levels.BOSS_STAGES if l not in world.options.excluded_stages and l not in Levels.LAST_STORY_STAGES
+    story_boss_stages = [ l for l in Levels.BOSS_STAGES if Levels.LEVEL_ID_TO_LEVEL[l] not in world.options.excluded_stages
+                          and l not in Levels.LAST_STORY_STAGES
                           and l not in final_bosses_full ]
 
     if include_last_way:
@@ -124,7 +125,8 @@ def ChaosShuffle(world):
     # Potentially duplicate some bosses for more clarity
 
     #steps_to_randomise = [ s for s in ModifiedStoryMode if s.start_stage_id is not None ]
-    steps_to_randomise = [s for s in ModifiedStoryMode if s.start_stage_id is not None ]
+    steps_to_randomise = [s for s in ModifiedStoryMode if s.start_stage_id is not None
+                          and Levels.LEVEL_ID_TO_LEVEL[s.start_stage_id] not in world.options.excluded_stages]
 
     if include_last_way:
         steps_to_randomise.append(PathInfo(Levels.STAGE_THE_LAST_WAY, Levels.MISSION_ALIGNMENT_NEUTRAL, None, []))
@@ -227,7 +229,7 @@ def ShuffleStoryMode(world):
     story_stages = []
     for step in ModifiedStoryMode:
         if step.end_stage_id is not None and step.end_stage_id not in story_stages and \
-                step.end_stage_id not in world.options.excluded_stages:
+                Levels.LEVEL_ID_TO_LEVEL[step.end_stage_id] not in world.options.excluded_stages:
             if step.end_stage_id == Levels.STAGE_WESTOPOLIS:
                 continue
             story_stages.append(step.end_stage_id)
@@ -249,7 +251,7 @@ def GenerateStoryMode(world):
     ModifiedStoryMode = DefaultStoryMode.copy()
     ModifiedStoryMode[0].end_stage_id = world.random.choice(
         [s for s in Levels.ALL_STAGES if s not in Levels.BOSS_STAGES and s not in Levels.LAST_STORY_STAGES
-         and s not in Levels.FINAL_STAGES and s not in world.options.excluded_stages])
+         and s not in Levels.FINAL_STAGES and Levels.LEVEL_ID_TO_LEVEL[s] not in world.options.excluded_stages])
     return ModifiedStoryMode
 
 def GetStoryMode(world):
