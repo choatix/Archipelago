@@ -703,7 +703,7 @@ class ShTHContext(CommonContext):
         self.include_last_way_shuffle = False
         self.dead = False
         self.initialised = False
-        self.secret_story_progression = True
+        self.secret_story_progression = False
 
     async def disconnect(self, allow_autoreconnect: bool = False):
         self.auth = None

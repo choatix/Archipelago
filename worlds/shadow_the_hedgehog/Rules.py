@@ -132,6 +132,10 @@ def handle_path_rules(options, player, additional_level_region, path_type):
 
 
 def lock_warp_items(multiworld, world, player):
+
+    if not world.options.secret_story_progression:
+        return
+
     (clear_locations, mission_locations, end_location,
      enemysanity_locations, checkpointsanity_locations, charactersanity_locations,
      token_locations, keysanity_locations, weaponsanity_locations, boss_locations,
