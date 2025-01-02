@@ -1181,6 +1181,10 @@ def create_locations(world, regions: Dict[str, Region]):
         world.token_locations.append(token)
 
     for warp in warp_locations:
+
+        if not world.options.secret_story_progression or world.options.level_progression == Options.LevelProgression.option_select:
+            continue
+
         if warp.stageId in Levels.LAST_STORY_STAGES and not world.options.include_last_way_shuffle:
             continue
 

@@ -51,13 +51,17 @@ def GetRuleByWeaponRequirement(player, req, stage, regions):
         else:
             regions = p_regions
 
-    matches = [ w for w in WEAPON_INFO if (req is None or req in w.attributes) and
+    matches = [ w for w in WEAPON_INFO if (
+            (req is None and len(w.attributes) > 0)
+            or req in w.attributes) and
                 len([ a for a in w.available_stages
                   if (type(a) is tuple and a[0] == stage and a[1] in regions)
                   or
-                  a == stage
+                      (type(a) is not tuple and a == stage)
                 ]) > 0
                 ]
+
+    #print(stage, regions, matches)
 
     if len(matches) == 0:
         print("Something wrong here with", req, stage, regions)
@@ -119,7 +123,7 @@ WEAPON_INFO = [
                 Levels.STAGE_LETHAL_HIGHWAY, (Levels.STAGE_CRYPTIC_CASTLE,1),
                 Levels.STAGE_PRISON_ISLAND, Levels.STAGE_CENTRAL_CITY,
                 Levels.STAGE_DEATH_RUINS, Levels.STAGE_SPACE_GADGET,
-                Levels.STAGE_BLACK_COMET, Levels.BOSS_DIABLON_BC,
+                Levels.STAGE_BLACK_COMET, Levels.BOSS_DIABLON_BC, Levels.BOSS_BLACK_BULL_LH,
                Levels.BOSS_DIABLON_FH, Levels.BOSS_BLACK_DOOM_FH],
                [WeaponAttributes.SHOT]),
     WeaponInfo(0xA, "Ring Shot",

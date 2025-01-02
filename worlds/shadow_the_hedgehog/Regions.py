@@ -196,9 +196,9 @@ def connect_by_story_mode(multiworld: MultiWorld, world, player: int, order: typ
             end_region = world.get_region(end_region_name)
 
             secret_rule = None
-            if world.options.secret_story_progression and hasattr(multiworld, "re_gen_passthrough"):
-                warp_item = Items.GetStageWarpItem(path.end_stage_id)
-                secret_rule = lambda state, wi=warp_item: state.has(wi, world.player)
+            #if world.options.secret_story_progression and hasattr(multiworld, "re_gen_passthrough"):
+            #    warp_item = Items.GetStageWarpItem(path.end_stage_id)
+            #    secret_rule = lambda state, wi=warp_item: state.has(wi, world.player)
 
             connect(world.player, "Base Story Entrance_" + str(order.index(path)) + str(path.start_stage_id) + "/" +
                     str(path.end_stage_id), start_region, end_region, rule=secret_rule)
@@ -283,6 +283,7 @@ def connect_by_story_mode(multiworld: MultiWorld, world, player: int, order: typ
 
         base_rule = lambda state,n=completion_location_name: state.can_reach_location(n, player)
 
+        boss_base_rule = base_rule
         if world.options.secret_story_progression and hasattr(multiworld, "re_gen_passthrough"):
             warp_item = Items.GetStageWarpItem(path.end_stage_id)
             secret_rule = lambda state, wi=warp_item: state.has(wi, world.player)
@@ -297,7 +298,7 @@ def connect_by_story_mode(multiworld: MultiWorld, world, player: int, order: typ
                 base_rule = lambda state, br=base_rule, sr=secret_rule: br(state) and sr(state)
 
             boss_entrance = connect(world.player, "Boss Entrance_"+str(order.index(path)) + str(path.start_stage_id) + "/" +
-                    str(path.end_stage_id), start_region, boss_region, rule=base_rule)
+                    str(path.end_stage_id), start_region, boss_region, rule=boss_base_rule)
             multiworld.register_indirect_condition(start_region, boss_entrance)
             base_region_name = stage_id_to_region(path.start_stage_id)
             #base_story_region_name = stage_id_to_story_region(path.start_stage_id)

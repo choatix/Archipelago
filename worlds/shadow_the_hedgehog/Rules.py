@@ -187,7 +187,7 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
 
             path_rule = handle_path_rules(world.options, player, additional_level_region,
                                           REGION_RESTRICTION_REFERENCE_TYPES.BaseLogic)
-            if path_rule:
+            if path_rule is not None:
                 rule = path_rule
 
             connect(world.player, base_region_name+">"+new_region_name,
@@ -237,8 +237,7 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
                 for region_id in clear.getDistribution().keys():
                     required_region = Regions.stage_id_to_region(clear.stageId, region_id)
                     new_rule = lambda state, r_region=required_region: state.can_reach_region(r_region, player)
-                    current_rule = level_rule
-                    level_rule = lambda state, l_rule=level_rule, n_rule=new_rule, c_rule=current_rule: n_rule(state) and c_rule(state) and l_rule(state)
+                    level_rule = lambda state, l_rule=level_rule, n_rule=new_rule: n_rule(state) and l_rule(state)
                     rule_change = True
 
                 if clear.requirement_count is not None and world.options.objective_sanity:
@@ -266,8 +265,20 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
                             if l > max_required:
                                 break
 
-                            if l+1 % frequency_required != 0 and max_required != l:
-                                continue
+                            if l % frequency_required != 0 and max_required != l:
+
+                                #try:
+                                #    location_id, objective_location_name = (
+                                #        GetLevelObjectNames(clear.stageId, clear.alignmentId, clear.mission_object_name,
+                                #                            l))
+                                #    location = multiworld.get_location(objective_location_name, player)
+                                #    raise Exception("Its borked if we get to here")
+                                #except Exception as e:
+                                #    print("as expected this does not exist:", objective_location_name)
+                                #    # this is fine
+#
+#                                    #print(region, count, clear.stageId, clear.alignmentId, l, frequency_required, max_required)
+                               continue
 
                             location_id, objective_location_name = (
                                 GetLevelObjectNames(clear.stageId, clear.alignmentId, clear.mission_object_name,

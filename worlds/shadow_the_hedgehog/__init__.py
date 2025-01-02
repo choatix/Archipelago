@@ -188,6 +188,9 @@ class ShtHWorld(World):
                 self.options.story_shuffle = passthrough["story_shuffle"]
                 self.options.story_boss_count = passthrough["story_boss_count"]
 
+                if "secret_story_progression" in passthrough:
+                    self.options.secret_story_progression = passthrough["secret_story_progression"]
+
                 self.shuffled_story_mode = Story.StringToStory(passthrough["shuffled_story_mode"])
 
 
@@ -382,7 +385,8 @@ class ShtHWorld(World):
             "exceeding_items_filler": self.options.exceeding_items_filler.value,
             "include_last_way_shuffle": self.options.include_last_way_shuffle.value,
             "story_shuffle": self.options.story_shuffle.value,
-            "story_boss_count": self.options.story_boss_count.value
+            "story_boss_count": self.options.story_boss_count.value,
+            "secret_story_progression": self.options.secret_story_progression.value
         }
 
         return slot_data
