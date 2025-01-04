@@ -8,7 +8,7 @@ from typing import List, Optional
 
 from BaseClasses import Item, ItemClassification
 from worlds.AutoWorld import World
-from . import Locations, Weapons, Vehicle, Utils as ShadowUtils, Options
+from . import Locations, Weapons, Vehicle, Utils as ShadowUtils, Options, Levels
 from .Levels import LEVEL_ID_TO_LEVEL, ALL_STAGES, MISSION_ALIGNMENT_DARK, \
     MISSION_ALIGNMENT_HERO, MISSION_ALIGNMENT_NEUTRAL, ITEM_TOKEN_TYPE_STANDARD, ITEM_TOKEN_TYPE_FINAL, \
     ITEM_TOKEN_TYPE_OBJECTIVE, ITEM_TOKEN_TYPE_ALIGNMENT, BOSS_STAGES, LAST_STORY_STAGES, ITEM_TOKEN_TYPE_BOSS, \
@@ -148,13 +148,16 @@ def GetLevelTokenItems():
     return level_token_items
 
 
-
 def PopulateLevelUnlockItems():
     level_unlock_items = []
     count = ITEM_ID_START_AT_LEVEL
     for stageId in ALL_STAGES:
-        if stageId in BOSS_STAGES or stageId in LAST_STORY_STAGES:
+        #if stageId in BOSS_STAGES or stageId in LAST_STORY_STAGES:
+        #    continue
+
+        if stageId == Levels.BOSS_DEVIL_DOOM:
             continue
+
         item = ItemInfo(count, GetStageUnlockItem(stageId), ItemClassification.progression, stageId=stageId,
                         alignmentId=None, type="level_unlock", value=None)
         count += 1
@@ -582,6 +585,8 @@ def PopulateItemPool(world : World, first_regions):
     # Don't use level unlocks for stages you start with!
     use_level_unlock_items = [ l for l in level_unlock_items if l.stageId not in first_regions and
                                l.stageId in world.available_levels
+                               #and (l.stageId not in Levels.FINAL_BOSSES
+                               and l.stageId not in Levels.LAST_STORY_STAGES
                                and world.options.level_progression != Options.LevelProgression.option_story ]
 
     # Convert to multiworld items

@@ -455,7 +455,8 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
 
     e.access_rule = lambda state, g_has=goal_has: len([ x for x in g_has if state.has(x[0], player, count=x[1]) ]) == len(g_has)
 
-    if world.options.include_last_way_shuffle and world.options.story_shuffle == Options.StoryShuffle.option_chaos:
+    if (world.options.level_progression != Options.LevelProgression.option_select and
+            world.options.include_last_way_shuffle and world.options.story_shuffle == Options.StoryShuffle.option_chaos):
 
         # handle requirement that DD must be found in the level shuffle!
         devil_doom_story_region = Regions.stage_id_to_story_region(Levels.BOSS_DEVIL_DOOM)

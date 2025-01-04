@@ -245,6 +245,10 @@ class LevelProgression(Choice):
     option_both = 2  # Stages can be unlocked through story mode progression or unlocked for Select Mode
     default = option_select
 
+class SelectBosses(DefaultOnToggle):
+    """Whether bosses can be unlocked via select mode."""
+    display_name = "Select Bosses"
+
 class PercentOverrides(OptionDict):
     """List of provided keys to dictate percentage based overrides."""
     display_name = "Percent Overrides"
@@ -376,6 +380,16 @@ class EnemyFrequency(Range):
     range_end = 100
     default = 100
 
+class MinimumRank(Choice):
+    """Minimum rank required to get the location clear check."""
+    display_name = "Minimum Rank"
+    option_a = "A"
+    option_b = "B"
+    option_c = "C"
+    option_d = "D"
+    option_e = "E"
+    default = option_e
+
 @dataclass
 class ShadowTheHedgehogOptions(PerGameCommonOptions):
     #goal: Goal
@@ -432,9 +446,8 @@ class ShadowTheHedgehogOptions(PerGameCommonOptions):
     objective_frequency: ObjectiveFrequency
     enemy_objective_frequency: EnemyObjectiveFrequency
     enemy_frequency: EnemyFrequency
-
-    #boss_checks: BossChecks
-
+    select_bosses: SelectBosses
+    minimum_rank: MinimumRank
 
 shadow_option_groups = [
     OptionGroup("Goal",

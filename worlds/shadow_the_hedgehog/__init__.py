@@ -149,7 +149,11 @@ class ShtHWorld(World):
                             #print("Had to adjust key for {key}".format(key=key))
     def generate_early(self):
         self.check_invalid_configurations()
-        self.shuffled_story_mode = Story.GetStoryMode(self)
+
+        if self.options.level_progression != Options.LevelProgression.option_select:
+            self.shuffled_story_mode = Story.GetStoryMode(self)
+        else:
+            self.shuffled_story_mode = Story.DefaultStoryMode
 
         if hasattr(self.multiworld, "re_gen_passthrough"):
             if "Shadow The Hedgehog" in self.multiworld.re_gen_passthrough:
@@ -187,6 +191,8 @@ class ShtHWorld(World):
                 self.options.include_last_way_shuffle = passthrough["include_last_way_shuffle"]
                 self.options.story_shuffle = passthrough["story_shuffle"]
                 self.options.story_boss_count = passthrough["story_boss_count"]
+                self.options.select_bosses = passthrough["select_bosses"]
+                self.options.minimum_rank = passthrough["minimum_rank"]
 
                 if "secret_story_progression" in passthrough:
                     self.options.secret_story_progression = passthrough["secret_story_progression"]
@@ -221,6 +227,7 @@ class ShtHWorld(World):
                 potential_downgrades, removals = GetPotentialDowngradeItems(self)
                 if len(potential_downgrades) < item_count - location_count - len(removals):
                     c = item_count - location_count - len(potential_downgrades)
+                    print("Issue with counts", item_count, location_count, len(potential_downgrades), c)
                     raise OptionError("Not enough locations to fill even with downgrades::"+str(c))
                 self.excess_item_count = item_count - location_count
 
@@ -386,7 +393,9 @@ class ShtHWorld(World):
             "include_last_way_shuffle": self.options.include_last_way_shuffle.value,
             "story_shuffle": self.options.story_shuffle.value,
             "story_boss_count": self.options.story_boss_count.value,
-            "secret_story_progression": self.options.secret_story_progression.value
+            "secret_story_progression": self.options.secret_story_progression.value,
+            "select_bosses": self.options.select_bosses.value,
+            "minimum_rank": self.options.minimum_rank.value
         }
 
         return slot_data

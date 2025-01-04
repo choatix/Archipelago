@@ -1,4 +1,5 @@
 import asyncio
+import struct
 from datetime import datetime, timedelta
 import time
 import traceback
@@ -84,6 +85,7 @@ class GAME_ADDRESSES:
 
     is_paused_address = 0x805EE1DC
     boss_save_info_base_address = 0x80577499
+    boss_final_additional_unlock_address = 0x80577720
     CURRENT_STAGE_BASE_KEYSANITY_ADDRESS = 0x8057fb80
     LIVES_ADDRESS = 0x80576704
 
@@ -446,14 +448,14 @@ class SAVE_STRUCTURE_DETAILS:
     Size = 4 + (24 * 3) + 20
 
 class SAVE_STRUCTURE_BOSS_DETAILS:
-    LevelClears = 4
-    AlignmentUnknown1 = 3
-    AlignmentMissionRank = 4
-    AlignmentTimeMinutes = 4
-    AlignmentTimeSeconds = 1
-    AlignmentTimeMilliseconds = 1
+    Unlocked = 1
+    BossUnknown1 = 3
+    BossRank = 4
+    BossTimeMinutes = 4
+    BossTimeSeconds = 1
+    BossTimeMilliseconds = 1
 
-    Extra = 0
+    Extra = 10
 
     Size = 96
 
@@ -490,10 +492,29 @@ KEY_IDENTIFIER_BY_STAGE = \
 
 def GetStageUnlockAddresses():
     unlock_addresses = {}
+    stage_index = 0
+    boss_index = 0
 
     for stage in Levels.ALL_STAGES:
-        unlock_addresses[stage] = (GAME_ADDRESSES.westopolis_save_info_base_address +
-                                                   (SAVE_STRUCTURE_DETAILS.Size * Levels.ALL_STAGES.index(stage)))
+        if stage not in Levels.BOSS_STAGES:
+            unlock_addresses[stage] = (GAME_ADDRESSES.westopolis_save_info_base_address +
+                                                       (SAVE_STRUCTURE_DETAILS.Size * stage_index))
+            stage_index += 1
+        else:
+            unlock_addresses[stage] = (GAME_ADDRESSES.boss_save_info_base_address +
+                                       (SAVE_STRUCTURE_BOSS_DETAILS.Size * boss_index))
+            boss_index += 1
+
+    return unlock_addresses
+
+def GetFinalBossAdditionalUnlock():
+    unlock_addresses = {}
+    boss_index = len([ s for s in Levels.BOSS_STAGES if s not in Levels.FINAL_BOSSES and s not in Levels.LAST_STORY_STAGES ])-1
+
+    for stage in Levels.FINAL_BOSSES:
+            unlock_addresses[stage] = (GAME_ADDRESSES.boss_final_additional_unlock_address +
+                                       (SAVE_STRUCTURE_BOSS_DETAILS.Size * boss_index))
+            boss_index += 1
 
     return unlock_addresses
 
@@ -508,8 +529,6 @@ def GetKeysanityAddresses():
 
 def GetStageClearAddresses():
 
-
-
     clear_addresses = {}
     stage_index = 0
     boss_index = 0
@@ -518,12 +537,28 @@ def GetStageClearAddresses():
         if stage not in Levels.BOSS_STAGES:
             stage_alignments = GetAlignmentsForStage(stage)
             for alignment in stage_alignments:
-                clear_addresses[(stage, alignment)] = (GAME_ADDRESSES.westopolis_save_info_base_address +
+
+                alignment_complete_address = (GAME_ADDRESSES.westopolis_save_info_base_address +
                                                        (SAVE_STRUCTURE_DETAILS.Size * stage_index) + (alignment * 24)) + 4
+
+                alignment_rank_address = (alignment_complete_address + SAVE_STRUCTURE_DETAILS.AlignmentClear + SAVE_STRUCTURE_DETAILS.AlignmentUnknown1)
+
+                alignment_time_address = (alignment_rank_address + SAVE_STRUCTURE_DETAILS.AlignmentMissionRank)
+
+                clear_addresses[(stage, alignment)] = (alignment_complete_address, alignment_rank_address, alignment_time_address)
+
             stage_index += 1
         else:
-            clear_addresses[(stage, None)] = (GAME_ADDRESSES.boss_save_info_base_address +
+            boss_complete_address = (GAME_ADDRESSES.boss_save_info_base_address +
                                               (SAVE_STRUCTURE_BOSS_DETAILS.Size * boss_index)) + 3
+
+            boss_rank_address = (boss_complete_address + SAVE_STRUCTURE_BOSS_DETAILS.Unlocked +
+                                 SAVE_STRUCTURE_BOSS_DETAILS.BossUnknown1)
+
+            boss_time_address = (boss_rank_address + SAVE_STRUCTURE_BOSS_DETAILS.BossRank)
+
+            clear_addresses[(stage, None)] = (boss_complete_address, boss_rank_address, boss_time_address)
+
             boss_index += 1
 
     return clear_addresses
@@ -704,6 +739,9 @@ class ShTHContext(CommonContext):
         self.dead = False
         self.initialised = False
         self.secret_story_progression = False
+        self.minimum_rank = Options.MinimumRank.option_e
+        self.select_bosses = False
+        self.select_initialised = False
 
     async def disconnect(self, allow_autoreconnect: bool = False):
         self.auth = None
@@ -895,6 +933,13 @@ class ShTHContext(CommonContext):
             if "secret_story_progression" in slot_data:
                 self.secret_story_progression = slot_data["secret_story_progression"]
 
+            if "select_bosses" in slot_data:
+                self.select_bosses = slot_data["select_bosses"]
+
+            if "minimum_rank" in slot_data:
+                self.minimum_rank = slot_data["minimum_rank"]
+
+
             self.restoreState()
             self.awaiting_server = False
 
@@ -1031,6 +1076,24 @@ class ShTHContext(CommonContext):
         return True
 
 
+def RankToOption(rank_number, rank_option):
+    required_rank = 4
+    if rank_option == Options.MinimumRank.option_a:
+        required_rank = 0
+    elif rank_option == Options.MinimumRank.option_b:
+        required_rank = 1
+    elif rank_option == Options.MinimumRank.option_c:
+        required_rank = 2
+    elif rank_option == Options.MinimumRank.option_d:
+        required_rank = 3
+    elif rank_option == Options.MinimumRank.option_e:
+        required_rank = 4
+
+    if rank_number > required_rank:
+        return True
+
+    return False
+
 async def check_save_loaded(ctx):
 
     # Check a save is loaded. Write to static memory address with seed info
@@ -1062,10 +1125,26 @@ async def check_save_loaded(ctx):
         messages = []
         for stage_clear_address in GetStageClearAddresses().items():
             stage, alignment = stage_clear_address[0]
-            clear_address = stage_clear_address[1]
+            clear_address_data = stage_clear_address[1]
+            clear_address = clear_address_data[0]
+            clear_address_rank = clear_address_data[1]
+            clear_address_time = clear_address_data[2]
 
             if not is_mission_completable(ctx, stage, alignment):
                 continue
+
+            time_bytes = dolphin_memory_engine.read_bytes(clear_address_time, 6)
+            time_data = struct.unpack('>IBB', time_bytes)
+
+            # Add handle that level must not be set to default time!
+            if time_data[0] == 99 and time_data[1] == 59 and time_data[2] == 99:
+                continue
+
+            if ctx.minimum_rank != Options.MinimumRank.option_e:
+                rank_bytes = dolphin_memory_engine.read_bytes(clear_address_rank, 1)
+                rank = int.from_bytes(rank_bytes, byteorder='big')
+                if RankToOption(rank, ctx.minimum_rank):
+                    continue
 
             if ctx.story_mode_available and is_level_accessible(ctx, stage, story=True):
                 if stage not in ctx.available_levels:
@@ -1073,6 +1152,8 @@ async def check_save_loaded(ctx):
 
             current_bytes = dolphin_memory_engine.read_bytes(clear_address, 1)
             current_status = int.from_bytes(current_bytes, byteorder='big')
+
+            # TODO: Handle auto boss clears and completion based on time
 
             if current_status == 1:
                 cleared_missions.append((stage,alignment))
@@ -1106,7 +1187,12 @@ async def check_save_loaded(ctx):
                         logger.info(f"Restore {c.name}")
                         set_complete = 1
                         set_complete_bytes = set_complete.to_bytes(1, byteorder='big')
+
+                        set_seconds = 58
+                        set_seconds_bytes = set_seconds.to_bytes(1, byteorder='big')
+
                         writeBytes(clear_address, set_complete_bytes)
+                        writeBytes(clear_address_time+4, set_seconds_bytes)
 
 
         # decide settings for goal
@@ -1276,7 +1362,7 @@ def is_level_accessible(ctx, stageId, story=False):
             first = checking.pop()
             checked.append(first)
 
-            leads = [ s for s in storyMode if s.end_stage_id == first ]
+            leads = [ s for s in storyMode if s.end_stage_id == first or s.boss == first]
             for lead in leads:
                 if lead.start_stage_id in checked:
                     continue
@@ -1302,20 +1388,20 @@ def is_level_accessible(ctx, stageId, story=False):
 # By handling in this function, all handling is auto-handled with stage access, etc as well!
 
 def is_mission_completable(ctx, stage, alignment):
-    relevant_clears = [ mc for mc in MissionClearLocations if mc.alignmentId == alignment and mc.stageId == stage]
+    relevant_level_clears = [ mc for mc in MissionClearLocations if mc.alignmentId == alignment and mc.stageId == stage]
+    relevant_boss_clears = [ b for b in Locations.BossClearLocations if b.stageId == stage ]
     info = Items.GetItemLookupDict()
-
-
-
-    if stage in Levels.BOSS_STAGES:
-        return True
 
     if not is_level_accessible(ctx, stage):
         return False
 
-    if len(relevant_clears) == 0:
+    if len(relevant_level_clears) == 0 and len(relevant_boss_clears) == 0:
         return False
-    clear = relevant_clears[0]
+
+    if len(relevant_boss_clears) > 0:
+        return True
+
+    clear = relevant_level_clears[0]
 
     if clear.requirement_count is None or not ctx.objective_sanity:
         return True
@@ -1597,8 +1683,9 @@ async def check_level_status(ctx):
         ctx.items_to_handle.remove(r)
 
     item_behaviour_changed = False
-    if ctx.available_levels != last_accessible_levels:
+    if ctx.available_levels != last_accessible_levels or not ctx.select_initialised:
         item_behaviour_changed = True
+        ctx.select_initialised = True
 
     # Set working address to set accessibility to levels
     # This data should save when the game is saved
@@ -1625,6 +1712,14 @@ async def check_level_status(ctx):
             if current_value != new_count:
                 new_bytes = new_count.to_bytes(4, byteorder='big')
                 writeBytes(address, new_bytes)
+
+                if level in Levels.FINAL_BOSSES:
+                    boss_level = level
+
+                    final_boss_unlock_address = GetFinalBossAdditionalUnlock()[boss_level]
+                    extra_count = 1
+                    new_extra_bytes = extra_count.to_bytes(4, byteorder='big')
+                    writeBytes(final_boss_unlock_address, new_extra_bytes)
 
         ctx.last_accessible_levels = ctx.available_levels
 
@@ -2975,6 +3070,7 @@ def resetGameState(ctx):
     if ctx.initialised:
         ctx.successful_shuffle = False
         ctx.initialised = False
+        ctx.select_initialised = False
 
 async def dolphin_sync_task(ctx: ShTHContext):
     logger.info("Starting Dolphin connector. Use /dolphin for status information.")
