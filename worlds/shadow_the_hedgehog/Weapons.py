@@ -24,6 +24,7 @@ class WeaponAttributes:
     NOT_AIMABLE = 16
     HEAL = 32
     SPECIAL = 64
+    SHADOW_RIFLE = 128
 
 
 def GetAnyShadowBoxRegions():
@@ -50,18 +51,22 @@ def GetRuleByWeaponRequirement(player, req, stage, regions):
         else:
             regions = p_regions
 
-    matches = [ w for w in WEAPON_INFO if req in w.attributes and
+    matches = [ w for w in WEAPON_INFO if (
+            (req is None and len(w.attributes) > 0)
+            or req in w.attributes) and
                 len([ a for a in w.available_stages
                   if (type(a) is tuple and a[0] == stage and a[1] in regions)
                   or
-                  a == stage
+                      (type(a) is not tuple and a == stage)
                 ]) > 0
                 ]
+
+    #print(stage, regions, matches)
 
     if len(matches) == 0:
         print("Something wrong here with", req, stage, regions)
 
-    return lambda state, match=matches: state.has_any([m.name for m in matches],player)
+    return lambda state, reqs=matches: state.has_any([m.name for m in reqs],player)
 
 
 
@@ -118,7 +123,7 @@ WEAPON_INFO = [
                 Levels.STAGE_LETHAL_HIGHWAY, (Levels.STAGE_CRYPTIC_CASTLE,1),
                 Levels.STAGE_PRISON_ISLAND, Levels.STAGE_CENTRAL_CITY,
                 Levels.STAGE_DEATH_RUINS, Levels.STAGE_SPACE_GADGET,
-                Levels.STAGE_BLACK_COMET, Levels.BOSS_DIABLON_BC,
+                Levels.STAGE_BLACK_COMET, Levels.BOSS_DIABLON_BC, Levels.BOSS_BLACK_BULL_LH,
                Levels.BOSS_DIABLON_FH, Levels.BOSS_BLACK_DOOM_FH],
                [WeaponAttributes.SHOT]),
     WeaponInfo(0xA, "Ring Shot",
@@ -195,7 +200,7 @@ WEAPON_INFO = [
 [WeaponAttributes.SHOT]),
     WeaponInfo(0x1B, "Refractor",
                [(Levels.STAGE_BLACK_COMET,1),Levels.STAGE_FINAL_HAUNT,
-                Levels.BOSS_BLACK_DOOM_FH],
+                Levels.BOSS_BLACK_DOOM_FH, Levels.STAGE_THE_LAST_WAY],
 [WeaponAttributes.SHOT, WeaponAttributes.LONG_RANGE]),
     WeaponInfo(0x1E, "Survival Knife",
                [Levels.STAGE_THE_DOOM],
@@ -306,7 +311,7 @@ WEAPON_INFO = [
 [WeaponAttributes.SPECIAL, WeaponAttributes.HEAL]),
     WeaponInfo(0x43, "Shadow Rifle",
                GetAnyShadowBoxRegions(),
-[WeaponAttributes.SPECIAL, WeaponAttributes.SHOT, WeaponAttributes.LONG_RANGE])
+[WeaponAttributes.SPECIAL, WeaponAttributes.SHOT, WeaponAttributes.LONG_RANGE, WeaponAttributes.SHADOW_RIFLE])
 ]
 
 def GetWeaponDict():

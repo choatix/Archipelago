@@ -84,8 +84,7 @@ class ObjectiveSanity(DefaultOnToggle):
 class ObjectivePercentage(Range):
     """Sets the objective percentage for each objective.
     When playing objectsanity, this removes the locations for anything after the percentage objective.
-    The remaining items however will still be in the pool.
-    When playing without objectsanity, the requirement to finish is reduced also."""
+    Only affects locations, use available/completion for goal-related effects."""
     display_name = "Objective Percentage"
     range_start = 1
     range_end = 100
@@ -99,7 +98,8 @@ class EnemyObjectivePercentage(Range):
     default = 90
 
 class ObjectiveCompletionPercentage(Range):
-    """When playing Objective Sanity, determine the percentage of items required to finish stages."""
+    """When playing Objective Sanity, determine the percentage of items required to finish stages.
+    When playing non-objective, this is the amount required to complete the stage."""
     display_name = "Objective Completion Percentage"
     range_start = 1
     range_end = 100
@@ -178,7 +178,7 @@ class GaugeFiller(DefaultOnToggle):
 class EnemySanityPercentage(Range):
     """Determines the percentage of enemysanity checks in a stage to be included."""
     display_name = "Enemy Sanity Percentage"
-    range_start = 25
+    range_start = 0
     range_end = 100
     default = 50
 
@@ -245,12 +245,32 @@ class LevelProgression(Choice):
     option_both = 2  # Stages can be unlocked through story mode progression or unlocked for Select Mode
     default = option_select
 
+class SelectBosses(DefaultOnToggle):
+    """Whether bosses can be unlocked via select mode."""
+    display_name = "Select Bosses"
+
 class PercentOverrides(OptionDict):
     """List of provided keys to dictate percentage based overrides."""
     display_name = "Percent Overrides"
 
 class LogicLevel(Choice):
     """Determines the logic level for playthrough."""
+    display_name = "Logic Level"
+    option_easy = 0  # Logic adds in easier elements for completion
+    option_normal = 1  # Standard logic
+    option_hard = 2  # Requires skips to traverse regions.
+    default = option_normal
+
+class BossLogicLevel(Choice):
+    """Determines the boss logic level for playthrough."""
+    display_name = "Boss Logic Level"
+    option_easy = 0  # Logic adds in easier elements for completion
+    option_normal = 1  # Standard logic
+    option_hard = 2  # Requires skips to traverse regions.
+    default = option_normal
+
+class CraftLogicLevel(Choice):
+    """Determines the craft logic level for playthrough."""
     display_name = "Logic Level"
     option_easy = 0  # Logic adds in easier elements for completion
     option_normal = 1  # Standard logic
@@ -288,7 +308,7 @@ class IncludeLastStoryShuffle(Toggle):
     display_name = "Include Last Story"
 
 
-class SecretStoryProgression(DefaultOnToggle):
+class SecretStoryProgression(Toggle):
     """
         Changes behaviour for displaying accessible story stages.
     """
@@ -326,6 +346,49 @@ class SingleDiablon(Toggle):
         When shuffling story mode, only include a single Sonic & Diablon of the available 3.
     """
     display_name = "Single Diablon"
+
+class RifleComponents(Toggle):
+    """
+        Whether parts are required for the Shadow Rifle to be complete and available.
+    """
+    display_name = "Shadow Rfile Components"
+
+class ObjectiveFrequency(Range):
+    """
+        Frequency of checks for objective checks, i.e. if set to 4, each 4 progress is 1 check.
+    """
+    display_name = "Objective Frequency"
+    range_start = 1
+    range_end = 100
+    default = 100
+
+class EnemyObjectiveFrequency(Range):
+    """
+        Frequency of checks for enemy objective checks as percentage
+    """
+    display_name = "Enemy Objective Frequency"
+    range_start = 1
+    range_end = 100
+    default = 100
+
+class EnemyFrequency(Range):
+    """
+        Frequency of checks for enemy checks, i.e. if set to 4, each 4 progress is 1 check.
+    """
+    display_name = "Enemy Frequency"
+    range_start = 1
+    range_end = 100
+    default = 100
+
+class MinimumRank(Choice):
+    """Minimum rank required to get the location clear check."""
+    display_name = "Minimum Rank"
+    option_a = "A"
+    option_b = "B"
+    option_c = "C"
+    option_d = "D"
+    option_e = "E"
+    default = option_e
 
 @dataclass
 class ShadowTheHedgehogOptions(PerGameCommonOptions):
@@ -368,6 +431,8 @@ class ShadowTheHedgehogOptions(PerGameCommonOptions):
     level_progression: LevelProgression
     percent_overrides: PercentOverrides
     logic_level: LogicLevel
+    boss_logic_level: BossLogicLevel
+    craft_logic_level: CraftLogicLevel
     allow_dangerous_settings: AllowDangerousPercentage
     story_shuffle: StoryShuffle
     include_last_way_shuffle: IncludeLastStoryShuffle
@@ -377,9 +442,12 @@ class ShadowTheHedgehogOptions(PerGameCommonOptions):
     single_egg_dealer: SingleEggDealer
     single_black_doom: SingleBlackDoom
     single_diablon: SingleDiablon
-
-    #boss_checks: BossChecks
-
+    rifle_components: RifleComponents
+    objective_frequency: ObjectiveFrequency
+    enemy_objective_frequency: EnemyObjectiveFrequency
+    enemy_frequency: EnemyFrequency
+    select_bosses: SelectBosses
+    minimum_rank: MinimumRank
 
 shadow_option_groups = [
     OptionGroup("Goal",

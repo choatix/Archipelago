@@ -50,6 +50,7 @@ STAGE_THE_LAST_WAY = 700
 BOSS_DEVIL_DOOM = 710
 
 LOCATION_ID_PLUS = 100066
+LOCATION_ID_SHADOW_RIFLE_COMPLETE = 100067
 
 LEVEL_ID_TO_LEVEL = {
     STAGE_WESTOPOLIS: "Westopolis",
@@ -171,11 +172,19 @@ class REGION_RESTRICTION_TYPES:
     BlackArmsTurret = 14
     GunTurret = 15
     ShootOrTurret = 16
+    AnyStageWeapon = 17
+    ShadowRifle = 18
+
+
+class REGION_RESTRICTION_REFERENCE_TYPES:
+    BaseLogic = 1
+    BossLogic = 2
+    CraftLogic = 3
 
 def IsWeaponsanityRestriction(restriction_type):
     weapons = [REGION_RESTRICTION_TYPES.Torch, REGION_RESTRICTION_TYPES.LongRangeGun,
                REGION_RESTRICTION_TYPES.Vacuum, REGION_RESTRICTION_TYPES.Gun,
-               REGION_RESTRICTION_TYPES.Heal]
+               REGION_RESTRICTION_TYPES.Heal, REGION_RESTRICTION_TYPES.AnyStageWeapon]
     return restriction_type in weapons
 
 def IsVeichleSanityRestriction(restriction_type):

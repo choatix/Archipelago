@@ -36,7 +36,7 @@ class LocationInfo:
     alignmentId: Optional[int]
     count: Optional[int]
     total: Optional[int]
-    other: str
+    other: Optional[str]
 
 
 @dataclass
@@ -47,7 +47,9 @@ class MissionClearLocation:
     mission_object_name: Optional[str]
     distribution = None
     requirements = None
+    craft_requirements = None
     logicType: int
+    craftLogicType: Optional[int]
 
     def __init__(self, stageId, alignmentId, requirement_count,
                  mission_object_name):
@@ -56,6 +58,8 @@ class MissionClearLocation:
         self.requirement_count = requirement_count
         self.mission_object_name = mission_object_name
         self.logicType = Options.LogicLevel.option_normal
+        self.craft_requirements = None
+        self.craftLogicType = None
 
     def setDistribution(self, dist):
         self.distribution = dist
@@ -71,6 +75,13 @@ class MissionClearLocation:
         if type(reqs) is not list:
             reqs = [reqs]
         self.requirements = reqs
+        return self
+
+    def setCraftRequirement(self, reqs, level):
+        if type(reqs) is not list:
+            reqs = [reqs]
+        self.craft_requirements = reqs
+        self.craftLogicType = level
         return self
 
     def setLogicLevel(self, level):
@@ -196,7 +207,8 @@ MissionClearLocations = [
 
     MissionClearLocation(STAGE_LETHAL_HIGHWAY, MISSION_ALIGNMENT_DARK, None, None),
     MissionClearLocation(STAGE_LETHAL_HIGHWAY, MISSION_ALIGNMENT_HERO, 1, "Tank")
-        .setRequirement(REGION_RESTRICTION_TYPES.Gun),
+        .setRequirement(REGION_RESTRICTION_TYPES.Gun)
+        .setCraftRequirement(REGION_RESTRICTION_TYPES.ShadowRifle, Options.LogicLevel.option_easy),
 
     MissionClearLocation(STAGE_CRYPTIC_CASTLE, MISSION_ALIGNMENT_DARK, 5, "Lantern")
         .setDistribution(
@@ -330,14 +342,16 @@ MissionClearLocations = [
     ),
 
     MissionClearLocation(STAGE_AIR_FLEET, MISSION_ALIGNMENT_DARK, 1, "President Aircraft")
-    .setRequirement(REGION_RESTRICTION_TYPES.Gun),
+    .setRequirement(REGION_RESTRICTION_TYPES.Gun)
+    .setCraftRequirement(REGION_RESTRICTION_TYPES.ShadowRifle, Options.LogicLevel.option_easy),
     MissionClearLocation(STAGE_AIR_FLEET, MISSION_ALIGNMENT_NEUTRAL, None, None),
     MissionClearLocation(STAGE_AIR_FLEET, MISSION_ALIGNMENT_HERO, 35, "Alien"),
 
     MissionClearLocation(STAGE_IRON_JUNGLE, MISSION_ALIGNMENT_DARK, 28, "Soldier"),
     MissionClearLocation(STAGE_IRON_JUNGLE, MISSION_ALIGNMENT_NEUTRAL, None, None),
     MissionClearLocation(STAGE_IRON_JUNGLE, MISSION_ALIGNMENT_HERO, 1, "Egg Balloon")
-        .setRequirement(REGION_RESTRICTION_TYPES.Gun),
+        .setRequirement(REGION_RESTRICTION_TYPES.Gun)
+        .setCraftRequirement(REGION_RESTRICTION_TYPES.ShadowRifle, Options.LogicLevel.option_easy),
 
     MissionClearLocation(STAGE_SPACE_GADGET, MISSION_ALIGNMENT_DARK, 6, "Defense Unit")
     .setDistribution(
@@ -434,23 +448,53 @@ MissionClearLocations = [
 
 BossClearLocations = \
 [
-    BossClearLocation(BOSS_BLACK_BULL_LH),
-    BossClearLocation(BOSS_EGG_BREAKER_CC),
-    BossClearLocation(BOSS_HEAVY_DOG),
-    BossClearLocation(BOSS_BLACK_BULL_DR),
-    BossClearLocation(BOSS_EGG_BREAKER_MM),
-    BossClearLocation(BOSS_BLUE_FALCON),
+    BossClearLocation(BOSS_BLACK_BULL_LH)
+        .setRequirement(REGION_RESTRICTION_TYPES.AnyStageWeapon)
+        .setLogicType(Options.BossLogicLevel.option_easy),
+    BossClearLocation(BOSS_EGG_BREAKER_CC)
+        .setRequirement(REGION_RESTRICTION_TYPES.AnyStageWeapon)
+        .setLogicType(Options.BossLogicLevel.option_easy),
+    BossClearLocation(BOSS_HEAVY_DOG)
+        .setRequirement(REGION_RESTRICTION_TYPES.AnyStageWeapon)
+        .setLogicType(Options.BossLogicLevel.option_easy),
+    BossClearLocation(BOSS_BLACK_BULL_DR)
+        .setRequirement(REGION_RESTRICTION_TYPES.AnyStageWeapon)
+        .setLogicType(Options.BossLogicLevel.option_easy),
+    BossClearLocation(BOSS_EGG_BREAKER_MM)
+        .setRequirement(REGION_RESTRICTION_TYPES.AnyStageWeapon)
+        .setLogicType(Options.BossLogicLevel.option_easy),
+    BossClearLocation(BOSS_BLUE_FALCON)
+        .setRequirement(REGION_RESTRICTION_TYPES.AnyStageWeapon)
+        .setLogicType(Options.BossLogicLevel.option_easy),
     BossClearLocation(BOSS_EGG_BREAKER_IJ)
         .setRequirement(REGION_RESTRICTION_TYPES.GunTurret),
-    BossClearLocation(BOSS_BLACK_DOOM_GF),
-    BossClearLocation(BOSS_DIABLON_GF),
-    BossClearLocation(BOSS_EGG_DEALER_BC),
-    BossClearLocation(BOSS_DIABLON_BC),
-    BossClearLocation(BOSS_EGG_DEALER_LS),
-    BossClearLocation(BOSS_BLACK_DOOM_CF),
-    BossClearLocation(BOSS_EGG_DEALER_CF),
-    BossClearLocation(BOSS_DIABLON_FH),
-    BossClearLocation(BOSS_BLACK_DOOM_FH),
+    BossClearLocation(BOSS_BLACK_DOOM_GF)
+        .setRequirement(REGION_RESTRICTION_TYPES.AnyStageWeapon)
+        .setLogicType(Options.BossLogicLevel.option_easy),
+    BossClearLocation(BOSS_DIABLON_GF)
+        .setRequirement(REGION_RESTRICTION_TYPES.AnyStageWeapon)
+        .setLogicType(Options.BossLogicLevel.option_easy),
+    BossClearLocation(BOSS_EGG_DEALER_BC)
+        .setRequirement(REGION_RESTRICTION_TYPES.AnyStageWeapon)
+        .setLogicType(Options.BossLogicLevel.option_easy),
+    BossClearLocation(BOSS_DIABLON_BC)
+        .setRequirement(REGION_RESTRICTION_TYPES.AnyStageWeapon)
+        .setLogicType(Options.BossLogicLevel.option_easy),
+    BossClearLocation(BOSS_EGG_DEALER_LS)
+        .setRequirement(REGION_RESTRICTION_TYPES.AnyStageWeapon)
+        .setLogicType(Options.BossLogicLevel.option_easy),
+    BossClearLocation(BOSS_BLACK_DOOM_CF)
+        .setRequirement(REGION_RESTRICTION_TYPES.AnyStageWeapon)
+        .setLogicType(Options.BossLogicLevel.option_easy),
+    BossClearLocation(BOSS_EGG_DEALER_CF)
+        .setRequirement(REGION_RESTRICTION_TYPES.AnyStageWeapon)
+        .setLogicType(Options.BossLogicLevel.option_easy),
+    BossClearLocation(BOSS_DIABLON_FH)
+        .setRequirement(REGION_RESTRICTION_TYPES.AnyStageWeapon)
+        .setLogicType(Options.BossLogicLevel.option_easy),
+    BossClearLocation(BOSS_BLACK_DOOM_FH)
+        .setRequirement(REGION_RESTRICTION_TYPES.AnyStageWeapon)
+        .setLogicType(Options.BossLogicLevel.option_easy),
     BossClearLocation(BOSS_DEVIL_DOOM)
 ]
 
@@ -889,8 +933,12 @@ def GetAllLocationInfo():
             enemysanity_locations.append(info)
 
 
-    progression_locations = [LocationInfo(LOCATION_TYPE_OTHER, LOCATION_ID_PLUS+1000, Levels.DevilDoom_Name, stageId=None, alignmentId=None,
-                                 total=None, count=None, other=None)]
+    progression_locations = [LocationInfo(LOCATION_TYPE_OTHER, LOCATION_ID_PLUS+1000, Levels.DevilDoom_Name,
+                                          stageId=None, alignmentId=None,total=None, count=None, other=None)]
+
+    progression_locations.append(
+        LocationInfo(LOCATION_TYPE_OTHER, LOCATION_ID_SHADOW_RIFLE_COMPLETE, "Shadow Rifle Complete", stageId=None, \
+                     alignmentId=None, total=None, count=None, other=None))
 
     for location in CheckpointLocations:
         i = 0
@@ -1032,10 +1080,17 @@ def create_locations(world, regions: Dict[str, Region]):
                 location.total, location.stageId, location.alignmentId,
                 override_settings)
 
+            frequency_required = ShadowUtils.getMaxRequired(
+                ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_OBJECTIVE_FREQUENCY,
+                                                          location.name, world.options),
+                100, location.stageId, location.alignmentId,
+                override_settings)
+
             if location.count <= max_required:
-                within_region = regions[Regions.stage_id_to_region(location.stageId)]
-                completion_location = ShadowTheHedgehogLocation(world.player, location.name, location.locationId, within_region)
-                within_region.locations.append(completion_location)
+                if location.count % frequency_required == 0 or max_required == location.count:
+                    within_region = regions[Regions.stage_id_to_region(location.stageId)]
+                    completion_location = ShadowTheHedgehogLocation(world.player, location.name, location.locationId, within_region)
+                    within_region.locations.append(completion_location)
 
     if world.options.enemy_sanity:
         for enemy in enemysanity_locations:
@@ -1047,10 +1102,18 @@ def create_locations(world, regions: Dict[str, Region]):
                                                           enemy.name, world.options),
                 enemy.total, enemy.stageId, enemy.alignmentId,
                 override_settings)
+
+            frequency_required = ShadowUtils.getMaxRequired(
+                ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_ENEMY_FREQUENCY,
+                                                          enemy.name, world.options),
+                100, enemy.stageId, enemy.alignmentId,
+                override_settings)
+
             if enemy.count <= max_required:
-                within_region = regions[Regions.get_max_stage_region_id(enemy.stageId)]
-                completion_location = ShadowTheHedgehogLocation(world.player, enemy.name, enemy.locationId, within_region)
-                within_region.locations.append(completion_location)
+                if enemy.count % frequency_required == 0 or max_required == enemy.count:
+                    within_region = regions[Regions.get_max_stage_region_id(enemy.stageId)]
+                    completion_location = ShadowTheHedgehogLocation(world.player, enemy.name, enemy.locationId, within_region)
+                    within_region.locations.append(completion_location)
 
     if world.options.checkpoint_sanity:
         for checkpoint in checkpointsanity_locations:
@@ -1118,6 +1181,10 @@ def create_locations(world, regions: Dict[str, Region]):
         world.token_locations.append(token)
 
     for warp in warp_locations:
+
+        if not world.options.secret_story_progression or world.options.level_progression == Options.LevelProgression.option_select:
+            continue
+
         if warp.stageId in Levels.LAST_STORY_STAGES and not world.options.include_last_way_shuffle:
             continue
 
@@ -1132,6 +1199,11 @@ def create_locations(world, regions: Dict[str, Region]):
                                                    within_region)
         within_region.locations.append(warp_location)
 
+    if world.options.rifle_components:
+        menu_region = regions["Menu"]
+        rifle_location = ShadowTheHedgehogLocation(world.player, "Complete Shadow Rifle", LOCATION_ID_SHADOW_RIFLE_COMPLETE, menu_region)
+        menu_region.locations.append(rifle_location)
+
 
     end_region = regions["FinalStory"]
     devil_doom_location = ShadowTheHedgehogLocation(world.player, end_location[0].name, end_location[0].locationId, end_region)
@@ -1139,7 +1211,7 @@ def create_locations(world, regions: Dict[str, Region]):
 
 def count_locations(world):
     count = 0
-    (mission_clear_locations, mission_locations, end_location,
+    (mission_clear_locations, mission_locations, progression_locations,
      enemysanity_locations, checkpointsanity_locations,
      charactersanity_locations, token_locations, keysanity_locations,
      weaponsanity_locations, boss_locations, warp_locations) = GetAllLocationInfo()
@@ -1178,19 +1250,34 @@ def count_locations(world):
                 location.total, location.stageId, location.alignmentId,
                 override_settings)
 
+            frequency_required = ShadowUtils.getMaxRequired(
+                ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_OBJECTIVE_FREQUENCY,
+                                                          location.name, world.options),
+                100, location.stageId, location.alignmentId,
+                override_settings)
+
             if location.count <= max_required:
-                count += 1
+                if location.count % frequency_required == 0 or max_required == location.count:
+                    count += 1
 
     if world.options.enemy_sanity:
         for enemy in enemysanity_locations:
+
+            frequency_required = ShadowUtils.getMaxRequired(
+                ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_ENEMY_FREQUENCY,
+                                                          enemy.name, world.options),
+                100, enemy.stageId, enemy.alignmentId,
+                override_settings)
 
             max_required = ShadowUtils.getMaxRequired(
                 ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_ENEMY,
                                                           enemy.name, world.options),
                 enemy.total, enemy.stageId, enemy.alignmentId,
                 override_settings)
+
             if enemy.count <= max_required:
-                count += 1
+                if enemy.count % frequency_required == 0 or max_required == enemy.count:
+                    count += 1
 
     if world.options.checkpoint_sanity:
         count += len(checkpointsanity_locations)
@@ -1208,7 +1295,8 @@ def count_locations(world):
     if world.options.weapon_sanity_hold > 0:
         count += len(weaponsanity_locations)
 
-    count += len(end_location)
+    # Progression locations are hardcoded and not pool-related
+    #count += len(end_location)
 
     return count
 
@@ -1271,7 +1359,7 @@ def GetStagesWithNoRequirements(world):
                       IsRegionAutoPassable(combined_regions[m.stageId], m.distribution)
 
                    ))
-              and m.requirement_count is None and m.stageId not in world.options.excluded_stages ]
+              and m.requirement_count is None and Levels.LEVEL_ID_TO_LEVEL[m.stageId] not in world.options.excluded_stages ]
     return list(set(stages))
 
 

@@ -7,7 +7,8 @@ from worlds.generic.Rules import add_rule
 from . import Items, Levels, LEVEL_ID_TO_LEVEL, CharacterToLevel, ITEM_TOKEN_TYPE_FINAL, \
     MISSION_ALIGNMENT_DARK, MISSION_ALIGNMENT_HERO, ITEM_TOKEN_TYPE_OBJECTIVE, \
     ITEM_TOKEN_TYPE_STANDARD, ITEM_TOKEN_TYPE_ALIGNMENT, Utils, REGION_RESTRICTION_TYPES, Weapons, Regions, LevelRegion, \
-    GetLevelObjectNames, Vehicle, Story, Options, Locations, ITEM_TOKEN_TYPE_BOSS, ITEM_TOKEN_TYPE_FINAL_BOSS
+    GetLevelObjectNames, Vehicle, Story, Options, Locations, ITEM_TOKEN_TYPE_BOSS, ITEM_TOKEN_TYPE_FINAL_BOSS, \
+    REGION_RESTRICTION_REFERENCE_TYPES
 from .Items import ShadowTheHedgehogItem, GetLevelTokenItems
 from .Locations import MissionClearLocations, LocationInfo, BossClearLocations
 from .Options import LevelProgression
@@ -41,12 +42,19 @@ def GetRelevantTokenItem(token: LocationInfo):
 
     return level_token_items[0]
 
-def handle_path_rules(options, player, additional_level_region):
+def handle_path_rules(options, player, additional_level_region, path_type):
     rule = lambda state: True
+
+    logic_level = None
+    if path_type == REGION_RESTRICTION_REFERENCE_TYPES.BaseLogic:
+        logic_level = options.logic_level
+    elif path_type == REGION_RESTRICTION_REFERENCE_TYPES.BossLogic:
+        logic_level = options.boss_logic_level
+    elif path_type == REGION_RESTRICTION_REFERENCE_TYPES.CraftLogic:
+        logic_level = options.craft_logic_level
 
     region_restriction = additional_level_region.restrictionType
 
-    logic_level = options.logic_level
     if additional_level_region.logicType == Options.LogicLevel.option_easy and \
             logic_level != Options.LogicLevel.option_easy:
         return rule
@@ -92,6 +100,9 @@ def handle_path_rules(options, player, additional_level_region):
             rule = Weapons.GetRuleByWeaponRequirement(player, Weapons.WeaponAttributes.HEAL,
                                                       additional_level_region.stageId, additional_level_region.fromRegions)
 
+        elif region_restriction == REGION_RESTRICTION_TYPES.AnyStageWeapon:
+            rule = Weapons.GetRuleByWeaponRequirement(player, None, additional_level_region.stageId, additional_level_region.fromRegions)
+
         else:
             print("Unhandled restriction",region_restriction, additional_level_region )
 
@@ -113,11 +124,18 @@ def handle_path_rules(options, player, additional_level_region):
         elif region_restriction == REGION_RESTRICTION_TYPES.GunTurret:
             rule = Vehicle.GetRuleByVehicleRequirement(player, "Gun Turret")
 
-
+    elif region_restriction == REGION_RESTRICTION_TYPES.ShadowRifle:
+        rule = Weapons.GetRuleByWeaponRequirement(player, Weapons.WeaponAttributes.SHADOW_RIFLE,
+                                                         additional_level_region.stageId,
+                                                         additional_level_region.fromRegions)
     return rule
 
 
 def lock_warp_items(multiworld, world, player):
+
+    if not world.options.secret_story_progression:
+        return
+
     (clear_locations, mission_locations, end_location,
      enemysanity_locations, checkpointsanity_locations, charactersanity_locations,
      token_locations, keysanity_locations, weaponsanity_locations, boss_locations,
@@ -171,8 +189,9 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
                         last_region, new_region, rule)
                 continue
 
-            path_rule = handle_path_rules(world.options, player, additional_level_region)
-            if path_rule:
+            path_rule = handle_path_rules(world.options, player, additional_level_region,
+                                          REGION_RESTRICTION_REFERENCE_TYPES.BaseLogic)
+            if path_rule is not None:
                 rule = path_rule
 
             connect(world.player, base_region_name+">"+new_region_name,
@@ -195,7 +214,24 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
                 for req in clear.requirements:
                     lr = LevelRegion(clear.stageId, None, req)
                     lr.setLogicType(clear.logicType)
-                    req_rule = handle_path_rules(world.options, player, lr)
+
+                    logic_type = REGION_RESTRICTION_REFERENCE_TYPES.BaseLogic
+
+                    req_rule = handle_path_rules(world.options, player, lr,
+                                                 logic_type)
+                    if req_rule is not None:
+                        level_rule = lambda state, r_rule=req_rule, l_rule=level_rule: (
+                                r_rule(state) and l_rule(state))
+                        rule_change = True
+            if clear.craft_requirements is not None:
+                for req in clear.craft_requirements:
+                    lr = LevelRegion(clear.stageId, None, req)
+                    lr.setLogicType(clear.logicType)
+
+                    logic_type = REGION_RESTRICTION_REFERENCE_TYPES.CraftLogic
+
+                    req_rule = handle_path_rules(world.options, player, lr,
+                                                 logic_type)
                     if req_rule is not None:
                         level_rule = lambda state, r_rule=req_rule, l_rule=level_rule: (
                                 r_rule(state) and l_rule(state))
@@ -205,8 +241,7 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
                 for region_id in clear.getDistribution().keys():
                     required_region = Regions.stage_id_to_region(clear.stageId, region_id)
                     new_rule = lambda state, r_region=required_region: state.can_reach_region(r_region, player)
-                    current_rule = level_rule
-                    level_rule = lambda state, l_rule=level_rule, n_rule=new_rule, c_rule=current_rule: n_rule(state) and c_rule(state) and l_rule(state)
+                    level_rule = lambda state, l_rule=level_rule, n_rule=new_rule: n_rule(state) and l_rule(state)
                     rule_change = True
 
                 if clear.requirement_count is not None and world.options.objective_sanity:
@@ -215,6 +250,12 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
                         ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_OBJECTIVE,
                                                                   clear.mission_object_name, world.options),
                         clear.requirement_count, clear.stageId, clear.alignmentId,
+                        override_settings)
+
+                    frequency_required = ShadowUtils.getMaxRequired(
+                        ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_OBJECTIVE_FREQUENCY,
+                                                                  clear.mission_object_name, world.options),
+                        100, clear.stageId, clear.alignmentId,
                         override_settings)
 
                     total = 1
@@ -227,6 +268,21 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
                         for l in range(total, total+count+1):
                             if l > max_required:
                                 break
+
+                            if l % frequency_required != 0 and max_required != l:
+
+                                #try:
+                                #    location_id, objective_location_name = (
+                                #        GetLevelObjectNames(clear.stageId, clear.alignmentId, clear.mission_object_name,
+                                #                            l))
+                                #    location = multiworld.get_location(objective_location_name, player)
+                                #    raise Exception("Its borked if we get to here")
+                                #except Exception as e:
+                                #    print("as expected this does not exist:", objective_location_name)
+                                #    # this is fine
+#
+#                                    #print(region, count, clear.stageId, clear.alignmentId, l, frequency_required, max_required)
+                               continue
 
                             location_id, objective_location_name = (
                                 GetLevelObjectNames(clear.stageId, clear.alignmentId, clear.mission_object_name,
@@ -297,19 +353,19 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
         boss_id, boss_name = Locations.GetBossLocationName(boss.name, boss.stageId)
         location = multiworld.get_location(boss_name, player)
 
+        boss_rule = None
         if boss.requirements is not None:
             if boss.stageId not in world.available_levels:
                 continue
             lr = LevelRegion(boss.stageId, None, boss.requirements)
             lr.setLogicType(boss.logicType)
-            req_rule = handle_path_rules(world.options, player, lr)
+            req_rule = handle_path_rules(world.options, player, lr, REGION_RESTRICTION_REFERENCE_TYPES.BossLogic)
             if req_rule is not None:
                 boss_rule = lambda state, r_rule=req_rule: r_rule(state)
                 boss_id, boss_name = Locations.GetBossLocationName(boss.name, boss.stageId)
                 location = multiworld.get_location(boss_name, player)
                 add_rule(location, boss_rule)
 
-        # TODO: Lock tokens
 
         associated_tokens = [t for t in world.token_locations if
                              t.stageId == boss.stageId and
@@ -319,6 +375,8 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
             if allocated_item.name not in token_assignments:
                 token_assignments[allocated_item.name] = []
             token_location = multiworld.get_location(token.name, player)
+            if boss_rule is not None:
+                add_rule(token_location, boss_rule)
             token_assignments[allocated_item.name].append(location)
             mw_token_item = ShadowTheHedgehogItem(allocated_item, world.player)
             token_location.place_locked_item(
@@ -397,7 +455,8 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
 
     e.access_rule = lambda state, g_has=goal_has: len([ x for x in g_has if state.has(x[0], player, count=x[1]) ]) == len(g_has)
 
-    if world.options.include_last_way_shuffle and world.options.story_shuffle == Options.StoryShuffle.option_chaos:
+    if (world.options.level_progression != Options.LevelProgression.option_select and
+            world.options.include_last_way_shuffle and world.options.story_shuffle == Options.StoryShuffle.option_chaos):
 
         # handle requirement that DD must be found in the level shuffle!
         devil_doom_story_region = Regions.stage_id_to_story_region(Levels.BOSS_DEVIL_DOOM)
@@ -415,6 +474,21 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
     mw_final_item = ShadowTheHedgehogItem(final_item, world.player)
     multiworld.get_location(Levels.DevilDoom_Name, world.player).place_locked_item(
         mw_final_item)
+
+    if world.options.rifle_components:
+        location = multiworld.get_location("Complete Shadow Rifle", player)
+        shadow_rifle = Items.GetShadowRifle()
+        mw_shadow_rifle = ShadowTheHedgehogItem(shadow_rifle, world.player)
+        location.place_locked_item(mw_shadow_rifle)
+
+        rifle_components = Items.GetRifleComponents()
+        rifle_rule = lambda state: True
+
+        for component in rifle_components:
+            new_rifle_part = lambda state, cn=component.name: state.has(cn, player)
+            rifle_rule = lambda state, rr=rifle_rule, nrp=new_rifle_part: rr(state) and nrp(state)
+
+        add_rule(location, rifle_rule)
 
     multiworld.completion_condition[player] = lambda state: state.has(Items.Progression.GoodbyeForever, player)
 
