@@ -51,6 +51,18 @@ class Upgrade(Enum):
     Lure4 = auto()
 
 
+class Capsule(Enum):
+    ExtraLife = 1
+    Shield = auto()
+    MagneticShield = auto()
+    SpeedUp = auto()
+    Invincibility = auto()
+    Bomb = auto()
+    FiveRings = auto()
+    TenRings = auto()
+    RandomRings = auto()
+
+
 class SubLevelMission(Enum):
     B = 0
     A = auto()

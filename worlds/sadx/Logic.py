@@ -1,7 +1,8 @@
 from dataclasses import dataclass
 from typing import Dict, Tuple, List, Union
 
-from .Enums import Character, Area, SubLevel, LevelMission, pascal_to_space, SubLevelMission, EVERYONE, SONIC_TAILS
+from .Enums import Character, Area, SubLevel, LevelMission, pascal_to_space, SubLevelMission, EVERYONE, SONIC_TAILS, \
+    Capsule
 from .Names import ItemName, LocationName
 from .Names.LocationName import Boss
 from .Options import SonicAdventureDXOptions
@@ -18,7 +19,7 @@ class LevelLocation:
     expertLogicItems: List[str]
 
     def get_level_name(self) -> str:
-        return f"{pascal_to_space(self.area.name)} ({self.character.name} - Mission {self.levelMission.name})"
+        return f"{pascal_to_space(self.area.name)} ({self.character.name}) - Mission {self.levelMission.name}"
 
     def get_logic_items(self, options: SonicAdventureDXOptions) -> List[str]:
         if options.logic_level.value == 2:
@@ -86,11 +87,31 @@ class EmblemLocation:
 
 
 @dataclass
-class LifeCapsuleLocation:
+class CapsuleLocation:
     locationId: int
     area: Area
     character: Character
-    lifeCapsuleNumber: int
+    capsuleNumber: int
+    type: Capsule
+    normalLogicItems: List[str]
+    hardLogicItems: List[str]
+    expertLogicItems: List[str]
+
+    def get_logic_items(self, options: SonicAdventureDXOptions) -> List[str]:
+        if options.logic_level.value == 2:
+            return self.expertLogicItems
+        elif options.logic_level.value == 1:
+            return self.hardLogicItems
+        else:
+            return self.normalLogicItems
+
+
+@dataclass
+class EnemyLocation:
+    locationId: int
+    area: Area
+    character: Character
+    enemyNumber: int
     normalLogicItems: List[str]
     hardLogicItems: List[str]
     expertLogicItems: List[str]
@@ -709,116 +730,6 @@ field_emblem_location_table: List[EmblemLocation] = [
                    [Character.Sonic, Character.Big], "Main Platform Emblem"),
 ]
 
-life_capsule_location_table: List[LifeCapsuleLocation] = [
-    LifeCapsuleLocation(1010, Area.EmeraldCoast, Character.Sonic, 1, [], [], []),
-    LifeCapsuleLocation(1011, Area.EmeraldCoast, Character.Sonic, 2, [], [], []),
-    LifeCapsuleLocation(1012, Area.EmeraldCoast, Character.Sonic, 3, [], [], []),
-    LifeCapsuleLocation(1013, Area.EmeraldCoast, Character.Sonic, 4, [], [], []),
-    LifeCapsuleLocation(1110, Area.WindyValley, Character.Sonic, 1, [ItemName.Sonic.LightShoes], [], []),
-    LifeCapsuleLocation(1111, Area.WindyValley, Character.Sonic, 2, [], [], []),
-    LifeCapsuleLocation(1112, Area.WindyValley, Character.Sonic, 3, [], [], []),
-    LifeCapsuleLocation(1113, Area.WindyValley, Character.Sonic, 4, [ItemName.Sonic.LightShoes], [], []),
-    LifeCapsuleLocation(1114, Area.WindyValley, Character.Sonic, 5, [], [], []),
-    LifeCapsuleLocation(1210, Area.Casinopolis, Character.Sonic, 1, [], [], []),
-    LifeCapsuleLocation(1211, Area.Casinopolis, Character.Sonic, 2, [], [], []),
-    LifeCapsuleLocation(1212, Area.Casinopolis, Character.Sonic, 3, [], [], []),
-    LifeCapsuleLocation(1310, Area.IceCap, Character.Sonic, 1, [], [], []),
-    LifeCapsuleLocation(1410, Area.TwinklePark, Character.Sonic, 1, [], [], []),
-    LifeCapsuleLocation(1411, Area.TwinklePark, Character.Sonic, 2, [], [], []),
-    LifeCapsuleLocation(1412, Area.TwinklePark, Character.Sonic, 3, [], [], []),
-    LifeCapsuleLocation(1413, Area.TwinklePark, Character.Sonic, 4, [], [], []),
-    LifeCapsuleLocation(1510, Area.SpeedHighway, Character.Sonic, 1, [], [], []),
-    LifeCapsuleLocation(1511, Area.SpeedHighway, Character.Sonic, 2, [], [], []),
-    LifeCapsuleLocation(1512, Area.SpeedHighway, Character.Sonic, 3, [], [], []),
-    LifeCapsuleLocation(1513, Area.SpeedHighway, Character.Sonic, 4, [], [], []),
-    LifeCapsuleLocation(1514, Area.SpeedHighway, Character.Sonic, 5, [], [], []),
-    LifeCapsuleLocation(1515, Area.SpeedHighway, Character.Sonic, 6, [], [], []),
-    LifeCapsuleLocation(1516, Area.SpeedHighway, Character.Sonic, 7, [], [], []),
-    LifeCapsuleLocation(1517, Area.SpeedHighway, Character.Sonic, 8, [], [], []),
-    LifeCapsuleLocation(1518, Area.SpeedHighway, Character.Sonic, 9, [], [], []),
-    LifeCapsuleLocation(1610, Area.RedMountain, Character.Sonic, 1, [], [], []),
-    LifeCapsuleLocation(1611, Area.RedMountain, Character.Sonic, 2, [], [], []),
-    LifeCapsuleLocation(1612, Area.RedMountain, Character.Sonic, 3, [], [], []),
-    LifeCapsuleLocation(1613, Area.RedMountain, Character.Sonic, 4, [], [], []),
-    LifeCapsuleLocation(1614, Area.RedMountain, Character.Sonic, 5, [ItemName.Sonic.LightShoes],
-                        [ItemName.Sonic.LightShoes], []),
-    LifeCapsuleLocation(1615, Area.RedMountain, Character.Sonic, 6, [ItemName.Sonic.LightShoes],
-                        [ItemName.Sonic.LightShoes], []),
-    LifeCapsuleLocation(1616, Area.RedMountain, Character.Sonic, 7, [], [], []),
-    LifeCapsuleLocation(1617, Area.RedMountain, Character.Sonic, 8, [], [], []),
-    LifeCapsuleLocation(1710, Area.SkyDeck, Character.Sonic, 1, [], [], []),
-    LifeCapsuleLocation(1711, Area.SkyDeck, Character.Sonic, 2, [], [], []),
-    LifeCapsuleLocation(1712, Area.SkyDeck, Character.Sonic, 3, [], [], []),
-    LifeCapsuleLocation(1713, Area.SkyDeck, Character.Sonic, 4, [], [], []),
-    LifeCapsuleLocation(1714, Area.SkyDeck, Character.Sonic, 5, [], [], []),
-    LifeCapsuleLocation(1715, Area.SkyDeck, Character.Sonic, 6, [], [], []),
-    LifeCapsuleLocation(1716, Area.SkyDeck, Character.Sonic, 7, [], [], []),
-    LifeCapsuleLocation(1717, Area.SkyDeck, Character.Sonic, 8, [], [], []),
-    LifeCapsuleLocation(1718, Area.SkyDeck, Character.Sonic, 9, [], [], []),
-    LifeCapsuleLocation(1719, Area.SkyDeck, Character.Sonic, 10, [], [], []),
-    LifeCapsuleLocation(1720, Area.SkyDeck, Character.Sonic, 11, [], [], []),
-    LifeCapsuleLocation(1721, Area.SkyDeck, Character.Sonic, 12, [], [], []),
-    LifeCapsuleLocation(1810, Area.LostWorld, Character.Sonic, 1, [], [], []),
-    LifeCapsuleLocation(1811, Area.LostWorld, Character.Sonic, 2, [ItemName.Sonic.LightShoes], [], []),
-    LifeCapsuleLocation(1910, Area.FinalEgg, Character.Sonic, 1, [], [], []),
-    LifeCapsuleLocation(1911, Area.FinalEgg, Character.Sonic, 2, [], [], []),
-    LifeCapsuleLocation(1912, Area.FinalEgg, Character.Sonic, 3, [], [], []),
-    LifeCapsuleLocation(1913, Area.FinalEgg, Character.Sonic, 4, [], [], []),
-    LifeCapsuleLocation(1914, Area.FinalEgg, Character.Sonic, 5, [], [], []),
-    LifeCapsuleLocation(1915, Area.FinalEgg, Character.Sonic, 6, [], [], []),
-    LifeCapsuleLocation(1916, Area.FinalEgg, Character.Sonic, 7, [], [], []),
-    LifeCapsuleLocation(1917, Area.FinalEgg, Character.Sonic, 8, [], [], []),
-    LifeCapsuleLocation(1918, Area.FinalEgg, Character.Sonic, 9, [], [], []),
-    LifeCapsuleLocation(1919, Area.FinalEgg, Character.Sonic, 10, [], [], []),
-    LifeCapsuleLocation(1920, Area.FinalEgg, Character.Sonic, 11, [], [], []),
-    LifeCapsuleLocation(1921, Area.FinalEgg, Character.Sonic, 12, [], [], []),
-    LifeCapsuleLocation(1922, Area.FinalEgg, Character.Sonic, 13, [], [], []),
-    LifeCapsuleLocation(1923, Area.FinalEgg, Character.Sonic, 14, [], [], []),
-    LifeCapsuleLocation(1924, Area.FinalEgg, Character.Sonic, 15, [], [], []),
-    LifeCapsuleLocation(1925, Area.FinalEgg, Character.Sonic, 16, [], [], []),
-    LifeCapsuleLocation(2010, Area.WindyValley, Character.Tails, 1, [], [], []),
-    LifeCapsuleLocation(2110, Area.Casinopolis, Character.Tails, 1, [], [], []),
-    LifeCapsuleLocation(2111, Area.Casinopolis, Character.Tails, 2, [], [], []),
-    LifeCapsuleLocation(2310, Area.SkyDeck, Character.Tails, 1, [], [], []),
-    LifeCapsuleLocation(2311, Area.SkyDeck, Character.Tails, 2, [], [], []),
-    LifeCapsuleLocation(2312, Area.SkyDeck, Character.Tails, 3, [], [], []),
-    LifeCapsuleLocation(2313, Area.SkyDeck, Character.Tails, 4, [], [], []),
-    LifeCapsuleLocation(2410, Area.SpeedHighway, Character.Tails, 1, [], [], []),
-    LifeCapsuleLocation(2411, Area.SpeedHighway, Character.Tails, 2, [], [], []),
-    LifeCapsuleLocation(2412, Area.SpeedHighway, Character.Tails, 3, [], [], []),
-    LifeCapsuleLocation(2413, Area.SpeedHighway, Character.Tails, 4, [], [], []),
-    LifeCapsuleLocation(3010, Area.SpeedHighway, Character.Knuckles, 1, [], [], []),
-    LifeCapsuleLocation(3011, Area.SpeedHighway, Character.Knuckles, 2, [], [], []),
-    LifeCapsuleLocation(3012, Area.SpeedHighway, Character.Knuckles, 3, [], [], []),
-    LifeCapsuleLocation(3110, Area.Casinopolis, Character.Knuckles, 1, [], [], []),
-    LifeCapsuleLocation(3111, Area.Casinopolis, Character.Knuckles, 2, [], [], []),
-    LifeCapsuleLocation(3210, Area.RedMountain, Character.Knuckles, 1, [], [], []),
-    LifeCapsuleLocation(3211, Area.RedMountain, Character.Knuckles, 2, [], [], []),
-    LifeCapsuleLocation(3212, Area.RedMountain, Character.Knuckles, 3, [], [], []),
-    LifeCapsuleLocation(3213, Area.RedMountain, Character.Knuckles, 4, [], [], []),
-    LifeCapsuleLocation(3410, Area.SkyDeck, Character.Knuckles, 1, [], [], []),
-    LifeCapsuleLocation(4010, Area.TwinklePark, Character.Amy, 1, [], [], []),
-    LifeCapsuleLocation(4110, Area.HotShelter, Character.Amy, 1, [], [], []),
-    LifeCapsuleLocation(4111, Area.HotShelter, Character.Amy, 2, [], [], []),
-    LifeCapsuleLocation(4112, Area.HotShelter, Character.Amy, 3, [], [], []),
-    LifeCapsuleLocation(4113, Area.HotShelter, Character.Amy, 4, [], [], []),
-    LifeCapsuleLocation(4210, Area.FinalEgg, Character.Amy, 1, [], [], []),
-    LifeCapsuleLocation(4211, Area.FinalEgg, Character.Amy, 2, [], [], []),
-    LifeCapsuleLocation(5110, Area.EmeraldCoast, Character.Gamma, 1, [], [], []),
-    LifeCapsuleLocation(5210, Area.WindyValley, Character.Gamma, 1, [ItemName.Gamma.JetBooster],
-                        [ItemName.Gamma.JetBooster], [ItemName.Gamma.JetBooster]),
-    LifeCapsuleLocation(5211, Area.WindyValley, Character.Gamma, 2, [ItemName.Gamma.JetBooster],
-                        [ItemName.Gamma.JetBooster], [ItemName.Gamma.JetBooster]),
-    LifeCapsuleLocation(5310, Area.RedMountain, Character.Gamma, 1, [], [], []),
-    LifeCapsuleLocation(5410, Area.HotShelter, Character.Gamma, 1, [ItemName.Gamma.JetBooster], [], []),
-    LifeCapsuleLocation(5411, Area.HotShelter, Character.Gamma, 2, [ItemName.Gamma.JetBooster], [], []),
-    LifeCapsuleLocation(5412, Area.HotShelter, Character.Gamma, 3, [ItemName.Gamma.JetBooster], [], []),
-    LifeCapsuleLocation(5413, Area.HotShelter, Character.Gamma, 4, [ItemName.Gamma.JetBooster], [], []),
-    LifeCapsuleLocation(6110, Area.IceCap, Character.Big, 1, [], [], []),
-    LifeCapsuleLocation(6210, Area.EmeraldCoast, Character.Big, 1, [], [], []),
-    LifeCapsuleLocation(6310, Area.HotShelter, Character.Big, 1, [], [], []),
-]
-
 mission_location_table: List[MissionLocation] = [
     MissionLocation(801, Area.StationSquareMain, Area.StationSquareMain, Character.Sonic, 1, [], [], []),
     MissionLocation(802, Area.MysticRuinsMain, Area.MysticRuinsMain, Character.Sonic, 2, [], [], []),
@@ -945,4 +856,14 @@ chao_race_location_table: List[ChaoRaceLocation] = [
     ChaoRaceLocation(907, LocationName.Chao.SapphireCourse, Area.Hotel),
     ChaoRaceLocation(908, LocationName.Chao.RubyCourse, Area.Hotel),
     ChaoRaceLocation(909, LocationName.Chao.EmeraldCourse, Area.Hotel),
+]
+
+enemy_location_table: List[EnemyLocation] = [
+    EnemyLocation(62000, Area.EmeraldCoast, Character.Big, 1, [], [], []),
+    EnemyLocation(62001, Area.EmeraldCoast, Character.Big, 2, [], [], []),
+    EnemyLocation(62002, Area.EmeraldCoast, Character.Big, 3, [], [], []),
+]
+capsule_location_table: List[CapsuleLocation] = [
+    CapsuleLocation(62500, Area.EmeraldCoast, Character.Big, 1, Capsule.TenRings, [], [], []),
+    CapsuleLocation(62501, Area.EmeraldCoast, Character.Big, 2, Capsule.ExtraLife, [], [], []),
 ]

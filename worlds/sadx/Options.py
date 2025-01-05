@@ -379,44 +379,99 @@ class SkyChaseChecksHard(Toggle):
     display_name = "Hard Sky Chase Checks"
 
 
-class LifeSanity(Toggle):
-    """Determines whether collecting life capsules grants checks (102 Locations)."""
-    display_name = "Life Sanity"
+class EnemySanity(Toggle):
+    """Determines whether destroying enemies grants checks."""
+    display_name = "Enemy Sanity"
 
 
-class PinballLifeCapsules(Toggle):
-    """Determines whether pinball's life capsules grant checks (2 Locations)."""
-    display_name = "Include Pinball's Life Capsules"
+class SonicEnemySanity(DefaultOnToggle):
+    """If enemy-sanity is on, determines whether Sonic's enemies are part of the randomizer."""
+    display_name = "Sonic's Enemy Sanity"
 
 
-class SonicLifeSanity(DefaultOnToggle):
-    """If life-sanity is on, determines whether Sonic's life capsules are part of the randomizer."""
-    display_name = "Sonic's Life Sanity"
+class TailsEnemySanity(DefaultOnToggle):
+    """If enemy-sanity is on, determines whether Tails' enemies are part of the randomizer."""
+    display_name = "Tails' Enemy Sanity"
 
 
-class TailsLifeSanity(DefaultOnToggle):
-    """If life-sanity is on, determines whether Tails' life capsules are part of the randomizer."""
-    display_name = "Tails' Life Sanity"
+class KnucklesEnemySanity(DefaultOnToggle):
+    """If enemy-sanity is on, determines whether Knuckles' enemies are part of the randomizer."""
+    display_name = "Knuckles' Enemy Sanity"
 
 
-class KnucklesLifeSanity(DefaultOnToggle):
-    """If life-sanity is on, determines whether Knuckles' life capsules are part of the randomizer."""
-    display_name = "Knuckles' Life Sanity"
+class AmyEnemySanity(DefaultOnToggle):
+    """If enemy-sanity is on, determines whether Amy's enemies are part of the randomizer."""
+    display_name = "Amy's Enemy Sanity"
 
 
-class AmyLifeSanity(DefaultOnToggle):
-    """If life-sanity is on, determines whether Amy's life capsules are part of the randomizer."""
-    display_name = "Amy's Life Sanity"
+class BigEnemySanity(DefaultOnToggle):
+    """If enemy-sanity is on, determines whether Big's enemies are part of the randomizer."""
+    display_name = "Big's Enemy Sanity"
 
 
-class BigLifeSanity(DefaultOnToggle):
-    """If life-sanity is on, determines whether Big's life capsules are part of the randomizer."""
-    display_name = "Big's Life Sanity"
+class GammaEnemySanity(DefaultOnToggle):
+    """If enemy-sanity is on, determines whether Gamma's enemies are part of the randomizer."""
+    display_name = "Gamma's Enemy Sanity"
 
 
-class GammaLifeSanity(DefaultOnToggle):
-    """If life-sanity is on, determines whether Gamma's life capsules are part of the randomizer."""
-    display_name = "Gamma's Life Sanity"
+class CapsuleSanity(Toggle):
+    """Determines whether destroying capsules grants checks."""
+    display_name = "Capsule Sanity"
+
+
+class PinballCapsules(Toggle):
+    """Determines whether pinball's capsules grant checks."""
+    display_name = "Include Pinball's Capsules"
+
+
+class SonicCapsuleSanity(DefaultOnToggle):
+    """If capsule-sanity is on, determines whether Sonic's capsules are part of the randomizer."""
+    display_name = "Sonic's Capsule Sanity"
+
+
+class TailsCapsuleSanity(DefaultOnToggle):
+    """If capsule-sanity is on, determines whether Tails' capsules are part of the randomizer."""
+    display_name = "Tails' Capsule Sanity"
+
+
+class KnucklesCapsuleSanity(DefaultOnToggle):
+    """If capsule-sanity is on, determines whether Knuckles' capsules are part of the randomizer."""
+    display_name = "Knuckles' Capsule Sanity"
+
+
+class AmyCapsuleSanity(DefaultOnToggle):
+    """If capsule-sanity is on, determines whether Amy's capsules are part of the randomizer."""
+    display_name = "Amy's Capsule Sanity"
+
+
+class BigCapsuleSanity(DefaultOnToggle):
+    """If capsule-sanity is on, determines whether Big's capsules are part of the randomizer."""
+    display_name = "Big's Capsule Sanity"
+
+
+class GammaCapsuleSanity(DefaultOnToggle):
+    """If capsule-sanity is on, determines whether Gamma's capsules are part of the randomizer."""
+    display_name = "Gamma's Capsule Sanity"
+
+
+class LifeCapsuleSanity(Toggle):
+    """If capsule-sanity is on, the randomizer will include Life Capsules (102 Locations)."""
+    display_name = "Life Capsule Sanity"
+
+
+class ShieldCapsuleSanity(Toggle):
+    """If capsule-sanity is on, the randomizer will include  Shields and Magnetic Shields."""
+    display_name = "Shield Capsule Sanity"
+
+
+class PowerUpCapsuleSanity(Toggle):
+    """If capsule-sanity is on, the randomizer will include Invincibility, Speed Up and Bomb Capsules."""
+    display_name = "Power Up Capsule Sanity"
+
+
+class RingCapsuleSanity(Toggle):
+    """If capsule-sanity is on, the randomizer will include 5, 10 and ? capsules."""
+    display_name = "Ring Capsule Sanity"
 
 
 class JunkFillPercentage(Range):
@@ -587,14 +642,28 @@ class SonicAdventureDXOptions(PerGameCommonOptions):
     sky_chase_checks: SkyChaseChecks
     sky_chase_checks_hard: SkyChaseChecksHard
 
-    life_sanity: LifeSanity
-    pinball_life_capsules: PinballLifeCapsules
-    sonic_life_sanity: SonicLifeSanity
-    tails_life_sanity: TailsLifeSanity
-    knuckles_life_sanity: KnucklesLifeSanity
-    amy_life_sanity: AmyLifeSanity
-    big_life_sanity: BigLifeSanity
-    gamma_life_sanity: GammaLifeSanity
+    enemy_sanity: EnemySanity
+    sonic_enemy_sanity: SonicEnemySanity
+    tails_enemy_sanity: TailsEnemySanity
+    knuckles_enemy_sanity: KnucklesEnemySanity
+    amy_enemy_sanity: AmyEnemySanity
+    big_enemy_sanity: BigEnemySanity
+    gamma_enemy_sanity: GammaEnemySanity
+
+    capsule_sanity: CapsuleSanity
+    pinball_capsules: PinballCapsules
+
+    sonic_capsule_sanity: SonicCapsuleSanity
+    tails_capsule_sanity: TailsCapsuleSanity
+    knuckles_capsule_sanity: KnucklesCapsuleSanity
+    amy_capsule_sanity: AmyCapsuleSanity
+    big_capsule_sanity: BigCapsuleSanity
+    gamma_capsule_sanity: GammaCapsuleSanity
+
+    life_capsule_sanity: LifeCapsuleSanity
+    shield_capsule_sanity: ShieldCapsuleSanity
+    powerup_capsule_sanity: PowerUpCapsuleSanity
+    ring_capsule_sanity: RingCapsuleSanity
 
     junk_fill_percentage: JunkFillPercentage
     trap_fill_percentage: TrapFillPercentage
@@ -678,14 +747,25 @@ sadx_option_groups = [
         SubLevelChecksHard,
         SkyChaseChecks,
         SkyChaseChecksHard,
-        LifeSanity,
-        PinballLifeCapsules,
-        SonicLifeSanity,
-        TailsLifeSanity,
-        KnucklesLifeSanity,
-        AmyLifeSanity,
-        BigLifeSanity,
-        GammaLifeSanity,
+        EnemySanity,
+        SonicEnemySanity,
+        TailsEnemySanity,
+        KnucklesEnemySanity,
+        AmyEnemySanity,
+        BigEnemySanity,
+        GammaEnemySanity,
+        CapsuleSanity,
+        PinballCapsules,
+        SonicCapsuleSanity,
+        TailsCapsuleSanity,
+        KnucklesCapsuleSanity,
+        AmyCapsuleSanity,
+        BigCapsuleSanity,
+        GammaCapsuleSanity,
+        LifeCapsuleSanity,
+        ShieldCapsuleSanity,
+        PowerUpCapsuleSanity,
+        RingCapsuleSanity,
     ]),
     OptionGroup("Junk Options", [
         JunkFillPercentage,

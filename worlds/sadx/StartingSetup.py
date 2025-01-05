@@ -10,8 +10,8 @@ from .CharacterUtils import get_playable_characters, are_character_upgrades_rand
     is_character_playable
 from .Enums import Character, Area, SubLevel, pascal_to_space, level_areas, LevelMission
 from .Locations import level_location_table, upgrade_location_table, sub_level_location_table, \
-    field_emblem_location_table, boss_location_table, life_capsule_location_table, mission_location_table
-from .Logic import area_connections, chao_egg_location_table
+    field_emblem_location_table, boss_location_table, capsule_location_table, mission_location_table
+from .Logic import area_connections, chao_egg_location_table, enemy_location_table
 from .Names import ItemName
 from .Options import SonicAdventureDXOptions
 
@@ -229,8 +229,8 @@ def get_possible_starting_area_information(character: Character, area: Area, opt
         for boss_fight in boss_location_table:
             if character in boss_fight.characters and boss_fight.area == area:
                 possible_locations[area].append(None)
-    if options.life_sanity:
-        for life_capsule in life_capsule_location_table:
+    if options.capsule_sanity:
+        for life_capsule in capsule_location_table:
             actual_area_to = life_capsule.area
             if options.entrance_randomizer:
                 for level_entrance, actual_level in level_mapping.items():
@@ -251,6 +251,17 @@ def get_possible_starting_area_information(character: Character, area: Area, opt
         for egg in chao_egg_location_table:
             if character in egg.characters and egg.area == area and not egg.requirements:
                 possible_locations[area].append(None)
+    if options.enemy_sanity:
+        for enemy in enemy_location_table:
+            actual_area_to = enemy.area
+            if options.entrance_randomizer:
+                for level_entrance, actual_level in level_mapping.items():
+                    if actual_level == enemy.area:
+                        actual_area_to = level_entrance
+            key = (character, area, actual_area_to)
+            if key in area_connections and not area_connections[key][options.logic_level.value]:
+                if enemy.character == character and not enemy.get_logic_items(options):
+                    possible_locations[area].append(None)
 
     return possible_locations
 
