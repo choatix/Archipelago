@@ -3,6 +3,7 @@ import time
 
 from NetUtils import ClientStatus, color
 from worlds.AutoSNIClient import SNIClient
+from . import Locations, Levels
 from .Names.TextBox import generate_received_text
 
 snes_logger = logging.getLogger("SNES")
@@ -273,6 +274,16 @@ class SMWSNIClient(SNIClient):
                 self.add_message_to_queue(message)
 
 
+    async def sendWarp(self, ctx, level):
+        if level in Levels.level_info_dict:
+            levelData = Levels.level_info_dict[level]
+            warp_location_name = levelData.levelName
+            warp_location = [w for w in Locations.warp_location_names.items() if w[0] == "Enter "+warp_location_name]
+            if len(warp_location) > 0:
+                w = warp_location[0]
+                if w[1] not in ctx.checked_locations:
+                    await ctx.send_msgs([{"cmd": 'LocationChecks', "locations": [w[1]]}])
+
     async def game_watcher(self, ctx):
         from SNIClient import snes_buffered_write, snes_flush_writes, snes_read
         
@@ -333,6 +344,10 @@ class SMWSNIClient(SNIClient):
 
         await self.handle_message_queue(ctx)
         await self.handle_trap_queue(ctx)
+
+        if True:
+            current_level = await snes_read(ctx, SMW_CURRENT_LEVEL_ADDR, 0x1)
+            await self.sendWarp(ctx, current_level[0])
 
         new_checks = []
         event_data = await snes_read(ctx, SMW_EVENT_ROM_DATA, 0x60)

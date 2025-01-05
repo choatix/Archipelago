@@ -2,6 +2,7 @@ import typing
 
 from BaseClasses import Location
 from worlds.AutoWorld import World
+from . import Levels
 from .Names import LocationName
 
 class SMWLocation(Location):
@@ -815,6 +816,16 @@ blocksanity_location_table = {
     LocationName.star_road_5_green_block_20: 0xBC0845
 }
 
+warp_location_names = {
+}
+
+for x in  Levels.level_info_dict.values():
+    if x.levelName in [LocationName.front_door, LocationName.back_door]:
+        continue
+    location_name = "Enter "+x.levelName
+    location_id = 0xC0000 + list(Levels.level_info_dict.values()).index(x)
+    warp_location_names[location_name] = location_id
+
 bowser_location_table = {
     LocationName.bowser: 0xBC0200,
 }
@@ -832,6 +843,7 @@ all_locations = {
     **blocksanity_location_table,
     **bowser_location_table,
     **yoshi_house_location_table,
+    **warp_location_names
 }
 
 special_zone_level_names = [
@@ -976,7 +988,6 @@ special_zone_blocksanity_names = [
 
 location_table = {}
 
-
 def setup_locations(world: World):
     location_table = {**level_location_table}
 
@@ -999,6 +1010,7 @@ def setup_locations(world: World):
         location_table.update(yoshi_house_location_table)
     else:
         location_table.update(bowser_location_table)
+
 
     return location_table
 

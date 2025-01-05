@@ -1,6 +1,7 @@
 import typing
 
 from BaseClasses import CollectionState, MultiWorld, Region, Entrance
+from . import Locations
 from .Locations import SMWLocation
 from .Levels import level_info_dict
 from .Names import LocationName, ItemName
@@ -2148,6 +2149,14 @@ def create_region(multiworld: MultiWorld, player: int, active_locations, name: s
             if loc_id:
                 location = SMWLocation(player, locationName, loc_id, ret)
                 ret.locations.append(location)
+
+    if True:
+        expected_warp_name = "Enter "+name
+        warp_location = [ w for w in Locations.warp_location_names.items() if w[0] == expected_warp_name]
+        if len(warp_location) > 0:
+            warp = warp_location[0]
+            l = SMWLocation(player, expected_warp_name, warp[1], ret)
+            ret.locations.append(l)
 
     return ret
 

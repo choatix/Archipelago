@@ -417,6 +417,12 @@ class PalaceShuffle(Toggle):
     """
     display_name = "Palace Shuffle"
 
+class WarpReveal(DefaultOnToggle):
+    """
+    Whether to reveal levels in tracker when entering stages
+    """
+    display_name = "Warp Reveal"
+
 
 smw_option_groups = [
     OptionGroup("Goal Options", [
@@ -506,3 +512,4 @@ class SMWOptions(PerGameCommonOptions):
     start_with_easy: StartWithEasy
     castle_shuffle: CastleShuffle
     palace_shuffle: PalaceShuffle
+    warp_reveal: WarpReveal

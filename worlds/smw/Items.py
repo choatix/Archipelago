@@ -1,7 +1,8 @@
 import typing
 
 from BaseClasses import Item, ItemClassification
-from .Names import ItemName
+from . import Levels
+from .Names import ItemName, LocationName
 
 
 class ItemData(typing.NamedTuple):
@@ -64,6 +65,22 @@ event_table = {
     ItemName.koopaling: ItemData(0xBC0012, True),
 }
 
+stage_item_table = {
+
+}
+
+start_at_v = 0xBD0000
+for item in Levels.level_info_dict.values():
+    if item.levelName in [LocationName.front_door, LocationName.back_door]:
+        continue
+    name = "Warp:"+item.levelName
+    stage_item_table[name] = ItemData(start_at_v, False)
+
+    start_at_v += 1
+
+
+
+
 # Complete item table.
 item_table = {
     **junk_table,
@@ -72,6 +89,7 @@ item_table = {
     **switch_palace_table,
     **trap_table,
     **event_table,
+    **stage_item_table
 }
 
 lookup_id_to_name: typing.Dict[int, str] = {data.code: item_name for item_name, data in item_table.items() if data.code}

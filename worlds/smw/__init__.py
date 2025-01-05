@@ -211,6 +211,17 @@ class SMWWorld(World):
         for location_name in boss_location_names:
             self.multiworld.get_location(location_name, self.player).place_locked_item(self.create_item(ItemName.koopaling))
 
+        if self.options.warp_reveal:
+            for base_level in Levels.level_info_dict.values():
+                if base_level.levelName in [LocationName.front_door, LocationName.back_door]:
+                    continue
+                base_level_name = base_level.levelName
+                warp_location_name = [ w for w in Locations.warp_location_names.items() if w[0] == "Enter "+ base_level_name][0]
+                warp_item_name = [ i for i in Items.stage_item_table.keys() if i == "Warp:" + base_level_name][0]
+                self.multiworld.get_location(warp_location_name[0], self.player).place_locked_item(
+                    self.create_item(warp_item_name))
+
+
         self.multiworld.itempool += itempool
 
 
