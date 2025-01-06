@@ -45,7 +45,7 @@ def get_location_from_emblem() -> List[LocationInfo]:
 def get_location_from_capsule() -> List[LocationInfo]:
     locations: List[LocationInfo] = []
     for capsule in capsule_location_table:
-        level_name: str = f"{pascal_to_space(capsule.area.name)} ({capsule.character.name}) - Capsule {capsule.capsuleNumber}"
+        level_name: str = f"{pascal_to_space(capsule.area.name)} ({capsule.character.name}) - Capsule {capsule.capsuleNumber:02d} ({pascal_to_space(capsule.type.name)})"
         locations += [{"id": capsule.locationId, "name": level_name}]
     return locations
 
@@ -82,7 +82,7 @@ def get_location_from_races() -> List[LocationInfo]:
 def get_location_from_enemies() -> List[LocationInfo]:
     locations: List[LocationInfo] = []
     for enemy in enemy_location_table:
-        level_name: str = f"{pascal_to_space(enemy.area.name)} ({enemy.character.name}) - Enemy {enemy.enemyNumber}"
+        level_name: str = f"{pascal_to_space(enemy.area.name)} ({enemy.character.name}) - Enemy {enemy.enemyNumber:02d} ({pascal_to_space(enemy.type.name)})"
         locations += [{"id": enemy.locationId, "name": level_name}]
     return locations
 
