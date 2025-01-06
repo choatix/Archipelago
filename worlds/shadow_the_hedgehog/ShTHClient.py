@@ -49,7 +49,7 @@ class GAME_ADDRESSES:
     ADDRESS_ALIEN_COUNT = 0x8057FB54
     ADDRESS_SOLDIER_COUNT = 0x8057FB4C
     ADDRESS_EGG_COUNT = 0x8057FB50
-    SAVE_DATA_LOADED = 0x80575F58
+    SAVE_DATA_LOADED = 0x805E326B
 
     ADDRESS_MISSION_MANAGER = 0x80575EF8
 
@@ -509,7 +509,7 @@ def GetStageUnlockAddresses():
 
 def GetFinalBossAdditionalUnlock():
     unlock_addresses = {}
-    boss_index = len([ s for s in Levels.BOSS_STAGES if s not in Levels.FINAL_BOSSES and s not in Levels.LAST_STORY_STAGES ])-1
+    boss_index = 0
 
     for stage in Levels.FINAL_BOSSES:
             unlock_addresses[stage] = (GAME_ADDRESSES.boss_final_additional_unlock_address +
@@ -756,10 +756,20 @@ class ShTHContext(CommonContext):
                            unlock[0].item in info and \
                            info[unlock[0].item].type == "Weapon"]
 
+        allowed_weapon_groups = [weapon_dict[info[unlock[0].item].name] for unlock in self.handled if
+                           unlock[0].item in info and \
+                           info[unlock[0].item].type == "WeaponGroup"]
+
         weapons_to_handle = [weapon_dict[info[unlock[0].item].name] for unlock in self.items_to_handle if unlock[0].item in info and \
                              info[unlock[0].item].type == "Weapon"]
 
+        weapon_groups_to_handle = [weapon_dict[info[unlock[0].item].name] for unlock in self.items_to_handle if
+                             unlock[0].item in info and \
+                             info[unlock[0].item].type == "WeaponGroup"]
+
+        allowed_weapons.extend(allowed_weapon_groups)
         allowed_weapons.extend(weapons_to_handle)
+        allowed_weapons.extend(weapon_groups_to_handle)
 
         # Check if available
         if available:
@@ -1077,7 +1087,7 @@ class ShTHContext(CommonContext):
 
 
 def RankToOption(rank_number, rank_option):
-    required_rank = 4
+    required_rank = Options.MinimumRank.option_e
     if rank_option == Options.MinimumRank.option_a:
         required_rank = 0
     elif rank_option == Options.MinimumRank.option_b:
@@ -1105,6 +1115,8 @@ async def check_save_loaded(ctx):
 
     loaded_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.SAVE_DATA_LOADED, 1)
     loaded_bytes = int.from_bytes(loaded_bytes, byteorder='big')
+
+    # This doesn't yet factor in fully loaded, so this needs to be fixed
 
     if loaded_bytes == 1:
         loaded = True
@@ -2010,7 +2022,8 @@ async def check_weapons(ctx, current_level):
     info = Items.GetItemLookupDict()
 
     weapons_to_handle = [unlock for unlock in ctx.items_to_handle if unlock[0].item in info and \
-         info[unlock[0].item].type == "Weapon" or info[unlock[0].item].type == "Rifle Component"]
+         info[unlock[0].item].type == "Weapon" or info[unlock[0].item].type == "Rifle Component" or
+                         info[unlock[0].item].type == "WeaponGroup"]
 
     newly_handled = []
     newly_handled.extend(weapons_to_handle)
@@ -2062,6 +2075,14 @@ async def check_weapons(ctx, current_level):
         if ctx.weapon_sanity_unlock:
             allowed_weapons = [weapon_dict[info[unlock[0].item].name] for unlock in ctx.handled if unlock[0].item in info and \
                                  info[unlock[0].item].type == "Weapon"]
+
+            allowed_weapon_groups = [info[unlock[0].item].name for unlock in ctx.handled if unlock[0].item in info and \
+                                 info[unlock[0].item].type == "WeaponGroup"]
+
+            for group in allowed_weapon_groups:
+                group_weapons = Weapons.WeaponGroups[group]
+                matching_weapons = [ w for w in Weapons.WEAPON_INFO if w.game_id in group_weapons]
+                allowed_weapons.extend(matching_weapons)
 
             allowed_weapons_by_id = {}
             for a in allowed_weapons:

@@ -1,10 +1,6 @@
 from dataclasses import dataclass
-from math import ceil
-
 from Options import PerGameCommonOptions, Choice, DefaultOnToggle, Toggle, Range, OptionSet, OptionDict, OptionGroup
 
-
-#from . import Levels
 
 
 class GoalChaosEmeralds(DefaultOnToggle):
@@ -174,6 +170,10 @@ class GaugeFiller(DefaultOnToggle):
     """Determines if gauge filler is included."""
     display_name = "Gauge Filler"
 
+class RingFiller(DefaultOnToggle):
+    """Determines if ring filler is included."""
+    display_name = "Ring Filler"
+
 
 class EnemySanityPercentage(Range):
     """Determines the percentage of enemysanity checks in a stage to be included."""
@@ -253,6 +253,26 @@ class PercentOverrides(OptionDict):
     """List of provided keys to dictate percentage based overrides."""
     display_name = "Percent Overrides"
 
+class WeaponGroups(OptionSet):
+    """
+    Group together confirmed sets of weapon items to unlock them in given batches.
+
+    - Stage Melee Weapons: Non-required Stage Melee Weapons
+    - Environment Weapons: All Stage Melee Environment Weapons
+    - Egg Pawn Weapons: Used by Egg Pawns
+    - GUN Launcher Weapons: Launching GUN Weapons
+    - Black Warrior Weapons: Held by standard Black Arms
+    - Black Oak Weapons: Held by big Black Arm enemies
+    - Worm Weapons:  Held by Black Arm Worm enemies
+    - Gun Solider Weapons: Held by GUN Soliders
+    - Gun Mech Weapons: Held by GUN Mechs
+    - Laser Weapons: Laser-style weapons
+    """
+    display_name = "Weapon Groups"
+    valid_keys = []
+    default = ["Stage Melee Weapons"]
+
+
 class LogicLevel(Choice):
     """Determines the logic level for playthrough."""
     display_name = "Logic Level"
@@ -262,7 +282,8 @@ class LogicLevel(Choice):
     default = option_normal
 
 class BossLogicLevel(Choice):
-    """Determines the boss logic level for playthrough."""
+    """Determines the boss logic level for playthrough.
+    Easy boss logic ensures the player has access to a weapon within the stage in order to beat it."""
     display_name = "Boss Logic Level"
     option_easy = 0  # Logic adds in easier elements for completion
     option_normal = 1  # Standard logic
@@ -270,7 +291,8 @@ class BossLogicLevel(Choice):
     default = option_normal
 
 class CraftLogicLevel(Choice):
-    """Determines the craft logic level for playthrough."""
+    """Determines the craft logic level for playthrough - distinguishing a difference
+     in logic for crafts in Iron Jungle, Lethal Highway and Air Fleet"""
     display_name = "Logic Level"
     option_easy = 0  # Logic adds in easier elements for completion
     option_normal = 1  # Standard logic
@@ -426,6 +448,7 @@ class ShadowTheHedgehogOptions(PerGameCommonOptions):
     vehicle_logic: VehicleLogic
     exceeding_items_filler: ExceedingItemsFiller
     enable_gauge_items: GaugeFiller
+    enable_ring_items: RingFiller
     ring_link: RingLink
     auto_clear_missions: AutoClearMissions
     level_progression: LevelProgression
@@ -448,6 +471,7 @@ class ShadowTheHedgehogOptions(PerGameCommonOptions):
     enemy_frequency: EnemyFrequency
     select_bosses: SelectBosses
     minimum_rank: MinimumRank
+    weapon_groups: WeaponGroups
 
 shadow_option_groups = [
     OptionGroup("Goal",

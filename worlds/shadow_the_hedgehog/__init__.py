@@ -52,7 +52,7 @@ class ShtHWorld(World):
     item_name_to_id: ClassVar[Dict[str, int]] = Items.GetItemDict()
     location_name_to_id: ClassVar[Dict[str, int]] = Locations.GetLocationDict()
 
-    required_client_version: Tuple[int, int, int] = (0, 5, 0)
+    required_client_version: Tuple[int, int, int] = (0, 5, 1)
     web = ShtHWebWorld()
 
     options_dataclass = Options.ShadowTheHedgehogOptions
@@ -335,7 +335,8 @@ class ShtHWorld(World):
 
     def get_filler_item_name(self) -> str:
         # Use the same weights for filler items that are used in the base randomizer.
-        pass
+        return Items.ChooseJunkItems(self.random, Items.GetJunkItemInfo(), self.options, 1)[0]
+
 
     def get_pre_fill_items(self):
         res = []
