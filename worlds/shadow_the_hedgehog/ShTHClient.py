@@ -49,7 +49,7 @@ class GAME_ADDRESSES:
     ADDRESS_ALIEN_COUNT = 0x8057FB54
     ADDRESS_SOLDIER_COUNT = 0x8057FB4C
     ADDRESS_EGG_COUNT = 0x8057FB50
-    SAVE_DATA_LOADED = 0x80575F58
+    SAVE_DATA_LOADED = 0x805E326B
 
     ADDRESS_MISSION_MANAGER = 0x80575EF8
 
@@ -188,7 +188,10 @@ class ShTHCommandProcessor(ClientCommandProcessor):
             arguments = self.parse_args(args)
             if 's' in arguments:
                 stage = arguments['s']
-            self.ctx.set_story_mode(stage)
+                self.ctx.set_story_mode(stage)
+            else:
+                available = self.ctx.get_story_accessible_stages()
+                logger.info(available)
 
     def _cmd_token(self, *args):
         if isinstance(self.ctx, ShTHContext):
@@ -509,7 +512,7 @@ def GetStageUnlockAddresses():
 
 def GetFinalBossAdditionalUnlock():
     unlock_addresses = {}
-    boss_index = len([ s for s in Levels.BOSS_STAGES if s not in Levels.FINAL_BOSSES and s not in Levels.LAST_STORY_STAGES ])-1
+    boss_index = 0
 
     for stage in Levels.FINAL_BOSSES:
             unlock_addresses[stage] = (GAME_ADDRESSES.boss_final_additional_unlock_address +
@@ -713,7 +716,7 @@ class ShTHContext(CommonContext):
         self.previous_rings = None
         self.ring_link_rings = 0
         self.instance_id = time.time()
-        self.debug_logging = False
+        self.debug_logging = True
         self.error_logging = True
         self.info_logging = True
         self.last_level = None
@@ -756,10 +759,20 @@ class ShTHContext(CommonContext):
                            unlock[0].item in info and \
                            info[unlock[0].item].type == "Weapon"]
 
+        allowed_weapon_groups = [weapon_dict[info[unlock[0].item].name] for unlock in self.handled if
+                           unlock[0].item in info and \
+                           info[unlock[0].item].type == "WeaponGroup"]
+
         weapons_to_handle = [weapon_dict[info[unlock[0].item].name] for unlock in self.items_to_handle if unlock[0].item in info and \
                              info[unlock[0].item].type == "Weapon"]
 
+        weapon_groups_to_handle = [weapon_dict[info[unlock[0].item].name] for unlock in self.items_to_handle if
+                             unlock[0].item in info and \
+                             info[unlock[0].item].type == "WeaponGroup"]
+
+        allowed_weapons.extend(allowed_weapon_groups)
         allowed_weapons.extend(weapons_to_handle)
+        allowed_weapons.extend(weapon_groups_to_handle)
 
         # Check if available
         if available:
@@ -1046,9 +1059,16 @@ class ShTHContext(CommonContext):
         if not known_route:
             logger.info("Route currently unknown.")
 
+    def get_story_accessible_stages(self):
+        if not self.auth:
+            return False
 
+        results = []
+        for stageId in Levels.ALL_STAGES:
+            if is_level_accessible(self, stageId, story=True):
+                results.append(Levels.LEVEL_ID_TO_LEVEL[stageId])
 
-
+        return results
 
     def set_story_mode(self, stage):
         if not self.auth:
@@ -1058,7 +1078,7 @@ class ShTHContext(CommonContext):
             return None
 
         if not is_level_accessible(self, stageId, story=True):
-            logger.error("Level is not accessible", stage)
+            logger.error("Level is not accessible: %s", stage)
 
         story_block = Levels.STAGE_TO_STORY_BLOCK[stageId]
 
@@ -1077,7 +1097,7 @@ class ShTHContext(CommonContext):
 
 
 def RankToOption(rank_number, rank_option):
-    required_rank = 4
+    required_rank = Options.MinimumRank.option_e
     if rank_option == Options.MinimumRank.option_a:
         required_rank = 0
     elif rank_option == Options.MinimumRank.option_b:
@@ -1105,6 +1125,8 @@ async def check_save_loaded(ctx):
 
     loaded_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.SAVE_DATA_LOADED, 1)
     loaded_bytes = int.from_bytes(loaded_bytes, byteorder='big')
+
+    # This doesn't yet factor in fully loaded, so this needs to be fixed
 
     if loaded_bytes == 1:
         loaded = True
@@ -1475,15 +1497,16 @@ def complete_completable_levels(ctx):
             to_end_boss = [ s for s in story if s.start_stage_id == mission.stageId and s.alignment_id == mission.alignmentId]
             if len(to_end_boss) == 1:
                 boss_path = to_end_boss[0]
-                r_boss_l = [b for b in Locations.BossClearLocations if b.stageId == boss_path.boss]
-                if len(r_boss_l) == 1:
-                    r_boss = r_boss_l[0]
-                    boss_location_id, boss_location_name = Locations.GetBossLocationName(r_boss.name, r_boss.stageId)
-                    u_bosses = [b for b in uncleared_bosses if b == boss_location_id]
-                    if len(u_bosses) != 0:
-                        continue
-                else:
-                    print("Unable to find boss clear location for", boss_path)
+                if boss_path.boss is not None:
+                    r_boss_l = [b for b in Locations.BossClearLocations if b.stageId == boss_path.boss]
+                    if len(r_boss_l) == 1:
+                        r_boss = r_boss_l[0]
+                        boss_location_id, boss_location_name = Locations.GetBossLocationName(r_boss.name, r_boss.stageId)
+                        u_bosses = [b for b in uncleared_bosses if b == boss_location_id]
+                        if len(u_bosses) != 0:
+                            continue
+                    else:
+                        print("Unable to find boss clear location for", boss_path)
 
         mission_complete_locations = [ l for l in location_dict.values() if l.stageId == mission.stageId and
                                l.location_type == Locations.LOCATION_TYPE_MISSION_CLEAR
@@ -1777,6 +1800,7 @@ async def check_level_status(ctx):
                 current_screen_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.MENU_ENUM, 4)
                 current_screen = int.from_bytes(current_screen_bytes, byteorder='big')
 
+                logger.debug("Detected screen %d", current_screen)
                 if current_screen != MenuOptions.NotInMenu:
                     extra_messages = CheckAutoWarps(ctx)
                     new_messages.extend(extra_messages)
@@ -2010,7 +2034,8 @@ async def check_weapons(ctx, current_level):
     info = Items.GetItemLookupDict()
 
     weapons_to_handle = [unlock for unlock in ctx.items_to_handle if unlock[0].item in info and \
-         info[unlock[0].item].type == "Weapon" or info[unlock[0].item].type == "Rifle Component"]
+         info[unlock[0].item].type == "Weapon" or info[unlock[0].item].type == "Rifle Component" or
+                         info[unlock[0].item].type == "WeaponGroup"]
 
     newly_handled = []
     newly_handled.extend(weapons_to_handle)
@@ -2062,6 +2087,14 @@ async def check_weapons(ctx, current_level):
         if ctx.weapon_sanity_unlock:
             allowed_weapons = [weapon_dict[info[unlock[0].item].name] for unlock in ctx.handled if unlock[0].item in info and \
                                  info[unlock[0].item].type == "Weapon"]
+
+            allowed_weapon_groups = [info[unlock[0].item].name for unlock in ctx.handled if unlock[0].item in info and \
+                                 info[unlock[0].item].type == "WeaponGroup"]
+
+            for group in allowed_weapon_groups:
+                group_weapons = Weapons.WeaponGroups[group]
+                matching_weapons = [ w for w in Weapons.WEAPON_INFO if w.game_id in group_weapons]
+                allowed_weapons.extend(matching_weapons)
 
             allowed_weapons_by_id = {}
             for a in allowed_weapons:
@@ -2718,8 +2751,9 @@ async def update_level_behaviour(ctx, current_level, death):
         current_count = int.from_bytes(current_bytes, byteorder='big')
 
         if current_count is not None and expected_hero_value is not None and current_count < expected_hero_value:
-            ctx.level_state["hero_progress"] = current_count
-            expected_hero_value = current_count
+            if not death and ctx.level_state["hero_progress"] != 0:
+                logger.info("Detected decrease in hero count")
+                ctx.level_state["hero_progress"] -= 1
 
         if expected_hero_value is not None and current_count > expected_hero_value:
             if ctx.debug_logging:
@@ -2760,8 +2794,9 @@ async def update_level_behaviour(ctx, current_level, death):
         current_count = int.from_bytes(current_bytes, byteorder='big')
 
         if current_count is not None and expected_dark_value is not None and current_count < expected_dark_value:
-            ctx.level_state["dark_progress"] = current_count
-            expected_dark_value = current_count
+            if not death and ctx.level_state["dark_progress"] != 0:
+                logger.info("Detected decrease in dark count")
+                ctx.level_state["dark_progress"] -= 1
 
         if expected_dark_value is not None and current_count > expected_dark_value:
             if ctx.debug_logging:
@@ -2804,8 +2839,9 @@ async def update_level_behaviour(ctx, current_level, death):
         current_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.ADDRESS_ALIEN_COUNT, alien_address_size)
         current_count = int.from_bytes(current_bytes, byteorder='big')
 
-        if current_count is not None and alien_count is not None and current_count < alien_count:
-            ctx.level_state["alien_progress"] = current_count
+        if not death and ctx.level_state["alien_progress"] != 0:
+            logger.info("Detected decrease in alien count")
+            ctx.level_state["alien_progress"] -= 1
 
         if current_count > alien_count:
             if current_count > alienInfo.total_count + extra_increase:
@@ -2821,7 +2857,9 @@ async def update_level_behaviour(ctx, current_level, death):
         current_count = int.from_bytes(current_bytes, byteorder='big')
 
         if current_count is not None and gun_count is not None and current_count < gun_count:
-            ctx.level_state["gun_progress"] = current_count
+            if not death and ctx.level_state["gun_progress"] != 0:
+                logger.info("Detected decrease in gun count")
+                ctx.level_state["gun_progress"] -= 1
 
         if current_count > gun_count:
             #print("gun count increased --", current_count, gun_count)
@@ -2838,7 +2876,9 @@ async def update_level_behaviour(ctx, current_level, death):
         current_count = int.from_bytes(current_bytes, byteorder='big')
 
         if current_count is not None and egg_count is not None and current_count < egg_count:
-            ctx.level_state["egg_progress"] = current_count
+            if not death and ctx.level_state["egg_progress"] != 0:
+                logger.info("Detected decrease in egg count")
+                ctx.level_state["egg_progress"] -= 1
 
         if current_count > egg_count:
             #print("egg count increased --", current_count, egg_count)

@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from . import Levels, Regions
+from . import Levels
 
 
 @dataclass
@@ -51,7 +51,7 @@ def GetRuleByWeaponRequirement(player, req, stage, regions):
         else:
             regions = p_regions
 
-    matches = [ w for w in WEAPON_INFO if (
+    matches_items = [ w for w in WEAPON_INFO if (
             (req is None and len(w.attributes) > 0)
             or req in w.attributes) and
                 len([ a for a in w.available_stages
@@ -61,13 +61,78 @@ def GetRuleByWeaponRequirement(player, req, stage, regions):
                 ]) > 0
                 ]
 
+    matches_groups = [ group[0] for group in WeaponGroups.items() if len([ x for x in group[1] if x in
+                                                                           [m.game_id for m in matches_items]]) > 0]
+    matches = []
+    matches.extend([ x.name for x in matches_items])
+    matches.extend(matches_groups)
+
     #print(stage, regions, matches)
 
     if len(matches) == 0:
         print("Something wrong here with", req, stage, regions)
 
-    return lambda state, reqs=matches: state.has_any([m.name for m in reqs],player)
+    return lambda state, reqs=matches: state.has_any([m for m in reqs],player)
 
+
+class WEAPONS:
+    PISTOL = 0x1
+    SUB_MACHINE_GUN = 0x2
+    SEMI_AUTOMATIC_RIFLE = 0x3
+    HEAVY_MACHINE_GUN = 0x4
+    GATLING_GUN = 0x5
+    EGG_GUN = 0x7
+    LIGHT_SHOT = 0x8
+    FLASH_SHOT = 0x9
+    RING_SHOT = 0xA
+    HEAVY_SHOT = 0xB
+    GRENADE_LAUNCHER = 0xC
+    BAZOOKA = 0xD
+    TANK_CANNON = 0xE
+    BLACK_BARREL = 0xF
+    BIG_BARREL = 0x10
+    EGG_BAZOOKA = 0x11
+    RPG = 0x12
+    FOUR_SHOT_RPG = 0x13
+    EIGHT_SHOT_RPG = 0x14
+    WORM_SHOOTER = 0x15
+    WIDE_WORM_SHOOTER = 0x16
+    BIG_WORM_SHOOTER = 0x17
+    VACUUM_POD = 0x18
+    LASER_RIFLE = 0x19
+    SPLITTER = 0x1A
+    REFRACTOR = 0x1B
+    SURVIVAL_KNIFE = 0x1E
+    BLACK_SWORD = 0x1F
+    DARK_HAMMER = 0x20
+    EGG_SPEAR = 0x21
+    SPEED_LIMIT_SIGN = 0x22
+    DIGITAL_POLE = 0x23
+    CANYON_POLE = 0x24
+    LETHAL_POLE = 0x25
+    CRYPTIC_TORCH = 0x26
+    PRISON_BRANCH = 0x27
+    CIRCUS_POLE = 0x28
+    STOP_SIGN = 0x29
+    DOOM_POLE = 0x2A
+    SKY_POLE = 0x2B
+    MATRIX_POLE = 0x2C
+    RUINS_BRANCH = 0x2D
+    FLEET_POLE = 0x2F
+    IRON_POLE = 0x30
+    GADGET_POLE = 0x31
+    IMPACT_POLE = 0x32
+    FORTRESS_POLE = 0x33
+    LAVA_SHOVEL = 0x35
+    COSMIC_POLE = 0x36
+    HAUNT_POLE = 0x37
+    LAST_POLE = 0x38
+    SAMURAI_BLADE = 0x3A
+    SATELLITE_GUN = 0x3C
+    EGG_VACUUM = 0x3E
+    OMOCHAO_GUN = 0x40
+    HEAL_CANNON = 0x42
+    SHADOW_RIFLE = 0x43
 
 
 WEAPON_INFO = [
@@ -370,3 +435,59 @@ def WeaponInfoByWeapon():
     pass
 
 #WeaponInfoByWeapon()
+
+def GetWeaponByName(name):
+    weapon = [ w for w in WEAPON_INFO if w.name == name]
+    if len(weapon)  == 0:
+        return None
+
+    return weapon[0]
+
+WeaponGroups = {
+
+    "Stage Melee Weapons": [WEAPONS.SPEED_LIMIT_SIGN, WEAPONS.DIGITAL_POLE, WEAPONS.CANYON_POLE, WEAPONS.LETHAL_POLE,
+                    WEAPONS.PRISON_BRANCH, WEAPONS.CIRCUS_POLE, WEAPONS.STOP_SIGN, WEAPONS.DOOM_POLE,
+                    WEAPONS.SKY_POLE, WEAPONS.MATRIX_POLE, WEAPONS.RUINS_BRANCH, WEAPONS.FLEET_POLE,
+                    WEAPONS.IRON_POLE, WEAPONS.GADGET_POLE, WEAPONS.IMPACT_POLE, WEAPONS.FORTRESS_POLE,
+                    WEAPONS.LAVA_SHOVEL, WEAPONS.COSMIC_POLE, WEAPONS.HAUNT_POLE, WEAPONS.LAST_POLE],
+
+    "Environment Weapons": [WEAPONS.SPEED_LIMIT_SIGN, WEAPONS.DIGITAL_POLE, WEAPONS.CANYON_POLE, WEAPONS.LETHAL_POLE,
+                    WEAPONS.PRISON_BRANCH, WEAPONS.CIRCUS_POLE, WEAPONS.STOP_SIGN, WEAPONS.DOOM_POLE,
+                    WEAPONS.SKY_POLE, WEAPONS.MATRIX_POLE, WEAPONS.RUINS_BRANCH, WEAPONS.FLEET_POLE,
+                    WEAPONS.IRON_POLE, WEAPONS.GADGET_POLE, WEAPONS.IMPACT_POLE, WEAPONS.FORTRESS_POLE,
+                    WEAPONS.LAVA_SHOVEL, WEAPONS.COSMIC_POLE, WEAPONS.HAUNT_POLE, WEAPONS.LAST_POLE, WEAPONS.CRYPTIC_TORCH],
+
+    "Egg Pawn Weapons": [WEAPONS.EGG_GUN, WEAPONS.EGG_SPEAR, WEAPONS.EGG_BAZOOKA],
+
+    "GUN Launcher Weapons": [WEAPONS.RPG, WEAPONS.FOUR_SHOT_RPG, WEAPONS.EIGHT_SHOT_RPG, WEAPONS.BAZOOKA,
+                             WEAPONS.TANK_CANNON],
+
+    "Black Warrior Weapons": [WEAPONS.FLASH_SHOT, WEAPONS.LIGHT_SHOT, WEAPONS.HEAVY_SHOT, WEAPONS.RING_SHOT,
+                              WEAPONS.BLACK_SWORD],
+
+    "Black Oak Weapons": [WEAPONS.BLACK_SWORD, WEAPONS.BLACK_BARREL, WEAPONS.BIG_BARREL,
+                          WEAPONS.DARK_HAMMER],
+
+    "Worm Weapons": [WEAPONS.WORM_SHOOTER, WEAPONS.WIDE_WORM_SHOOTER, WEAPONS.BIG_WORM_SHOOTER],
+
+    "Gun Solider Weapons": [WEAPONS.PISTOL, WEAPONS.GRENADE_LAUNCHER, WEAPONS.SURVIVAL_KNIFE,
+                            WEAPONS.SUB_MACHINE_GUN],
+
+    "Gun Mech Weapons": [WEAPONS.SEMI_AUTOMATIC_RIFLE, WEAPONS.LASER_RIFLE, WEAPONS.HEAVY_MACHINE_GUN,
+                         WEAPONS.SUB_MACHINE_GUN, WEAPONS.GATLING_GUN],
+
+    "Laser Weapons": [WEAPONS.REFRACTOR, WEAPONS.LASER_RIFLE, WEAPONS.SPLITTER, WEAPONS.RING_SHOT],
+
+    "Standard Melee Weapons": [WEAPONS.SURVIVAL_KNIFE, WEAPONS.BLACK_SWORD, WEAPONS.DARK_HAMMER],
+
+    "All Melee Weapons": [WEAPONS.SPEED_LIMIT_SIGN, WEAPONS.DIGITAL_POLE, WEAPONS.CANYON_POLE, WEAPONS.LETHAL_POLE,
+                    WEAPONS.PRISON_BRANCH, WEAPONS.CIRCUS_POLE, WEAPONS.STOP_SIGN, WEAPONS.DOOM_POLE,
+                    WEAPONS.SKY_POLE, WEAPONS.MATRIX_POLE, WEAPONS.RUINS_BRANCH, WEAPONS.FLEET_POLE,
+                    WEAPONS.IRON_POLE, WEAPONS.GADGET_POLE, WEAPONS.IMPACT_POLE, WEAPONS.FORTRESS_POLE,
+                    WEAPONS.LAVA_SHOVEL, WEAPONS.COSMIC_POLE, WEAPONS.HAUNT_POLE, WEAPONS.LAST_POLE, WEAPONS.CRYPTIC_TORCH,
+                          WEAPONS.SURVIVAL_KNIFE, WEAPONS.BLACK_SWORD, WEAPONS.DARK_HAMMER]
+
+
+
+
+}
