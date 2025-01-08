@@ -1,3 +1,4 @@
+import copy
 import random
 from dataclasses import dataclass
 
@@ -64,7 +65,8 @@ def StoryToOrder(StoryMode):
 
 
 def ChaosShuffle(world):
-    ModifiedStoryMode = DefaultStoryMode.copy()
+
+    ModifiedStoryMode = copy.deepcopy(DefaultStoryMode)
 
     include_last_way = world.options.include_last_way_shuffle
 
@@ -231,7 +233,7 @@ def ChaosShuffle(world):
 
 
 def ShuffleStoryMode(world):
-    ModifiedStoryMode = DefaultStoryMode.copy()
+    ModifiedStoryMode = copy.deepcopy(DefaultStoryMode)
     story_stages = []
     for step in ModifiedStoryMode:
         if step.end_stage_id is not None and step.end_stage_id not in story_stages and \
@@ -254,7 +256,7 @@ def ShuffleStoryMode(world):
 
 
 def GenerateStoryMode(world):
-    ModifiedStoryMode = DefaultStoryMode.copy()
+    ModifiedStoryMode = copy.deepcopy(DefaultStoryMode)
     ModifiedStoryMode[0].end_stage_id = world.random.choice(
         [s for s in Levels.ALL_STAGES if s not in Levels.BOSS_STAGES and s not in Levels.LAST_STORY_STAGES
          and s not in Levels.FINAL_STAGES and Levels.LEVEL_ID_TO_LEVEL[s] not in world.options.excluded_stages])

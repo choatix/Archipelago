@@ -549,7 +549,7 @@ EnemySanityLocations = \
     EnemySanityLocation(STAGE_SPACE_GADGET, ENEMY_CLASS_GUN, 25, "GUN Soldier"),
     EnemySanityLocation(STAGE_SPACE_GADGET, ENEMY_CLASS_ALIEN, 33, "Black Arm"),
 
-    EnemySanityLocation(STAGE_LOST_IMPACT, ENEMY_CLASS_GUN, 31, "GUN Soldier"),
+    EnemySanityLocation(STAGE_LOST_IMPACT, ENEMY_CLASS_GUN, 37, "GUN Soldier"),
     EnemySanityLocation(STAGE_LOST_IMPACT, ENEMY_CLASS_ALIEN, 35, "Artificial Chaos"),
 
     EnemySanityLocation(STAGE_GUN_FORTRESS, ENEMY_CLASS_GUN, 94, "GUN Soldier"),

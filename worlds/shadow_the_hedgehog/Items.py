@@ -705,14 +705,14 @@ def PopulateItemPool(world : World, first_regions):
 
     weapon_items.extend(special_weapon_extras)
     shadow_rifle = GetShadowRifle()
+    available_weapons = [ w for w in weapon_items if w.name in world.available_weapons ]
+
     if not world.options.rifle_components:
         special_weapon_extras.append(shadow_rifle)
-        weapon_items.append(shadow_rifle)
+        available_weapons.append(shadow_rifle)
     else:
         special_weapon_extras.extend(rifle_components)
-        weapon_items.extend(rifle_components)
-
-    available_weapons = [ w for w in weapon_items if w.name in world.available_weapons ]
+        available_weapons.extend(rifle_components)
 
     HandleAllWeaponsGroups(world.options, available_weapons, weapon_group_items)
 

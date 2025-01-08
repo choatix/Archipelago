@@ -153,9 +153,12 @@ def lock_warp_items(multiworld, world, player):
         if warp.stageId not in world.available_levels:
             continue
 
+        warp_story_region = Regions.stage_id_to_story_region(warp.stageId)
         location = multiworld.get_location(warp.name, player)
         i = [ w for w in warpItemInfos if w.stageId == warp.stageId][0]
         mw_token_item = ShadowTheHedgehogItem(i, player)
+        location.access_rule = lambda state, r=location.access_rule: r(state) and state.can_reach_region(
+            warp_story_region, player)
         location.place_locked_item(
             mw_token_item)
 
