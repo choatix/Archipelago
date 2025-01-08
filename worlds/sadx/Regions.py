@@ -119,6 +119,8 @@ def get_location_ids_for_area(area: Area, character: Character, options: SonicAd
             if capsule.area == area and capsule.character == character and is_character_playable(capsule.character,
                                                                                                  options):
                 if character_has_capsule_sanity(capsule.character, options):
+                    if 12548 <= capsule.locationId <= 12552 and not options.pinball_capsules.value:
+                        continue
                     if capsule.type == Capsule.ExtraLife and options.life_capsule_sanity:
                         location_ids.append(capsule.locationId)
                     elif capsule.type in [Capsule.Shield, Capsule.MagneticShield] and options.shield_capsule_sanity:
@@ -129,13 +131,6 @@ def get_location_ids_for_area(area: Area, character: Character, options: SonicAd
                     elif (capsule.type in [Capsule.FiveRings, Capsule.TenRings, Capsule.RandomRings]
                           and options.ring_capsule_sanity):
                         location_ids.append(capsule.locationId)
-
-                        # TODO: Add pinball capsules' ids
-                        # if life_capsule.locationId == 1211 or life_capsule.locationId == 1212:
-                        #     if options.pinball_life_capsules:
-                        #         location_ids.append(life_capsule.locationId)
-                        # else:
-                        #     location_ids.append(life_capsule.locationId)
 
     if options.enemy_sanity:
         for enemy in enemy_location_table:
