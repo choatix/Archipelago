@@ -77,6 +77,8 @@ def early_region_checks(world):
                 and ( level not in Levels.BOSS_STAGES or world.options.select_bosses )
                 #and level not in Levels.FINAL_BOSSES
                 and level not in Levels.LAST_STORY_STAGES # Until resolved
+                and (Story.GetVanillaBossStage(level) is None or level in Levels.FINAL_BOSSES
+                     or Levels.LEVEL_ID_TO_LEVEL[Story.GetVanillaBossStage(level)] not in world.options.excluded_stages)
                 and not (level in Levels.LAST_STORY_STAGES and not world.options.include_last_way_shuffle)
                 and level not in world.available_levels):
             world.available_levels.append(level)

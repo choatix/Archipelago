@@ -1152,6 +1152,10 @@ async def check_save_loaded(ctx):
             clear_address_rank = clear_address_data[1]
             clear_address_time = clear_address_data[2]
 
+            if ctx.story_mode_available and is_level_accessible(ctx, stage, story=True):
+                if stage not in ctx.available_levels:
+                    ctx.available_levels.append(stage)
+
             if not is_mission_completable(ctx, stage, alignment):
                 continue
 
@@ -1168,9 +1172,7 @@ async def check_save_loaded(ctx):
                 if RankToOption(rank, ctx.minimum_rank):
                     continue
 
-            if ctx.story_mode_available and is_level_accessible(ctx, stage, story=True):
-                if stage not in ctx.available_levels:
-                    ctx.available_levels.append(stage)
+
 
             current_bytes = dolphin_memory_engine.read_bytes(clear_address, 1)
             current_status = int.from_bytes(current_bytes, byteorder='big')
@@ -1514,7 +1516,8 @@ def complete_completable_levels(ctx):
 
         other_locations = [ l for l in remaining_locations if location_dict[l].stageId == mission.stageId and
                             location_dict[l].location_type != Locations.LOCATION_TYPE_MISSION_CLEAR and
-                            location_dict[l].location_type != Locations.LOCATION_TYPE_TOKEN
+                            location_dict[l].location_type != Locations.LOCATION_TYPE_TOKEN and
+                            location_dict[l].location_type != Locations.LOCATION_TYPE_WARP
                             ]
 
         if len(mission_complete_locations) > 0 and len(other_locations) == 0:
@@ -1781,11 +1784,25 @@ async def check_level_status(ctx):
 
     force_retry = item_behaviour_changed
 
+    current_screen_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.MENU_ENUM, 4)
+    current_screen = int.from_bytes(current_screen_bytes, byteorder='big')
+
+    if current_screen != MenuOptions.NotInMenu:
+        extra_messages = CheckAutoWarps(ctx)
+
+        if len(extra_messages) > 0:
+            message = [{"cmd": 'LocationChecks', "locations": extra_messages}]
+            await ctx.send_msgs(message)
+            check = [l for l in HandleLocationAutoclears() if l in extra_messages]
+            ctx.level_state["temp"] = True
+
+
     if True:
         current_level_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.ADDRESS_CURRENT_LEVEL, 2)
         current_level = int.from_bytes(current_level_bytes, byteorder='big')
 
         if current_level == 0:
+
             # Reset the level state when not in a level
             if (len(ctx.level_state) != 0 or force_retry or
                     ("temp" in ctx.level_state and ctx.level_state["temp"])):
@@ -1797,13 +1814,7 @@ async def check_level_status(ctx):
                 else:
                     new_messages = []
 
-                current_screen_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.MENU_ENUM, 4)
-                current_screen = int.from_bytes(current_screen_bytes, byteorder='big')
-
                 logger.debug("Detected screen %d", current_screen)
-                if current_screen != MenuOptions.NotInMenu:
-                    extra_messages = CheckAutoWarps(ctx)
-                    new_messages.extend(extra_messages)
 
                 if len(new_messages) > 0:
                     message = [{"cmd": 'LocationChecks', "locations": new_messages}]

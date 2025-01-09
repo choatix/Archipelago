@@ -133,7 +133,7 @@ def handle_path_rules(options, player, additional_level_region, path_type):
 
 def lock_warp_items(multiworld, world, player):
 
-    if not world.options.secret_story_progression:
+    if world.options.level_progression == Options.LevelProgression.option_select or not world.options.secret_story_progression:
         return
 
     (clear_locations, mission_locations, end_location,
