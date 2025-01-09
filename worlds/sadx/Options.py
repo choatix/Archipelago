@@ -380,97 +380,97 @@ class SkyChaseChecksHard(Toggle):
 
 
 class EnemySanity(Toggle):
-    """Determines whether destroying enemies grants checks."""
+    """Determines whether destroying enemies grants checks (710 Locations)."""
     display_name = "Enemy Sanity"
 
 
 class SonicEnemySanity(DefaultOnToggle):
-    """If enemy-sanity is on, determines whether Sonic's enemies are part of the randomizer."""
+    """If enemy-sanity is on, determines whether Sonic's enemies are part of the randomizer (308 Locations)."""
     display_name = "Sonic's Enemy Sanity"
 
 
 class TailsEnemySanity(DefaultOnToggle):
-    """If enemy-sanity is on, determines whether Tails' enemies are part of the randomizer."""
+    """If enemy-sanity is on, determines whether Tails' enemies are part of the randomizer (46 Locations)."""
     display_name = "Tails' Enemy Sanity"
 
 
 class KnucklesEnemySanity(DefaultOnToggle):
-    """If enemy-sanity is on, determines whether Knuckles' enemies are part of the randomizer."""
+    """If enemy-sanity is on, determines whether Knuckles' enemies are part of the randomizer (80 Locations)."""
     display_name = "Knuckles' Enemy Sanity"
 
 
 class AmyEnemySanity(DefaultOnToggle):
-    """If enemy-sanity is on, determines whether Amy's enemies are part of the randomizer."""
+    """If enemy-sanity is on, determines whether Amy's enemies are part of the randomizer (54 Locations)."""
     display_name = "Amy's Enemy Sanity"
 
 
 class BigEnemySanity(DefaultOnToggle):
-    """If enemy-sanity is on, determines whether Big's enemies are part of the randomizer."""
+    """If enemy-sanity is on, determines whether Big's enemies are part of the randomizer (12 Locations)."""
     display_name = "Big's Enemy Sanity"
 
 
 class GammaEnemySanity(DefaultOnToggle):
-    """If enemy-sanity is on, determines whether Gamma's enemies are part of the randomizer."""
+    """If enemy-sanity is on, determines whether Gamma's enemies are part of the randomizer (210 Locations)."""
     display_name = "Gamma's Enemy Sanity"
 
 
 class CapsuleSanity(Toggle):
-    """Determines whether destroying capsules grants checks."""
+    """Determines whether destroying capsules grants checks (692 Locations)."""
     display_name = "Capsule Sanity"
 
 
 class PinballCapsules(Toggle):
-    """Determines whether pinball's capsules grant checks."""
+    """Determines whether pinball's capsules grant checks (5 Locations)."""
     display_name = "Include Pinball's Capsules"
 
 
 class SonicCapsuleSanity(DefaultOnToggle):
-    """If capsule-sanity is on, determines whether Sonic's capsules are part of the randomizer."""
+    """If capsule-sanity is on, determines whether Sonic's capsules are part of the randomizer (360 Locations)."""
     display_name = "Sonic's Capsule Sanity"
 
 
 class TailsCapsuleSanity(DefaultOnToggle):
-    """If capsule-sanity is on, determines whether Tails' capsules are part of the randomizer."""
+    """If capsule-sanity is on, determines whether Tails' capsules are part of the randomizer (111 Locations)."""
     display_name = "Tails' Capsule Sanity"
 
 
 class KnucklesCapsuleSanity(DefaultOnToggle):
-    """If capsule-sanity is on, determines whether Knuckles' capsules are part of the randomizer."""
+    """If capsule-sanity is on, determines whether Knuckles' capsules are part of the randomizer (66 Locations)."""
     display_name = "Knuckles' Capsule Sanity"
 
 
 class AmyCapsuleSanity(DefaultOnToggle):
-    """If capsule-sanity is on, determines whether Amy's capsules are part of the randomizer."""
+    """If capsule-sanity is on, determines whether Amy's capsules are part of the randomizer (53 Locations)."""
     display_name = "Amy's Capsule Sanity"
 
 
 class BigCapsuleSanity(DefaultOnToggle):
-    """If capsule-sanity is on, determines whether Big's capsules are part of the randomizer."""
+    """If capsule-sanity is on, determines whether Big's capsules are part of the randomizer (26 Locations)."""
     display_name = "Big's Capsule Sanity"
 
 
 class GammaCapsuleSanity(DefaultOnToggle):
-    """If capsule-sanity is on, determines whether Gamma's capsules are part of the randomizer."""
+    """If capsule-sanity is on, determines whether Gamma's capsules are part of the randomizer (76 Locations)."""
     display_name = "Gamma's Capsule Sanity"
 
 
 class LifeCapsuleSanity(Toggle):
-    """If capsule-sanity is on, the randomizer will include Life Capsules (102 Locations)."""
+    """If capsule-sanity is on, the randomizer will include Life Capsules (103 Locations)."""
     display_name = "Life Capsule Sanity"
 
 
 class ShieldCapsuleSanity(Toggle):
-    """If capsule-sanity is on, the randomizer will include  Shields and Magnetic Shields."""
+    """If capsule-sanity is on, the randomizer will include  Shields and Magnetic Shields (78 Locations)."""
     display_name = "Shield Capsule Sanity"
 
 
 class PowerUpCapsuleSanity(Toggle):
-    """If capsule-sanity is on, the randomizer will include Invincibility, Speed Up and Bomb Capsules."""
+    """If capsule-sanity is on, the randomizer will include Invincibility, Speed Up and Bomb Capsules (70 Locations)."""
     display_name = "Power Up Capsule Sanity"
 
 
 class RingCapsuleSanity(Toggle):
-    """If capsule-sanity is on, the randomizer will include 5, 10 and ? capsules."""
+    """If capsule-sanity is on, the randomizer will include 5, 10 and ? capsules (441 Locations)."""
     display_name = "Ring Capsule Sanity"
 
 
