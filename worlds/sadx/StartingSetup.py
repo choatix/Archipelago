@@ -159,6 +159,12 @@ def validate_settings(options):
             raise OptionError(
                 " -- SADX Error: You need to add more missions in the settings to use mission as goal. Either add more characters or remove missions from the blacklist.")
 
+    if options.capsule_sanity.value:
+        if not options.life_capsule_sanity.value and not options.shield_capsule_sanity.value and not options.powerup_capsule_sanity and not options.ring_capsule_sanity:
+            logging.warning(
+                " -- SADX warning: Capsule-sanity is enabled but all capsule types are disabled. Enabling life capsules.")
+            options.life_capsule_sanity.value = True
+
 
 def get_possible_starting_areas(world, character: Character, level_mapping: dict[Area, Area], guaranteed_level: bool) -> \
         dict[Area, List[Optional[str]]]:
