@@ -214,12 +214,12 @@ def get_possible_starting_area_information(character: Character, area: Area, opt
     if options.sub_level_checks:
         for sub_level in sub_level_location_table:
             if sub_level.subLevel == SubLevel.SandHill or sub_level.subLevel == SubLevel.TwinkleCircuit:
-                if character in sub_level.characters and sub_level.area == area:
+                if character in sub_level.get_logic_characters(options) and sub_level.area == area:
                     possible_locations[area].append(None)
     if options.sky_chase_checks:
         for sub_level in sub_level_location_table:
             if sub_level.subLevel == SubLevel.SkyChaseAct1 or sub_level.subLevel == SubLevel.SkyChaseAct2:
-                if character in sub_level.characters and sub_level.area == area:
+                if character in sub_level.get_logic_characters(options) and sub_level.area == area:
                     possible_locations[area].append(None)
     if options.field_emblems_checks:
         for field_emblem in field_emblem_location_table:

@@ -174,14 +174,14 @@ def get_location_ids_for_common_region(options):
     if options.sub_level_checks:
         for sub_level in sub_level_location_table:
             if sub_level.subLevel == SubLevel.SandHill or sub_level.subLevel == SubLevel.TwinkleCircuit:
-                if is_any_character_playable(sub_level.characters, options):
+                if is_any_character_playable(sub_level.get_logic_characters(options), options):
                     if ((options.sub_level_checks_hard and sub_level.subLevelMission == SubLevelMission.A)
                             or sub_level.subLevelMission == SubLevelMission.B):
                         location_ids.append(sub_level.locationId)
     if options.sky_chase_checks:
         for sub_level in sub_level_location_table:
             if sub_level.subLevel == SubLevel.SkyChaseAct1 or sub_level.subLevel == SubLevel.SkyChaseAct2:
-                if is_any_character_playable(sub_level.characters, options):
+                if is_any_character_playable(sub_level.get_logic_characters(options), options):
                     if ((options.sky_chase_checks_hard and sub_level.subLevelMission == SubLevelMission.A)
                             or sub_level.subLevelMission == SubLevelMission.B):
                         location_ids.append(sub_level.locationId)

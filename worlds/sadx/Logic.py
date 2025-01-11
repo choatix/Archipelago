@@ -1,8 +1,7 @@
 from dataclasses import dataclass
 from typing import Dict, Tuple, List, Union
 
-from .Enums import Character, Area, SubLevel, LevelMission, pascal_to_space, SubLevelMission, EVERYONE, SONIC_TAILS, \
-    Capsule, Enemy
+from .Enums import Character, Area, SubLevel, LevelMission, pascal_to_space, SubLevelMission, EVERYONE, Capsule, Enemy
 from .Names import ItemName, LocationName
 from .Names.LocationName import Boss
 from .Options import SonicAdventureDXOptions
@@ -153,9 +152,19 @@ class MissionLocation:
 class SubLevelLocation:
     locationId: int
     area: Area
-    characters: List[Character]
     subLevel: SubLevel
     subLevelMission: SubLevelMission
+    normalLogicCharacters: List[Character]
+    hardLogicCharacters: List[Character]
+    expertLogicCharacters: List[Character]
+
+    def get_logic_characters(self, options: SonicAdventureDXOptions) -> List[Character]:
+        if options.logic_level.value == 2:
+            return self.expertLogicCharacters
+        elif options.logic_level.value == 1:
+            return self.hardLogicCharacters
+        else:
+            return self.normalLogicCharacters
 
 
 @dataclass
@@ -809,14 +818,32 @@ mission_location_table: List[MissionLocation] = [
 ]
 
 sub_level_location_table: List[SubLevelLocation] = [
-    SubLevelLocation(15, Area.TwinkleParkLobby, EVERYONE, SubLevel.TwinkleCircuit, SubLevelMission.B),
-    SubLevelLocation(16, Area.TwinkleParkLobby, EVERYONE, SubLevel.TwinkleCircuit, SubLevelMission.A),
-    SubLevelLocation(25, Area.Jungle, SONIC_TAILS, SubLevel.SandHill, SubLevelMission.B),
-    SubLevelLocation(26, Area.Jungle, SONIC_TAILS, SubLevel.SandHill, SubLevelMission.A),
-    SubLevelLocation(27, Area.MysticRuinsMain, SONIC_TAILS, SubLevel.SkyChaseAct1, SubLevelMission.B),
-    SubLevelLocation(28, Area.MysticRuinsMain, SONIC_TAILS, SubLevel.SkyChaseAct1, SubLevelMission.A),
-    SubLevelLocation(35, Area.EggCarrierMain, SONIC_TAILS, SubLevel.SkyChaseAct2, SubLevelMission.B),
-    SubLevelLocation(36, Area.EggCarrierMain, SONIC_TAILS, SubLevel.SkyChaseAct2, SubLevelMission.A),
+    SubLevelLocation(15, Area.TwinkleParkLobby, SubLevel.TwinkleCircuit, SubLevelMission.B,
+                     [Character.Sonic, Character.Tails, Character.Knuckles, Character.Amy, Character.Big,
+                      Character.Gamma],
+                     [Character.Sonic, Character.Knuckles, Character.Tails, Character.Amy, Character.Big],
+                     [Character.Sonic, Character.Knuckles, Character.Tails, Character.Amy, Character.Big]),
+    SubLevelLocation(16, Area.TwinkleParkLobby, SubLevel.TwinkleCircuit, SubLevelMission.A,
+                     [Character.Sonic, Character.Tails, Character.Knuckles, Character.Amy, Character.Big,
+                      Character.Gamma],
+                     [Character.Sonic, Character.Knuckles, Character.Tails, Character.Amy, Character.Big],
+                     [Character.Sonic, Character.Knuckles, Character.Tails, Character.Amy, Character.Big]),
+    SubLevelLocation(25, Area.Jungle, SubLevel.SandHill, SubLevelMission.B, [Character.Tails],
+                     [Character.Tails, Character.Sonic], [Character.Tails, Character.Sonic]),
+    SubLevelLocation(26, Area.Jungle, SubLevel.SandHill, SubLevelMission.A, [Character.Tails],
+                     [Character.Tails, Character.Sonic], [Character.Tails, Character.Sonic]),
+    SubLevelLocation(27, Area.MysticRuinsMain, SubLevel.SkyChaseAct1, SubLevelMission.B,
+                     [Character.Tails, Character.Sonic], [Character.Tails, Character.Sonic],
+                     [Character.Tails, Character.Sonic]),
+    SubLevelLocation(28, Area.MysticRuinsMain, SubLevel.SkyChaseAct1, SubLevelMission.A,
+                     [Character.Tails, Character.Sonic], [Character.Tails, Character.Sonic],
+                     [Character.Tails, Character.Sonic]),
+    SubLevelLocation(35, Area.EggCarrierMain, SubLevel.SkyChaseAct2, SubLevelMission.B,
+                     [Character.Tails, Character.Sonic], [Character.Tails, Character.Sonic],
+                     [Character.Tails, Character.Sonic]),
+    SubLevelLocation(36, Area.EggCarrierMain, SubLevel.SkyChaseAct2, SubLevelMission.A,
+                     [Character.Tails, Character.Sonic], [Character.Tails, Character.Sonic],
+                     [Character.Tails, Character.Sonic]),
 ]
 
 boss_location_table: List[BossFightLocation] = [

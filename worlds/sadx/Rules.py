@@ -35,7 +35,7 @@ def add_sub_level_rules(self, location_name: str, sub_level: SubLevelLocation):
     location = self.multiworld.get_location(location_name, self.player)
     add_rule(location, lambda state: any(
         state.can_reach_region(get_region_name(character, sub_level.area), self.player) for character in
-        sub_level.characters if character in get_playable_characters(self.options)))
+        sub_level.get_logic_characters(self.options) if character in get_playable_characters(self.options)))
 
 
 def add_field_emblem_rules(self, location_name: str, field_emblem: EmblemLocation):
