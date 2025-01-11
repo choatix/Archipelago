@@ -213,7 +213,7 @@ class ForceObjectiveSanityMaxCounter(Range):
 class ExcludedStages(OptionSet):
     """Stage names to exclude checks from."""
     display_name = "Excluded Stages"
-    default = {}
+    #default = {}
     #valid_keys = [i for i in Levels.LEVEL_ID_TO_LEVEL.values() ]
 
 class ExceedingItemsFiller(Choice):

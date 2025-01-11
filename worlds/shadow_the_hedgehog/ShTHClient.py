@@ -716,7 +716,7 @@ class ShTHContext(CommonContext):
         self.previous_rings = None
         self.ring_link_rings = 0
         self.instance_id = time.time()
-        self.debug_logging = True
+        self.debug_logging = False
         self.error_logging = True
         self.info_logging = True
         self.last_level = None
