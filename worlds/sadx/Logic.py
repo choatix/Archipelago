@@ -687,7 +687,6 @@ upgrade_location_table: List[UpgradeLocation] = [
     UpgradeLocation(605, LocationName.Big.Lure4, Area.EggCarrierMain, Character.Big, [], [], []),
     UpgradeLocation(201, LocationName.Tails.RhythmBadge, Area.AngelIsland, Character.Tails, [], [], []),
 ]
-
 field_emblem_location_table: List[EmblemLocation] = [
     EmblemLocation(10, Area.Station,
                    [Character.Sonic, Character.Knuckles, Character.Tails, Character.Amy, Character.Big],
@@ -706,7 +705,8 @@ field_emblem_location_table: List[EmblemLocation] = [
                    [Character.Tails, CharacterUpgrade(Character.Knuckles, ItemName.Knuckles.ShovelClaw)],
                    [Character.Amy, Character.Tails, CharacterUpgrade(Character.Knuckles, ItemName.Knuckles.ShovelClaw)],
                    "City Hall Emblem"),
-    EmblemLocation(13, Area.Casino, [Character.Tails], [Character.Tails], [Character.Tails], "Casino Emblem"),
+    EmblemLocation(13, Area.Casino, [Character.Tails], [Character.Tails, Character.Sonic],
+                   [Character.Tails, Character.Sonic], "Casino Emblem"),
     EmblemLocation(20, Area.MysticRuinsMain,
                    [Character.Tails, Character.Knuckles, CharacterUpgrade(Character.Gamma, ItemName.Gamma.JetBooster)],
                    [Character.Sonic, Character.Tails, Character.Knuckles,
