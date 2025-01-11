@@ -228,7 +228,7 @@ area_connections: Dict[Tuple[Character, Area, Area], Tuple[List[str], List[str],
         [ItemName.KeyItem.IceStone, ItemName.KeyItem.CasinoKeys, ItemName.KeyItem.Train, ItemName.KeyItem.Dynamite]),
     (Character.Tails, Area.TwinkleParkLobby, Area.TwinklePark): ([], [], []),
     (Character.Tails, Area.StationSquareMain, Area.SpeedHighway): (
-        [ItemName.KeyItem.EmployeeCard], [ItemName.KeyItem.EmployeeCard], [ItemName.KeyItem.EmployeeCard]),
+        [ItemName.KeyItem.EmployeeCard], [ItemName.KeyItem.EmployeeCard], []),
     (Character.Tails, Area.AngelIsland, Area.RedMountain): ([], [], []),
     (Character.Tails, Area.EggCarrierMain, Area.SkyDeck): ([], [], []),
     (Character.Tails, Area.Jungle, Area.LostWorld): ([], [], []),
@@ -353,8 +353,7 @@ area_connections: Dict[Tuple[Character, Area, Area], Tuple[List[str], List[str],
     (Character.Tails, Area.Station, Area.Casino): (
         [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys]),
     (Character.Tails, Area.Casino, Area.Station): ([ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys], []),
-    (Character.Tails, Area.Hotel, Area.Casino): (
-        [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys]),
+    (Character.Tails, Area.Hotel, Area.Casino): ([ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys], []),
     (Character.Tails, Area.Casino, Area.Hotel): (
         [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys]),
     (Character.Tails, Area.StationSquareMain, Area.TwinkleParkLobby): (
@@ -391,8 +390,7 @@ area_connections: Dict[Tuple[Character, Area, Area], Tuple[List[str], List[str],
         [ItemName.KeyItem.HotelKeys], [ItemName.KeyItem.HotelKeys], [ItemName.KeyItem.HotelKeys]),
     (Character.Knuckles, Area.Hotel, Area.StationSquareMain): (
         [ItemName.KeyItem.HotelKeys], [ItemName.KeyItem.HotelKeys], [ItemName.KeyItem.HotelKeys]),
-    (Character.Knuckles, Area.Station, Area.Casino): (
-        [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys]),
+    (Character.Knuckles, Area.Station, Area.Casino): ([ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys], []),
     (Character.Knuckles, Area.Casino, Area.Station): (
         [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys]),
     (Character.Knuckles, Area.Hotel, Area.Casino): (
@@ -425,7 +423,7 @@ area_connections: Dict[Tuple[Character, Area, Area], Tuple[List[str], List[str],
     (Character.Knuckles, Area.EggCarrierMain, Area.MysticRuinsMain): (
         [ItemName.KeyItem.Raft], [ItemName.KeyItem.Raft], [ItemName.KeyItem.Raft]),
     (Character.Amy, Area.StationSquareMain, Area.Station): (
-        [ItemName.KeyItem.StationKeys], [ItemName.KeyItem.StationKeys], [ItemName.KeyItem.StationKeys]),
+        [ItemName.KeyItem.StationKeys], [ItemName.KeyItem.StationKeys], []),
     (Character.Amy, Area.Station, Area.StationSquareMain): (
         [ItemName.KeyItem.StationKeys], [ItemName.KeyItem.StationKeys], [ItemName.KeyItem.StationKeys]),
     (Character.Amy, Area.StationSquareMain, Area.Hotel): (
@@ -687,6 +685,7 @@ upgrade_location_table: List[UpgradeLocation] = [
     UpgradeLocation(605, LocationName.Big.Lure4, Area.EggCarrierMain, Character.Big, [], [], []),
     UpgradeLocation(201, LocationName.Tails.RhythmBadge, Area.AngelIsland, Character.Tails, [], [], []),
 ]
+
 field_emblem_location_table: List[EmblemLocation] = [
     EmblemLocation(10, Area.Station,
                    [Character.Sonic, Character.Knuckles, Character.Tails, Character.Amy, Character.Big],
@@ -713,9 +712,8 @@ field_emblem_location_table: List[EmblemLocation] = [
                     CharacterUpgrade(Character.Gamma, ItemName.Gamma.JetBooster)],
                    [Character.Sonic, Character.Tails, Character.Knuckles,
                     CharacterUpgrade(Character.Gamma, ItemName.Gamma.JetBooster)], "Tails' Workshop Emblem"),
-    EmblemLocation(21, Area.AngelIsland, [Character.Knuckles], [Character.Tails, Character.Knuckles,
-                                                                CharacterUpgrade(Character.Gamma,
-                                                                                 ItemName.Gamma.JetBooster)],
+    EmblemLocation(21, Area.AngelIsland, [Character.Knuckles],
+                   [Character.Tails, Character.Knuckles, CharacterUpgrade(Character.Gamma, ItemName.Gamma.JetBooster)],
                    [Character.Sonic, Character.Tails, Character.Knuckles,
                     CharacterUpgrade(Character.Gamma,
                                      ItemName.Gamma.JetBooster)], "Shrine Emblem"),
@@ -732,10 +730,10 @@ field_emblem_location_table: List[EmblemLocation] = [
                    [Character.Sonic, Character.Tails, Character.Knuckles, Character.Amy],
                    [Character.Sonic, Character.Tails, Character.Knuckles, Character.Amy], "Pool Emblem"),
     EmblemLocation(31, Area.EggCarrierMain, [Character.Tails], [Character.Tails, Character.Sonic],
-                   [Character.Tails, Character.Sonic], "Spinning Platform Emblem"),
+                   [Character.Tails, Character.Sonic, Character.Knuckles], "Spinning Platform Emblem"),
     EmblemLocation(32, Area.EggCarrierMain, [Character.Tails, Character.Sonic],
-                   [Character.Tails, Character.Sonic, Character.Big], [Character.Tails, Character.Sonic, Character.Big],
-                   "Hidden Bed Emblem"),
+                   [Character.Tails, Character.Sonic, Character.Big],
+                   [Character.Tails, Character.Sonic, Character.Big, Character.Knuckles], "Hidden Bed Emblem"),
     EmblemLocation(33, Area.EggCarrierMain, [Character.Sonic], [Character.Sonic, Character.Big],
                    [Character.Sonic, Character.Big], "Main Platform Emblem"),
 ]
