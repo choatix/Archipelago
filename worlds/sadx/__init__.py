@@ -1,7 +1,7 @@
 import typing
 from typing import Dict, Any
 
-from BaseClasses import Tutorial
+from BaseClasses import Tutorial, ItemClassification
 from worlds.AutoWorld import WebWorld, World
 from .CharacterUtils import get_playable_characters
 from .Enums import Character, SADX_BASE_ID, Area, remove_character_suffix, pascal_to_space
@@ -109,13 +109,15 @@ class SonicAdventureDXWorld(World):
 
                 self.options.field_emblems_checks.value = passthrough["FieldEmblemChecks"]
                 self.options.random_starting_location.value = passthrough["RandomStartingLocation"]
-                self.options.random_starting_location_per_character.value = passthrough["RandomStartingLocationPerCharacter"]
+                self.options.random_starting_location_per_character.value = passthrough[
+                    "RandomStartingLocationPerCharacter"]
                 self.options.guaranteed_level.value = passthrough["GuaranteedLevel"]
                 self.options.guaranteed_starting_checks.value = passthrough["GuaranteedStartingChecks"]
 
                 self.options.chao_egg_checks.value = passthrough["SecretChaoEggs"]
                 self.options.chao_races_checks.value = passthrough["ChaoRacesChecks"]
-                self.options.chao_races_levels_to_access_percentage.value = passthrough["ChaoRacesLevelsToAccessPercentage"]
+                self.options.chao_races_levels_to_access_percentage.value = passthrough[
+                    "ChaoRacesLevelsToAccessPercentage"]
                 self.options.mission_mode_checks.value = passthrough["MissionModeChecks"]
                 self.options.auto_start_missions.value = passthrough["AutoStartMissions"]
 
@@ -185,9 +187,16 @@ class SonicAdventureDXWorld(World):
 
         hint_data[self.player] = sadx_hint_data
 
+    def generate_progression_data(self) -> typing.Dict[int, int]:
+        progression_data = {}
+        for ap_location in self.multiworld.get_locations(self.player):
+            if ap_location.item.classification == ItemClassification.progression:
+                progression_data[ap_location.address] = ap_location.address
+        return progression_data
+
     def fill_slot_data(self) -> Dict[str, Any]:
         return {
-            "ModVersion": 100,
+            "ModVersion": 101,
             "GoalRequiresLevels": self.options.goal_requires_levels.value,
             "LevelsPercentage": self.options.levels_percentage.value,
             "GoalRequiresChaosEmeralds": self.options.goal_requires_chaos_emeralds.value,
@@ -246,6 +255,8 @@ class SonicAdventureDXWorld(World):
             "ShieldCapsuleSanity": self.options.shield_capsule_sanity.value,
             "PowerUpCapsuleSanity": self.options.powerup_capsule_sanity.value,
             "RingCapsuleSanity": self.options.ring_capsule_sanity.value,
+
+            "ProgressionItems": self.generate_progression_data(),
 
             "DeathLink": self.options.death_link.value,
             "SendDeathLinkChance": self.options.send_death_link_chance.value,
