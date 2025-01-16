@@ -335,7 +335,8 @@ class ShtHWorld(World):
 
     def get_filler_item_name(self) -> str:
         # Use the same weights for filler items that are used in the base randomizer.
-        return Items.ChooseJunkItems(self.random, Items.GetJunkItemInfo(), self.options, 1)[0]
+        item_info = Items.ChooseJunkItems(self.random, Items.GetJunkItemInfo(), self.options, 1)[0]
+        return item_info.name
 
 
     def get_pre_fill_items(self):

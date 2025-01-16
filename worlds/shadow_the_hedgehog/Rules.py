@@ -202,6 +202,8 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
 
     override_settings = world.options.percent_overrides
     lock_warp_items(multiworld, world, world.player)
+
+
     for clear in MissionClearLocations:
 
         if clear.stageId not in world.available_levels:
@@ -417,13 +419,17 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
 
                 rule = lambda state: True
 
-                if (world.options.weapon_sanity_unlock and world.options.weapon_sanity_hold == 1) or \
+                if (world.options.weapon_sanity_unlock and
+                    world.options.weapon_sanity_hold == Options.WeaponsanityHold.option_unlocked) or \
                     Weapons.WeaponAttributes.SPECIAL in weapon.attributes:
-                        rule = lambda state, w=weapon.name: state.has(w, player)
+                        rule = Weapons.GetRuleByWeaponRequirement(player, weapon.name, None, None)
 
                 region_stage = world.get_region(stage_id_to_region(stage, region_index))
                 region_stage.connect(region, region_name_for_weapon(LEVEL_ID_TO_LEVEL[stage], weapon.name),
                                      rule=rule)
+
+    for enemy in Locations.EnemySanityLocations:
+        pass
 
 
     e = multiworld.get_entrance("final-story-unlock", player)
