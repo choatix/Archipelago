@@ -44,7 +44,7 @@ def GetRuleByWeaponRequirement(player, req, stage, regions):
         for i in range(0, len(regions)):
             if max(regions) > i:
                 regions.append(i)
-    else:
+    elif stage is not None:
         p_regions = [ l.regionIndex for l in Levels.INDIVIDUAL_LEVEL_REGIONS if l.stageId == stage]
         if len(p_regions) == 0:
             regions = []
@@ -53,11 +53,13 @@ def GetRuleByWeaponRequirement(player, req, stage, regions):
 
     matches_items = [ w for w in WEAPON_INFO if (
             (req is None and len(w.attributes) > 0)
-            or req in w.attributes) and
+            or req in w.attributes or req == w.name) and
                 len([ a for a in w.available_stages
-                  if (type(a) is tuple and a[0] == stage and a[1] in regions)
+                  if (stage is not None and type(a) is tuple and a[0] == stage and a[1] in regions)
                   or
-                      (type(a) is not tuple and a == stage)
+                      (stage is None)
+                  or
+                      (stage is not None and type(a) is not tuple and a == stage)
                 ]) > 0
                 ]
 
