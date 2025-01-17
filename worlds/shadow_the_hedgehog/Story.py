@@ -36,6 +36,7 @@ def GetVanillaBossStage(boss):
     stages = [ b.start_stage_id for b in DefaultStoryMode if b.boss == boss]
     if len(stages) > 0:
         return stages[0]
+
     return None
 
 

@@ -163,12 +163,10 @@ def create_regions(world) -> Dict[str, Region]:
             boss_item_name = None
 
             if stage_id in Levels.BOSS_STAGES:
-                if stage_id in Levels.LAST_STORY_STAGES:
-                    continue
-
-                boss_stage_requirement = Story.GetVanillaBossStage(stage_id)
-                if boss_stage_requirement is not None:
-                    boss_item_name = Items.GetStageUnlockItem(boss_stage_requirement)
+                if stage_id not in Levels.LAST_STORY_STAGES and stage_id not in Levels.FINAL_BOSSES:
+                    boss_stage_requirement = Story.GetVanillaBossStage(stage_id)
+                    if boss_stage_requirement is not None:
+                        boss_item_name = Items.GetStageUnlockItem(boss_stage_requirement)
 
             if boss_item_name is None:
                 connect_rule = lambda state, si=stage_item_name: state.has(si, world.player)
