@@ -1709,9 +1709,12 @@ enemy_location_table: List[EnemyLocation] = [
     EnemyLocation(54117, Area.HotShelter, Character.Gamma, 117, Enemy.Kiki, [ItemName.Gamma.JetBooster], [], [], []),
     EnemyLocation(63001, Area.HotShelter, Character.Big, 1, Enemy.Kiki, [], [], [], []),
     EnemyLocation(63002, Area.HotShelter, Character.Big, 2, Enemy.Kiki, [], [], [], []),
-    EnemyLocation(63003, Area.HotShelter, Character.Big, 3, Enemy.Kiki, [], [], [], []),
-    EnemyLocation(63004, Area.HotShelter, Character.Big, 4, Enemy.Kiki, [], [], [], []),
-    EnemyLocation(63005, Area.HotShelter, Character.Big, 5, Enemy.Kiki, [], [], [], []),
+    EnemyLocation(63003, Area.HotShelter, Character.Big, 3, Enemy.Kiki, [ItemName.Big.LifeBelt],
+                  [ItemName.Big.LifeBelt], [ItemName.Big.LifeBelt], [ItemName.Big.LifeBelt]),
+    EnemyLocation(63004, Area.HotShelter, Character.Big, 4, Enemy.Kiki, [ItemName.Big.LifeBelt],
+                  [ItemName.Big.LifeBelt], [ItemName.Big.LifeBelt], [ItemName.Big.LifeBelt]),
+    EnemyLocation(63005, Area.HotShelter, Character.Big, 5, Enemy.Kiki, [ItemName.Big.LifeBelt],
+                  [ItemName.Big.LifeBelt], [ItemName.Big.LifeBelt], [ItemName.Big.LifeBelt]),
 ]
 
 capsule_location_table: List[CapsuleLocation] = [
