@@ -400,11 +400,12 @@ area_connections: Dict[Tuple[Character, Area, Area], Tuple[List[str], List[str],
         [ItemName.KeyItem.HotelKeys], [ItemName.KeyItem.HotelKeys], [ItemName.KeyItem.HotelKeys],
         [ItemName.KeyItem.HotelKeys]),
     (Character.Tails, Area.Station, Area.Casino): (
-        [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys],
-        [ItemName.KeyItem.CasinoKeys]),
+        [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys], [], []),
     (Character.Tails, Area.Casino, Area.Station): (
         [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys], [], []),
-    (Character.Tails, Area.Hotel, Area.Casino): ([ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys], [], []),
+    (Character.Tails, Area.Hotel, Area.Casino): (
+        [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys],
+        [ItemName.KeyItem.CasinoKeys]),
     (Character.Tails, Area.Casino, Area.Hotel): ([ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys], [], []),
     (Character.Tails, Area.StationSquareMain, Area.TwinkleParkLobby): (
         [ItemName.KeyItem.TwinkleParkTicket], [ItemName.KeyItem.TwinkleParkTicket],
