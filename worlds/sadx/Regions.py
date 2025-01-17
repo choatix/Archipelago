@@ -52,8 +52,8 @@ def create_sadx_regions(world: World, starter_setup: StarterSetup, options: Soni
                                                                                                          world.player))
 
     # Connect regions based on area connections rules
-    for (character, area_from, area_to), (
-            normal_logic_items, hard_logic_items, expert_logic_items) in area_connections.items():
+    for (character, area_from, area_to), (normal_logic_items, hard_logic_items, expert_dc_logic_items,
+                                          expert_dx_logic_items) in area_connections.items():
 
         if options.entrance_randomizer:
             actual_area = starter_setup.level_mapping.get(area_to, area_to)
@@ -63,8 +63,10 @@ def create_sadx_regions(world: World, starter_setup: StarterSetup, options: Soni
         region_from = created_regions.get((character, area_from))
         region_to = created_regions.get((character, actual_area))
 
-        if options.logic_level.value == 2:
-            key_items = expert_logic_items
+        if options.logic_level.value == 3:
+            key_items = expert_dx_logic_items
+        elif options.logic_level.value == 2:
+            key_items = expert_dc_logic_items
         elif options.logic_level.value == 1:
             key_items = hard_logic_items
         else:
