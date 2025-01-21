@@ -60,6 +60,8 @@ class ShtHWorld(World):
 
     item_name_groups = Items.get_item_groups()
 
+    location_name_groups = Locations.getLocationGroups()
+
     def reinitialise(self):
         self.first_regions = []
         self.available_characters = []
@@ -193,9 +195,10 @@ class ShtHWorld(World):
                 self.options.story_boss_count = passthrough["story_boss_count"]
                 self.options.select_bosses = passthrough["select_bosses"]
                 self.options.minimum_rank = passthrough["minimum_rank"]
-
-                if "secret_story_progression" in passthrough:
-                    self.options.secret_story_progression = passthrough["secret_story_progression"]
+                self.options.enemy_frequency = passthrough["enemy_frequency"]
+                self.options.objective_frequency = passthrough["objective_frequency"]
+                self.options.enemy_objective_frequency = passthrough["enemy_objective_frequency"]
+                self.options.secret_story_progression = passthrough["secret_story_progression"]
 
                 self.shuffled_story_mode = Story.StringToStory(passthrough["shuffled_story_mode"])
 
@@ -397,7 +400,10 @@ class ShtHWorld(World):
             "story_boss_count": self.options.story_boss_count.value,
             "secret_story_progression": self.options.secret_story_progression.value,
             "select_bosses": self.options.select_bosses.value,
-            "minimum_rank": self.options.minimum_rank.value
+            "minimum_rank": self.options.minimum_rank.value,
+            "enemy_frequency": self.options.enemy_frequency.value,
+            "objective_frequency": self.options.objective_frequency.value,
+            "enemy_objective_frequency": self.options.enemy_objective_frequency.value
         }
 
         return slot_data

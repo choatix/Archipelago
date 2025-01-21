@@ -226,7 +226,7 @@ WEAPON_INFO = [
 [WeaponAttributes.NOT_AIMABLE]),
     WeaponInfo(0x11, "Egg Bazooka",
                [(Levels.STAGE_CRYPTIC_CASTLE, 1), Levels.STAGE_CIRCUS_PARK, Levels.STAGE_SKY_TROOPS,
-                Levels.STAGE_MAD_MATRIX, Levels.STAGE_IRON_JUNGLE, Levels.STAGE_LAVA_SHELTER,
+                (Levels.STAGE_MAD_MATRIX,1), Levels.STAGE_IRON_JUNGLE, Levels.STAGE_LAVA_SHELTER,
                 Levels.BOSS_EGG_BREAKER_MM, Levels.BOSS_EGG_BREAKER_IJ,
                 Levels.BOSS_EGG_DEALER_BC, Levels.BOSS_EGG_DEALER_LS, Levels.BOSS_EGG_DEALER_CF],
 [WeaponAttributes.NOT_AIMABLE]),

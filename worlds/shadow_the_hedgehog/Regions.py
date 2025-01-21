@@ -44,6 +44,8 @@ def early_region_checks(world):
     available_story_stages = []
 
     story_sorted_stages = Story.StoryToOrder(world.shuffled_story_mode)
+    if Levels.STAGE_THE_LAST_WAY not in story_sorted_stages:
+        story_sorted_stages.append(Levels.STAGE_THE_LAST_WAY)
 
     for level in story_sorted_stages:
         if Levels.LEVEL_ID_TO_LEVEL[level] in world.options.excluded_stages:
@@ -76,7 +78,8 @@ def early_region_checks(world):
         if (world.options.level_progression != Options.LevelProgression.option_story \
                 and ( level not in Levels.BOSS_STAGES or world.options.select_bosses )
                 #and level not in Levels.FINAL_BOSSES
-                and level not in Levels.LAST_STORY_STAGES # Until resolved
+                and level != Levels.BOSS_DEVIL_DOOM
+                #and level not in Levels.LAST_STORY_STAGES # Until resolved
                 and (Story.GetVanillaBossStage(level) is None or level in Levels.FINAL_BOSSES
                      or Levels.LEVEL_ID_TO_LEVEL[Story.GetVanillaBossStage(level)] not in world.options.excluded_stages)
                 and not (level in Levels.LAST_STORY_STAGES and not world.options.include_last_way_shuffle)
@@ -109,9 +112,15 @@ def create_regions(world) -> Dict[str, Region]:
     region_to_stage_id = {}
     possible_first_regions = []
 
+    last_way_standard = (world.options.level_progression == Options.LevelProgression.option_select
+                         or not world.options.include_last_way_shuffle or not world.options.story_shuffle == Options.StoryShuffle.option_chaos)
+
+
     limited_first_stages = []
     if world.options.guaranteed_level_clear:
         limited_first_stages = Locations.GetStagesWithNoRequirements(world)
+
+
 
     for level_id in stages:
         if level_id not in world.available_levels:
@@ -161,7 +170,10 @@ def create_regions(world) -> Dict[str, Region]:
             connect_name = "menu-to-stage-"+str(stage_id)
             stage_item_name = Items.GetStageUnlockItem(stage_id)
             boss_item_name = None
+            boss_stage_requirement = None
 
+            if stage_id in Levels.LAST_STORY_STAGES:
+                continue
             if stage_id in Levels.BOSS_STAGES:
                 if stage_id not in Levels.LAST_STORY_STAGES and stage_id not in Levels.FINAL_BOSSES:
                     boss_stage_requirement = Story.GetVanillaBossStage(stage_id)
@@ -170,9 +182,17 @@ def create_regions(world) -> Dict[str, Region]:
 
             if boss_item_name is None:
                 connect_rule = lambda state, si=stage_item_name: state.has(si, world.player)
+            elif boss_stage_requirement is not None and world.options.level_progression == LevelProgression.option_both:
+                connect_rule = lambda state, si=stage_item_name, b_name=boss_item_name, b_stage=boss_stage_requirement: (
+                        state.has(si, world.player) and
+                        (state.has(b_name, world.player)
+                         or
+                         state.can_reach_region(stage_id_to_story_region(b_stage),world.player))
+                         )
             else:
                 connect_rule = lambda state, si=stage_item_name, b_name=boss_item_name: (
-                        state.has(si, world.player) and state.has(b_name, world.player))
+                        state.has(si, world.player) and state.has(b_name, world.player)
+                )
 
             connect(world.player, connect_name,
                     regions["Menu"], region, connect_rule)
@@ -204,6 +224,18 @@ def create_regions(world) -> Dict[str, Region]:
     regions["FinalStory"] = Region("FinalStory", world.player, world.multiworld)
     connect(world.player, "final-story-unlock", regions["Menu"],
             regions["FinalStory"])
+
+    regions["DevilDoom"] = Region("DevilDoom", world.player, world.multiworld)
+    connect(world.player, "devil-doom-fight", regions["FinalStory"],
+            regions["DevilDoom"])
+
+    if last_way_standard:
+        last_way_region = regions[stage_id_to_region(Levels.STAGE_THE_LAST_WAY)]
+        connect(world.player, "final-story-unlock-tlw", regions["FinalStory"],
+                last_way_region)
+
+        pass
+
 
 
     return regions
@@ -315,7 +347,7 @@ def connect_by_story_mode(multiworld: MultiWorld, world, player: int, order: typ
             if world.options.secret_story_progression and hasattr(multiworld, "re_gen_passthrough"):
                 warp_item = Items.GetStageWarpItem(path.boss)
                 secret_rule = lambda state, wi=warp_item: state.has(wi, world.player)
-                base_rule = lambda state, br=base_rule, sr=secret_rule: br(state) and sr(state)
+                boss_base_rule = lambda state, br=boss_base_rule, sr=secret_rule: br(state) and sr(state)
 
             boss_entrance = connect(world.player, "Boss Entrance_"+str(order.index(path)) + str(path.start_stage_id) + "/" +
                     str(path.end_stage_id), start_region, boss_region, rule=boss_base_rule)
