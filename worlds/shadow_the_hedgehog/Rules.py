@@ -74,10 +74,12 @@ def handle_path_rules(options, player, additional_level_region, path_type):
             rule = (rule_weapon or rule_vehicle)
             return rule
 
-        elif options.weapon_sanity_unlock:
-            region_restriction = REGION_RESTRICTION_TYPES.LongRangeGun
-        elif options.vehicle_logic:
-            region_restriction = REGION_RESTRICTION_TYPES.GunTurret
+        # If weapon or vehicle is not on, then it will always be available to use the other method
+
+        #elif options.weapon_sanity_unlock:
+        #    region_restriction = REGION_RESTRICTION_TYPES.LongRangeGun
+        #elif options.vehicle_logic:
+        #    region_restriction = REGION_RESTRICTION_TYPES.GunTurret
 
     if options.weapon_sanity_unlock and Levels.IsWeaponsanityRestriction(region_restriction):
         if region_restriction == REGION_RESTRICTION_TYPES.Torch:
@@ -133,7 +135,7 @@ def handle_path_rules(options, player, additional_level_region, path_type):
 
 def lock_warp_items(multiworld, world, player):
 
-    if not world.options.secret_story_progression:
+    if world.options.level_progression == Options.LevelProgression.option_select or not world.options.secret_story_progression:
         return
 
     (clear_locations, mission_locations, end_location,
@@ -431,7 +433,6 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
     for enemy in Locations.EnemySanityLocations:
         pass
 
-
     e = multiworld.get_entrance("final-story-unlock", player)
     goal_has = []
     item_dict = Items.GetItemDict()
@@ -470,6 +471,18 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
         # handle requirement that DD must be found in the level shuffle!
         devil_doom_story_region = Regions.stage_id_to_story_region(Levels.BOSS_DEVIL_DOOM)
         e.access_rule = lambda state, er=e.access_rule : er(state) and state.can_reach_region(devil_doom_story_region, player)
+
+    else:
+        # Ensure TLW is beatable
+        tlw_location_id, tlw_location_name = Levels.GetLevelCompletionNames(Levels.STAGE_THE_LAST_WAY, Levels.MISSION_ALIGNMENT_NEUTRAL)
+        e.access_rule = lambda state, er=e.access_rule: er(state)
+
+        devil_doom = multiworld.get_entrance("devil-doom-fight", player)
+        devil_doom.access_rule = lambda state, er=e.access_rule: er(state) and state.can_reach_location(tlw_location_name, player)
+
+    #else:
+    #    e = multiworld.get_entrance("final-story-unlock-tlw", player)
+        pass
 
         #e.access_rule = lambda state, : state.has(, player) and state.has(emeralds[1].name, player) \
         #        and state.has(emeralds[2].name, player) and state.has(emeralds[3].name, player) \

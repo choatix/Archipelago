@@ -485,7 +485,7 @@ def ChooseJunkItems(random, junk, options, junk_count):
     return [ junk_items[k] for k in randomised_indicies]
 
 def CountItems(world: World):
-    (emerald_items, key_items, level_unlock_items, stage_objective_items,
+    (emerald_items, key_items, level_unlock_items, stage_objective_items_x,
      junk_items, token_items, weapon_items, vehicle_items, warp_items, rifle_components,
      weapon_group_items) = GetAllItemInfo()
 
@@ -498,7 +498,22 @@ def CountItems(world: World):
     if not world.options.rifle_components:
         rifle_components = []
 
-    stage_objective_items = [ s for s in stage_objective_items if s.stageId in world.available_levels ]
+    stage_objective_items_full = [ s for s in stage_objective_items_x if s.stageId in world.available_levels ]
+    using_stage_objective_items = []
+
+    for item in stage_objective_items_full:
+
+        lookup = [x for x in MissionClearLocations
+                  if x.stageId == item.stageId and x.alignmentId == item.alignmentId][0]
+
+        max_available = ShadowUtils.getMaxRequired(
+        ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_OBJECTIVE_AVAILABLE, lookup.mission_object_name,
+                                                  world.options),
+            lookup.requirement_count, lookup.stageId, lookup.alignmentId, world.options.percent_overrides)
+
+        current_count_of = len([ s for s in using_stage_objective_items if item.itemId == s.itemId])
+        if current_count_of < max_available:
+            using_stage_objective_items.append(item)
 
     # Don't use level unlocks for stages you start with!
     use_level_unlock_items = [l for l in level_unlock_items if l.stageId in world.available_levels
@@ -511,7 +526,7 @@ def CountItems(world: World):
 
     weapon_items.extend(special_weapon_extras)
 
-    item_count = (len(use_level_unlock_items) + len(stage_objective_items))
+    item_count = (len(use_level_unlock_items) + len(using_stage_objective_items))
     if world.options.goal_chaos_emeralds:
         item_count += len(emerald_items)
 
@@ -525,7 +540,7 @@ def CountItems(world: World):
         item_count += len(vehicle_items)
 
     item_duper = []
-    for item in stage_objective_items:
+    for item in using_stage_objective_items:
         if item.name in item_duper:
             continue
         item_duper.append(item.name)
@@ -544,7 +559,7 @@ def CountItems(world: World):
             #print("Add extras", item.name, extras)
             for i in range(0, max_required - lookup.requirement_count):
                 i_item = copy.copy(item)
-                stage_objective_items.append(i_item)
+                using_stage_objective_items.append(i_item)
 
     return item_count
 

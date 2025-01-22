@@ -1205,7 +1205,7 @@ def create_locations(world, regions: Dict[str, Region]):
         menu_region.locations.append(rifle_location)
 
 
-    end_region = regions["FinalStory"]
+    end_region = regions["DevilDoom"]
     devil_doom_location = ShadowTheHedgehogLocation(world.player, end_location[0].name, end_location[0].locationId, end_region)
     end_region.locations.append(devil_doom_location)
 
@@ -1362,7 +1362,46 @@ def GetStagesWithNoRequirements(world):
               and m.requirement_count is None and Levels.LEVEL_ID_TO_LEVEL[m.stageId] not in world.options.excluded_stages ]
     return list(set(stages))
 
+def getLocationGroups():
+    (clear_locations, mission_locations, end_location,
+     enemysanity_locations, checkpointsanity_locations, charactersanity_locations,
+     token_locations, keysanity_locations, weaponsanity_locations, boss_locations,
+     warp_locations) = GetAllLocationInfo()
 
+    groups = {
+        "Mission Clears": [c.name for c in clear_locations],
+        "Hero Mission Clears": [c.name for c in clear_locations if c.alignmentId == Levels.MISSION_ALIGNMENT_HERO],
+        "Dark Mission Clears": [c.name for c in clear_locations if c.alignmentId == Levels.MISSION_ALIGNMENT_DARK],
+        "Neutral Mission Clears": [c.name for c in clear_locations if
+                                   c.alignmentId == Levels.MISSION_ALIGNMENT_NEUTRAL],
+        "Objective Mission Clears": [c.name for c in clear_locations if c.count is not None],
+        "Objective Hero Mission Clears": [c.name for c in clear_locations if
+                                          c.count is not None and c.alignmentId == Levels.MISSION_ALIGNMENT_HERO],
+        "Objective Dark Mission Clears": [c.name for c in clear_locations if
+                                          c.count is not None and c.alignmentId == Levels.MISSION_ALIGNMENT_DARK],
+        "Mission Objectives": [c.name for c in mission_locations],
+        "Enemies": [c.name for c in enemysanity_locations],
+        "GUN Enemies": [c.name for c in enemysanity_locations if c.alignmentId == ENEMY_CLASS_GUN],
+        "Egg Enemies": [c.name for c in enemysanity_locations if c.alignmentId == ENEMY_CLASS_EGG],
+        "Alien Enemies": [c.name for c in enemysanity_locations if c.alignmentId == ENEMY_CLASS_ALIEN],
+        "Checkpoints": [c.name for c in checkpointsanity_locations],
+        "Characters": [c.name for c in charactersanity_locations],
+        "Keys": [c.name for c in keysanity_locations],
+        "Weapons": [c.name for c in weaponsanity_locations],
+        "Bosses": [c.name for c in boss_locations],
+        "Final Bosses": [c.name for c in boss_locations if c.stageId in Levels.FINAL_BOSSES]
+    }
+
+    l_info = GetLocationInfoDict()
+
+    for level in Levels.LEVEL_ID_TO_LEVEL.keys():
+        if level in Levels.BOSS_STAGES:
+            continue
+        group_name = Levels.LEVEL_ID_TO_LEVEL[level]
+        groups[group_name] = [ x.name for x in l_info.values() if x.stageId == level]
+
+
+    return groups
 
 
 

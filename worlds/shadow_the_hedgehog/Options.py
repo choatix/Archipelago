@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from Options import PerGameCommonOptions, Choice, DefaultOnToggle, Toggle, Range, OptionSet, OptionDict, OptionGroup
-
+from worlds.shadow_the_hedgehog import Names
 
 
 class GoalChaosEmeralds(DefaultOnToggle):
@@ -213,8 +213,8 @@ class ForceObjectiveSanityMaxCounter(Range):
 class ExcludedStages(OptionSet):
     """Stage names to exclude checks from."""
     display_name = "Excluded Stages"
-    default = {}
-    #valid_keys = [i for i in Levels.LEVEL_ID_TO_LEVEL.values() ]
+    #default = {}
+    valid_keys = [i for i in Names.getLevelNames() ]
 
 class ExceedingItemsFiller(Choice):
     """Determines whether game marks non-required items as progression or not."""
@@ -224,11 +224,20 @@ class ExceedingItemsFiller(Choice):
     option_always = 2  # Always mark exceeding items as filler
     default = option_minimise
 
-class RingLink(Toggle):
+class RingLink(Choice):
     """
     Whether your in-level ring gain/loss is linked to other players.
+    Off disabled the feature.
+    On enables the feature excluding special cases.
+    Unsafe disables ring link during Circus Park missions and during the final boss.
+
     """
+    option_off = 0
+    option_on = 1
+    option_unsafe = 2
+
     display_name = "Ring Link"
+    default = option_off
 
 class AutoClearMissions(DefaultOnToggle):
     """
@@ -252,6 +261,7 @@ class SelectBosses(DefaultOnToggle):
 class PercentOverrides(OptionDict):
     """List of provided keys to dictate percentage based overrides."""
     display_name = "Percent Overrides"
+    valid_keys = Names.getValidPercentOverrides()
 
 class WeaponGroups(OptionSet):
     """
@@ -412,6 +422,12 @@ class MinimumRank(Choice):
     option_e = "E"
     default = option_e
 
+class StoryProgressionBalancing(Range):
+    """Story progression balancing to determine sphering for story stages."""
+    range_start = 0
+    range_end = 100
+    default = 50
+
 @dataclass
 class ShadowTheHedgehogOptions(PerGameCommonOptions):
     #goal: Goal
@@ -472,6 +488,7 @@ class ShadowTheHedgehogOptions(PerGameCommonOptions):
     select_bosses: SelectBosses
     minimum_rank: MinimumRank
     weapon_groups: WeaponGroups
+    story_progression_balancing: StoryProgressionBalancing
 
 shadow_option_groups = [
     OptionGroup("Goal",

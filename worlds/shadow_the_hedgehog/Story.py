@@ -36,7 +36,159 @@ def GetVanillaBossStage(boss):
     stages = [ b.start_stage_id for b in DefaultStoryMode if b.boss == boss]
     if len(stages) > 0:
         return stages[0]
+
     return None
+
+def SortByAvailableLength(item):
+    return len(item[1])
+
+def ChoosePathOption(world, story_options):
+    balancing_value = world.options.story_progression_balancing
+
+    sorted_options = sorted(story_options, key=SortByAvailableLength)
+
+    balance_index = (len(sorted_options) - 1) / 100 * balancing_value
+    chosen_index = round(balance_index)
+
+    # If 100: always the last item in the list
+    # If 1, always the first item in the list
+
+    return story_options[chosen_index]
+
+
+def TraversePath(story, available_stages, available_missions):
+    clear_locations = Locations.MissionClearLocations
+
+    unhandled_progression = [[s for s in story if s.start_stage_id == c.stageId and s.alignment_id == c.alignmentId][0].end_stage_id
+                             for c in clear_locations if c in available_missions and
+                             [s for s in story if s.start_stage_id == c.stageId and s.alignment_id == c.alignmentId][
+                                 0].end_stage_id not in available_stages
+                             ]
+
+    unhandled_progression = [ u for u in unhandled_progression if u is not None]
+
+    available_stages.extend(unhandled_progression)
+
+    first = True
+    new_available_without_objectivesanity = []
+    while first or len(new_available_without_objectivesanity) != 0:
+        first = False
+
+        available_without_objectivesanity = [c for c in clear_locations if c.stageId in available_stages
+                                             and c.requirement_count is None]
+
+        new_available_without_objectivesanity = [a for a in available_without_objectivesanity if
+                                                 a not in available_missions]
+
+
+        for mission_clear in new_available_without_objectivesanity:
+            story_element = [c for c in story if c.start_stage_id == mission_clear.stageId
+                             and c.alignment_id == mission_clear.alignmentId][0]
+
+            if story_element.end_stage_id is not None and story_element.end_stage_id not in available_stages:
+                available_stages.append(story_element.end_stage_id)
+
+            available_missions.append(mission_clear)
+
+class StoryAssignmentObject:
+    start_stage_id: int
+    alignmentId: int
+    end_start_id: int
+    mission_id: int
+
+
+def DecideStoryPath(world, story):
+    clear_locations = Locations.MissionClearLocations
+    starting_stage = [ s for s in story if s.start_stage_id is None]
+
+    stage = starting_stage[0]
+
+    stage_count = len([ x for x in Levels.ALL_STAGES if x not in Levels.BOSS_STAGES and
+                        Levels.LEVEL_ID_TO_LEVEL[x] not in world.options.excluded_stages])
+
+    available_stages = [stage.end_stage_id]
+    available_missions = []
+    TraversePath(story, available_stages, available_missions)
+
+    # Add sphere 0
+    sphere_results = [(None, available_stages, available_missions)]
+
+    while len(available_stages) < stage_count:
+        objectivesanity_missions = [ s for s in clear_locations if s.stageId in available_stages and s not in available_missions ]
+
+        options = []
+        for option in objectivesanity_missions:
+            option_available_stages = available_stages.copy()
+            option_available_missions = available_missions.copy()
+            option_available_missions.append(option)
+
+            TraversePath(story, option_available_stages, option_available_missions)
+            if len(option_available_stages) > len(available_stages):
+                options.append((option, option_available_stages, option_available_missions))
+
+        choice = ChoosePathOption(world, options)
+        chosen_option = choice[0]
+        available_stages = choice[1]
+        available_missions = choice[2]
+
+        sphere_results.append(choice)
+
+    return sphere_results
+
+
+def AlterOverridesForStoryPath(spheres):
+
+    first_sphere_size = len(spheres[0][1])
+    new_sphere_size = first_sphere_size
+
+    intended_percentage = {
+        0: 1,
+        1: 2,
+        2: 3,
+        3: 4,
+        4: 5,
+        5: 10,
+        6: 12,
+        7: 15,
+        8: 15,
+        9: 20,
+        10: 25,
+        11: 30,
+        12: 35,
+        13: 40,
+        14: 50,
+        15: 60,
+        16: 75,
+        17: 80,
+        18: 85,
+        19: 90,
+        20: 95,
+        21: 98,
+        22: 99,
+        23: 100
+    }
+
+
+    new_overrides = {}
+
+    for sphere in spheres:
+        if sphere == spheres[0]:
+            continue
+
+        sphere_mission = sphere[0]
+        sphere_key = ("C"+
+                      ("D" if sphere_mission.alignmentId == Levels.MISSION_ALIGNMENT_DARK else
+                       "H")+"."+
+                      Levels.LEVEL_ID_TO_LEVEL[sphere_mission.stageId])
+
+        percent_value = intended_percentage[new_sphere_size]
+        new_sphere_size = len(sphere[1])
+
+        new_overrides[sphere_key] = percent_value
+
+    return new_overrides
+
+
 
 
 def StoryToOrder(StoryMode):
