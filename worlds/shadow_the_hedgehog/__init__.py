@@ -154,6 +154,18 @@ class ShtHWorld(World):
 
         if self.options.level_progression != Options.LevelProgression.option_select:
             self.shuffled_story_mode = Story.GetStoryMode(self)
+
+            if self.options.story_progression_balancing > 0:
+                story_spheres = Story.DecideStoryPath(self, self.shuffled_story_mode)
+                print("Story Spheres", [ (s[0].stageId, s[0].alignmentId) if s[0] is not None else "Start"
+                                         for s in story_spheres])
+                new_overrides = Story.AlterOverridesForStoryPath(story_spheres)
+
+                for override in new_overrides.items():
+                    self.options.percent_overrides.value[override[0]] = override[1]
+
+
+
         else:
             self.shuffled_story_mode = Story.DefaultStoryMode
 

@@ -422,6 +422,12 @@ class MinimumRank(Choice):
     option_e = "E"
     default = option_e
 
+class StoryProgressionBalancing(Range):
+    """Story progression balancing to determine sphering for story stages."""
+    range_start = 0
+    range_end = 100
+    default = 50
+
 @dataclass
 class ShadowTheHedgehogOptions(PerGameCommonOptions):
     #goal: Goal
@@ -482,6 +488,7 @@ class ShadowTheHedgehogOptions(PerGameCommonOptions):
     select_bosses: SelectBosses
     minimum_rank: MinimumRank
     weapon_groups: WeaponGroups
+    story_progression_balancing: StoryProgressionBalancing
 
 shadow_option_groups = [
     OptionGroup("Goal",
