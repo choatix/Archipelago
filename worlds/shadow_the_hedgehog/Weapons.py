@@ -395,6 +395,17 @@ def GetWeaponDictById():
 
     return weapon_dict
 
+def GetWeaponGroupsDict():
+    weapons = GetWeaponDictById()
+    weapon_groups_dict = {}
+    for group in WeaponGroups.items():
+        weapon_groups_dict[group[0]] = []
+        for item in group[1]:
+            weapon_item = weapons[item]
+            weapon_groups_dict[group[0]].append(weapon_item)
+
+    return weapon_groups_dict
+
 
 def GetWeaponByStageDict():
     stages_dict = {}

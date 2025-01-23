@@ -136,7 +136,7 @@ def DecideStoryPath(world, story):
     return sphere_results
 
 
-def AlterOverridesForStoryPath(spheres):
+def AlterOverridesForStoryPath(spheres, current_overrides):
 
     first_sphere_size = len(spheres[0][1])
     new_sphere_size = first_sphere_size
@@ -181,10 +181,19 @@ def AlterOverridesForStoryPath(spheres):
                        "H")+"."+
                       Levels.LEVEL_ID_TO_LEVEL[sphere_mission.stageId])
 
+        sphere_key_a = ("A" +
+                      ("D" if sphere_mission.alignmentId == Levels.MISSION_ALIGNMENT_DARK else
+                       "H") + "." +
+                      Levels.LEVEL_ID_TO_LEVEL[sphere_mission.stageId])
+
         percent_value = intended_percentage[new_sphere_size]
         new_sphere_size = len(sphere[1])
 
         new_overrides[sphere_key] = percent_value
+
+        if sphere_key_a in current_overrides and current_overrides[sphere_key_a] < percent_value:
+            current_overrides[sphere_key_a] = percent_value
+
 
     return new_overrides
 
