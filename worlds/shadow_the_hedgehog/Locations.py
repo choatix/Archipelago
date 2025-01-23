@@ -26,6 +26,7 @@ LOCATION_TYPE_OTHER = 7
 LOCATION_TYPE_CHARACTER = 8
 LOCATION_TYPE_BOSS = 9
 LOCATION_TYPE_WARP = 10
+LOCATION_TYPE_WEAPON_HOLD = 11
 
 @dataclass
 class LocationInfo:
@@ -969,7 +970,7 @@ def GetAllLocationInfo():
 
     for weapon in Weapons.WEAPON_INFO:
         weapon_location_id, weapon_location_name = GetWeaponsanityLocationName(weapon.name, weapon.game_id)
-        info = LocationInfo(LOCATION_TYPE_KEY, weapon_location_id, weapon_location_name,
+        info = LocationInfo(LOCATION_TYPE_WEAPON_HOLD, weapon_location_id, weapon_location_name,
                             stageId=None, alignmentId=None, count=None, total=None, other=weapon.name)
         weaponsanity_locations.append(info)
 

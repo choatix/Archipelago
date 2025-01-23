@@ -44,11 +44,17 @@ def early_region_checks(world):
     available_story_stages = []
 
     story_sorted_stages = Story.StoryToOrder(world.shuffled_story_mode)
-    if Levels.STAGE_THE_LAST_WAY not in story_sorted_stages:
+
+    last_way_required = not world.options.include_last_way_shuffle or world.options.level_progression == Options.LevelProgression.option_select
+
+    if last_way_required:
         story_sorted_stages.append(Levels.STAGE_THE_LAST_WAY)
 
+    # TODO: Add handling for story NOT having all stages, in future
+
     for level in story_sorted_stages:
-        if Levels.LEVEL_ID_TO_LEVEL[level] in world.options.excluded_stages:
+        if Levels.LEVEL_ID_TO_LEVEL[level] in world.options.excluded_stages and \
+            (level != Levels.STAGE_THE_LAST_WAY or not last_way_required):
             continue
 
         if world.options.level_progression != Options.LevelProgression.option_select:
@@ -85,6 +91,10 @@ def early_region_checks(world):
                 and not (level in Levels.LAST_STORY_STAGES and not world.options.include_last_way_shuffle)
                 and level not in world.available_levels):
             world.available_levels.append(level)
+
+        if level == Levels.STAGE_THE_LAST_WAY and last_way_required:
+            world.available_levels.append(level)
+
 
     for char_name in Levels.CharacterToLevel.keys():
         levels_in = Levels.CharacterToLevel[char_name]
@@ -180,22 +190,51 @@ def create_regions(world) -> Dict[str, Region]:
                     if boss_stage_requirement is not None:
                         boss_item_name = Items.GetStageUnlockItem(boss_stage_requirement)
 
+            connect_rule = None
             if boss_item_name is None:
                 connect_rule = lambda state, si=stage_item_name: state.has(si, world.player)
             elif boss_stage_requirement is not None and world.options.level_progression == LevelProgression.option_both:
-                connect_rule = lambda state, si=stage_item_name, b_name=boss_item_name, b_stage=boss_stage_requirement: (
-                        state.has(si, world.player) and
-                        (state.has(b_name, world.player)
-                         or
-                         state.can_reach_region(stage_id_to_story_region(b_stage),world.player))
-                         )
+
+                # check if available via story
+                # check if available via select
+
+                possible_via_select = True
+                possible_via_story = True
+
+                vanilla_boss_stage = Story.GetVanillaBossStage(stage_id)
+
+                if vanilla_boss_stage is not None and vanilla_boss_stage not in world.available_levels:
+                    possible_via_select = False
+
+                if len([ s for s in world.shuffled_story_mode if s == stage_id ]) == 0:
+                    possible_via_story = False
+
+                if possible_via_story and possible_via_select:
+                    connect_rule = lambda state, si=stage_item_name, b_name=boss_item_name, b_stage=boss_stage_requirement: (
+                            state.has(si, world.player) and
+                            (state.has(b_name, world.player)
+                             or
+                             state.can_reach_region(stage_id_to_story_region(b_stage),world.player))
+                             )
+                elif possible_via_select:
+                    connect_rule = lambda state, si=stage_item_name, b_name=boss_item_name: (
+                            state.has(si, world.player) and
+                            state.has(b_name, world.player)
+                    )
+                    # Nothing to do, this is select logic
+                    pass
+                elif possible_via_story:
+                    # Don't add route to stage via select!
+                    pass
+
             else:
                 connect_rule = lambda state, si=stage_item_name, b_name=boss_item_name: (
                         state.has(si, world.player) and state.has(b_name, world.player)
                 )
 
-            connect(world.player, connect_name,
-                    regions["Menu"], region, connect_rule)
+            if connect_rule is not None:
+                connect(world.player, connect_name,
+                        regions["Menu"], region, connect_rule)
 
     for char_name in Levels.CharacterToLevel.keys():
         levels_in = Levels.CharacterToLevel[char_name]

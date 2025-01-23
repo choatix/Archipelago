@@ -2,6 +2,7 @@ import copy
 import random
 from dataclasses import dataclass
 
+from Options import OptionError
 from . import Levels, Options, Locations
 
 
@@ -136,7 +137,7 @@ def DecideStoryPath(world, story):
     return sphere_results
 
 
-def AlterOverridesForStoryPath(spheres):
+def AlterOverridesForStoryPath(spheres, current_overrides):
 
     first_sphere_size = len(spheres[0][1])
     new_sphere_size = first_sphere_size
@@ -181,10 +182,19 @@ def AlterOverridesForStoryPath(spheres):
                        "H")+"."+
                       Levels.LEVEL_ID_TO_LEVEL[sphere_mission.stageId])
 
+        sphere_key_a = ("A" +
+                      ("D" if sphere_mission.alignmentId == Levels.MISSION_ALIGNMENT_DARK else
+                       "H") + "." +
+                      Levels.LEVEL_ID_TO_LEVEL[sphere_mission.stageId])
+
         percent_value = intended_percentage[new_sphere_size]
         new_sphere_size = len(sphere[1])
 
         new_overrides[sphere_key] = percent_value
+
+        if sphere_key_a in current_overrides and current_overrides[sphere_key_a] < percent_value:
+            current_overrides[sphere_key_a] = percent_value
+
 
     return new_overrides
 
@@ -228,7 +238,8 @@ def ChaosShuffle(world):
 
     possible_stages = stages_to_assign.copy()
 
-    final_bosses_full = [boss.boss for boss in ModifiedStoryMode if boss.end_stage_id is None]
+    final_bosses_full = [boss.boss for boss in ModifiedStoryMode if boss.end_stage_id is None and
+                         Levels.LEVEL_ID_TO_LEVEL[boss.boss] not in world.options.excluded_stages]
     final_bosses = final_bosses_full.copy()
 
     boss_groups = Levels.BOSS_GROUPING
@@ -237,8 +248,8 @@ def ChaosShuffle(world):
         if len(options) > 0:
             for o in options:
                 final_bosses.remove(o)
-        chosen = world.random.choice(options)
-        final_bosses.append(chosen)
+            chosen = world.random.choice(options)
+            final_bosses.append(chosen)
 
     if world.options.single_black_doom:
         options = [b for b in final_bosses if b in boss_groups["Black Doom"]]
@@ -268,9 +279,16 @@ def ChaosShuffle(world):
                           and l not in Levels.LAST_STORY_STAGES
                           and l not in final_bosses_full ]
 
+    last_way_active = Levels.LEVEL_ID_TO_LEVEL[Levels.STAGE_THE_LAST_WAY] not in world.options.excluded_stages
+
     if include_last_way:
-        stages_to_assign.append(Levels.STAGE_THE_LAST_WAY)
+        if last_way_active:
+            stages_to_assign.append(Levels.STAGE_THE_LAST_WAY)
+
         final_bosses.append(Levels.BOSS_DEVIL_DOOM)
+
+    if len(stages_to_assign) == 0:
+        raise OptionError("No stages to assign!")
 
     random.shuffle(stages_to_assign)
 
@@ -288,7 +306,7 @@ def ChaosShuffle(world):
     steps_to_randomise = [s for s in ModifiedStoryMode if s.start_stage_id is not None
                           and Levels.LEVEL_ID_TO_LEVEL[s.start_stage_id] not in world.options.excluded_stages]
 
-    if include_last_way:
+    if include_last_way and last_way_active:
         steps_to_randomise.append(PathInfo(Levels.STAGE_THE_LAST_WAY, Levels.MISSION_ALIGNMENT_NEUTRAL, None, []))
 
     #untouched_steps = [ s for s in ModifiedStoryMode if s not in steps_to_randomise ]
@@ -359,7 +377,7 @@ def ChaosShuffle(world):
             if not boss_assigned:
                 step.boss = None
 
-            if world.options.guaranteed_level_clear and step.start_stage_id is None:
+            if world.options.guaranteed_level_clear and step.start_stage_id is None and len(SafeStartingStages) > 0:
                 step.end_stage_id = random.choice(SafeStartingStages)
                 stages_to_assign.remove(step.end_stage_id)
                 first_stage = step.end_stage_id
@@ -367,7 +385,7 @@ def ChaosShuffle(world):
                     force_path[0] = first_stage
             elif len(stages_to_assign) > 0:
                 step.end_stage_id = stages_to_assign.pop()
-                if step.end_stage_id == step.start_stage_id:
+                if step.end_stage_id == step.start_stage_id and len(stages_to_assign) != 0:
                     stages_to_assign.append(step.end_stage_id)
             else:
                 step.end_stage_id = random.choice(possible_stages)
@@ -415,11 +433,11 @@ def GenerateStoryMode(world):
     return ModifiedStoryMode
 
 def GetStoryMode(world):
-    if world.options.story_shuffle == Options.StoryShuffle.option_basic:
-        return GenerateStoryMode(world)
-    elif world.options.story_shuffle == Options.StoryShuffle.option_shuffle:
-        return ShuffleStoryMode(world)
-    elif world.options.story_shuffle == Options.StoryShuffle.option_chaos:
+    #if world.options.story_shuffle == Options.StoryShuffle.option_basic:
+    #    return GenerateStoryMode(world)
+    #elif world.options.story_shuffle == Options.StoryShuffle.option_shuffle:
+    #    return ShuffleStoryMode(world)
+    if world.options.story_shuffle == Options.StoryShuffle.option_chaos:
         return ChaosShuffle(world)
     else:
         return DefaultStoryMode

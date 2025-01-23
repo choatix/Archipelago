@@ -159,7 +159,7 @@ class ShtHWorld(World):
                 story_spheres = Story.DecideStoryPath(self, self.shuffled_story_mode)
                 print("Story Spheres", [ (s[0].stageId, s[0].alignmentId) if s[0] is not None else "Start"
                                          for s in story_spheres])
-                new_overrides = Story.AlterOverridesForStoryPath(story_spheres)
+                new_overrides = Story.AlterOverridesForStoryPath(story_spheres, self.options.percent_overrides)
 
                 for override in new_overrides.items():
                     self.options.percent_overrides.value[override[0]] = override[1]
@@ -211,6 +211,23 @@ class ShtHWorld(World):
                 self.options.objective_frequency = passthrough["objective_frequency"]
                 self.options.enemy_objective_frequency = passthrough["enemy_objective_frequency"]
                 self.options.secret_story_progression = passthrough["secret_story_progression"]
+
+                if "goal_missions" in passthrough:
+                    self.options.goal_missions = passthrough["goal_missions"]
+                    self.options.goal_final_missions = passthrough["goal_final_missions"]
+                    self.options.goal_hero_missions = passthrough["goal_hero_missions"]
+                    self.options.goal_dark_missions = passthrough["goal_dark_missions"]
+                    self.options.goal_objective_missions = passthrough["goal_objective_missions"]
+                    self.options.goal_bosses = passthrough["goal_bosses"]
+                    self.options.goal_final_bosses = passthrough["goal_final_bosses"]
+                else:
+                    self.options.goal_missions = 0
+                    self.options.goal_final_missions = 0
+                    self.options.goal_hero_missions = 0
+                    self.options.goal_dark_missions = 0
+                    self.options.goal_objective_missions = 0
+                    self.options.goal_bosses = 0
+                    self.options.goal_final_bosses = 0
 
                 self.shuffled_story_mode = Story.StringToStory(passthrough["shuffled_story_mode"])
 
@@ -415,9 +432,15 @@ class ShtHWorld(World):
             "minimum_rank": self.options.minimum_rank.value,
             "enemy_frequency": self.options.enemy_frequency.value,
             "objective_frequency": self.options.objective_frequency.value,
-            "enemy_objective_frequency": self.options.enemy_objective_frequency.value
+            "enemy_objective_frequency": self.options.enemy_objective_frequency.value,
+            "goal_missions": self.options.goal_missions.value,
+            "goal_final_missions": self.options.goal_final_missions.value,
+            "goal_hero_missions": self.options.goal_hero_missions.value,
+            "goal_dark_missions": self.options.goal_dark_missions.value,
+            "goal_objective_missions": self.options.goal_objective_missions.value,
+            "goal_bosses": self.options.goal_bosses.value,
+            "goal_final_bosses": self.options.goal_final_bosses.value
         }
-
         return slot_data
 
     def write_spoiler(self, spoiler_handle: typing.TextIO):
