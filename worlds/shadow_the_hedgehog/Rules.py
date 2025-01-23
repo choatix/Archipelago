@@ -471,14 +471,20 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
         # handle requirement that DD must be found in the level shuffle!
         devil_doom_story_region = Regions.stage_id_to_story_region(Levels.BOSS_DEVIL_DOOM)
         e.access_rule = lambda state, er=e.access_rule : er(state) and state.can_reach_region(devil_doom_story_region, player)
+        multiworld.register_indirect_condition(multiworld.get_region(devil_doom_story_region, player),
+                                               multiworld.get_entrance('devil-doom-fight', player))
 
     else:
         # Ensure TLW is beatable
         tlw_location_id, tlw_location_name = Levels.GetLevelCompletionNames(Levels.STAGE_THE_LAST_WAY, Levels.MISSION_ALIGNMENT_NEUTRAL)
+        last_way_region = multiworld.get_region(Regions.get_max_stage_region_id(Levels.STAGE_THE_LAST_WAY), player)
         e.access_rule = lambda state, er=e.access_rule: er(state)
 
         devil_doom = multiworld.get_entrance("devil-doom-fight", player)
+        devil_doom_region = multiworld.get_region('DevilDoom', player)
         devil_doom.access_rule = lambda state, er=e.access_rule: er(state) and state.can_reach_location(tlw_location_name, player)
+        multiworld.register_indirect_condition(devil_doom_region,devil_doom)
+        multiworld.register_indirect_condition(last_way_region, devil_doom)
 
     #else:
     #    e = multiworld.get_entrance("final-story-unlock-tlw", player)

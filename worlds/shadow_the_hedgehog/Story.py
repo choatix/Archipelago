@@ -433,11 +433,11 @@ def GenerateStoryMode(world):
     return ModifiedStoryMode
 
 def GetStoryMode(world):
-    if world.options.story_shuffle == Options.StoryShuffle.option_basic:
-        return GenerateStoryMode(world)
-    elif world.options.story_shuffle == Options.StoryShuffle.option_shuffle:
-        return ShuffleStoryMode(world)
-    elif world.options.story_shuffle == Options.StoryShuffle.option_chaos:
+    #if world.options.story_shuffle == Options.StoryShuffle.option_basic:
+    #    return GenerateStoryMode(world)
+    #elif world.options.story_shuffle == Options.StoryShuffle.option_shuffle:
+    #    return ShuffleStoryMode(world)
+    if world.options.story_shuffle == Options.StoryShuffle.option_chaos:
         return ChaosShuffle(world)
     else:
         return DefaultStoryMode

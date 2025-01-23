@@ -328,8 +328,8 @@ class StoryShuffle(Choice):
     """
     display_name = "Story Shuffle"
     option_off = 0  # Story stages will be in vanilla order
-    option_basic = 1
-    option_shuffle = 2
+    #option_basic = 1
+    #option_shuffle = 2
     option_chaos = 3
     default = option_off
 
