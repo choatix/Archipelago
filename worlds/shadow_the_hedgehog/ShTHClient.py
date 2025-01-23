@@ -1195,7 +1195,7 @@ class ShTHContext(CommonContext):
             logger.error("Level is not accessible: %s", stage)
             return False
 
-        elif stageId in Levels.BOSS_STAGES and stageId not in Levels.FINAL_BOSSES:
+        elif stageId in Levels.BOSS_STAGES and stageId not in Levels.FINAL_BOSSES and stageId != Levels.BOSS_DEVIL_DOOM:
             logger.error("Unavailable to set story bosses due to oversight, "
                          "please lookup with /boss command until future updates.")
             return False
@@ -1606,6 +1606,14 @@ def complete_completable_levels(ctx):
             routes_to = [ s for s in story if s.end_stage_id == story_path_entry.end_stage_id ]
             if story_path_entry.end_stage_id is None:
                 routes_to = [ s for s in routes_to if s.boss == story_path_entry.boss ]
+
+            if story_path_entry.boss is not None:
+                r_boss = [b for b in Locations.BossClearLocations if b.stageId == story_path_entry.boss][0]
+                boss_location_id, boss_location_name = Locations.GetBossLocationName(r_boss.name, r_boss.stageId)
+                u_bosses = [b for b in uncleared_bosses if b == boss_location_id]
+                if len(u_bosses) != 0:
+                    continue
+
             available = False
             for route in routes_to:
                 is_remaining = [ s for s in uncleared_stages
@@ -1942,7 +1950,7 @@ async def check_level_status(ctx):
                 else:
                     new_messages = []
 
-                logger.debug("Detected screen %d", current_screen)
+                #logger.debug("Detected screen %d", current_screen)
 
                 if len(new_messages) > 0:
                     message = [{"cmd": 'LocationChecks', "locations": new_messages}]

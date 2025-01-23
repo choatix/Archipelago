@@ -516,6 +516,8 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
 
 
 def get_token_count(world, type, token_assignments, goal_value):
+    if type not in token_assignments:
+        return (type, 0)
     count = len(token_assignments[type])
     goal_req = Utils.getRequiredCount(count, goal_value, ceil)
     world.required_tokens[type] = goal_req
