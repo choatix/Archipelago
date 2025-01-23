@@ -173,13 +173,31 @@ class ShTHCommandProcessor(ClientCommandProcessor):
         """Prints the current weapons to the client."""
         if isinstance(self.ctx, ShTHContext):
             #print(args)
-            stage = None
             arguments = self.parse_args(args)
-            if 'c' in arguments:
-                stage = self.ctx.last_level
-            elif 's' in arguments:
+            stage = self.ctx.last_level
+            if 's' in arguments:
                 stage = arguments['s']
-            weapons = self.ctx.getWeapons(stage=stage)
+                if stage == "":
+                    logger.error("Invalid s value")
+                    return
+
+
+            #
+            available = True
+            if 'a' in arguments:
+                if 's' in arguments:
+                    available = False
+                else:
+                    stage = None
+
+            held = False
+            if 'h' in arguments:
+                held = True
+
+                if self.ctx.weapon_sanity_hold_option != Options.WeaponsanityHold.option_unlocked:
+                    available = False
+
+            weapons = self.ctx.getWeapons(stage=stage, available=available, held=held)
             logger.info("Available weapons:\n%s", "\n".join([ w.replace("Weapon:", "") for w in weapons]))
 
     def _cmd_story(self, *args):
@@ -305,30 +323,27 @@ class ShTHCommandProcessor(ClientCommandProcessor):
                          and info[unlock[0].item].alignmentId == dark.alignmentId and
                          info[unlock[0].item].type == "level_object"])
 
-
-                # This one needs to check items
-
-
         if type == "heroclear":
             dark = [ m for m in Locations.MissionClearLocations if m.stageId == stage
                   and m.alignmentId == MISSION_ALIGNMENT_HERO ]
             if len(dark) > 0:
-                dark = dark[0]
-                if dark.requirement_count is not None:
-                    required_count = ShadowUtils.getMaxRequired(
-                        ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_COMPLETION,
-                                                                  dark.mission_object_name, ctx),
-                        dark.requirement_count, dark.stageId, dark.alignmentId, ctx.override_settings)
+                if len(dark) > 0:
+                    dark = dark[0]
+                    if dark.requirement_count is not None:
+                        required_count = ShadowUtils.getMaxRequired(
+                            ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_COMPLETION,
+                                                                      dark.mission_object_name, ctx),
+                            dark.requirement_count, dark.stageId, dark.alignmentId, ctx.override_settings)
 
-                    freq_or_avail_count = ShadowUtils.getMaxRequired(
-                        ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_OBJECTIVE_AVAILABLE,
-                                                                  dark.mission_object_name, ctx),
-                        dark.requirement_count, dark.stageId, dark.alignmentId, ctx.override_settings)
+                        freq_or_avail_count = ShadowUtils.getMaxRequired(
+                            ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_OBJECTIVE_AVAILABLE,
+                                                                      dark.mission_object_name, ctx),
+                            dark.requirement_count, dark.stageId, dark.alignmentId, ctx.override_settings)
 
-                    current_count = required_count - len([unlock for unlock in ctx.handled if unlock[0].item in info and \
-                                                            info[unlock[0].item].stageId == stage
-                                                            and info[unlock[0].item].alignmentId == dark.alignmentId and
-                                                            info[unlock[0].item].type == "level_object"])
+                        current_count = len([unlock for unlock in ctx.handled if unlock[0].item in info and \
+                                             info[unlock[0].item].stageId == stage
+                                             and info[unlock[0].item].alignmentId == dark.alignmentId and
+                                             info[unlock[0].item].type == "level_object"])
 
         if type == "gun":
             dark = [ m for m in Locations.EnemySanityLocations if m.stageId == stage
@@ -827,38 +842,43 @@ class ShTHContext(CommonContext):
         self.current_stage_name = ""
         await super().disconnect(allow_autoreconnect)
 
-    def getWeapons(self, available=False, stage=None):
+
+    def HasWeaponBeenHeld(self, name):
+        locations = Locations.GetLocationInfoDict()
+        hold_locations = [ locations[s].other for s in self.checked_locations if locations[s].location_type == Locations.LOCATION_TYPE_WEAPON_HOLD]
+        return name in [ h for h in hold_locations ]
+
+    def getWeapons(self, available=True, stage=None, held=False):
         info = Items.GetItemLookupDict()
         weapon_dict = Weapons.GetWeaponDict()
+        weapon_group_dict = Weapons.GetWeaponGroupsDict()
 
         allowed_weapons = [weapon_dict[info[unlock[0].item].name] for unlock in self.handled if
                            unlock[0].item in info and \
                            info[unlock[0].item].type == "Weapon"]
 
-        allowed_weapon_groups = [weapon_dict[info[unlock[0].item].name] for unlock in self.handled if
+        allowed_weapons_by_group = [weapon_group_dict[info[unlock[0].item].name] for unlock in self.handled if
                            unlock[0].item in info and \
                            info[unlock[0].item].type == "WeaponGroup"]
 
         weapons_to_handle = [weapon_dict[info[unlock[0].item].name] for unlock in self.items_to_handle if unlock[0].item in info and \
                              info[unlock[0].item].type == "Weapon"]
 
-        weapon_groups_to_handle = [weapon_dict[info[unlock[0].item].name] for unlock in self.items_to_handle if
+        weapons_by_weapon_groups_to_handle = [weapon_group_dict[info[unlock[0].item].name] for unlock in self.items_to_handle if
                              unlock[0].item in info and \
                              info[unlock[0].item].type == "WeaponGroup"]
 
-        allowed_weapons.extend(allowed_weapon_groups)
-        allowed_weapons.extend(weapons_to_handle)
-        allowed_weapons.extend(weapon_groups_to_handle)
 
-        # Check if available
-        if available:
-            pass
+        allowed_weapons.extend(weapons_to_handle)
+        for items in allowed_weapons_by_group:
+            allowed_weapons.extend(items)
+        for items in weapons_by_weapon_groups_to_handle:
+            allowed_weapons.extend(items)
 
         if stage is not None:
             weapons_by_stage = Weapons.GetWeaponByStageDict()
             stageId = stage
             if type(stage) == str:
-
                 if stage.isdigit():
                     stageId = int(stage)
                 else:
@@ -867,9 +887,18 @@ class ShTHContext(CommonContext):
                         stageId = level_by_name[stage]
 
             weapons_in_stage = weapons_by_stage[stageId]
-            allowed_weapons = [ r for r in allowed_weapons if r.game_id in weapons_in_stage ]
+            if available:
+                allowed_weapons = [ r for r in allowed_weapons if r.game_id in weapons_in_stage ]
+            else:
+                allowed_weapons = [ r for r in weapon_dict.values() if r.game_id in weapons_in_stage ]
 
         results = [ weapon.name for weapon in allowed_weapons ]
+
+        if held and self.weapon_sanity_hold_option != Options.WeaponsanityHold.option_off:
+            results = [ r + " " + ("(Held)" if self.HasWeaponBeenHeld(r) else "(Not Held)")
+                        for r in results ]
+            pass
+
         return results
 
     async def server_auth(self, username_requested: bool = True, password_requested: bool = False,
@@ -1571,10 +1600,12 @@ def complete_completable_levels(ctx):
         # Don't autoclear missions if they lead to a stage you haven't accessed via story mode yet
         # Makes tracking easier for getting to that stage
         if ctx.story_mode_available:
-            would_lead_to = [ s for s in story if s.start_stage_id == mission.stageId
+            story_path_entry = [ s for s in story if s.start_stage_id == mission.stageId
                                      and s.alignment_id == mission.alignmentId][0]
 
-            routes_to = [ s for s in story if s.end_stage_id == would_lead_to.end_stage_id ]
+            routes_to = [ s for s in story if s.end_stage_id == story_path_entry.end_stage_id ]
+            if story_path_entry.end_stage_id is None:
+                routes_to = [ s for s in routes_to if s.boss == story_path_entry.boss ]
             available = False
             for route in routes_to:
                 is_remaining = [ s for s in uncleared_stages
@@ -2384,7 +2415,7 @@ def handle_received_rings(ctx, data):
         ctx.previous_rings = None
 
 
-async def check_junk(ctx, current_level):
+async def check_junk(ctx, current_level, death):
     info = Items.GetItemLookupDict()
 
     if ctx.junk_delay > 0:
@@ -2419,14 +2450,20 @@ async def check_junk(ctx, current_level):
 
     RING_LIMIT = 999
     GAUGE_LIMIT = 30000
-    if (len(filler_rings) > 0 and current_level != Levels.STAGE_CIRCUS_PARK) or ctx.ring_link_rings != 0:
+
+    ring_link_available = should_send_ring_link(ctx, death)
+
+    if (len(filler_rings) > 0 or ctx.ring_link_rings != 0) and ring_link_available :
         current_rings_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.RINGS_ADDRESS, 4)
         current_rings = int.from_bytes(current_rings_bytes, byteorder="big")
         rings_changed = False
         for ringJunk in filler_rings:
             if current_rings >= RING_LIMIT:
+                logger.info("Ring limit has been reached")
                 break
+
             if current_rings + ringJunk[1].value >= RING_LIMIT:
+                logger.info("Ring limit has been reached")
                 continue
 
             current_rings += ringJunk[1].value
@@ -2586,7 +2623,7 @@ async def update_level_behaviour(ctx, current_level, death):
         return
 
     await check_weapons(ctx, current_level)
-    await check_junk(ctx, current_level)
+    await check_junk(ctx, current_level, death)
 
     if len(ctx.level_state.keys()) == 0:
         ctx.level_state["active"] = True
@@ -2882,12 +2919,15 @@ async def update_level_behaviour(ctx, current_level, death):
 
     if hero_address is not None:
         current_bytes = dolphin_memory_engine.read_bytes(hero_address, hero_address_size)
-        current_count = int.from_bytes(current_bytes, byteorder='big')
+        current_count = int.from_bytes(current_bytes, byteorder='big', signed=True)
 
         if current_count is not None and expected_hero_value is not None and current_count < expected_hero_value:
             if not death and ctx.level_state["hero_progress"] != 0:
                 logger.info("Detected decrease in hero count")
                 ctx.level_state["hero_progress"] -= 1
+
+                if enemysanity and hero_address == GAME_ADDRESSES.ADDRESS_ALIEN_COUNT:
+                    ctx.level_state["alien_progress"] -= 1
 
         if expected_hero_value is not None and current_count > expected_hero_value:
             if ctx.debug_logging:
@@ -2925,12 +2965,16 @@ async def update_level_behaviour(ctx, current_level, death):
 
     if dark_address is not None:
         current_bytes = dolphin_memory_engine.read_bytes(dark_address, dark_address_size)
-        current_count = int.from_bytes(current_bytes, byteorder='big')
+        current_count = int.from_bytes(current_bytes, byteorder='big', signed=True)
 
         if current_count is not None and expected_dark_value is not None and current_count < expected_dark_value:
             if not death and ctx.level_state["dark_progress"] != 0:
                 logger.info("Detected decrease in dark count")
                 ctx.level_state["dark_progress"] -= 1
+
+                if enemysanity and dark_address == GAME_ADDRESSES.ADDRESS_SOLDIER_COUNT:
+                    ctx.level_state["gun_progress"] -= 1
+
 
         if expected_dark_value is not None and current_count > expected_dark_value:
             if ctx.debug_logging:
@@ -2971,12 +3015,13 @@ async def update_level_behaviour(ctx, current_level, death):
         alien_count = ctx.level_state["alien_progress"]
 
         current_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.ADDRESS_ALIEN_COUNT, alien_address_size)
-        current_count = int.from_bytes(current_bytes, byteorder='big')
+        current_count = int.from_bytes(current_bytes, byteorder='big', signed=True)
 
         if current_count is not None and alien_count is not None and current_count < alien_count:
             if not death and ctx.level_state["alien_progress"] != 0:
                 logger.info("Detected decrease in alien count")
                 ctx.level_state["alien_progress"] -= 1
+
 
         if current_count > alien_count:
             if current_count > alienInfo.total_count + extra_increase:
@@ -2989,7 +3034,7 @@ async def update_level_behaviour(ctx, current_level, death):
         gun_count = ctx.level_state["gun_progress"]
 
         current_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.ADDRESS_SOLDIER_COUNT, gun_address_size)
-        current_count = int.from_bytes(current_bytes, byteorder='big')
+        current_count = int.from_bytes(current_bytes, byteorder='big', signed=True)
 
         if current_count is not None and gun_count is not None and current_count < gun_count:
             if not death and ctx.level_state["gun_progress"] != 0:
@@ -3008,7 +3053,7 @@ async def update_level_behaviour(ctx, current_level, death):
         egg_count = ctx.level_state["egg_progress"]
 
         current_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.ADDRESS_EGG_COUNT, egg_address_size)
-        current_count = int.from_bytes(current_bytes, byteorder='big')
+        current_count = int.from_bytes(current_bytes, byteorder='big', signed=True)
 
         #logger.info("Egg %d", current_count)
 

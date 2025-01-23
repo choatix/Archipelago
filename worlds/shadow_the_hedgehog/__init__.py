@@ -159,7 +159,7 @@ class ShtHWorld(World):
                 story_spheres = Story.DecideStoryPath(self, self.shuffled_story_mode)
                 print("Story Spheres", [ (s[0].stageId, s[0].alignmentId) if s[0] is not None else "Start"
                                          for s in story_spheres])
-                new_overrides = Story.AlterOverridesForStoryPath(story_spheres)
+                new_overrides = Story.AlterOverridesForStoryPath(story_spheres, self.options.percent_overrides)
 
                 for override in new_overrides.items():
                     self.options.percent_overrides.value[override[0]] = override[1]
