@@ -104,7 +104,7 @@ override_strings = \
 
 
 def getLevelNames():
-    return LEVEL_ID_TO_LEVEL.values()
+    return [ v for v in LEVEL_ID_TO_LEVEL.values() if v != "Devil Doom" ]
 
 def getValidPercentOverrides():
     options = []

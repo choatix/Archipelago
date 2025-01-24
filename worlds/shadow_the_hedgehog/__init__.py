@@ -10,6 +10,7 @@ from .Items import *
 from .Locations import *
 
 from . import Options, Rules, Regions, Utils as ShadowUtils, Story
+from .Options import shadow_option_groups
 
 
 def run_client():
@@ -30,6 +31,8 @@ components.append(
 
 
 class ShtHWebWorld(WebWorld):
+    theme = "dirt"
+
     tutorials = [
         Tutorial(
             "Multiworld Setup Guide",
@@ -41,8 +44,15 @@ class ShtHWebWorld(WebWorld):
         )
     ]
 
-class ShtHWorld(World):
+    option_groups = shadow_option_groups
 
+class ShtHWorld(World):
+    """
+        Shadow The Hedgehog (also known as Shadow 05) allows the player to play through 23 stages
+        with the ultimate lifeform, tracking down the answers to his past.
+        But this time, it seems the past makes even less sense as nothing appears to be what it seems!
+        Help Shadow find the truth and put a stop the his cursed past from coming back to haunt him!
+    """
     #options_dataclass = ShThOptions
     #options: ShThOptions
 
@@ -94,6 +104,14 @@ class ShtHWorld(World):
         if self.options.level_progression == Options.LevelProgression.option_select and \
             self.options.starting_stages == 0:
             raise OptionError("Cannot start select mode with 0 starting stages")
+
+        if self.options.shadow_mod.value != Options.ShadowMod.option_vanilla and\
+            self.options.character_sanity:
+            raise OptionError("Unable to play charactersanity outside of vanilla")
+
+        if self.options.shadow_mod.value == Options.ShadowMod.option_reloaded and \
+            self.options.key_sanity:
+            raise OptionError("Key/RSR sanity not supported in Reloaded at this time.")
 
     def calculate_object_discrepancies(self):
 
@@ -439,7 +457,8 @@ class ShtHWorld(World):
             "goal_dark_missions": self.options.goal_dark_missions.value,
             "goal_objective_missions": self.options.goal_objective_missions.value,
             "goal_bosses": self.options.goal_bosses.value,
-            "goal_final_bosses": self.options.goal_final_bosses.value
+            "goal_final_bosses": self.options.goal_final_bosses.value,
+            "shadow_mod": self.options.shadow_mod.value
         }
         return slot_data
 

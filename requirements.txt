@@ -30,5 +30,5 @@ pip~=23.2.1
 setuptools~=68.2.0
 pony~=0.7.19
 MarkupSafe~=3.0.2
-bokeh~=3.4.3
+bokeh~=3.6.2
 docutils~=0.21.2

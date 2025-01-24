@@ -32,16 +32,30 @@ CONNECTION_INITIAL_STATUS = "Dolphin connection has not been initiated."
 
 SHADOW_THE_HEDGEHOG_GAME_ID = "GUPE8P"
 SHADOW_THE_HEDGEHOG_GAME_ID_RELOADED = "GUPR8P"
+SHADOW_THE_HEDGEHOG_GAME_ID_SX = "GUPX8P"
 
 valid_game_bytes = [
     bytes(SHADOW_THE_HEDGEHOG_GAME_ID, "utf-8"),
-    bytes(SHADOW_THE_HEDGEHOG_GAME_ID_RELOADED, "utf-8")
+    bytes(SHADOW_THE_HEDGEHOG_GAME_ID_RELOADED, "utf-8"),
+    bytes(SHADOW_THE_HEDGEHOG_GAME_ID_SX, "utf-8")
 ]
 
 @dataclass
 class CharacterAddress:
     name: str
     met_address: int
+
+def GetGameAddress(ctx, base_address):
+    if (base_address == GAME_ADDRESSES.FIRST_STORY_MODE_STAGE_ADDRESS and ctx.game_id ==
+            bytes(SHADOW_THE_HEDGEHOG_GAME_ID_SX, "utf-8")):
+        return GAME_ADDRESSES.FIRST_STORY_MODE_STAGE_ADDRESS_SX
+
+    elif (base_address == GAME_ADDRESSES.FIRST_STORY_MODE_STAGE_ADDRESS and ctx.game_id ==
+            bytes(SHADOW_THE_HEDGEHOG_GAME_ID_RELOADED, "utf-8")):
+        return GAME_ADDRESSES.FIRST_STORY_MODE_STAGE_ADDRESS_RELOADED
+
+    return base_address
+
 
 class GAME_ADDRESSES:
     STORY_MODE_COUNTER = 0x80576988
@@ -107,6 +121,8 @@ class GAME_ADDRESSES:
     ]
 
     FIRST_STORY_MODE_STAGE_ADDRESS = 0x802D2131
+    FIRST_STORY_MODE_STAGE_ADDRESS_SX = 0x80004BE5
+    FIRST_STORY_MODE_STAGE_ADDRESS_RELOADED = 0x800046FD
 
 class LevelStatusOptions:
     NotInLevel = 0x01
@@ -216,8 +232,6 @@ class ShTHCommandProcessor(ClientCommandProcessor):
         if isinstance(self.ctx, ShTHContext):
             stage = None
             arguments = self.parse_args(args)
-            if 's' in arguments:
-                stage = arguments['s']
             token_dict = self.get_required_tokens(self.ctx)
             if token_dict is None:
                 logger.error("Unable to work out tokens")
@@ -743,8 +757,10 @@ class ShTHContext(CommonContext):
         self.override_settings = []
         self.dolphin_sync_task: Optional[asyncio.Task] = None
         self.dolphin_status = CONNECTION_INITIAL_STATUS
+        self.game_id = None
         self.awaiting_rom = False
         self.awaiting_server = True
+        self.invalid_rom = False
         self.last_rcvd_index = -1
         self.has_send_death = False
         self.available_levels = []
@@ -1066,6 +1082,23 @@ class ShTHContext(CommonContext):
             if "enemy_frequency" in slot_data:
                 self.enemy_frequency = slot_data["enemy_frequency"]
 
+            if "shadow_mod" in slot_data:
+                mod = slot_data["shadow_mod"]
+                if mod == Options.ShadowMod.option_vanilla and self.game_id != bytes(SHADOW_THE_HEDGEHOG_GAME_ID, "utf-8"):
+                    logger.fatal("Wrong shadow mod detected")
+                    self.invalid_rom = True
+                    return
+
+                elif mod == Options.ShadowMod.option_reloaded and self.game_id != bytes(SHADOW_THE_HEDGEHOG_GAME_ID_RELOADED, "utf-8"):
+                    logger.fatal("Wrong shadow mod detected")
+                    self.disconnect(True)
+                    self.invalid_rom = True
+                    return
+
+                elif mod == Options.ShadowMod.option_sx and self.game_id != bytes(SHADOW_THE_HEDGEHOG_GAME_ID_SX, "utf-8"):
+                    logger.fatal("Wrong shadow mod detected")
+                    self.invalid_rom = True
+                    return
 
             self.restoreState()
             self.awaiting_server = False
@@ -1286,7 +1319,7 @@ async def check_save_loaded(ctx):
                 continue
 
             if ctx.minimum_rank != Options.MinimumRank.option_e:
-                rank_bytes = dolphin_memory_engine.read_bytes(clear_address_rank, 1)
+                rank_bytes = dolphin_memory_engine.read_bytes(clear_address_rank, 4)
                 rank = int.from_bytes(rank_bytes, byteorder='big')
                 if RankToOption(rank, ctx.minimum_rank):
                     continue
@@ -1730,7 +1763,7 @@ def check_story(ctx):
                 print("Whoops?")
         else:
             new_bytes = story.end_stage_id.to_bytes(3, byteorder='big')
-            writeBytes(GAME_ADDRESSES.FIRST_STORY_MODE_STAGE_ADDRESS, new_bytes)
+            writeBytes(GetGameAddress(ctx, GAME_ADDRESSES.FIRST_STORY_MODE_STAGE_ADDRESS), new_bytes)
 
 
     ctx.successful_shuffle = True
@@ -3322,7 +3355,12 @@ async def dolphin_sync_task(ctx: ShTHContext):
                     await ctx.server_auth()
 
             if dolphin_memory_engine.is_hooked() and ctx.dolphin_status == CONNECTION_CONNECTED_STATUS:
-                if ctx.awaiting_server:
+                if ctx.invalid_rom:
+                    await ctx.disconnect()
+                    await asyncio.sleep(5)
+
+
+                elif ctx.awaiting_server:
                     await asyncio.sleep(1)
                     continue
 
@@ -3355,22 +3393,26 @@ async def dolphin_sync_task(ctx: ShTHContext):
 
                 await asyncio.sleep(0.1)
             else:
-                if ctx.dolphin_status == CONNECTION_CONNECTED_STATUS:
+                if ctx.dolphin_status == CONNECTION_CONNECTED_STATUS and not ctx.invalid_rom:
                     logger.info("Connection to Dolphin lost, reconnecting...")
                     ctx.dolphin_status = CONNECTION_LOST_STATUS
+                if ctx.invalid_rom:
+                    logger.error("Invalid rom modification.")
+                    break
                 logger.info("Attempting to connect to Dolphin...")
                 dolphin_memory_engine.hook()
                 if dolphin_memory_engine.is_hooked():
                     # Hook and check the game?!
                     game_id_bytes = dolphin_memory_engine.read_bytes(0x80000000, 6)
                     if game_id_bytes not in valid_game_bytes:
-                        logger.info(CONNECTION_REFUSED_GAME_STATUS.format(str(game_id_bytes)))
+                        logger.info(CONNECTION_REFUSED_GAME_STATUS.format("", str(game_id_bytes)))
                         ctx.dolphin_status = CONNECTION_REFUSED_GAME_STATUS
                         dolphin_memory_engine.un_hook()
                         await asyncio.sleep(5)
                     else:
                         logger.info(CONNECTION_CONNECTED_STATUS)
                         ctx.dolphin_status = CONNECTION_CONNECTED_STATUS
+                        ctx.game_id = game_id_bytes
                         #ctx.locations_checked = set()
                 else:
                     logger.info("Connection to Dolphin failed, attempting again in 5 seconds...")
