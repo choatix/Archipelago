@@ -6,6 +6,7 @@ from worlds.shadow_the_hedgehog import Names
 class GoalChaosEmeralds(DefaultOnToggle):
     """
         Determines if chaos emeralds are required for completion.
+        If enabled, you require the 7 chaos emeralds to unlock your goal.
     """
     display_name = "Goal: Chaos Emeralds"
 
@@ -74,7 +75,11 @@ class GoalFinalMissions(Range):
     default = 0
 
 class ObjectiveSanity(DefaultOnToggle):
-    """Determines if objective based checks are enabled."""
+    """
+        Determines if objective based checks are enabled.
+        Objectivesanity checks are all stage objectives for dark/hero missions.
+        Please read the readme for more information.
+    """
     display_name = "Objective Sanity"
 
 class ObjectivePercentage(Range):
@@ -102,7 +107,11 @@ class ObjectiveCompletionPercentage(Range):
     default = 100
 
 class ObjectiveCompletionEnemyPercentage(Range):
-    """When playing Enemy Objective Sanity, determine the percentage of items required to finish stages."""
+    """
+        When playing Enemy Objective Sanity, determine the percentage of items required to finish stages.
+        This is specifically the enemy-based objectivesanity missions.
+        For all enemies, refer to enemy sanity. These can be used in tandem.
+    """
     display_name = "Objective Completion Enemy Percentage"
     range_start = 1
     range_end = 100
@@ -110,7 +119,12 @@ class ObjectiveCompletionEnemyPercentage(Range):
 
 
 class ObjectiveItemPercentageAvailable(Range):
-    """When playing Objective Sanity, determine the percentage of items required to finish stages left in the pool."""
+    """
+        When playing Objective Sanity, determine the percentage of items required to finish stages left in the pool.
+        This number MUST be higher than the required amount to clear.
+        This number can exceed 100% if you want more items than there are to add,
+        so long as you have location space.
+    """
     display_name = "Objective Item Percentage"
     range_start = 1
     range_end = 1000
@@ -128,11 +142,17 @@ class EnemyObjectiveSanity(DefaultOnToggle):
     display_name = "Enemy Objective Sanity"
 
 class Enemysanity(Toggle):
-    """Determines whether standard enemy sanity is enabled."""
+    """
+        Determines whether standard enemy sanity is enabled.
+        This can be used in tandem with enemy objectve sanity.
+    """
     display_name = "Enemy Sanity"
 
 class Keysanity(Toggle):
-    """Determines whether key sanity is enabled."""
+    """
+        Determines whether key sanity is enabled.
+        This enables checks as keys and does not add any items to the pool.
+    """
     display_name = "Key Sanity"
 
 class Doorsanity(Toggle):
@@ -140,15 +160,26 @@ class Doorsanity(Toggle):
     display_name = "Door Sanity"
 
 class Checkpointsanity(DefaultOnToggle):
-    """Determines whether checkpoint sanity is enabled."""
+    """
+        Determines whether checkpoint sanity is enabled.
+        This only adds checks and does not add anything to the pool.
+    """
     display_name = "Checkpoint Sanity"
 
 class CharacterSanity(DefaultOnToggle):
-    """Determines if character checks are enabled"""
+    """
+        Determines if character checks are enabled.
+        The first time you meet a character, the cutscene will play and provide a check.
+        Disabling is handling by overwriting the value and cutscene will never play.
+    """
     display_name = "Character Sanity"
 
 class WeaponsanityUnlock(Toggle):
-    """Determines whether weapons are required to be obtained from the pool of items."""
+    """
+        Determines whether weapons are required to be obtained from the pool of items.
+        This will change the logic of same stages.
+        Can be used alongside Weapon Groups for more flexibility.
+    """
     display_name = "Weapon Sanity Unlock"
 
 class WeaponsanityHold(Choice):
@@ -183,7 +214,9 @@ class EnemySanityPercentage(Range):
     default = 50
 
 class StartingStages(Range):
-    """Determines the number of stages that start unlocked."""
+    """
+        Determines the number of stages that start unlocked in Select mode.
+    """
     display_name = "Starting Stages"
     range_start = 0
     range_end = 22
@@ -242,12 +275,17 @@ class RingLink(Choice):
 class AutoClearMissions(DefaultOnToggle):
     """
         Set automatic clears for missions once objective criteria is achieved. When playing story mode, ensure
-        that the player has access to a new stage before autoclearing to improve tracking behaviour.
+        that the player has access to a new stage before auto-clearing to improve tracking behaviour.
     """
     display_name = "Auto Clear Missions"
 
 class LevelProgression(Choice):
-    """Which type of logic to use for progression through the game."""
+    """
+        Which type of logic to use for progression through the game.
+        Select will provide stage unlock items to unlock stages via the Select screen.
+        Story will require the user to play through story mode.
+        Select mode can still be used, but recommended to complete missions in story mode where possible.
+    """
     display_name = "Level Progression"
     option_select = 0  # All stages will be unlocked through unlocks to Select Mode
     option_story = 1  # All stages will only be unlocked through story mode progression
@@ -255,11 +293,17 @@ class LevelProgression(Choice):
     default = option_select
 
 class SelectBosses(DefaultOnToggle):
-    """Whether bosses can be unlocked via select mode."""
+    """
+        Whether bosses can be unlocked via select mode.
+        Note that mid-bosses require the ability to access the main stage in order to enter them.
+    """
     display_name = "Select Bosses"
 
 class PercentOverrides(OptionDict):
-    """List of provided keys to dictate percentage based overrides."""
+    """
+        Advanced YAML setting to provide keys to dictate percentage based overrides.
+        Read the setup_en.yaml for more information.
+    """
     display_name = "Percent Overrides"
     valid_keys = Names.getValidPercentOverrides()
 
@@ -284,7 +328,12 @@ class WeaponGroups(OptionSet):
 
 
 class LogicLevel(Choice):
-    """Determines the logic level for playthrough."""
+    """
+        Determines the logic level for play-through.
+        Easy: Some requirements are dialled back to make for a smoother early experience.
+        Normal: Standard logic.
+        Hard: Skips expected of the player in order to make progress.
+    """
     display_name = "Logic Level"
     option_easy = 0  # Logic adds in easier elements for completion
     option_normal = 1  # Standard logic
@@ -292,17 +341,21 @@ class LogicLevel(Choice):
     default = option_normal
 
 class BossLogicLevel(Choice):
-    """Determines the boss logic level for playthrough.
-    Easy boss logic ensures the player has access to a weapon within the stage in order to beat it."""
+    """
+        Determines the boss logic level for playthrough.
+        Easy boss logic ensures the player has access to one of the weapons within the stage in order to beat it.
+    """
     display_name = "Boss Logic Level"
     option_easy = 0  # Logic adds in easier elements for completion
     option_normal = 1  # Standard logic
-    option_hard = 2  # Requires skips to traverse regions.
+    #option_hard = 2  # Requires skips to traverse regions.
     default = option_normal
 
 class CraftLogicLevel(Choice):
-    """Determines the craft logic level for playthrough - distinguishing a difference
-     in logic for crafts in Iron Jungle, Lethal Highway and Air Fleet"""
+    """
+        Determines the craft logic level for playthrough - distinguishing a difference
+        in logic for crafts in Iron Jungle, Lethal Highway and Air Fleet
+    """
     display_name = "Logic Level"
     option_easy = 0  # Logic adds in easier elements for completion
     option_normal = 1  # Standard logic
@@ -310,7 +363,10 @@ class CraftLogicLevel(Choice):
     default = option_normal
 
 class AllowDangerousPercentage(Toggle):
-    """Allows setting dangerous logic for percentages for objectives"""
+    """
+        Allows setting dangerous logic for percentages for objectives.
+        Do not enable this unless you are very sure about what you are setting!
+    """
     display_name = "Dangerous Percentage"
     option_off = 0
     option_on = 1
@@ -324,7 +380,9 @@ class BossChecks(Toggle):
 
 class StoryShuffle(Choice):
     """
-    Determines method for shuffling story stages
+    Determines method for shuffling story stages.
+    Off will disable the story shuffle and will instead require vanilla order.
+    Chaos mode will shuffle the story. For more information on chaos shuffle, please read the documentation.
     """
     display_name = "Story Shuffle"
     option_off = 0  # Story stages will be in vanilla order
@@ -335,14 +393,19 @@ class StoryShuffle(Choice):
 
 class IncludeLastStoryShuffle(Toggle):
     """
-        Determines whether to include Last Way / Devil Doom in the story shuffle
+        Determines whether to include Last Way / Devil Doom in the story shuffle.
+        By enabling this, Devil Doom (the final fight) will be hidden in story mode and must be found
+        in order to clear the game.
+        Last Way goes to a random stage at the end, hence why Devil Doom MUST be shuffled in this way.
+        Note, if you are in the Devil Doom stage without the goal unlocked, you will be unable to complete it,
+        and must come back when unlocked.
     """
     display_name = "Include Last Story"
 
 
 class SecretStoryProgression(Toggle):
     """
-        Changes behaviour for displaying accessible story stages.
+        When using trackers, hide the progress of stages until the player has found them in the story mode.
     """
     display_name = "Secret Story Progression"
 
@@ -358,6 +421,7 @@ class StoryBossCount(Range):
 class GuaranteedLevelClear(DefaultOnToggle):
     """
         Ensures the first available stage in shuffled story mode is a completable mission out the gate.
+        This option is ignored should you disable all stages meeting this criteria.
     """
     display_name = "Guaranteed Level Clear"
 
@@ -388,6 +452,7 @@ class RifleComponents(Toggle):
 class ObjectiveFrequency(Range):
     """
         Frequency of checks for objective checks, i.e. if set to 4, each 4 progress is 1 check.
+        This will always include the final check as well as every 4.
     """
     display_name = "Objective Frequency"
     range_start = 1
@@ -396,7 +461,7 @@ class ObjectiveFrequency(Range):
 
 class EnemyObjectiveFrequency(Range):
     """
-        Frequency of checks for enemy objective checks as percentage
+        Frequency of checks for enemy objective checks as percentage.
     """
     display_name = "Enemy Objective Frequency"
     range_start = 1
@@ -423,10 +488,24 @@ class MinimumRank(Choice):
     default = option_e
 
 class StoryProgressionBalancing(Range):
-    """Story progression balancing to determine sphering for story stages."""
+    """
+        Story progression balancing to determine sphering for story stages.
+        Refer to the documentation for more information.
+    """
     range_start = 0
     range_end = 100
     default = 50
+
+class ShadowMod(Choice):
+    """
+        Shadow Mod intended to be used.
+        Functionality expected on vanilla, or if not marked unknown.
+    """
+    display_name = "Shadow Mod"
+    option_vanilla = "Vanilla"
+    option_reloaded = "Reloaded"
+    option_sx = "SX"
+    default = option_vanilla
 
 @dataclass
 class ShadowTheHedgehogOptions(PerGameCommonOptions):
@@ -489,6 +568,7 @@ class ShadowTheHedgehogOptions(PerGameCommonOptions):
     minimum_rank: MinimumRank
     weapon_groups: WeaponGroups
     story_progression_balancing: StoryProgressionBalancing
+    shadow_mod: ShadowMod
 
 shadow_option_groups = [
     OptionGroup("Goal",
@@ -498,16 +578,21 @@ shadow_option_groups = [
     OptionGroup("Sanities", [ObjectiveSanity, EnemyObjectiveSanity,
                              CharacterSanity, Enemysanity, Keysanity,
                              Checkpointsanity, WeaponsanityUnlock, WeaponsanityHold,
+                             WeaponGroups, SelectBosses,
                              VehicleLogic]),
-    OptionGroup("Sanity Config", [ObjectivePercentage, EnemyObjectivePercentage,
+    OptionGroup("Sanity Config", [LogicLevel, ObjectivePercentage, EnemyObjectivePercentage,
                                   ObjectiveCompletionPercentage, ObjectiveCompletionEnemyPercentage,
                                   ObjectiveItemPercentageAvailable, ObjectiveItemEnemyPercentageAvailable,
-                                  EnemySanityPercentage, PercentOverrides], True),
+                                  EnemySanityPercentage, PercentOverrides,
+                                  MinimumRank, EnemyFrequency, EnemyObjectiveFrequency,
+                                  ObjectiveFrequency, BossLogicLevel, CraftLogicLevel], True),
     OptionGroup("Story", [LevelProgression, IncludeLastStoryShuffle, SecretStoryProgression,
                           StoryBossCount, GuaranteedLevelClear,
-                          SingleDiablon, SingleBlackDoom, SingleEggDealer]),
+                          SingleDiablon, SingleBlackDoom, SingleEggDealer,
+                          StoryProgressionBalancing ]),
     OptionGroup("Junk", [ExceedingItemsFiller, GaugeFiller], True),
     OptionGroup("Other", [StartingStages, ForceObjectiveSanityChance, ForceObjectiveSanityMax,
                           ForceObjectiveSanityMaxCounter, ExcludedStages,
-                          AutoClearMissions, AllowDangerousPercentage], True)
+                          AutoClearMissions, AllowDangerousPercentage,
+                          RifleComponents], True)
 ]
