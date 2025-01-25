@@ -1315,8 +1315,6 @@ async def check_save_loaded(ctx):
             time_data = struct.unpack('>IBB', time_bytes)
 
             # Add handle that level must not be set to default time!
-            if time_data[0] == 99 and time_data[1] == 59 and time_data[2] == 99:
-                continue
 
             if ctx.minimum_rank != Options.MinimumRank.option_e:
                 rank_bytes = dolphin_memory_engine.read_bytes(clear_address_rank, 4)
@@ -1324,14 +1322,16 @@ async def check_save_loaded(ctx):
                 if RankToOption(rank, ctx.minimum_rank):
                     continue
 
-
-
             current_bytes = dolphin_memory_engine.read_bytes(clear_address, 1)
             current_status = int.from_bytes(current_bytes, byteorder='big')
 
             # TODO: Handle auto boss clears and completion based on time
 
             if current_status == 1:
+
+                if time_data[0] == 99 and time_data[1] == 59 and time_data[2] == 99:
+                    continue
+
                 cleared_missions.append((stage,alignment))
                 if stage not in per_stage:
                     per_stage[stage] = []

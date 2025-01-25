@@ -168,21 +168,23 @@ class ShtHWorld(World):
                             override_settings.value[key] = (max_required_complete * 100) / aliens.total_count
                             #print("Had to adjust key for {key}".format(key=key))
     def generate_early(self):
+
         self.check_invalid_configurations()
 
         if self.options.level_progression != Options.LevelProgression.option_select:
             self.shuffled_story_mode = Story.GetStoryMode(self)
 
-            if self.options.story_progression_balancing > 0:
+            # TODO: Handle this / overwrite this with UT, check validity
+            if self.options.story_progression_balancing > 0 and not hasattr(self.multiworld, "re_gen_passthrough"):
                 story_spheres = Story.DecideStoryPath(self, self.shuffled_story_mode)
                 print("Story Spheres", [ (s[0].stageId, s[0].alignmentId) if s[0] is not None else "Start"
                                          for s in story_spheres])
-                new_overrides = Story.AlterOverridesForStoryPath(story_spheres, self.options.percent_overrides)
+                new_overrides = Story.AlterOverridesForStoryPath(story_spheres, self.options.percent_overrides.value)
 
                 for override in new_overrides.items():
                     self.options.percent_overrides.value[override[0]] = override[1]
-
-
+            #elif hasattr(self.multiworld, "re_gen_passthrough"):
+            #    print("o=", self.options.percent_overrides)
 
         else:
             self.shuffled_story_mode = Story.DefaultStoryMode
@@ -192,63 +194,171 @@ class ShtHWorld(World):
                 self.reinitialise()
                 passthrough = self.multiworld.re_gen_passthrough["Shadow The Hedgehog"]
 
-                self.options.objective_sanity = passthrough["objective_sanity"]
-                self.options.objective_percentage.value = passthrough["objective_percentage"]
-                self.options.objective_enemy_percentage = passthrough["objective_enemy_percentage"]
-                self.options.objective_completion_percentage = passthrough["objective_completion_percentage"]
-                self.options.objective_completion_enemy_percentage = passthrough["objective_completion_enemy_percentage"]
-                self.options.objective_item_percentage_available = passthrough["objective_item_percentage_available"]
-                self.options.objective_item_enemy_percentage_available = passthrough["objective_item_enemy_percentage_available"]
-                self.options.enemy_sanity_percentage = passthrough["enemy_sanity_percentage"]
-                self.options.checkpoint_sanity = passthrough["checkpoint_sanity"]
-                self.options.character_sanity = passthrough["character_sanity"]
-                self.options.required_mission_tokens = passthrough["required_mission_tokens"]
-                self.options.required_hero_tokens = passthrough["required_hero_tokens"]
-                self.options.required_dark_tokens = passthrough["required_dark_tokens"]
-                self.options.required_final_tokens = passthrough["required_final_tokens"]
-                self.options.required_objective_tokens = passthrough["required_objective_tokens"]
-                self.options.required_boss_tokens = passthrough["required_boss_tokens"]
-                self.options.required_final_boss_tokens = passthrough["required_final_boss_tokens"]
-                self.options.requires_emeralds = passthrough["requires_emeralds"]
-                self.options.key_sanity = passthrough["key_sanity"]
-                self.options.enemy_sanity = passthrough["enemy_sanity"]
-                self.options.objective_enemy_sanity = passthrough["objective_enemy_sanity"]
-                self.options.weapon_sanity_unlock = passthrough["weapon_sanity_unlock"]
-                self.options.weapon_sanity_hold = passthrough["weapon_sanity_hold"]
-                self.options.vehicle_logic = passthrough["vehicle_logic"]
-                self.options.percent_overrides = passthrough["override_settings"]
-                self.options.level_progression = passthrough["level_progression"]
-                self.options.excluded_stages = passthrough["excluded_stages"]
-                self.options.logic_level = passthrough["logic_level"]
-                self.options.include_last_way_shuffle = passthrough["include_last_way_shuffle"]
-                self.options.story_shuffle = passthrough["story_shuffle"]
-                self.options.story_boss_count = passthrough["story_boss_count"]
-                self.options.select_bosses = passthrough["select_bosses"]
-                self.options.minimum_rank = passthrough["minimum_rank"]
-                self.options.enemy_frequency = passthrough["enemy_frequency"]
-                self.options.objective_frequency = passthrough["objective_frequency"]
-                self.options.enemy_objective_frequency = passthrough["enemy_objective_frequency"]
-                self.options.secret_story_progression = passthrough["secret_story_progression"]
+                if "objective_sanity" in passthrough:
+                    self.options.objective_sanity = passthrough["objective_sanity"]
+
+                if "objective_percentage" in passthrough:
+                    self.options.objective_percentage = passthrough["objective_percentage"]
+
+                if "objective_enemy_percentage" in passthrough:
+                    self.options.objective_enemy_percentage = passthrough["objective_enemy_percentage"]
+
+                if "objective_completion_percentage" in passthrough:
+                    self.options.objective_completion_percentage = passthrough["objective_completion_percentage"]
+
+                if "objective_percentage" in passthrough:
+                    self.options.objective_percentage = passthrough["objective_percentage"]
+
+                if "objective_enemy_percentage" in passthrough:
+                    self.options.objective_enemy_percentage = passthrough["objective_enemy_percentage"]
+
+                if "objective_completion_enemy_percentage" in passthrough:
+                    self.options.objective_completion_enemy_percentage = passthrough["objective_completion_enemy_percentage"]
+
+                if "objective_item_percentage_available" in passthrough:
+                    self.options.objective_item_percentage_available = passthrough["objective_item_percentage_available"]
+
+                if "objective_item_enemy_percentage_available" in passthrough:
+                    self.options.objective_item_enemy_percentage_available = passthrough["objective_item_enemy_percentage_available"]
+
+                if "enemy_sanity_percentage" in passthrough:
+                    self.options.enemy_sanity_percentage = passthrough["enemy_sanity_percentage"]
+
+                if "checkpoint_sanity" in passthrough:
+                    self.options.checkpoint_sanity = passthrough["checkpoint_sanity"]
+
+                if "character_sanity" in passthrough:
+                    self.options.character_sanity = passthrough["character_sanity"]
+
+                if "required_mission_tokens" in passthrough:
+                    self.options.required_mission_tokens = passthrough["required_mission_tokens"]
+
+                if "required_hero_tokens" in passthrough:
+                    self.options.required_hero_tokens = passthrough["required_hero_tokens"]
+
+                if "required_dark_tokens" in passthrough:
+                    self.options.required_dark_tokens = passthrough["required_dark_tokens"]
+
+                if "required_final_tokens" in passthrough:
+                    self.options.required_final_tokens = passthrough["required_final_tokens"]
+
+                if "required_boss_tokens" in passthrough:
+                    self.options.required_boss_tokens = passthrough["required_boss_tokens"]
+
+                if "required_final_boss_tokens" in passthrough:
+                    self.options.required_final_boss_tokens = passthrough["required_final_boss_tokens"]
+
+                if "objective_completion_percentage" in passthrough:
+                    self.options.objective_completion_percentage = passthrough["objective_completion_percentage"]
+
+                if "requires_emeralds" in passthrough:
+                    self.options.requires_emeralds = passthrough["requires_emeralds"]
+
+                if "key_sanity" in passthrough:
+                    self.options.key_sanity = passthrough["key_sanity"]
+
+                if "enemy_sanity" in passthrough:
+                    self.options.enemy_sanity = passthrough["enemy_sanity"]
+
+                if "objective_enemy_sanity" in passthrough:
+                    self.options.objective_enemy_sanity = passthrough["objective_enemy_sanity"]
+
+                if "weapon_sanity_unlock" in passthrough:
+                    self.options.weapon_sanity_unlock = passthrough["weapon_sanity_unlock"]
+
+                if "weapon_sanity_hold" in passthrough:
+                    self.options.weapon_sanity_hold = passthrough["weapon_sanity_hold"]
+
+                if "vehicle_logic" in passthrough:
+                    self.options.vehicle_logic = passthrough["vehicle_logic"]
+
+                if "override_settings" in passthrough:
+                    print("override=", passthrough["override_settings"])
+                    self.options.percent_overrides = passthrough["override_settings"]
+
+                if "level_progression" in passthrough:
+                    self.options.level_progression = passthrough["level_progression"]
+
+                if "excluded_stages" in passthrough:
+                    self.options.excluded_stages = passthrough["excluded_stages"]
+
+                if "logic_level" in passthrough:
+                    self.options.logic_level = passthrough["logic_level"]
+
+                if "include_last_way_shuffle" in passthrough:
+                    self.options.include_last_way_shuffle = passthrough["include_last_way_shuffle"]
+
+                if "story_boss_count" in passthrough:
+                    self.options.story_boss_count = passthrough["story_boss_count"]
+
+                if "story_shuffle" in passthrough:
+                    self.options.story_shuffle = passthrough["story_shuffle"]
+
+                if "select_bosses" in passthrough:
+                    self.options.select_bosses = passthrough["select_bosses"]
+
+                if "minimum_rank" in passthrough:
+                    self.options.minimum_rank = passthrough["minimum_rank"]
+
+                if "enemy_frequency" in passthrough:
+                    self.options.enemy_frequency = passthrough["enemy_frequency"]
+
+                if "objective_frequency" in passthrough:
+                    self.options.objective_frequency = passthrough["objective_frequency"]
+
+                if "enemy_objective_frequency" in passthrough:
+                    self.options.enemy_objective_frequency = passthrough["enemy_objective_frequency"]
+
+                if "secret_story_progression" in passthrough:
+                    self.options.secret_story_progression = passthrough["secret_story_progression"]
 
                 if "goal_missions" in passthrough:
                     self.options.goal_missions = passthrough["goal_missions"]
+
+                if "goal_final_missions" in passthrough:
                     self.options.goal_final_missions = passthrough["goal_final_missions"]
+
+                if "goal_hero_missions" in passthrough:
                     self.options.goal_hero_missions = passthrough["goal_hero_missions"]
+
+                if "goal_dark_missions" in passthrough:
                     self.options.goal_dark_missions = passthrough["goal_dark_missions"]
+
+                if "goal_objective_missions" in passthrough:
                     self.options.goal_objective_missions = passthrough["goal_objective_missions"]
+
+                if "goal_bosses" in passthrough:
                     self.options.goal_bosses = passthrough["goal_bosses"]
+
+                if "goal_final_bosses" in passthrough:
                     self.options.goal_final_bosses = passthrough["goal_final_bosses"]
-                else:
-                    self.options.goal_missions = 0
-                    self.options.goal_final_missions = 0
-                    self.options.goal_hero_missions = 0
-                    self.options.goal_dark_missions = 0
-                    self.options.goal_objective_missions = 0
-                    self.options.goal_bosses = 0
-                    self.options.goal_final_bosses = 0
 
-                self.shuffled_story_mode = Story.StringToStory(passthrough["shuffled_story_mode"])
+                if "shuffled_story_mode" in passthrough:
+                    self.shuffled_story_mode = Story.StringToStory(passthrough["shuffled_story_mode"])
 
+                if "shadow_mod" in passthrough:
+                    self.shadow_mod = Story.StringToStory(passthrough["shadow_mod"])
+
+                if "weapon_groups" in passthrough:
+                    self.weapon_groups = Story.StringToStory(passthrough["weapon_groups"])
+
+                if "single_egg_dealer" in passthrough:
+                    self.single_egg_dealer = Story.StringToStory(passthrough["single_egg_dealer"])
+
+                if "single_black_doom" in passthrough:
+                    self.single_black_doom = Story.StringToStory(passthrough["single_black_doom"])
+
+                if "single_diablon" in passthrough:
+                    self.single_diablon = Story.StringToStory(passthrough["single_diablon"])
+
+                if "boss_logic_level" in passthrough:
+                    self.boss_logic_level = Story.StringToStory(passthrough["boss_logic_level"])
+
+                if "craft_logic_level" in passthrough:
+                    self.craft_logic_level = Story.StringToStory(passthrough["craft_logic_level"])
+
+                if "guaranteed_level_clear" in passthrough:
+                    self.guaranteed_level_clear = Story.StringToStory(passthrough["guaranteed_level_clear"])
 
         # Set maximum of levels required
         # Exclude missions listed in exclude_locations
@@ -395,11 +505,6 @@ class ShtHWorld(World):
         return res
 
     def fill_slot_data(self):
-        story_string = Story.StoryToString(self.shuffled_story_mode)
-        #print(story_string)
-        Story.StringToStory(story_string)
-
-
         slot_data = {
             "check_level": None if len(self.first_regions) == 0 else self.first_regions[0],
             "first_levels": self.first_regions,
@@ -458,7 +563,15 @@ class ShtHWorld(World):
             "goal_objective_missions": self.options.goal_objective_missions.value,
             "goal_bosses": self.options.goal_bosses.value,
             "goal_final_bosses": self.options.goal_final_bosses.value,
-            "shadow_mod": self.options.shadow_mod.value
+            "shadow_mod": self.options.shadow_mod.value,
+            "weapon_groups": self.options.weapon_groups.value,
+            "single_egg_dealer": self.options.single_egg_dealer.value,
+            "single_black_doom": self.options.single_black_doom.value,
+            "single_diablon": self.options.single_diablon.value,
+            "boss_logic_level": self.options.boss_logic_level.value,
+            "craft_logic_level": self.options.craft_logic_level.value,
+            "guaranteed_level_clear": self.options.guaranteed_level_clear.value
+
         }
         return slot_data
 
