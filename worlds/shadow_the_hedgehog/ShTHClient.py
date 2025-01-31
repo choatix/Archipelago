@@ -103,6 +103,8 @@ class GAME_ADDRESSES:
     CURRENT_STAGE_BASE_KEYSANITY_ADDRESS = 0x8057fb80
     LIVES_ADDRESS = 0x80576704
 
+    EXTRA_SAVE_DATA = 0x805780D0
+
     MENU_ENUM = 0x80583ACC
 
     CharacterAddresses = [
@@ -852,6 +854,8 @@ class ShTHContext(CommonContext):
         self.select_bosses = False
         self.select_initialised = False
         self.weapon_delay = None
+        self.save_value = None
+        self.save_rejected = False
 
     async def disconnect(self, allow_autoreconnect: bool = False):
         self.auth = None
@@ -1082,6 +1086,9 @@ class ShTHContext(CommonContext):
             if "enemy_frequency" in slot_data:
                 self.enemy_frequency = slot_data["enemy_frequency"]
 
+            if "save_value" in slot_data:
+                self.save_value = slot_data["save_value"]
+
             if "shadow_mod" in slot_data:
                 mod = slot_data["shadow_mod"]
                 if mod == Options.ShadowMod.option_vanilla and self.game_id != bytes(SHADOW_THE_HEDGEHOG_GAME_ID, "utf-8"):
@@ -1274,6 +1281,9 @@ async def check_save_loaded(ctx):
     # Throw exception if save is not configured
     # If first load, set the memory to whether it can go in the save-data
 
+    if ctx.save_rejected:
+        return False
+
     loaded = False
 
     loaded_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.SAVE_DATA_LOADED, 1)
@@ -1288,6 +1298,18 @@ async def check_save_loaded(ctx):
         checkpointsanity_locations, charactersanity_locations,\
         token_locations, keysanity_locations, weaponsanity_locations, boss_locations,\
         warp_locations = Locations.GetAllLocationInfo()
+
+    random_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.EXTRA_SAVE_DATA, 8)
+    loaded_bytes = int.from_bytes(random_bytes, byteorder='big')
+
+    first_game_load = False
+    ctx.save_rejected = False
+    if loaded_bytes == 0:
+        first_game_load = True
+    elif loaded_bytes != ctx.save_value:
+        logger.error("Unrecognised save value. Please load from the correct/new save.")
+        ctx.save_rejected = True
+        loaded = False
 
     # TODO: Check for newly obtained instead of all
 
@@ -1304,6 +1326,9 @@ async def check_save_loaded(ctx):
             clear_address_rank = clear_address_data[1]
             clear_address_time = clear_address_data[2]
 
+            if not is_level_accessible(ctx, stage):
+                continue
+
             if ctx.story_mode_available and is_level_accessible(ctx, stage, story=True):
                 if stage not in ctx.available_levels:
                     ctx.available_levels.append(stage)
@@ -1316,21 +1341,25 @@ async def check_save_loaded(ctx):
 
             # Add handle that level must not be set to default time!
 
-            if ctx.minimum_rank != Options.MinimumRank.option_e:
-                rank_bytes = dolphin_memory_engine.read_bytes(clear_address_rank, 4)
-                rank = int.from_bytes(rank_bytes, byteorder='big')
-                if RankToOption(rank, ctx.minimum_rank):
-                    continue
-
             current_bytes = dolphin_memory_engine.read_bytes(clear_address, 1)
             current_status = int.from_bytes(current_bytes, byteorder='big')
 
             # TODO: Handle auto boss clears and completion based on time
 
             if current_status == 1:
+                if first_game_load:
+                    ctx.save_rejected = True
+                    logger.error("Game has preloaded but has clear data. Please start from a new save.")
+                    break
 
                 if time_data[0] == 99 and time_data[1] == 59 and time_data[2] == 99:
                     continue
+
+                if ctx.minimum_rank != Options.MinimumRank.option_e:
+                    rank_bytes = dolphin_memory_engine.read_bytes(clear_address_rank, 4)
+                    rank = int.from_bytes(rank_bytes, byteorder='big')
+                    if RankToOption(rank, ctx.minimum_rank):
+                        continue
 
                 cleared_missions.append((stage,alignment))
                 if stage not in per_stage:
@@ -1410,6 +1439,7 @@ async def check_save_loaded(ctx):
         if last_cutscene_id in (926, 8201, 8202, 8203, 8204):
             finished = True
 
+
         if len(messages) > 0:
             unsent_messages = [ message for message in messages if message not in ctx.checked_locations]
             #ctx.locations_checked = messages
@@ -1432,6 +1462,10 @@ async def check_save_loaded(ctx):
             ctx.expected_version_check = True
 
         # Check for mission completes
+
+    if loaded and first_game_load and not ctx.save_rejected:
+        new_bytes = ctx.save_value.to_bytes(8, byteorder='big')
+        writeBytes(GAME_ADDRESSES.EXTRA_SAVE_DATA, new_bytes)
 
     return loaded
 
@@ -1840,7 +1874,9 @@ def CheckAutoWarps(ctx):
             end_warp_location = [w for w in warp_locations if w.stageId == end_path_location]
             if len(end_warp_location) == 1 and end_warp_location[0].locationId not in ctx.checked_locations:
                 if end_warp_location[0].locationId not in found_warps:
-                    found_warps.append(end_warp_location[0].locationId)
+
+                    if is_level_accessible(ctx,end_warp_location[0].stageId, story=True):
+                        found_warps.append(end_warp_location[0].locationId)
 
     return found_warps
 

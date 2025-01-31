@@ -348,7 +348,7 @@ class BossLogicLevel(Choice):
     display_name = "Boss Logic Level"
     option_easy = 0  # Logic adds in easier elements for completion
     option_normal = 1  # Standard logic
-    #option_hard = 2  # Requires skips to traverse regions.
+    option_hard = 2  # Requires skips to traverse regions.
     default = option_normal
 
 class CraftLogicLevel(Choice):
