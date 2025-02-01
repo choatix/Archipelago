@@ -341,28 +341,28 @@ class ShtHWorld(World):
                     self.shuffled_story_mode = Story.StringToStory(passthrough["shuffled_story_mode"])
 
                 if "shadow_mod" in passthrough:
-                    self.shadow_mod = Story.StringToStory(passthrough["shadow_mod"])
+                    self.options.shadow_mod = passthrough["shadow_mod"]
 
                 if "weapon_groups" in passthrough:
-                    self.weapon_groups = Story.StringToStory(passthrough["weapon_groups"])
+                    self.options.weapon_groups = passthrough["weapon_groups"]
 
                 if "single_egg_dealer" in passthrough:
-                    self.single_egg_dealer = Story.StringToStory(passthrough["single_egg_dealer"])
+                    self.options.single_egg_dealer = passthrough["single_egg_dealer"]
 
                 if "single_black_doom" in passthrough:
-                    self.single_black_doom = Story.StringToStory(passthrough["single_black_doom"])
+                    self.options.single_black_doom = passthrough["single_black_doom"]
 
                 if "single_diablon" in passthrough:
-                    self.single_diablon = Story.StringToStory(passthrough["single_diablon"])
+                    self.options.single_diablon = passthrough["single_diablon"]
 
                 if "boss_logic_level" in passthrough:
-                    self.boss_logic_level = Story.StringToStory(passthrough["boss_logic_level"])
+                    self.options.boss_logic_level = passthrough["boss_logic_level"]
 
                 if "craft_logic_level" in passthrough:
-                    self.craft_logic_level = Story.StringToStory(passthrough["craft_logic_level"])
+                    self.options.craft_logic_level = passthrough["craft_logic_level"]
 
                 if "guaranteed_level_clear" in passthrough:
-                    self.guaranteed_level_clear = Story.StringToStory(passthrough["guaranteed_level_clear"])
+                    self.options.guaranteed_level_clear = passthrough["guaranteed_level_clear"]
 
         # Set maximum of levels required
         # Exclude missions listed in exclude_locations
