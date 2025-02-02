@@ -63,15 +63,18 @@ key_item_table: List[ItemInfo] = [
     ItemInfo(80, ItemName.KeyItem.Train, ItemClassification.progression),
     ItemInfo(81, ItemName.KeyItem.Boat, ItemClassification.progression),
     ItemInfo(82, ItemName.KeyItem.Raft, ItemClassification.progression),
-    ItemInfo(83, ItemName.KeyItem.HotelKeys, ItemClassification.progression),
-    ItemInfo(84, ItemName.KeyItem.CasinoKeys, ItemClassification.progression),
+    ItemInfo(83, ItemName.KeyItem.HotelFrontKeys, ItemClassification.progression),
+    ItemInfo(84, ItemName.KeyItem.HotelBackKeys, ItemClassification.progression),
     ItemInfo(85, ItemName.KeyItem.TwinkleParkTicket, ItemClassification.progression),
     ItemInfo(86, ItemName.KeyItem.EmployeeCard, ItemClassification.progression),
     ItemInfo(87, ItemName.KeyItem.IceStone, ItemClassification.progression),
     ItemInfo(88, ItemName.KeyItem.Dynamite, ItemClassification.progression),
     ItemInfo(89, ItemName.KeyItem.JungleCart, ItemClassification.progression),
     ItemInfo(120, ItemName.KeyItem.WindStone, ItemClassification.progression),
-    ItemInfo(121, ItemName.KeyItem.StationKeys, ItemClassification.progression),
+    ItemInfo(121, ItemName.KeyItem.StationFrontKeys, ItemClassification.progression),
+    ItemInfo(122, ItemName.KeyItem.StationBackKeys, ItemClassification.progression),
+    ItemInfo(123, ItemName.KeyItem.Egglift, ItemClassification.progression),
+    ItemInfo(124, ItemName.KeyItem.Monorail, ItemClassification.progression),
 
 ]
 
@@ -106,8 +109,7 @@ group_item_table: Dict[str, List[str]] = {
     ItemName.Groups.Upgrades: [item.name for item in character_upgrade_item_table],
     ItemName.Groups.KeyItems: [item.name for item in key_item_table],
     ItemName.Groups.Fillers: [item.name for item in filler_item_table],
-    ItemName.Groups.Traps: [item.name for item in trap_item_table],
-    "Casino Keys": [ItemName.KeyItem.CasinoKeys],
+    ItemName.Groups.Traps: [item.name for item in trap_item_table]
 }
 
 

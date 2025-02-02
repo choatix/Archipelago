@@ -79,8 +79,15 @@ def create_sadx_regions(world: World, starter_setup: StarterSetup, options: Soni
 
         if region_from and region_to:
             if key_items:
-                region_from.connect(region_to, entrance_name,
-                                    lambda state, items=key_items: all(state.has(item, world.player) for item in items))
+                if all(isinstance(item, str) for item in key_items):
+                    region_from.connect(region_to, entrance_name,
+                                        lambda state, items=key_items: all(
+                                            state.has(item, world.player) for item in items))
+                else:
+                    region_from.connect(region_to, entrance_name,
+                                        lambda state, items=key_items: any(
+                                            all(state.has(item, world.player) for item in requirement_group) for
+                                            requirement_group in items))
             else:
                 region_from.connect(region_to, entrance_name)
 

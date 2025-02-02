@@ -6,6 +6,8 @@ from .Names import ItemName, LocationName
 from .Names.LocationName import Boss
 from .Options import SonicAdventureDXOptions
 
+LogicItems = Union[List[str], List[List[str]]]
+
 
 @dataclass
 class LevelLocation:
@@ -38,12 +40,12 @@ class UpgradeLocation:
     locationName: str
     area: Area
     character: Character
-    normalLogicItems: List[str]
-    hardLogicItems: List[str]
-    expertDCLogicItems: List[str]
-    expertDXLogicItems: List[str]
+    normalLogicItems: LogicItems
+    hardLogicItems: LogicItems
+    expertDCLogicItems: LogicItems
+    expertDXLogicItems: LogicItems
 
-    def get_logic_items(self, options: SonicAdventureDXOptions) -> List[str]:
+    def get_logic_items(self, options: SonicAdventureDXOptions) -> LogicItems:
         if options.logic_level.value == 3:
             return self.expertDXLogicItems
         elif options.logic_level.value == 2:
@@ -149,15 +151,15 @@ class MissionLocation:
     objectiveArea: Area
     character: Character
     missionNumber: int
-    normalLogicItems: List[str]
-    hardLogicItems: List[str]
-    expertDCLogicItems: List[str]
-    expertDXLogicItems: List[str]
+    normalLogicItems: LogicItems
+    hardLogicItems: LogicItems
+    expertDCLogicItems: LogicItems
+    expertDXLogicItems: LogicItems
 
     def get_mission_name(self) -> str:
         return f"Mission {self.missionNumber} ({self.character.name})"
 
-    def get_logic_items(self, options: SonicAdventureDXOptions) -> List[str]:
+    def get_logic_items(self, options: SonicAdventureDXOptions) -> LogicItems:
         if options.logic_level.value == 3:
             return self.expertDXLogicItems
         elif options.logic_level.value == 2:
@@ -221,18 +223,51 @@ class ChaoRaceLocation:
     area: Area
 
 
-area_connections: Dict[Tuple[Character, Area, Area], Tuple[List[str], List[str], List[str]]] = {
+area_connections: Dict[Tuple[Character, Area, Area], Tuple[LogicItems, LogicItems, LogicItems]] = {
     (Character.Sonic, Area.Hotel, Area.EmeraldCoast): ([], [], [], []),
     (Character.Sonic, Area.MysticRuinsMain, Area.WindyValley): (
         [ItemName.KeyItem.WindStone], [ItemName.KeyItem.WindStone], [ItemName.KeyItem.WindStone],
         [ItemName.KeyItem.WindStone]),
     (Character.Sonic, Area.Casino, Area.Casinopolis): (
         [ItemName.Sonic.LightShoes], [ItemName.Sonic.LightShoes], [], []),
-    (Character.Sonic, Area.AngelIsland, Area.IceCap): (
-        [ItemName.KeyItem.IceStone, ItemName.KeyItem.CasinoKeys, ItemName.KeyItem.Train, ItemName.KeyItem.Dynamite],
-        [ItemName.KeyItem.IceStone, ItemName.KeyItem.CasinoKeys, ItemName.KeyItem.Train, ItemName.KeyItem.Dynamite],
-        [ItemName.KeyItem.IceStone, ItemName.KeyItem.CasinoKeys, ItemName.KeyItem.Train, ItemName.KeyItem.Dynamite],
-        [ItemName.KeyItem.IceStone, ItemName.KeyItem.CasinoKeys, ItemName.KeyItem.Train, ItemName.KeyItem.Dynamite]),
+    (Character.Sonic, Area.AngelIsland, Area.IceCap): ([[ItemName.KeyItem.IceStone,
+                                                         ItemName.KeyItem.StationBackKeys,
+                                                         ItemName.KeyItem.Train,
+                                                         ItemName.KeyItem.Dynamite],
+                                                        [ItemName.KeyItem.IceStone,
+                                                         ItemName.KeyItem.StationFrontKeys,
+                                                         ItemName.KeyItem.HotelFrontKeys,
+                                                         ItemName.KeyItem.HotelBackKeys,
+                                                         ItemName.KeyItem.Train,
+                                                         ItemName.KeyItem.Dynamite]], [[ItemName.KeyItem.IceStone,
+                                                                                        ItemName.KeyItem.StationBackKeys,
+                                                                                        ItemName.KeyItem.Train,
+                                                                                        ItemName.KeyItem.Dynamite],
+                                                                                       [ItemName.KeyItem.IceStone,
+                                                                                        ItemName.KeyItem.StationFrontKeys,
+                                                                                        ItemName.KeyItem.HotelFrontKeys,
+                                                                                        ItemName.KeyItem.HotelBackKeys,
+                                                                                        ItemName.KeyItem.Train,
+                                                                                        ItemName.KeyItem.Dynamite]],
+                                                       [[ItemName.KeyItem.IceStone,
+                                                         ItemName.KeyItem.StationBackKeys,
+                                                         ItemName.KeyItem.Train,
+                                                         ItemName.KeyItem.Dynamite],
+                                                        [ItemName.KeyItem.IceStone,
+                                                         ItemName.KeyItem.StationFrontKeys,
+                                                         ItemName.KeyItem.HotelFrontKeys,
+                                                         ItemName.KeyItem.HotelBackKeys,
+                                                         ItemName.KeyItem.Train,
+                                                         ItemName.KeyItem.Dynamite]], [[ItemName.KeyItem.IceStone,
+                                                                                        ItemName.KeyItem.StationBackKeys,
+                                                                                        ItemName.KeyItem.Train,
+                                                                                        ItemName.KeyItem.Dynamite],
+                                                                                       [ItemName.KeyItem.IceStone,
+                                                                                        ItemName.KeyItem.StationFrontKeys,
+                                                                                        ItemName.KeyItem.HotelFrontKeys,
+                                                                                        ItemName.KeyItem.HotelBackKeys,
+                                                                                        ItemName.KeyItem.Train,
+                                                                                        ItemName.KeyItem.Dynamite]]),
     (Character.Sonic, Area.TwinkleParkLobby, Area.TwinklePark): ([], [], [], []),
     (Character.Sonic, Area.StationSquareMain, Area.SpeedHighway): (
         [ItemName.KeyItem.EmployeeCard], [ItemName.KeyItem.EmployeeCard], [], []),
@@ -240,28 +275,61 @@ area_connections: Dict[Tuple[Character, Area, Area], Tuple[List[str], List[str],
         [ItemName.Sonic.LightShoes, ItemName.Sonic.AncientLight],
         [ItemName.Sonic.LightShoes, ItemName.Sonic.AncientLight],
         [], []),
-    (Character.Sonic, Area.EggCarrierMain, Area.SkyDeck): ([], [], [], []),
+    (Character.Sonic, Area.EggCarrierFrontDeck, Area.SkyDeck): ([], [], [], []),
     (Character.Sonic, Area.Jungle, Area.LostWorld): ([], [], [], []),
     (Character.Sonic, Area.Jungle, Area.FinalEgg): ([], [], [], []),
-    (Character.Sonic, Area.EggCarrierMain, Area.HotShelter): ([], [], [], []),
+    (Character.Sonic, Area.EggCarrierInside, Area.HotShelter): ([], [], [], []),
     (Character.Tails, Area.Hotel, Area.EmeraldCoast): ([], [], [], []),
     (Character.Tails, Area.MysticRuinsMain, Area.WindyValley): (
         [ItemName.KeyItem.WindStone], [ItemName.KeyItem.WindStone], [ItemName.KeyItem.WindStone],
         [ItemName.KeyItem.WindStone]),
     (Character.Tails, Area.Casino, Area.Casinopolis): ([], [], [], []),
-    (Character.Tails, Area.AngelIsland, Area.IceCap): (
-        [ItemName.KeyItem.IceStone, ItemName.KeyItem.CasinoKeys, ItemName.KeyItem.Train, ItemName.KeyItem.Dynamite],
-        [ItemName.KeyItem.IceStone, ItemName.KeyItem.CasinoKeys, ItemName.KeyItem.Train, ItemName.KeyItem.Dynamite],
-        [ItemName.KeyItem.IceStone, ItemName.KeyItem.CasinoKeys, ItemName.KeyItem.Train, ItemName.KeyItem.Dynamite],
-        [ItemName.KeyItem.IceStone, ItemName.KeyItem.CasinoKeys, ItemName.KeyItem.Train, ItemName.KeyItem.Dynamite]),
+    (Character.Tails, Area.AngelIsland, Area.IceCap): ([[ItemName.KeyItem.IceStone,
+                                                         ItemName.KeyItem.StationBackKeys,
+                                                         ItemName.KeyItem.Train,
+                                                         ItemName.KeyItem.Dynamite],
+                                                        [ItemName.KeyItem.IceStone,
+                                                         ItemName.KeyItem.StationFrontKeys,
+                                                         ItemName.KeyItem.HotelFrontKeys,
+                                                         ItemName.KeyItem.HotelBackKeys,
+                                                         ItemName.KeyItem.Train,
+                                                         ItemName.KeyItem.Dynamite]], [[ItemName.KeyItem.IceStone,
+                                                                                        ItemName.KeyItem.StationBackKeys,
+                                                                                        ItemName.KeyItem.Train,
+                                                                                        ItemName.KeyItem.Dynamite],
+                                                                                       [ItemName.KeyItem.IceStone,
+                                                                                        ItemName.KeyItem.StationFrontKeys,
+                                                                                        ItemName.KeyItem.HotelFrontKeys,
+                                                                                        ItemName.KeyItem.HotelBackKeys,
+                                                                                        ItemName.KeyItem.Train,
+                                                                                        ItemName.KeyItem.Dynamite]],
+                                                       [[ItemName.KeyItem.IceStone,
+                                                         ItemName.KeyItem.StationBackKeys,
+                                                         ItemName.KeyItem.Train,
+                                                         ItemName.KeyItem.Dynamite],
+                                                        [ItemName.KeyItem.IceStone,
+                                                         ItemName.KeyItem.StationFrontKeys,
+                                                         ItemName.KeyItem.HotelFrontKeys,
+                                                         ItemName.KeyItem.HotelBackKeys,
+                                                         ItemName.KeyItem.Train,
+                                                         ItemName.KeyItem.Dynamite]], [[ItemName.KeyItem.IceStone,
+                                                                                        ItemName.KeyItem.StationBackKeys,
+                                                                                        ItemName.KeyItem.Train,
+                                                                                        ItemName.KeyItem.Dynamite],
+                                                                                       [ItemName.KeyItem.IceStone,
+                                                                                        ItemName.KeyItem.StationFrontKeys,
+                                                                                        ItemName.KeyItem.HotelFrontKeys,
+                                                                                        ItemName.KeyItem.HotelBackKeys,
+                                                                                        ItemName.KeyItem.Train,
+                                                                                        ItemName.KeyItem.Dynamite]]),
     (Character.Tails, Area.TwinkleParkLobby, Area.TwinklePark): ([], [], [], []),
     (Character.Tails, Area.StationSquareMain, Area.SpeedHighway): (
         [ItemName.KeyItem.EmployeeCard], [ItemName.KeyItem.EmployeeCard], [ItemName.KeyItem.EmployeeCard], []),
     (Character.Tails, Area.AngelIsland, Area.RedMountain): ([], [], [], []),
-    (Character.Tails, Area.EggCarrierMain, Area.SkyDeck): ([], [], [], []),
+    (Character.Tails, Area.EggCarrierFrontDeck, Area.SkyDeck): ([], [], [], []),
     (Character.Tails, Area.Jungle, Area.LostWorld): ([], [], [], []),
     (Character.Tails, Area.Jungle, Area.FinalEgg): ([], [], [], []),
-    (Character.Tails, Area.EggCarrierMain, Area.HotShelter): ([], [], [], []),
+    (Character.Tails, Area.EggCarrierInside, Area.HotShelter): ([], [], [], []),
     (Character.Knuckles, Area.Hotel, Area.EmeraldCoast): ([], [], [], []),
     (Character.Knuckles, Area.MysticRuinsMain, Area.WindyValley): (
         [ItemName.KeyItem.WindStone], [ItemName.KeyItem.WindStone], [ItemName.KeyItem.WindStone],
@@ -277,11 +345,11 @@ area_connections: Dict[Tuple[Character, Area, Area], Tuple[List[str], List[str],
         [ItemName.Knuckles.ShovelClaw, ItemName.KeyItem.Dynamite],
         [ItemName.Knuckles.ShovelClaw, ItemName.KeyItem.Dynamite],
         [ItemName.Knuckles.ShovelClaw, ItemName.KeyItem.Dynamite]),
-    (Character.Knuckles, Area.EggCarrierMain, Area.SkyDeck): ([], [], [], []),
+    (Character.Knuckles, Area.EggCarrierOutside, Area.SkyDeck): ([], [], [], []),
     (Character.Knuckles, Area.Jungle, Area.LostWorld): (
         [ItemName.Knuckles.ShovelClaw], [ItemName.Knuckles.ShovelClaw], [], []),
     (Character.Knuckles, Area.Jungle, Area.FinalEgg): ([], [], [], []),
-    (Character.Knuckles, Area.EggCarrierMain, Area.HotShelter): ([], [], [], []),
+    (Character.Knuckles, Area.EggCarrierInside, Area.HotShelter): ([], [], [], []),
     (Character.Amy, Area.Hotel, Area.EmeraldCoast): ([], [], [], []),
     (Character.Amy, Area.MysticRuinsMain, Area.WindyValley): (
         [ItemName.KeyItem.WindStone], [ItemName.KeyItem.WindStone], [ItemName.KeyItem.WindStone],
@@ -295,29 +363,62 @@ area_connections: Dict[Tuple[Character, Area, Area], Tuple[List[str], List[str],
         [ItemName.KeyItem.EmployeeCard], [ItemName.KeyItem.EmployeeCard], [ItemName.KeyItem.EmployeeCard],
         [ItemName.KeyItem.EmployeeCard]),
     (Character.Amy, Area.AngelIsland, Area.RedMountain): ([], [], [], []),
-    (Character.Amy, Area.EggCarrierMain, Area.SkyDeck): ([], [], [], []),
+    (Character.Amy, Area.EggCarrierOutside, Area.SkyDeck): ([], [], [], []),
     (Character.Amy, Area.Jungle, Area.LostWorld): ([], [], [], []),
     (Character.Amy, Area.Jungle, Area.FinalEgg): ([], [], [], []),
-    (Character.Amy, Area.EggCarrierMain, Area.HotShelter): ([], [], [], []),
+    (Character.Amy, Area.EggCarrierInside, Area.HotShelter): ([], [], [], []),
     (Character.Big, Area.Hotel, Area.EmeraldCoast): ([], [], [], []),
     (Character.Big, Area.MysticRuinsMain, Area.WindyValley): (
         [ItemName.KeyItem.WindStone], [ItemName.KeyItem.WindStone], [ItemName.KeyItem.WindStone],
         [ItemName.KeyItem.WindStone]),
     (Character.Big, Area.Casino, Area.Casinopolis): ([], [], [], []),
-    (Character.Big, Area.AngelIsland, Area.IceCap): (
-        [ItemName.KeyItem.IceStone, ItemName.KeyItem.StationKeys, ItemName.KeyItem.Train, ItemName.KeyItem.Dynamite],
-        [ItemName.KeyItem.IceStone, ItemName.KeyItem.StationKeys, ItemName.KeyItem.Train, ItemName.KeyItem.Dynamite],
-        [ItemName.KeyItem.IceStone, ItemName.KeyItem.StationKeys, ItemName.KeyItem.Train, ItemName.KeyItem.Dynamite],
-        [ItemName.KeyItem.IceStone, ItemName.KeyItem.StationKeys, ItemName.KeyItem.Train, ItemName.KeyItem.Dynamite]),
+    (Character.Big, Area.AngelIsland, Area.IceCap): ([[ItemName.KeyItem.IceStone,
+                                                       ItemName.KeyItem.StationFrontKeys,
+                                                       ItemName.KeyItem.Train,
+                                                       ItemName.KeyItem.Dynamite],
+                                                      [ItemName.KeyItem.IceStone,
+                                                       ItemName.KeyItem.HotelFrontKeys,
+                                                       ItemName.KeyItem.HotelBackKeys,
+                                                       ItemName.KeyItem.StationBackKeys,
+                                                       ItemName.KeyItem.Train,
+                                                       ItemName.KeyItem.Dynamite]], [[ItemName.KeyItem.IceStone,
+                                                                                      ItemName.KeyItem.StationFrontKeys,
+                                                                                      ItemName.KeyItem.Train,
+                                                                                      ItemName.KeyItem.Dynamite],
+                                                                                     [ItemName.KeyItem.IceStone,
+                                                                                      ItemName.KeyItem.HotelFrontKeys,
+                                                                                      ItemName.KeyItem.HotelBackKeys,
+                                                                                      ItemName.KeyItem.StationBackKeys,
+                                                                                      ItemName.KeyItem.Train,
+                                                                                      ItemName.KeyItem.Dynamite]],
+                                                     [[ItemName.KeyItem.IceStone,
+                                                       ItemName.KeyItem.StationFrontKeys,
+                                                       ItemName.KeyItem.Train,
+                                                       ItemName.KeyItem.Dynamite],
+                                                      [ItemName.KeyItem.IceStone,
+                                                       ItemName.KeyItem.HotelFrontKeys,
+                                                       ItemName.KeyItem.HotelBackKeys,
+                                                       ItemName.KeyItem.StationBackKeys,
+                                                       ItemName.KeyItem.Train,
+                                                       ItemName.KeyItem.Dynamite]], [[ItemName.KeyItem.IceStone,
+                                                                                      ItemName.KeyItem.StationFrontKeys,
+                                                                                      ItemName.KeyItem.Train,
+                                                                                      ItemName.KeyItem.Dynamite],
+                                                                                     [ItemName.KeyItem.IceStone,
+                                                                                      ItemName.KeyItem.HotelFrontKeys,
+                                                                                      ItemName.KeyItem.HotelBackKeys,
+                                                                                      ItemName.KeyItem.StationBackKeys,
+                                                                                      ItemName.KeyItem.Train,
+                                                                                      ItemName.KeyItem.Dynamite]]),
     (Character.Big, Area.TwinkleParkLobby, Area.TwinklePark): ([], [], [], []),
     (Character.Big, Area.StationSquareMain, Area.SpeedHighway): (
         [ItemName.KeyItem.EmployeeCard], [ItemName.KeyItem.EmployeeCard], [ItemName.KeyItem.EmployeeCard],
         [ItemName.KeyItem.EmployeeCard]),
     (Character.Big, Area.AngelIsland, Area.RedMountain): ([], [], [], []),
-    (Character.Big, Area.EggCarrierMain, Area.SkyDeck): ([], [], [], []),
+    (Character.Big, Area.EggCarrierFrontDeck, Area.SkyDeck): ([], [], [], []),
     (Character.Big, Area.Jungle, Area.LostWorld): ([], [], [], []),
     (Character.Big, Area.Jungle, Area.FinalEgg): ([], [], [], []),
-    (Character.Big, Area.EggCarrierMain, Area.HotShelter): ([], [], [], []),
+    (Character.Big, Area.EggCarrierInside, Area.HotShelter): ([], [], [], []),
     (Character.Gamma, Area.Hotel, Area.EmeraldCoast): ([], [], [], []),
     (Character.Gamma, Area.MysticRuinsMain, Area.WindyValley): (
         [ItemName.KeyItem.WindStone], [ItemName.KeyItem.WindStone], [ItemName.KeyItem.WindStone],
@@ -334,30 +435,31 @@ area_connections: Dict[Tuple[Character, Area, Area], Tuple[List[str], List[str],
         [ItemName.KeyItem.EmployeeCard], [ItemName.KeyItem.EmployeeCard], [ItemName.KeyItem.EmployeeCard],
         [ItemName.KeyItem.EmployeeCard]),
     (Character.Gamma, Area.AngelIsland, Area.RedMountain): ([], [], [], []),
-    (Character.Gamma, Area.EggCarrierMain, Area.SkyDeck): ([], [], [], []),
+    (Character.Gamma, Area.EggCarrierOutside, Area.SkyDeck): ([], [], [], []),
     (Character.Gamma, Area.Jungle, Area.LostWorld): ([], [], [], []),
     (Character.Gamma, Area.Jungle, Area.FinalEgg): ([], [], [], []),
-    (Character.Gamma, Area.EggCarrierMain, Area.HotShelter): ([], [], [], []),
+    (Character.Gamma, Area.EggCarrierInside, Area.HotShelter): ([], [], [], []),
 
     (Character.Sonic, Area.StationSquareMain, Area.Station): (
-        [ItemName.KeyItem.StationKeys], [ItemName.KeyItem.StationKeys], [], []),
+        [ItemName.KeyItem.StationFrontKeys], [ItemName.KeyItem.StationFrontKeys], [], []),
     (Character.Sonic, Area.Station, Area.StationSquareMain): (
-        [ItemName.KeyItem.StationKeys], [ItemName.KeyItem.StationKeys], [ItemName.KeyItem.StationKeys],
-        [ItemName.KeyItem.StationKeys]),
+        [ItemName.KeyItem.StationFrontKeys], [ItemName.KeyItem.StationFrontKeys], [ItemName.KeyItem.StationFrontKeys],
+        [ItemName.KeyItem.StationFrontKeys]),
     (Character.Sonic, Area.StationSquareMain, Area.Hotel): (
-        [ItemName.KeyItem.HotelKeys], [ItemName.KeyItem.HotelKeys], [], []),
+        [ItemName.KeyItem.HotelFrontKeys], [ItemName.KeyItem.HotelFrontKeys], [], []),
     (Character.Sonic, Area.Hotel, Area.StationSquareMain): (
-        [ItemName.KeyItem.HotelKeys], [ItemName.KeyItem.HotelKeys], [ItemName.KeyItem.HotelKeys],
-        [ItemName.KeyItem.HotelKeys]),
+        [ItemName.KeyItem.HotelFrontKeys], [ItemName.KeyItem.HotelFrontKeys], [ItemName.KeyItem.HotelFrontKeys],
+        [ItemName.KeyItem.HotelFrontKeys]),
     (Character.Sonic, Area.Station, Area.Casino): (
-        [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys], [], []),
+        [ItemName.KeyItem.StationBackKeys], [ItemName.KeyItem.StationBackKeys], [], []),
     (Character.Sonic, Area.Casino, Area.Station): (
-        [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys],
-        [ItemName.KeyItem.CasinoKeys]),
+        [ItemName.KeyItem.StationBackKeys], [ItemName.KeyItem.StationBackKeys], [ItemName.KeyItem.StationBackKeys],
+        [ItemName.KeyItem.StationBackKeys]),
     (Character.Sonic, Area.Hotel, Area.Casino): (
-        [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys],
-        [ItemName.KeyItem.CasinoKeys]),
-    (Character.Sonic, Area.Casino, Area.Hotel): ([ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys], [], []),
+        [ItemName.KeyItem.HotelBackKeys], [ItemName.KeyItem.HotelBackKeys], [ItemName.KeyItem.HotelBackKeys],
+        [ItemName.KeyItem.HotelBackKeys]),
+    (Character.Sonic, Area.Casino, Area.Hotel): (
+        [ItemName.KeyItem.HotelBackKeys], [ItemName.KeyItem.HotelBackKeys], [], []),
     (Character.Sonic, Area.StationSquareMain, Area.TwinkleParkLobby): (
         [ItemName.KeyItem.TwinkleParkTicket], [ItemName.KeyItem.TwinkleParkTicket],
         [ItemName.KeyItem.TwinkleParkTicket],
@@ -381,32 +483,50 @@ area_connections: Dict[Tuple[Character, Area, Area], Tuple[List[str], List[str],
         [ItemName.KeyItem.Train], [ItemName.KeyItem.Train], [ItemName.KeyItem.Train], [ItemName.KeyItem.Train]),
     (Character.Sonic, Area.MysticRuinsMain, Area.Station): (
         [ItemName.KeyItem.Train], [ItemName.KeyItem.Train], [ItemName.KeyItem.Train], [ItemName.KeyItem.Train]),
-    (Character.Sonic, Area.StationSquareMain, Area.EggCarrierMain): (
+    (Character.Sonic, Area.StationSquareMain, Area.EggCarrierOutside): (
         [ItemName.KeyItem.Boat], [ItemName.KeyItem.Boat], [ItemName.KeyItem.Boat], [ItemName.KeyItem.Boat]),
-    (Character.Sonic, Area.EggCarrierMain, Area.StationSquareMain): (
+    (Character.Sonic, Area.EggCarrierOutside, Area.StationSquareMain): (
         [ItemName.KeyItem.Boat], [ItemName.KeyItem.Boat], [ItemName.KeyItem.Boat], [ItemName.KeyItem.Boat]),
-    (Character.Sonic, Area.MysticRuinsMain, Area.EggCarrierMain): (
+    (Character.Sonic, Area.MysticRuinsMain, Area.EggCarrierOutside): (
         [ItemName.KeyItem.Raft], [ItemName.KeyItem.Raft], [ItemName.KeyItem.Raft], [ItemName.KeyItem.Raft]),
-    (Character.Sonic, Area.EggCarrierMain, Area.MysticRuinsMain): (
+    (Character.Sonic, Area.EggCarrierOutside, Area.MysticRuinsMain): (
         [ItemName.KeyItem.Raft], [ItemName.KeyItem.Raft], [ItemName.KeyItem.Raft], [ItemName.KeyItem.Raft]),
+    (Character.Sonic, Area.EggCarrierOutside, Area.EggCarrierInside): (
+        [[ItemName.KeyItem.Monorail], [ItemName.KeyItem.Egglift]],
+        [[ItemName.KeyItem.Monorail], [ItemName.KeyItem.Egglift]],
+        [[ItemName.KeyItem.Monorail], [ItemName.KeyItem.Egglift]],
+        [[ItemName.KeyItem.Monorail], [ItemName.KeyItem.Egglift]]),
+    (Character.Sonic, Area.EggCarrierInside, Area.EggCarrierOutside): (
+        [[ItemName.KeyItem.Monorail], [ItemName.KeyItem.Egglift]],
+        [[ItemName.KeyItem.Monorail], [ItemName.KeyItem.Egglift]],
+        [[ItemName.KeyItem.Monorail], [ItemName.KeyItem.Egglift]],
+        [[ItemName.KeyItem.Monorail], [ItemName.KeyItem.Egglift]]),
+    (Character.Sonic, Area.EggCarrierInside, Area.EggCarrierFrontDeck): (
+        [ItemName.KeyItem.Monorail, ItemName.KeyItem.Egglift], [ItemName.KeyItem.Monorail, ItemName.KeyItem.Egglift],
+        [ItemName.KeyItem.Monorail, ItemName.KeyItem.Egglift], [ItemName.KeyItem.Monorail, ItemName.KeyItem.Egglift]),
+    (Character.Sonic, Area.EggCarrierFrontDeck, Area.EggCarrierInside): (
+        [ItemName.KeyItem.Monorail, ItemName.KeyItem.Egglift], [ItemName.KeyItem.Monorail, ItemName.KeyItem.Egglift],
+        [ItemName.KeyItem.Monorail, ItemName.KeyItem.Egglift], [ItemName.KeyItem.Monorail, ItemName.KeyItem.Egglift]),
     (Character.Tails, Area.StationSquareMain, Area.Station): (
-        [ItemName.KeyItem.StationKeys], [ItemName.KeyItem.StationKeys], [ItemName.KeyItem.StationKeys], []),
+        [ItemName.KeyItem.StationFrontKeys], [ItemName.KeyItem.StationFrontKeys], [ItemName.KeyItem.StationFrontKeys],
+        []),
     (Character.Tails, Area.Station, Area.StationSquareMain): (
-        [ItemName.KeyItem.StationKeys], [ItemName.KeyItem.StationKeys], [ItemName.KeyItem.StationKeys],
-        [ItemName.KeyItem.StationKeys]),
+        [ItemName.KeyItem.StationFrontKeys], [ItemName.KeyItem.StationFrontKeys], [ItemName.KeyItem.StationFrontKeys],
+        [ItemName.KeyItem.StationFrontKeys]),
     (Character.Tails, Area.StationSquareMain, Area.Hotel): (
-        [ItemName.KeyItem.HotelKeys], [ItemName.KeyItem.HotelKeys], [], []),
+        [ItemName.KeyItem.HotelFrontKeys], [ItemName.KeyItem.HotelFrontKeys], [], []),
     (Character.Tails, Area.Hotel, Area.StationSquareMain): (
-        [ItemName.KeyItem.HotelKeys], [ItemName.KeyItem.HotelKeys], [ItemName.KeyItem.HotelKeys],
-        [ItemName.KeyItem.HotelKeys]),
+        [ItemName.KeyItem.HotelFrontKeys], [ItemName.KeyItem.HotelFrontKeys], [ItemName.KeyItem.HotelFrontKeys],
+        [ItemName.KeyItem.HotelFrontKeys]),
     (Character.Tails, Area.Station, Area.Casino): (
-        [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys], [], []),
+        [ItemName.KeyItem.StationBackKeys], [ItemName.KeyItem.StationBackKeys], [], []),
     (Character.Tails, Area.Casino, Area.Station): (
-        [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys], [], []),
+        [ItemName.KeyItem.StationBackKeys], [ItemName.KeyItem.StationBackKeys], [], []),
     (Character.Tails, Area.Hotel, Area.Casino): (
-        [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys],
-        [ItemName.KeyItem.CasinoKeys]),
-    (Character.Tails, Area.Casino, Area.Hotel): ([ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys], [], []),
+        [ItemName.KeyItem.HotelBackKeys], [ItemName.KeyItem.HotelBackKeys], [ItemName.KeyItem.HotelBackKeys],
+        [ItemName.KeyItem.HotelBackKeys]),
+    (Character.Tails, Area.Casino, Area.Hotel): (
+        [ItemName.KeyItem.HotelBackKeys], [ItemName.KeyItem.HotelBackKeys], [], []),
     (Character.Tails, Area.StationSquareMain, Area.TwinkleParkLobby): (
         [ItemName.KeyItem.TwinkleParkTicket], [ItemName.KeyItem.TwinkleParkTicket],
         [ItemName.KeyItem.TwinkleParkTicket],
@@ -430,36 +550,53 @@ area_connections: Dict[Tuple[Character, Area, Area], Tuple[List[str], List[str],
         [ItemName.KeyItem.Train], [ItemName.KeyItem.Train], [ItemName.KeyItem.Train], [ItemName.KeyItem.Train]),
     (Character.Tails, Area.MysticRuinsMain, Area.Station): (
         [ItemName.KeyItem.Train], [ItemName.KeyItem.Train], [ItemName.KeyItem.Train], [ItemName.KeyItem.Train]),
-    (Character.Tails, Area.StationSquareMain, Area.EggCarrierMain): (
+    (Character.Tails, Area.StationSquareMain, Area.EggCarrierOutside): (
         [ItemName.KeyItem.Boat], [ItemName.KeyItem.Boat], [ItemName.KeyItem.Boat], [ItemName.KeyItem.Boat]),
-    (Character.Tails, Area.EggCarrierMain, Area.StationSquareMain): (
+    (Character.Tails, Area.EggCarrierOutside, Area.StationSquareMain): (
         [ItemName.KeyItem.Boat], [ItemName.KeyItem.Boat], [ItemName.KeyItem.Boat], [ItemName.KeyItem.Boat]),
-    (Character.Tails, Area.MysticRuinsMain, Area.EggCarrierMain): (
+    (Character.Tails, Area.MysticRuinsMain, Area.EggCarrierOutside): (
         [ItemName.KeyItem.Raft], [ItemName.KeyItem.Raft], [ItemName.KeyItem.Raft], [ItemName.KeyItem.Raft]),
-    (Character.Tails, Area.EggCarrierMain, Area.MysticRuinsMain): (
+    (Character.Tails, Area.EggCarrierOutside, Area.MysticRuinsMain): (
         [ItemName.KeyItem.Raft], [ItemName.KeyItem.Raft], [ItemName.KeyItem.Raft], [ItemName.KeyItem.Raft]),
+    (Character.Tails, Area.EggCarrierOutside, Area.EggCarrierInside): (
+        [[ItemName.KeyItem.Monorail], [ItemName.KeyItem.Egglift]],
+        [[ItemName.KeyItem.Monorail], [ItemName.KeyItem.Egglift]],
+        [[ItemName.KeyItem.Monorail], [ItemName.KeyItem.Egglift]],
+        [[ItemName.KeyItem.Monorail], [ItemName.KeyItem.Egglift]]),
+    (Character.Tails, Area.EggCarrierInside, Area.EggCarrierOutside): (
+        [[ItemName.KeyItem.Monorail], [ItemName.KeyItem.Egglift]],
+        [[ItemName.KeyItem.Monorail], [ItemName.KeyItem.Egglift]],
+        [[ItemName.KeyItem.Monorail], [ItemName.KeyItem.Egglift]],
+        [[ItemName.KeyItem.Monorail], [ItemName.KeyItem.Egglift]]),
+    (Character.Tails, Area.EggCarrierInside, Area.EggCarrierFrontDeck): (
+        [ItemName.KeyItem.Monorail, ItemName.KeyItem.Egglift], [ItemName.KeyItem.Monorail, ItemName.KeyItem.Egglift],
+        [ItemName.KeyItem.Monorail, ItemName.KeyItem.Egglift], [ItemName.KeyItem.Monorail, ItemName.KeyItem.Egglift]),
+    (Character.Tails, Area.EggCarrierFrontDeck, Area.EggCarrierInside): (
+        [ItemName.KeyItem.Monorail, ItemName.KeyItem.Egglift], [ItemName.KeyItem.Monorail, ItemName.KeyItem.Egglift],
+        [ItemName.KeyItem.Monorail, ItemName.KeyItem.Egglift], [ItemName.KeyItem.Monorail, ItemName.KeyItem.Egglift]),
     (Character.Knuckles, Area.StationSquareMain, Area.Station): (
-        [ItemName.KeyItem.StationKeys], [ItemName.KeyItem.StationKeys], [ItemName.KeyItem.StationKeys], []),
+        [ItemName.KeyItem.StationFrontKeys], [ItemName.KeyItem.StationFrontKeys], [ItemName.KeyItem.StationFrontKeys],
+        []),
     (Character.Knuckles, Area.Station, Area.StationSquareMain): (
-        [ItemName.KeyItem.StationKeys], [ItemName.KeyItem.StationKeys], [ItemName.KeyItem.StationKeys],
-        [ItemName.KeyItem.StationKeys]),
+        [ItemName.KeyItem.StationFrontKeys], [ItemName.KeyItem.StationFrontKeys], [ItemName.KeyItem.StationFrontKeys],
+        [ItemName.KeyItem.StationFrontKeys]),
     (Character.Knuckles, Area.StationSquareMain, Area.Hotel): (
-        [ItemName.KeyItem.HotelKeys], [ItemName.KeyItem.HotelKeys], [ItemName.KeyItem.HotelKeys],
-        [ItemName.KeyItem.HotelKeys]),
+        [ItemName.KeyItem.HotelFrontKeys], [ItemName.KeyItem.HotelFrontKeys], [ItemName.KeyItem.HotelFrontKeys],
+        [ItemName.KeyItem.HotelFrontKeys]),
     (Character.Knuckles, Area.Hotel, Area.StationSquareMain): (
-        [ItemName.KeyItem.HotelKeys], [ItemName.KeyItem.HotelKeys], [ItemName.KeyItem.HotelKeys],
-        [ItemName.KeyItem.HotelKeys]),
+        [ItemName.KeyItem.HotelFrontKeys], [ItemName.KeyItem.HotelFrontKeys], [ItemName.KeyItem.HotelFrontKeys],
+        [ItemName.KeyItem.HotelFrontKeys]),
     (Character.Knuckles, Area.Station, Area.Casino): (
-        [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys], [], []),
+        [ItemName.KeyItem.StationBackKeys], [ItemName.KeyItem.StationBackKeys], [], []),
     (Character.Knuckles, Area.Casino, Area.Station): (
-        [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys],
-        [ItemName.KeyItem.CasinoKeys]),
+        [ItemName.KeyItem.StationBackKeys], [ItemName.KeyItem.StationBackKeys], [ItemName.KeyItem.StationBackKeys],
+        [ItemName.KeyItem.StationBackKeys]),
     (Character.Knuckles, Area.Hotel, Area.Casino): (
-        [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys],
-        [ItemName.KeyItem.CasinoKeys]),
+        [ItemName.KeyItem.HotelBackKeys], [ItemName.KeyItem.HotelBackKeys], [ItemName.KeyItem.HotelBackKeys],
+        [ItemName.KeyItem.HotelBackKeys]),
     (Character.Knuckles, Area.Casino, Area.Hotel): (
-        [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys],
-        [ItemName.KeyItem.CasinoKeys]),
+        [ItemName.KeyItem.HotelBackKeys], [ItemName.KeyItem.HotelBackKeys], [ItemName.KeyItem.HotelBackKeys],
+        [ItemName.KeyItem.HotelBackKeys]),
     (Character.Knuckles, Area.StationSquareMain, Area.TwinkleParkLobby): (
         [ItemName.KeyItem.TwinkleParkTicket], [ItemName.KeyItem.TwinkleParkTicket],
         [ItemName.KeyItem.TwinkleParkTicket],
@@ -483,37 +620,54 @@ area_connections: Dict[Tuple[Character, Area, Area], Tuple[List[str], List[str],
         [ItemName.KeyItem.Train], [ItemName.KeyItem.Train], [ItemName.KeyItem.Train], [ItemName.KeyItem.Train]),
     (Character.Knuckles, Area.MysticRuinsMain, Area.Station): (
         [ItemName.KeyItem.Train], [ItemName.KeyItem.Train], [ItemName.KeyItem.Train], [ItemName.KeyItem.Train]),
-    (Character.Knuckles, Area.StationSquareMain, Area.EggCarrierMain): (
+    (Character.Knuckles, Area.StationSquareMain, Area.EggCarrierOutside): (
         [ItemName.KeyItem.Boat], [ItemName.KeyItem.Boat], [ItemName.KeyItem.Boat], [ItemName.KeyItem.Boat]),
-    (Character.Knuckles, Area.EggCarrierMain, Area.StationSquareMain): (
+    (Character.Knuckles, Area.EggCarrierOutside, Area.StationSquareMain): (
         [ItemName.KeyItem.Boat], [ItemName.KeyItem.Boat], [ItemName.KeyItem.Boat], [ItemName.KeyItem.Boat]),
-    (Character.Knuckles, Area.MysticRuinsMain, Area.EggCarrierMain): (
+    (Character.Knuckles, Area.MysticRuinsMain, Area.EggCarrierOutside): (
         [ItemName.KeyItem.Raft], [ItemName.KeyItem.Raft], [ItemName.KeyItem.Raft], [ItemName.KeyItem.Raft]),
-    (Character.Knuckles, Area.EggCarrierMain, Area.MysticRuinsMain): (
+    (Character.Knuckles, Area.EggCarrierOutside, Area.MysticRuinsMain): (
         [ItemName.KeyItem.Raft], [ItemName.KeyItem.Raft], [ItemName.KeyItem.Raft], [ItemName.KeyItem.Raft]),
+    (Character.Knuckles, Area.EggCarrierOutside, Area.EggCarrierInside): (
+        [[ItemName.KeyItem.Monorail], [ItemName.KeyItem.Egglift]],
+        [[ItemName.KeyItem.Monorail], [ItemName.KeyItem.Egglift]],
+        [[ItemName.KeyItem.Monorail], [ItemName.KeyItem.Egglift]],
+        [[ItemName.KeyItem.Monorail], [ItemName.KeyItem.Egglift]]),
+    (Character.Knuckles, Area.EggCarrierInside, Area.EggCarrierOutside): (
+        [[ItemName.KeyItem.Monorail], [ItemName.KeyItem.Egglift]],
+        [[ItemName.KeyItem.Monorail], [ItemName.KeyItem.Egglift]],
+        [[ItemName.KeyItem.Monorail], [ItemName.KeyItem.Egglift]],
+        [[ItemName.KeyItem.Monorail], [ItemName.KeyItem.Egglift]]),
+    (Character.Knuckles, Area.EggCarrierInside, Area.EggCarrierFrontDeck): (
+        [ItemName.KeyItem.Monorail, ItemName.KeyItem.Egglift], [ItemName.KeyItem.Monorail, ItemName.KeyItem.Egglift],
+        [ItemName.KeyItem.Monorail, ItemName.KeyItem.Egglift], [ItemName.KeyItem.Monorail, ItemName.KeyItem.Egglift]),
+    (Character.Knuckles, Area.EggCarrierFrontDeck, Area.EggCarrierInside): (
+        [ItemName.KeyItem.Monorail, ItemName.KeyItem.Egglift], [ItemName.KeyItem.Monorail, ItemName.KeyItem.Egglift],
+        [ItemName.KeyItem.Monorail, ItemName.KeyItem.Egglift], [ItemName.KeyItem.Monorail, ItemName.KeyItem.Egglift]),
     (Character.Amy, Area.StationSquareMain, Area.Station): (
-        [ItemName.KeyItem.StationKeys], [ItemName.KeyItem.StationKeys], [ItemName.KeyItem.StationKeys], []),
+        [ItemName.KeyItem.StationFrontKeys], [ItemName.KeyItem.StationFrontKeys], [ItemName.KeyItem.StationFrontKeys],
+        []),
     (Character.Amy, Area.Station, Area.StationSquareMain): (
-        [ItemName.KeyItem.StationKeys], [ItemName.KeyItem.StationKeys], [ItemName.KeyItem.StationKeys],
-        [ItemName.KeyItem.StationKeys]),
+        [ItemName.KeyItem.StationFrontKeys], [ItemName.KeyItem.StationFrontKeys], [ItemName.KeyItem.StationFrontKeys],
+        [ItemName.KeyItem.StationFrontKeys]),
     (Character.Amy, Area.StationSquareMain, Area.Hotel): (
-        [ItemName.KeyItem.HotelKeys], [ItemName.KeyItem.HotelKeys], [ItemName.KeyItem.HotelKeys],
-        [ItemName.KeyItem.HotelKeys]),
+        [ItemName.KeyItem.HotelFrontKeys], [ItemName.KeyItem.HotelFrontKeys], [ItemName.KeyItem.HotelFrontKeys],
+        [ItemName.KeyItem.HotelFrontKeys]),
     (Character.Amy, Area.Hotel, Area.StationSquareMain): (
-        [ItemName.KeyItem.HotelKeys], [ItemName.KeyItem.HotelKeys], [ItemName.KeyItem.HotelKeys],
-        [ItemName.KeyItem.HotelKeys]),
+        [ItemName.KeyItem.HotelFrontKeys], [ItemName.KeyItem.HotelFrontKeys], [ItemName.KeyItem.HotelFrontKeys],
+        [ItemName.KeyItem.HotelFrontKeys]),
     (Character.Amy, Area.Station, Area.Casino): (
-        [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys],
-        [ItemName.KeyItem.CasinoKeys]),
+        [ItemName.KeyItem.StationBackKeys], [ItemName.KeyItem.StationBackKeys], [ItemName.KeyItem.StationBackKeys],
+        [ItemName.KeyItem.StationBackKeys]),
     (Character.Amy, Area.Casino, Area.Station): (
-        [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys],
-        [ItemName.KeyItem.CasinoKeys]),
+        [ItemName.KeyItem.StationBackKeys], [ItemName.KeyItem.StationBackKeys], [ItemName.KeyItem.StationBackKeys],
+        [ItemName.KeyItem.StationBackKeys]),
     (Character.Amy, Area.Hotel, Area.Casino): (
-        [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys],
-        [ItemName.KeyItem.CasinoKeys]),
+        [ItemName.KeyItem.HotelBackKeys], [ItemName.KeyItem.HotelBackKeys], [ItemName.KeyItem.HotelBackKeys],
+        [ItemName.KeyItem.HotelBackKeys]),
     (Character.Amy, Area.Casino, Area.Hotel): (
-        [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys],
-        [ItemName.KeyItem.CasinoKeys]),
+        [ItemName.KeyItem.HotelBackKeys], [ItemName.KeyItem.HotelBackKeys], [ItemName.KeyItem.HotelBackKeys],
+        [ItemName.KeyItem.HotelBackKeys]),
     (Character.Amy, Area.StationSquareMain, Area.TwinkleParkLobby): (
         [ItemName.KeyItem.TwinkleParkTicket], [ItemName.KeyItem.TwinkleParkTicket],
         [ItemName.KeyItem.TwinkleParkTicket],
@@ -537,38 +691,54 @@ area_connections: Dict[Tuple[Character, Area, Area], Tuple[List[str], List[str],
         [ItemName.KeyItem.Train], [ItemName.KeyItem.Train], [ItemName.KeyItem.Train], [ItemName.KeyItem.Train]),
     (Character.Amy, Area.MysticRuinsMain, Area.Station): (
         [ItemName.KeyItem.Train], [ItemName.KeyItem.Train], [ItemName.KeyItem.Train], [ItemName.KeyItem.Train]),
-    (Character.Amy, Area.StationSquareMain, Area.EggCarrierMain): (
+    (Character.Amy, Area.StationSquareMain, Area.EggCarrierOutside): (
         [ItemName.KeyItem.Boat], [ItemName.KeyItem.Boat], [ItemName.KeyItem.Boat], [ItemName.KeyItem.Boat]),
-    (Character.Amy, Area.EggCarrierMain, Area.StationSquareMain): (
+    (Character.Amy, Area.EggCarrierOutside, Area.StationSquareMain): (
         [ItemName.KeyItem.Boat], [ItemName.KeyItem.Boat], [ItemName.KeyItem.Boat], [ItemName.KeyItem.Boat]),
-    (Character.Amy, Area.MysticRuinsMain, Area.EggCarrierMain): (
+    (Character.Amy, Area.MysticRuinsMain, Area.EggCarrierOutside): (
         [ItemName.KeyItem.Raft], [ItemName.KeyItem.Raft], [ItemName.KeyItem.Raft], [ItemName.KeyItem.Raft]),
-    (Character.Amy, Area.EggCarrierMain, Area.MysticRuinsMain): (
+    (Character.Amy, Area.EggCarrierOutside, Area.MysticRuinsMain): (
         [ItemName.KeyItem.Raft], [ItemName.KeyItem.Raft], [ItemName.KeyItem.Raft], [ItemName.KeyItem.Raft]),
+    (Character.Amy, Area.EggCarrierOutside, Area.EggCarrierInside): (
+        [[ItemName.KeyItem.Monorail], [ItemName.KeyItem.Egglift]],
+        [[ItemName.KeyItem.Monorail], [ItemName.KeyItem.Egglift]],
+        [[ItemName.KeyItem.Monorail], [ItemName.KeyItem.Egglift]],
+        [[ItemName.KeyItem.Monorail], [ItemName.KeyItem.Egglift]]),
+    (Character.Amy, Area.EggCarrierInside, Area.EggCarrierOutside): (
+        [[ItemName.KeyItem.Monorail], [ItemName.KeyItem.Egglift]],
+        [[ItemName.KeyItem.Monorail], [ItemName.KeyItem.Egglift]],
+        [[ItemName.KeyItem.Monorail], [ItemName.KeyItem.Egglift]],
+        [[ItemName.KeyItem.Monorail], [ItemName.KeyItem.Egglift]]),
+    (Character.Amy, Area.EggCarrierInside, Area.EggCarrierFrontDeck): (
+        [ItemName.KeyItem.Monorail, ItemName.KeyItem.Egglift], [ItemName.KeyItem.Monorail, ItemName.KeyItem.Egglift],
+        [ItemName.KeyItem.Monorail, ItemName.KeyItem.Egglift], [ItemName.KeyItem.Monorail, ItemName.KeyItem.Egglift]),
+    (Character.Amy, Area.EggCarrierFrontDeck, Area.EggCarrierInside): (
+        [ItemName.KeyItem.Monorail, ItemName.KeyItem.Egglift], [ItemName.KeyItem.Monorail, ItemName.KeyItem.Egglift],
+        [ItemName.KeyItem.Monorail, ItemName.KeyItem.Egglift], [ItemName.KeyItem.Monorail, ItemName.KeyItem.Egglift]),
     (Character.Big, Area.StationSquareMain, Area.Station): (
-        [ItemName.KeyItem.StationKeys], [ItemName.KeyItem.StationKeys], [ItemName.KeyItem.StationKeys],
-        [ItemName.KeyItem.StationKeys]),
+        [ItemName.KeyItem.StationFrontKeys], [ItemName.KeyItem.StationFrontKeys], [ItemName.KeyItem.StationFrontKeys],
+        [ItemName.KeyItem.StationFrontKeys]),
     (Character.Big, Area.Station, Area.StationSquareMain): (
-        [ItemName.KeyItem.StationKeys], [ItemName.KeyItem.StationKeys], [ItemName.KeyItem.StationKeys],
-        [ItemName.KeyItem.StationKeys]),
+        [ItemName.KeyItem.StationFrontKeys], [ItemName.KeyItem.StationFrontKeys], [ItemName.KeyItem.StationFrontKeys],
+        [ItemName.KeyItem.StationFrontKeys]),
     (Character.Big, Area.StationSquareMain, Area.Hotel): (
-        [ItemName.KeyItem.HotelKeys], [ItemName.KeyItem.HotelKeys], [ItemName.KeyItem.HotelKeys],
-        [ItemName.KeyItem.HotelKeys]),
+        [ItemName.KeyItem.HotelFrontKeys], [ItemName.KeyItem.HotelFrontKeys], [ItemName.KeyItem.HotelFrontKeys],
+        [ItemName.KeyItem.HotelFrontKeys]),
     (Character.Big, Area.Hotel, Area.StationSquareMain): (
-        [ItemName.KeyItem.HotelKeys], [ItemName.KeyItem.HotelKeys], [ItemName.KeyItem.HotelKeys],
-        [ItemName.KeyItem.HotelKeys]),
+        [ItemName.KeyItem.HotelFrontKeys], [ItemName.KeyItem.HotelFrontKeys], [ItemName.KeyItem.HotelFrontKeys],
+        [ItemName.KeyItem.HotelFrontKeys]),
     (Character.Big, Area.Station, Area.Casino): (
-        [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys],
-        [ItemName.KeyItem.CasinoKeys]),
+        [ItemName.KeyItem.StationBackKeys], [ItemName.KeyItem.StationBackKeys], [ItemName.KeyItem.StationBackKeys],
+        [ItemName.KeyItem.StationBackKeys]),
     (Character.Big, Area.Casino, Area.Station): (
-        [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys],
-        [ItemName.KeyItem.CasinoKeys]),
+        [ItemName.KeyItem.StationBackKeys], [ItemName.KeyItem.StationBackKeys], [ItemName.KeyItem.StationBackKeys],
+        [ItemName.KeyItem.StationBackKeys]),
     (Character.Big, Area.Hotel, Area.Casino): (
-        [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys],
-        [ItemName.KeyItem.CasinoKeys]),
+        [ItemName.KeyItem.HotelBackKeys], [ItemName.KeyItem.HotelBackKeys], [ItemName.KeyItem.HotelBackKeys],
+        [ItemName.KeyItem.HotelBackKeys]),
     (Character.Big, Area.Casino, Area.Hotel): (
-        [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys],
-        [ItemName.KeyItem.CasinoKeys]),
+        [ItemName.KeyItem.HotelBackKeys], [ItemName.KeyItem.HotelBackKeys], [ItemName.KeyItem.HotelBackKeys],
+        [ItemName.KeyItem.HotelBackKeys]),
     (Character.Big, Area.StationSquareMain, Area.TwinkleParkLobby): ([], [], [], []),
     (Character.Big, Area.TwinkleParkLobby, Area.StationSquareMain): (
         [ItemName.KeyItem.TwinkleParkTicket], [ItemName.KeyItem.TwinkleParkTicket], [],
@@ -589,38 +759,54 @@ area_connections: Dict[Tuple[Character, Area, Area], Tuple[List[str], List[str],
         [ItemName.KeyItem.Train], [ItemName.KeyItem.Train], [ItemName.KeyItem.Train], [ItemName.KeyItem.Train]),
     (Character.Big, Area.MysticRuinsMain, Area.Station): (
         [ItemName.KeyItem.Train], [ItemName.KeyItem.Train], [ItemName.KeyItem.Train], [ItemName.KeyItem.Train]),
-    (Character.Big, Area.StationSquareMain, Area.EggCarrierMain): (
+    (Character.Big, Area.StationSquareMain, Area.EggCarrierOutside): (
         [ItemName.KeyItem.Boat], [ItemName.KeyItem.Boat], [ItemName.KeyItem.Boat], [ItemName.KeyItem.Boat]),
-    (Character.Big, Area.EggCarrierMain, Area.StationSquareMain): (
+    (Character.Big, Area.EggCarrierOutside, Area.StationSquareMain): (
         [ItemName.KeyItem.Boat], [ItemName.KeyItem.Boat], [ItemName.KeyItem.Boat], [ItemName.KeyItem.Boat]),
-    (Character.Big, Area.MysticRuinsMain, Area.EggCarrierMain): (
+    (Character.Big, Area.MysticRuinsMain, Area.EggCarrierOutside): (
         [ItemName.KeyItem.Raft], [ItemName.KeyItem.Raft], [ItemName.KeyItem.Raft], [ItemName.KeyItem.Raft]),
-    (Character.Big, Area.EggCarrierMain, Area.MysticRuinsMain): (
+    (Character.Big, Area.EggCarrierOutside, Area.MysticRuinsMain): (
         [ItemName.KeyItem.Raft], [ItemName.KeyItem.Raft], [ItemName.KeyItem.Raft], [ItemName.KeyItem.Raft]),
+    (Character.Big, Area.EggCarrierOutside, Area.EggCarrierInside): (
+        [[ItemName.KeyItem.Monorail], [ItemName.KeyItem.Egglift]],
+        [[ItemName.KeyItem.Monorail], [ItemName.KeyItem.Egglift]],
+        [[ItemName.KeyItem.Monorail], [ItemName.KeyItem.Egglift]],
+        [[ItemName.KeyItem.Monorail], [ItemName.KeyItem.Egglift]]),
+    (Character.Big, Area.EggCarrierInside, Area.EggCarrierOutside): (
+        [[ItemName.KeyItem.Monorail], [ItemName.KeyItem.Egglift]],
+        [[ItemName.KeyItem.Monorail], [ItemName.KeyItem.Egglift]],
+        [[ItemName.KeyItem.Monorail], [ItemName.KeyItem.Egglift]],
+        [[ItemName.KeyItem.Monorail], [ItemName.KeyItem.Egglift]]),
+    (Character.Big, Area.EggCarrierInside, Area.EggCarrierFrontDeck): (
+        [ItemName.KeyItem.Monorail, ItemName.KeyItem.Egglift], [ItemName.KeyItem.Monorail, ItemName.KeyItem.Egglift],
+        [ItemName.KeyItem.Monorail, ItemName.KeyItem.Egglift], [ItemName.KeyItem.Monorail, ItemName.KeyItem.Egglift]),
+    (Character.Big, Area.EggCarrierFrontDeck, Area.EggCarrierInside): (
+        [ItemName.KeyItem.Monorail, ItemName.KeyItem.Egglift], [ItemName.KeyItem.Monorail, ItemName.KeyItem.Egglift],
+        [ItemName.KeyItem.Monorail, ItemName.KeyItem.Egglift], [ItemName.KeyItem.Monorail, ItemName.KeyItem.Egglift]),
     (Character.Gamma, Area.StationSquareMain, Area.Station): (
-        [ItemName.KeyItem.StationKeys], [ItemName.KeyItem.StationKeys], [ItemName.KeyItem.StationKeys],
-        [ItemName.KeyItem.StationKeys]),
+        [ItemName.KeyItem.StationFrontKeys], [ItemName.KeyItem.StationFrontKeys], [ItemName.KeyItem.StationFrontKeys],
+        [ItemName.KeyItem.StationFrontKeys]),
     (Character.Gamma, Area.Station, Area.StationSquareMain): (
-        [ItemName.KeyItem.StationKeys], [ItemName.KeyItem.StationKeys], [ItemName.KeyItem.StationKeys],
-        [ItemName.KeyItem.StationKeys]),
+        [ItemName.KeyItem.StationFrontKeys], [ItemName.KeyItem.StationFrontKeys], [ItemName.KeyItem.StationFrontKeys],
+        [ItemName.KeyItem.StationFrontKeys]),
     (Character.Gamma, Area.StationSquareMain, Area.Hotel): (
-        [ItemName.KeyItem.HotelKeys], [ItemName.KeyItem.HotelKeys], [ItemName.KeyItem.HotelKeys],
-        [ItemName.KeyItem.HotelKeys]),
+        [ItemName.KeyItem.HotelFrontKeys], [ItemName.KeyItem.HotelFrontKeys], [ItemName.KeyItem.HotelFrontKeys],
+        [ItemName.KeyItem.HotelFrontKeys]),
     (Character.Gamma, Area.Hotel, Area.StationSquareMain): (
-        [ItemName.KeyItem.HotelKeys], [ItemName.KeyItem.HotelKeys], [ItemName.KeyItem.HotelKeys],
-        [ItemName.KeyItem.HotelKeys]),
+        [ItemName.KeyItem.HotelFrontKeys], [ItemName.KeyItem.HotelFrontKeys], [ItemName.KeyItem.HotelFrontKeys],
+        [ItemName.KeyItem.HotelFrontKeys]),
     (Character.Gamma, Area.Station, Area.Casino): (
-        [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys],
-        [ItemName.KeyItem.CasinoKeys]),
+        [ItemName.KeyItem.StationBackKeys], [ItemName.KeyItem.StationBackKeys], [ItemName.KeyItem.StationBackKeys],
+        [ItemName.KeyItem.StationBackKeys]),
     (Character.Gamma, Area.Casino, Area.Station): (
-        [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys],
-        [ItemName.KeyItem.CasinoKeys]),
+        [ItemName.KeyItem.StationBackKeys], [ItemName.KeyItem.StationBackKeys], [ItemName.KeyItem.StationBackKeys],
+        [ItemName.KeyItem.StationBackKeys]),
     (Character.Gamma, Area.Hotel, Area.Casino): (
-        [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys],
-        [ItemName.KeyItem.CasinoKeys]),
+        [ItemName.KeyItem.HotelBackKeys], [ItemName.KeyItem.HotelBackKeys], [ItemName.KeyItem.HotelBackKeys],
+        [ItemName.KeyItem.HotelBackKeys]),
     (Character.Gamma, Area.Casino, Area.Hotel): (
-        [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys], [ItemName.KeyItem.CasinoKeys],
-        [ItemName.KeyItem.CasinoKeys]),
+        [ItemName.KeyItem.HotelBackKeys], [ItemName.KeyItem.HotelBackKeys], [ItemName.KeyItem.HotelBackKeys],
+        [ItemName.KeyItem.HotelBackKeys]),
     (Character.Gamma, Area.StationSquareMain, Area.TwinkleParkLobby): (
         [ItemName.KeyItem.TwinkleParkTicket], [ItemName.KeyItem.TwinkleParkTicket],
         [ItemName.KeyItem.TwinkleParkTicket],
@@ -644,14 +830,30 @@ area_connections: Dict[Tuple[Character, Area, Area], Tuple[List[str], List[str],
         [ItemName.KeyItem.Train], [ItemName.KeyItem.Train], [ItemName.KeyItem.Train], [ItemName.KeyItem.Train]),
     (Character.Gamma, Area.MysticRuinsMain, Area.Station): (
         [ItemName.KeyItem.Train], [ItemName.KeyItem.Train], [ItemName.KeyItem.Train], [ItemName.KeyItem.Train]),
-    (Character.Gamma, Area.StationSquareMain, Area.EggCarrierMain): (
+    (Character.Gamma, Area.StationSquareMain, Area.EggCarrierOutside): (
         [ItemName.KeyItem.Boat], [ItemName.KeyItem.Boat], [ItemName.KeyItem.Boat], [ItemName.KeyItem.Boat]),
-    (Character.Gamma, Area.EggCarrierMain, Area.StationSquareMain): (
+    (Character.Gamma, Area.EggCarrierOutside, Area.StationSquareMain): (
         [ItemName.KeyItem.Boat], [ItemName.KeyItem.Boat], [ItemName.KeyItem.Boat], [ItemName.KeyItem.Boat]),
-    (Character.Gamma, Area.MysticRuinsMain, Area.EggCarrierMain): (
+    (Character.Gamma, Area.MysticRuinsMain, Area.EggCarrierOutside): (
         [ItemName.KeyItem.Raft], [ItemName.KeyItem.Raft], [ItemName.KeyItem.Raft], [ItemName.KeyItem.Raft]),
-    (Character.Gamma, Area.EggCarrierMain, Area.MysticRuinsMain): (
+    (Character.Gamma, Area.EggCarrierOutside, Area.MysticRuinsMain): (
         [ItemName.KeyItem.Raft], [ItemName.KeyItem.Raft], [ItemName.KeyItem.Raft], [ItemName.KeyItem.Raft]),
+    (Character.Gamma, Area.EggCarrierOutside, Area.EggCarrierInside): (
+        [[ItemName.KeyItem.Monorail], [ItemName.KeyItem.Egglift]],
+        [[ItemName.KeyItem.Monorail], [ItemName.KeyItem.Egglift]],
+        [[ItemName.KeyItem.Monorail], [ItemName.KeyItem.Egglift]],
+        [[ItemName.KeyItem.Monorail], [ItemName.KeyItem.Egglift]]),
+    (Character.Gamma, Area.EggCarrierInside, Area.EggCarrierOutside): (
+        [[ItemName.KeyItem.Monorail], [ItemName.KeyItem.Egglift]],
+        [[ItemName.KeyItem.Monorail], [ItemName.KeyItem.Egglift]],
+        [[ItemName.KeyItem.Monorail], [ItemName.KeyItem.Egglift]],
+        [[ItemName.KeyItem.Monorail], [ItemName.KeyItem.Egglift]]),
+    (Character.Gamma, Area.EggCarrierInside, Area.EggCarrierFrontDeck): (
+        [ItemName.KeyItem.Monorail, ItemName.KeyItem.Egglift], [ItemName.KeyItem.Monorail, ItemName.KeyItem.Egglift],
+        [ItemName.KeyItem.Monorail, ItemName.KeyItem.Egglift], [ItemName.KeyItem.Monorail, ItemName.KeyItem.Egglift]),
+    (Character.Gamma, Area.EggCarrierFrontDeck, Area.EggCarrierInside): (
+        [ItemName.KeyItem.Monorail, ItemName.KeyItem.Egglift], [ItemName.KeyItem.Monorail, ItemName.KeyItem.Egglift],
+        [ItemName.KeyItem.Monorail, ItemName.KeyItem.Egglift], [ItemName.KeyItem.Monorail, ItemName.KeyItem.Egglift]),
 }
 
 level_location_table: List[LevelLocation] = [
@@ -785,20 +987,45 @@ upgrade_location_table: List[UpgradeLocation] = [
                     [ItemName.Sonic.LightShoes], [], []),
     UpgradeLocation(300, LocationName.Knuckles.ShovelClaw, Area.MysticRuinsMain, Character.Knuckles, [], [], [], []),
     UpgradeLocation(604, LocationName.Big.Lure3, Area.IceCap, Character.Big, [], [], [], []),
-    UpgradeLocation(600, LocationName.Big.LifeBelt, Area.AngelIsland, Character.Big,
-                    [ItemName.KeyItem.IceStone, ItemName.KeyItem.StationKeys, ItemName.KeyItem.Train],
-                    [ItemName.KeyItem.IceStone, ItemName.KeyItem.StationKeys, ItemName.KeyItem.Train],
-                    [ItemName.KeyItem.IceStone, ItemName.KeyItem.StationKeys, ItemName.KeyItem.Train],
-                    [ItemName.KeyItem.IceStone, ItemName.KeyItem.StationKeys, ItemName.KeyItem.Train]),
+    UpgradeLocation(600, LocationName.Big.LifeBelt, Area.AngelIsland, Character.Big, [[ItemName.KeyItem.IceStone,
+                                                                                       ItemName.KeyItem.StationFrontKeys,
+                                                                                       ItemName.KeyItem.Train],
+                                                                                      [ItemName.KeyItem.IceStone,
+                                                                                       ItemName.KeyItem.HotelFrontKeys,
+                                                                                       ItemName.KeyItem.HotelBackKeys,
+                                                                                       ItemName.KeyItem.StationBackKeys,
+                                                                                       ItemName.KeyItem.Train]],
+                    [[ItemName.KeyItem.IceStone,
+                      ItemName.KeyItem.StationFrontKeys,
+                      ItemName.KeyItem.Train],
+                     [ItemName.KeyItem.IceStone,
+                      ItemName.KeyItem.HotelFrontKeys,
+                      ItemName.KeyItem.HotelBackKeys,
+                      ItemName.KeyItem.StationBackKeys,
+                      ItemName.KeyItem.Train]], [[ItemName.KeyItem.IceStone,
+                                                  ItemName.KeyItem.StationFrontKeys,
+                                                  ItemName.KeyItem.Train],
+                                                 [ItemName.KeyItem.IceStone,
+                                                  ItemName.KeyItem.HotelFrontKeys,
+                                                  ItemName.KeyItem.HotelBackKeys,
+                                                  ItemName.KeyItem.StationBackKeys,
+                                                  ItemName.KeyItem.Train]], [[ItemName.KeyItem.IceStone,
+                                                                              ItemName.KeyItem.StationFrontKeys,
+                                                                              ItemName.KeyItem.Train],
+                                                                             [ItemName.KeyItem.IceStone,
+                                                                              ItemName.KeyItem.HotelFrontKeys,
+                                                                              ItemName.KeyItem.HotelBackKeys,
+                                                                              ItemName.KeyItem.StationBackKeys,
+                                                                              ItemName.KeyItem.Train]]),
     UpgradeLocation(102, LocationName.Sonic.AncientLight, Area.AngelIsland, Character.Sonic, [], [], [], []),
     UpgradeLocation(301, LocationName.Knuckles.FightingGloves, Area.Jungle, Character.Knuckles, [], [], [], []),
     UpgradeLocation(603, LocationName.Big.Lure2, Area.Jungle, Character.Big, [], [], [], []),
     UpgradeLocation(601, LocationName.Big.PowerRod, Area.Jungle, Character.Big, [], [], [], []),
-    UpgradeLocation(400, LocationName.Amy.WarriorFeather, Area.EggCarrierMain, Character.Amy, [], [], [], []),
-    UpgradeLocation(401, LocationName.Amy.LongHammer, Area.EggCarrierMain, Character.Amy, [], [], [], []),
-    UpgradeLocation(500, LocationName.Gamma.JetBooster, Area.EggCarrierMain, Character.Gamma, [], [], [], []),
-    UpgradeLocation(501, LocationName.Gamma.LaserBlaster, Area.EggCarrierMain, Character.Gamma, [], [], [], []),
-    UpgradeLocation(605, LocationName.Big.Lure4, Area.EggCarrierMain, Character.Big, [], [], [], []),
+    UpgradeLocation(400, LocationName.Amy.WarriorFeather, Area.EggCarrierInside, Character.Amy, [], [], [], []),
+    UpgradeLocation(401, LocationName.Amy.LongHammer, Area.EggCarrierInside, Character.Amy, [], [], [], []),
+    UpgradeLocation(500, LocationName.Gamma.JetBooster, Area.EggCarrierInside, Character.Gamma, [], [], [], []),
+    UpgradeLocation(501, LocationName.Gamma.LaserBlaster, Area.EggCarrierInside, Character.Gamma, [], [], [], []),
+    UpgradeLocation(605, LocationName.Big.Lure4, Area.EggCarrierInside, Character.Big, [], [], [], []),
     UpgradeLocation(201, LocationName.Tails.RhythmBadge, Area.AngelIsland, Character.Tails, [], [], [], []),
 ]
 
@@ -854,16 +1081,16 @@ field_emblem_location_table: List[EmblemLocation] = [
                    [Character.Sonic, Character.Tails, Character.Knuckles],
                    [Character.Sonic, Character.Tails, Character.Knuckles],
                    [Character.Sonic, Character.Tails, Character.Knuckles], "Tree Stump Emblem"),
-    EmblemLocation(30, Area.EggCarrierMain, [Character.Tails, Character.Knuckles],
+    EmblemLocation(30, Area.EggCarrierOutside, [Character.Tails, Character.Knuckles],
                    [Character.Sonic, Character.Tails, Character.Knuckles, Character.Amy],
                    [Character.Sonic, Character.Tails, Character.Knuckles, Character.Amy],
                    [Character.Sonic, Character.Tails, Character.Knuckles, Character.Amy], "Pool Emblem"),
-    EmblemLocation(31, Area.EggCarrierMain, [Character.Tails], [Character.Tails, Character.Sonic],
+    EmblemLocation(31, Area.EggCarrierOutside, [Character.Tails], [Character.Tails, Character.Sonic],
                    [Character.Tails, Character.Sonic], [Character.Tails, Character.Sonic], "Spinning Platform Emblem"),
-    EmblemLocation(32, Area.EggCarrierMain, [Character.Tails, Character.Sonic],
+    EmblemLocation(32, Area.EggCarrierOutside, [Character.Tails, Character.Sonic],
                    [Character.Tails, Character.Sonic, Character.Big], [Character.Tails, Character.Sonic, Character.Big],
                    [Character.Tails, Character.Sonic, Character.Big], "Hidden Bed Emblem"),
-    EmblemLocation(33, Area.EggCarrierMain, [Character.Sonic], [Character.Sonic, Character.Big],
+    EmblemLocation(33, Area.EggCarrierFrontDeck, [Character.Sonic], [Character.Sonic, Character.Big],
                    [Character.Sonic, Character.Big], [Character.Sonic, Character.Big], "Main Platform Emblem"),
 ]
 
@@ -889,11 +1116,23 @@ mission_location_table: List[MissionLocation] = [
     MissionLocation(817, Area.StationSquareMain, Area.Casinopolis, Character.Sonic, 17, [], [], [], []),
     MissionLocation(818, Area.Station, Area.TwinklePark, Character.Amy, 18, [], [], [], []),
     MissionLocation(819, Area.StationSquareMain, Area.TwinklePark, Character.Amy, 19, [], [], [], []),
-    MissionLocation(820, Area.AngelIsland, Area.IceCap, Character.Sonic, 20,
-                    [ItemName.KeyItem.IceStone, ItemName.KeyItem.CasinoKeys, ItemName.KeyItem.Train],
-                    [ItemName.KeyItem.IceStone, ItemName.KeyItem.CasinoKeys, ItemName.KeyItem.Train],
-                    [ItemName.KeyItem.IceStone, ItemName.KeyItem.CasinoKeys, ItemName.KeyItem.Train],
-                    [ItemName.KeyItem.IceStone, ItemName.KeyItem.CasinoKeys, ItemName.KeyItem.Train]),
+    MissionLocation(820, Area.AngelIsland, Area.IceCap, Character.Sonic, 20, [
+        [ItemName.KeyItem.IceStone, ItemName.KeyItem.StationBackKeys, ItemName.KeyItem.Train,
+         ItemName.KeyItem.Dynamite],
+        [ItemName.KeyItem.IceStone, ItemName.KeyItem.StationFrontKeys, ItemName.KeyItem.HotelFrontKeys,
+         ItemName.KeyItem.HotelBackKeys, ItemName.KeyItem.Train, ItemName.KeyItem.Dynamite]], [
+                        [ItemName.KeyItem.IceStone, ItemName.KeyItem.StationBackKeys, ItemName.KeyItem.Train,
+                         ItemName.KeyItem.Dynamite],
+                        [ItemName.KeyItem.IceStone, ItemName.KeyItem.StationFrontKeys, ItemName.KeyItem.HotelFrontKeys,
+                         ItemName.KeyItem.HotelBackKeys, ItemName.KeyItem.Train, ItemName.KeyItem.Dynamite]], [
+                        [ItemName.KeyItem.IceStone, ItemName.KeyItem.StationBackKeys, ItemName.KeyItem.Train,
+                         ItemName.KeyItem.Dynamite],
+                        [ItemName.KeyItem.IceStone, ItemName.KeyItem.StationFrontKeys, ItemName.KeyItem.HotelFrontKeys,
+                         ItemName.KeyItem.HotelBackKeys, ItemName.KeyItem.Train, ItemName.KeyItem.Dynamite]], [
+                        [ItemName.KeyItem.IceStone, ItemName.KeyItem.StationBackKeys, ItemName.KeyItem.Train,
+                         ItemName.KeyItem.Dynamite],
+                        [ItemName.KeyItem.IceStone, ItemName.KeyItem.StationFrontKeys, ItemName.KeyItem.HotelFrontKeys,
+                         ItemName.KeyItem.HotelBackKeys, ItemName.KeyItem.Train, ItemName.KeyItem.Dynamite]]),
     MissionLocation(821, Area.Jungle, Area.FinalEgg, Character.Gamma, 21, [], [], [], []),
     MissionLocation(822, Area.Hotel, Area.EmeraldCoast, Character.Big, 22, [], [], [], []),
     MissionLocation(823, Area.TwinkleParkLobby, Area.TwinklePark, Character.Sonic, 23, [], [], [], []),
@@ -907,15 +1146,48 @@ mission_location_table: List[MissionLocation] = [
     MissionLocation(830, Area.Jungle, Area.RedMountain, Character.Sonic, 30, [], [], [], []),
     MissionLocation(831, Area.Station, Area.Casinopolis, Character.Tails, 31, [], [], [], []),
     MissionLocation(832, Area.AngelIsland, Area.AngelIsland, Character.Knuckles, 32, [], [], [], []),
-    MissionLocation(833, Area.EggCarrierMain, Area.EggCarrierMain, Character.Sonic, 33, [], [], [], []),
-    MissionLocation(834, Area.EggCarrierMain, Area.EggCarrierMain, Character.Sonic, 34, [ItemName.Sonic.LightShoes],
-                    [ItemName.Sonic.LightShoes], [], []),
-    MissionLocation(835, Area.MysticRuinsMain, Area.AngelIsland, Character.Big, 35,
-                    [ItemName.KeyItem.IceStone, ItemName.KeyItem.StationKeys, ItemName.KeyItem.Train],
-                    [ItemName.KeyItem.IceStone, ItemName.KeyItem.StationKeys, ItemName.KeyItem.Train],
-                    [ItemName.KeyItem.IceStone, ItemName.KeyItem.StationKeys, ItemName.KeyItem.Train],
-                    [ItemName.KeyItem.IceStone, ItemName.KeyItem.StationKeys, ItemName.KeyItem.Train]),
-    MissionLocation(836, Area.EggCarrierMain, Area.SkyDeck, Character.Sonic, 36, [], [], [], []),
+    MissionLocation(833, Area.EggCarrierOutside, Area.EggCarrierOutside, Character.Sonic, 33, [], [], [], []),
+    MissionLocation(834, Area.EggCarrierOutside, Area.EggCarrierOutside, Character.Sonic, 34,
+                    [ItemName.Sonic.LightShoes], [ItemName.Sonic.LightShoes], [], []),
+    MissionLocation(835, Area.MysticRuinsMain, Area.AngelIsland, Character.Big, 35, [[ItemName.KeyItem.IceStone,
+                                                                                      ItemName.KeyItem.StationFrontKeys,
+                                                                                      ItemName.KeyItem.Train,
+                                                                                      ItemName.KeyItem.Dynamite],
+                                                                                     [ItemName.KeyItem.IceStone,
+                                                                                      ItemName.KeyItem.HotelFrontKeys,
+                                                                                      ItemName.KeyItem.HotelBackKeys,
+                                                                                      ItemName.KeyItem.StationBackKeys,
+                                                                                      ItemName.KeyItem.Train,
+                                                                                      ItemName.KeyItem.Dynamite]],
+                    [[ItemName.KeyItem.IceStone,
+                      ItemName.KeyItem.StationFrontKeys,
+                      ItemName.KeyItem.Train,
+                      ItemName.KeyItem.Dynamite],
+                     [ItemName.KeyItem.IceStone,
+                      ItemName.KeyItem.HotelFrontKeys,
+                      ItemName.KeyItem.HotelBackKeys,
+                      ItemName.KeyItem.StationBackKeys,
+                      ItemName.KeyItem.Train,
+                      ItemName.KeyItem.Dynamite]], [[ItemName.KeyItem.IceStone,
+                                                     ItemName.KeyItem.StationFrontKeys,
+                                                     ItemName.KeyItem.Train,
+                                                     ItemName.KeyItem.Dynamite],
+                                                    [ItemName.KeyItem.IceStone,
+                                                     ItemName.KeyItem.HotelFrontKeys,
+                                                     ItemName.KeyItem.HotelBackKeys,
+                                                     ItemName.KeyItem.StationBackKeys,
+                                                     ItemName.KeyItem.Train,
+                                                     ItemName.KeyItem.Dynamite]], [[ItemName.KeyItem.IceStone,
+                                                                                    ItemName.KeyItem.StationFrontKeys,
+                                                                                    ItemName.KeyItem.Train,
+                                                                                    ItemName.KeyItem.Dynamite],
+                                                                                   [ItemName.KeyItem.IceStone,
+                                                                                    ItemName.KeyItem.HotelFrontKeys,
+                                                                                    ItemName.KeyItem.HotelBackKeys,
+                                                                                    ItemName.KeyItem.StationBackKeys,
+                                                                                    ItemName.KeyItem.Train,
+                                                                                    ItemName.KeyItem.Dynamite]]),
+    MissionLocation(836, Area.EggCarrierInside, Area.SkyDeck, Character.Sonic, 36, [], [], [], []),
     MissionLocation(837, Area.Jungle, Area.Jungle, Character.Tails, 37, [ItemName.Tails.JetAnklet], [], [], []),
     MissionLocation(838, Area.Jungle, Area.LostWorld, Character.Knuckles, 38, [ItemName.Knuckles.ShovelClaw],
                     [ItemName.Knuckles.ShovelClaw], [ItemName.Knuckles.ShovelClaw], [ItemName.Knuckles.ShovelClaw]),
@@ -924,9 +1196,9 @@ mission_location_table: List[MissionLocation] = [
     MissionLocation(840, Area.MysticRuinsMain, Area.LostWorld, Character.Sonic, 40, [ItemName.Sonic.LightShoes],
                     [ItemName.Sonic.LightShoes], [ItemName.Sonic.LightShoes], [ItemName.Sonic.LightShoes]),
     MissionLocation(841, Area.Jungle, Area.LostWorld, Character.Sonic, 41, [ItemName.Sonic.LightShoes], [], [], []),
-    MissionLocation(842, Area.EggCarrierMain, Area.HotShelter, Character.Gamma, 42, [], [], [], []),
-    MissionLocation(843, Area.EggCarrierMain, Area.HotShelter, Character.Amy, 43, [], [], [], []),
-    MissionLocation(844, Area.EggCarrierMain, Area.EggCarrierMain, Character.Big, 44, [], [], [], []),
+    MissionLocation(842, Area.EggCarrierInside, Area.HotShelter, Character.Gamma, 42, [], [], [], []),
+    MissionLocation(843, Area.EggCarrierInside, Area.HotShelter, Character.Amy, 43, [], [], [], []),
+    MissionLocation(844, Area.EggCarrierOutside, Area.EggCarrierOutside, Character.Big, 44, [], [], [], []),
     MissionLocation(845, Area.Jungle, Area.FinalEgg, Character.Sonic, 45, [], [], [], []),
     MissionLocation(846, Area.Jungle, Area.FinalEgg, Character.Sonic, 46, [], [], [], []),
     MissionLocation(847, Area.MysticRuinsMain, Area.MysticRuinsMain, Character.Tails, 47, [], [], [], []),
@@ -943,7 +1215,7 @@ mission_location_table: List[MissionLocation] = [
                     [ItemName.Knuckles.ShovelClaw], [ItemName.Knuckles.ShovelClaw], [ItemName.Knuckles.ShovelClaw]),
     MissionLocation(857, Area.AngelIsland, Area.RedMountain, Character.Sonic, 57, [], [], [], []),
     MissionLocation(858, Area.Jungle, Area.LostWorld, Character.Sonic, 58, [], [], [], []),
-    MissionLocation(859, Area.EggCarrierMain, Area.SkyDeck, Character.Knuckles, 59, [], [], [], []),
+    MissionLocation(859, Area.EggCarrierOutside, Area.SkyDeck, Character.Knuckles, 59, [], [], [], []),
     MissionLocation(860, Area.MysticRuinsMain, Area.IceCap, Character.Big, 60, [], [], [], []),
 ]
 
@@ -972,10 +1244,10 @@ sub_level_location_table: List[SubLevelLocation] = [
     SubLevelLocation(28, Area.MysticRuinsMain, SubLevel.SkyChaseAct1, SubLevelMission.A,
                      [Character.Tails, Character.Sonic], [Character.Tails, Character.Sonic],
                      [Character.Tails, Character.Sonic], [Character.Tails, Character.Sonic]),
-    SubLevelLocation(35, Area.EggCarrierMain, SubLevel.SkyChaseAct2, SubLevelMission.B,
+    SubLevelLocation(35, Area.EggCarrierOutside, SubLevel.SkyChaseAct2, SubLevelMission.B,
                      [Character.Tails, Character.Sonic], [Character.Tails, Character.Sonic],
                      [Character.Tails, Character.Sonic], [Character.Tails, Character.Sonic]),
-    SubLevelLocation(36, Area.EggCarrierMain, SubLevel.SkyChaseAct2, SubLevelMission.A,
+    SubLevelLocation(36, Area.EggCarrierOutside, SubLevel.SkyChaseAct2, SubLevelMission.A,
                      [Character.Tails, Character.Sonic], [Character.Tails, Character.Sonic],
                      [Character.Tails, Character.Sonic], [Character.Tails, Character.Sonic]),
 ]
@@ -2475,21 +2747,23 @@ boss_location_table: List[BossFightLocation] = [
                       LocationName.Boss.Chaos4, True),
     BossFightLocation(750, Area.Jungle, [Character.Sonic], LocationName.Boss.EggViper, False),
     BossFightLocation(760, Area.Jungle, [Character.Gamma], LocationName.Boss.E101Beta, False),
-    BossFightLocation(770, Area.EggCarrierMain, [Character.Sonic], LocationName.Boss.Chaos6, False),
-    BossFightLocation(771, Area.EggCarrierMain, [Character.Knuckles], LocationName.Boss.Chaos6, False),
-    BossFightLocation(772, Area.EggCarrierMain, [Character.Big], LocationName.Boss.Chaos6, False),
-    BossFightLocation(779, Area.EggCarrierMain, [Character.Sonic, Character.Knuckles, Character.Big],
+    BossFightLocation(770, Area.EggCarrierOutside, [Character.Sonic], LocationName.Boss.Chaos6, False),
+    BossFightLocation(771, Area.EggCarrierOutside, [Character.Knuckles], LocationName.Boss.Chaos6, False),
+    BossFightLocation(772, Area.EggCarrierOutside, [Character.Big], LocationName.Boss.Chaos6, False),
+    BossFightLocation(779, Area.EggCarrierOutside, [Character.Sonic, Character.Knuckles, Character.Big],
                       LocationName.Boss.Chaos6, True),
-    BossFightLocation(780, Area.EggCarrierMain, [Character.Gamma], LocationName.Boss.E101mkII, False),
-    BossFightLocation(790, Area.EggCarrierMain, [Character.Amy], LocationName.Boss.Zero, False),
+    BossFightLocation(780, Area.EggCarrierOutside, [Character.Gamma], LocationName.Boss.E101mkII, False),
+    BossFightLocation(790, Area.EggCarrierOutside, [Character.Amy], LocationName.Boss.Zero, False),
 ]
 
 chao_egg_location_table: List[ChaoEggLocation] = [
     ChaoEggLocation(900, LocationName.Chao.GoldEgg, Area.StationSquareMain, EVERYONE,
-                    [[ItemName.KeyItem.HotelKeys], [ItemName.KeyItem.StationKeys, ItemName.KeyItem.CasinoKeys]]),
+                    [[ItemName.KeyItem.HotelFrontKeys],
+                     [ItemName.KeyItem.HotelBackKeys, ItemName.KeyItem.StationBackKeys,
+                      ItemName.KeyItem.StationFrontKeys]]),
     ChaoEggLocation(901, LocationName.Chao.SilverEgg, Area.MysticRuinsMain,
                     [Character.Sonic, Character.Tails, Character.Knuckles, Character.Amy, Character.Big], []),
-    ChaoEggLocation(902, LocationName.Chao.BlackEgg, Area.EggCarrierMain,
+    ChaoEggLocation(902, LocationName.Chao.BlackEgg, Area.EggCarrierInside,
                     [Character.Amy, Character.Gamma, Character.Big], []),
 ]
 

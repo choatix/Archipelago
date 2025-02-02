@@ -111,10 +111,11 @@ def get_item_distribution(world: World, starting_item_count: int, options: Sonic
 def get_item_names(options: SonicAdventureDXOptions, starter_setup: StarterSetup) -> List[str]:
     item_names = sum((get_item_for_options_per_character(character, options) for character in Character), [])
     item_names += [
-        ItemName.KeyItem.Train, ItemName.KeyItem.Boat, ItemName.KeyItem.Raft, ItemName.KeyItem.StationKeys,
-        ItemName.KeyItem.HotelKeys, ItemName.KeyItem.CasinoKeys, ItemName.KeyItem.TwinkleParkTicket,
+        ItemName.KeyItem.Train, ItemName.KeyItem.Boat, ItemName.KeyItem.Raft, ItemName.KeyItem.StationFrontKeys,
+        ItemName.KeyItem.StationBackKeys, ItemName.KeyItem.HotelFrontKeys, ItemName.KeyItem.HotelBackKeys,
+        ItemName.KeyItem.TwinkleParkTicket,
         ItemName.KeyItem.EmployeeCard, ItemName.KeyItem.Dynamite, ItemName.KeyItem.JungleCart,
-        ItemName.KeyItem.IceStone, ItemName.KeyItem.WindStone
+        ItemName.KeyItem.IceStone, ItemName.KeyItem.WindStone, ItemName.KeyItem.Egglift, ItemName.KeyItem.Monorail
     ]
 
     if options.goal_requires_chaos_emeralds.value:

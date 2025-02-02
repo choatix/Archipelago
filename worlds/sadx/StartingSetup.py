@@ -12,7 +12,6 @@ from .Enums import Character, Area, SubLevel, pascal_to_space, level_areas, Leve
 from .Locations import level_location_table, upgrade_location_table, sub_level_location_table, \
     field_emblem_location_table, boss_location_table, capsule_location_table, mission_location_table
 from .Logic import area_connections, chao_egg_location_table, enemy_location_table
-from .Names import ItemName
 from .Options import SonicAdventureDXOptions
 
 
@@ -170,7 +169,7 @@ def get_possible_starting_areas(world, character: Character, level_mapping: dict
         dict[Area, List[Optional[str]]]:
     possible_starting_areas = {}
     areas = [Area.StationSquareMain, Area.Station, Area.Hotel, Area.Casino, Area.TwinkleParkLobby,
-             Area.MysticRuinsMain, Area.AngelIsland, Area.Jungle, Area.EggCarrierMain]
+             Area.MysticRuinsMain, Area.AngelIsland, Area.Jungle, Area.EggCarrierOutside, Area.EggCarrierInside]
     for area in areas:
         possible_list_for_area = get_possible_starting_area_information(character, area, world.options, level_mapping,
                                                                         guaranteed_level)
@@ -299,37 +298,3 @@ def write_sadx_spoiler(world: World, spoiler_handle: TextIO, starter_setup: Star
     spoiler_handle.writelines(text)
 
 
-starting_area_items = {
-    Character.Sonic: {
-        Area.StationSquareMain: [ItemName.KeyItem.TwinkleParkTicket, ItemName.KeyItem.EmployeeCard],
-        Area.Hotel: [],
-        Area.MysticRuinsMain: [ItemName.KeyItem.WindStone],
-        Area.EggCarrierMain: []
-    },
-    Character.Tails: {
-        Area.StationSquareMain: [ItemName.KeyItem.EmployeeCard],
-        Area.Casino: [],
-        Area.MysticRuinsMain: [ItemName.KeyItem.WindStone],
-        Area.EggCarrierMain: []
-    },
-    Character.Knuckles: {
-        Area.StationSquareMain: [],
-        Area.Casino: [],
-    },
-    Character.Amy: {
-        Area.StationSquareMain: [ItemName.KeyItem.TwinkleParkTicket],
-        Area.Jungle: [],
-        Area.EggCarrierMain: []
-    },
-    Character.Gamma: {
-        Area.StationSquareMain: [ItemName.KeyItem.HotelKeys],
-        Area.Hotel: [],
-        Area.MysticRuinsMain: [ItemName.KeyItem.Dynamite],
-        Area.Jungle: [],
-    },
-    Character.Big: {
-        Area.StationSquareMain: [],
-        Area.Hotel: [],
-        Area.EggCarrierMain: []
-    }
-}

@@ -27,8 +27,13 @@ def add_level_rules(self, location_name: str, level: LevelLocation):
 
 def add_upgrade_rules(self, location_name: str, upgrade: UpgradeLocation):
     location = self.multiworld.get_location(location_name, self.player)
-    for need in upgrade.get_logic_items(self.options):
-        add_rule(location, lambda state, item=need: state.has(item, self.player))
+    logic_items = upgrade.get_logic_items(self.options)
+    if all(isinstance(item, str) for item in logic_items):
+        for need in logic_items:
+            add_rule(location, lambda state, item=need: state.has(item, self.player))
+    else:
+        add_rule(location, lambda state, egg_requirements=logic_items: any(
+            all(state.has(item, self.player) for item in requirement_group) for requirement_group in egg_requirements))
 
 
 def add_sub_level_rules(self, location_name: str, sub_level: SubLevelLocation):
@@ -71,8 +76,14 @@ def add_mission_rules(self, location_name: str, mission: MissionLocation):
     card_area_name = get_region_name(mission.character, mission.cardArea)
     if not self.options.auto_start_missions:
         add_rule(location, lambda state, card_area=card_area_name: state.can_reach_region(card_area, self.player))
-    for need in mission.get_logic_items(self.options):
-        add_rule(location, lambda state, item=need: state.has(item, self.player))
+
+    logic_items = mission.get_logic_items(self.options)
+    if all(isinstance(item, str) for item in logic_items):
+        for need in logic_items:
+            add_rule(location, lambda state, item=need: state.has(item, self.player))
+    else:
+        add_rule(location, lambda state, egg_requirements=logic_items: any(
+            all(state.has(item, self.player) for item in requirement_group) for requirement_group in egg_requirements))
 
 
 def add_egg_rules(self, location_name: str, egg: ChaoEggLocation):
