@@ -181,8 +181,8 @@ class ShtHWorld(World):
             # TODO: Handle this / overwrite this with UT, check validity
             if self.options.story_progression_balancing > 0 and not hasattr(self.multiworld, "re_gen_passthrough"):
                 story_spheres = Story.DecideStoryPath(self, self.shuffled_story_mode)
-                print("Story Spheres", [ (s[0].stageId, s[0].alignmentId) if s[0] is not None else "Start"
-                                         for s in story_spheres])
+                #print("Story Spheres", [ (s[0].stageId, s[0].alignmentId) if s[0] is not None else "Start"
+                #                         for s in story_spheres])
                 new_overrides = Story.AlterOverridesForStoryPath(story_spheres, self.options.percent_overrides.value)
 
                 for override in new_overrides.items():

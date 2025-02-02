@@ -331,8 +331,8 @@ def connect_by_story_mode(multiworld: MultiWorld, world, player: int, order: typ
                     secret_rule = lambda state, wi=warp_item: state.has(wi, world.player)
                     bf_rule = lambda state, br=bf_rule, sr=secret_rule: br(state) and sr(state)
 
-                boss_end_entrance = connect(world.player, "Boss Entrance_" + str(order.index(path)) + str(path.start_stage_id) + "/" +
-                    str(path.end_stage_id), start_region, boss_region,
+                boss_end_entrance = connect(world.player, "Boss Entrance_" + str(path.start_stage_id) + "/" +
+                    str(path.end_stage_id) + "/" + str(path.alignment_id), start_region, boss_region,
                                         rule=bf_rule)
 
                 multiworld.register_indirect_condition(start_region, boss_end_entrance)
@@ -362,8 +362,8 @@ def connect_by_story_mode(multiworld: MultiWorld, world, player: int, order: typ
             print("Unable to take story path due to excluded location:", path.start_stage_id, path.alignment_id)
             continue
 
-        end_region_base_name = stage_id_to_region(path.end_stage_id)
-        end_base_region = world.get_region(end_region_base_name)
+        #end_region_base_name = stage_id_to_region(path.end_stage_id)
+        #end_base_region = world.get_region(end_region_base_name)
         end_region_name = stage_id_to_story_region(path.end_stage_id)
         end_region = world.get_region(end_region_name)
 
@@ -406,8 +406,8 @@ def connect_by_story_mode(multiworld: MultiWorld, world, player: int, order: typ
         else:
             modified_rule = base_rule
 
-        new_entrance = connect(world.player, "Story Entrance_"+str(order.index(path)) + str(path.start_stage_id) + "/" +
-                    str(path.end_stage_id), start_region, end_region, rule=modified_rule)
+        new_entrance = connect(world.player, "Story Entrance_"+str(path.start_stage_id) + "/" +
+                    str(path.end_stage_id)+"/"+str(path.alignment_id), start_region, end_region, rule=modified_rule)
 
         for region in extra_level_regions:
             level_region_name = stage_id_to_region(region.stageId, region.regionIndex)

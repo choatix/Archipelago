@@ -654,7 +654,9 @@ def PopulateItemPool(world : World, first_regions):
                                l.stageId in world.available_levels
                                #and (l.stageId not in Levels.FINAL_BOSSES
                                and l.stageId not in Levels.LAST_STORY_STAGES
+                               and (l.stageId not in Levels.BOSS_STAGES or world.options.select_bosses)
                                and world.options.level_progression != Options.LevelProgression.option_story ]
+
 
     # Convert to multiworld items
     mw_em_items = [ ShadowTheHedgehogItem(e, world.player) for e in emerald_items]
