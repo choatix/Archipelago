@@ -306,6 +306,7 @@ class PercentOverrides(OptionDict):
     """
     display_name = "Percent Overrides"
     valid_keys = Names.getValidPercentOverrides()
+    default = {}
 
 class WeaponGroups(OptionSet):
     """

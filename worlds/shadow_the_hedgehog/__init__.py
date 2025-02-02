@@ -10,7 +10,7 @@ from .Items import *
 from .Locations import *
 
 from . import Options, Rules, Regions, Utils as ShadowUtils, Story
-from .Options import shadow_option_groups
+from .Options import shadow_option_groups, PercentOverrides
 
 
 def run_client():
@@ -118,7 +118,11 @@ class ShtHWorld(World):
 
     def calculate_object_discrepancies(self):
 
-        override_settings = self.options.percent_overrides
+        if type(self.options.percent_overrides) == PercentOverrides:
+            override_settings = self.options.percent_overrides.value
+        else:
+            override_settings = self.options.percent_overrides
+
         for stage in ALL_STAGES:
 
             related_clears = [ c for c in MissionClearLocations if c.stageId == stage]
@@ -168,7 +172,7 @@ class ShtHWorld(World):
 
                         if max_required > max_required_complete:
                             key = key_prefix + "." + Levels.LEVEL_ID_TO_LEVEL[stage]
-                            override_settings.value[key] = (max_required_complete * 100) / aliens.total_count
+                            override_settings[key] = (max_required_complete * 100) / aliens.total_count
                             #print("Had to adjust key for {key}".format(key=key))
     def generate_early(self):
         random_bytes = self.generate_random_bytes()
