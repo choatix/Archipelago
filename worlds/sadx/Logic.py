@@ -223,7 +223,7 @@ class ChaoRaceLocation:
     area: Area
 
 
-area_connections: Dict[Tuple[Character, Area, Area], Tuple[LogicItems, LogicItems, LogicItems]] = {
+area_connections: Dict[Tuple[Character, Area, Area], Tuple[List[str], List[str], List[str]]] = {
     (Character.Sonic, Area.Hotel, Area.EmeraldCoast): ([], [], [], []),
     (Character.Sonic, Area.MysticRuinsMain, Area.WindyValley): (
         [ItemName.KeyItem.WindStone], [ItemName.KeyItem.WindStone], [ItemName.KeyItem.WindStone],
@@ -448,22 +448,20 @@ area_connections: Dict[Tuple[Character, Area, Area], Tuple[LogicItems, LogicItem
     (Character.Sonic, Area.StationSquareMain, Area.Hotel): (
         [ItemName.KeyItem.HotelFrontKeys], [ItemName.KeyItem.HotelFrontKeys], [], []),
     (Character.Sonic, Area.Hotel, Area.StationSquareMain): (
-        [ItemName.KeyItem.HotelFrontKeys], [ItemName.KeyItem.HotelFrontKeys], [ItemName.KeyItem.HotelFrontKeys],
-        [ItemName.KeyItem.HotelFrontKeys]),
+        [ItemName.KeyItem.HotelFrontKeys], [ItemName.KeyItem.HotelFrontKeys], [], []),
     (Character.Sonic, Area.Station, Area.Casino): (
         [ItemName.KeyItem.StationBackKeys], [ItemName.KeyItem.StationBackKeys], [], []),
     (Character.Sonic, Area.Casino, Area.Station): (
         [ItemName.KeyItem.StationBackKeys], [ItemName.KeyItem.StationBackKeys], [ItemName.KeyItem.StationBackKeys],
         [ItemName.KeyItem.StationBackKeys]),
     (Character.Sonic, Area.Hotel, Area.Casino): (
-        [ItemName.KeyItem.HotelBackKeys], [ItemName.KeyItem.HotelBackKeys], [ItemName.KeyItem.HotelBackKeys],
-        [ItemName.KeyItem.HotelBackKeys]),
+        [ItemName.KeyItem.HotelBackKeys], [ItemName.KeyItem.HotelBackKeys], [ItemName.KeyItem.HotelBackKeys], []),
     (Character.Sonic, Area.Casino, Area.Hotel): (
         [ItemName.KeyItem.HotelBackKeys], [ItemName.KeyItem.HotelBackKeys], [], []),
     (Character.Sonic, Area.StationSquareMain, Area.TwinkleParkLobby): (
         [ItemName.KeyItem.TwinkleParkTicket], [ItemName.KeyItem.TwinkleParkTicket],
         [ItemName.KeyItem.TwinkleParkTicket],
-        [ItemName.KeyItem.TwinkleParkTicket]),
+        []),
     (Character.Sonic, Area.TwinkleParkLobby, Area.StationSquareMain): (
         [ItemName.KeyItem.TwinkleParkTicket], [ItemName.KeyItem.TwinkleParkTicket], [],
         [ItemName.KeyItem.TwinkleParkTicket]),
@@ -508,16 +506,14 @@ area_connections: Dict[Tuple[Character, Area, Area], Tuple[LogicItems, LogicItem
         [ItemName.KeyItem.Monorail, ItemName.KeyItem.Egglift], [ItemName.KeyItem.Monorail, ItemName.KeyItem.Egglift],
         [ItemName.KeyItem.Monorail, ItemName.KeyItem.Egglift], [ItemName.KeyItem.Monorail, ItemName.KeyItem.Egglift]),
     (Character.Tails, Area.StationSquareMain, Area.Station): (
-        [ItemName.KeyItem.StationFrontKeys], [ItemName.KeyItem.StationFrontKeys], [ItemName.KeyItem.StationFrontKeys],
-        []),
+        [ItemName.KeyItem.StationFrontKeys], [ItemName.KeyItem.StationFrontKeys], [], []),
     (Character.Tails, Area.Station, Area.StationSquareMain): (
         [ItemName.KeyItem.StationFrontKeys], [ItemName.KeyItem.StationFrontKeys], [ItemName.KeyItem.StationFrontKeys],
         [ItemName.KeyItem.StationFrontKeys]),
     (Character.Tails, Area.StationSquareMain, Area.Hotel): (
         [ItemName.KeyItem.HotelFrontKeys], [ItemName.KeyItem.HotelFrontKeys], [], []),
     (Character.Tails, Area.Hotel, Area.StationSquareMain): (
-        [ItemName.KeyItem.HotelFrontKeys], [ItemName.KeyItem.HotelFrontKeys], [ItemName.KeyItem.HotelFrontKeys],
-        [ItemName.KeyItem.HotelFrontKeys]),
+        [ItemName.KeyItem.HotelFrontKeys], [ItemName.KeyItem.HotelFrontKeys], [], [ItemName.KeyItem.HotelFrontKeys]),
     (Character.Tails, Area.Station, Area.Casino): (
         [ItemName.KeyItem.StationBackKeys], [ItemName.KeyItem.StationBackKeys], [], []),
     (Character.Tails, Area.Casino, Area.Station): (
@@ -584,8 +580,7 @@ area_connections: Dict[Tuple[Character, Area, Area], Tuple[LogicItems, LogicItem
         [ItemName.KeyItem.HotelFrontKeys], [ItemName.KeyItem.HotelFrontKeys], [ItemName.KeyItem.HotelFrontKeys],
         [ItemName.KeyItem.HotelFrontKeys]),
     (Character.Knuckles, Area.Hotel, Area.StationSquareMain): (
-        [ItemName.KeyItem.HotelFrontKeys], [ItemName.KeyItem.HotelFrontKeys], [ItemName.KeyItem.HotelFrontKeys],
-        [ItemName.KeyItem.HotelFrontKeys]),
+        [ItemName.KeyItem.HotelFrontKeys], [ItemName.KeyItem.HotelFrontKeys], [], [ItemName.KeyItem.HotelFrontKeys]),
     (Character.Knuckles, Area.Station, Area.Casino): (
         [ItemName.KeyItem.StationBackKeys], [ItemName.KeyItem.StationBackKeys], [], []),
     (Character.Knuckles, Area.Casino, Area.Station): (
@@ -654,8 +649,7 @@ area_connections: Dict[Tuple[Character, Area, Area], Tuple[LogicItems, LogicItem
         [ItemName.KeyItem.HotelFrontKeys], [ItemName.KeyItem.HotelFrontKeys], [ItemName.KeyItem.HotelFrontKeys],
         [ItemName.KeyItem.HotelFrontKeys]),
     (Character.Amy, Area.Hotel, Area.StationSquareMain): (
-        [ItemName.KeyItem.HotelFrontKeys], [ItemName.KeyItem.HotelFrontKeys], [ItemName.KeyItem.HotelFrontKeys],
-        [ItemName.KeyItem.HotelFrontKeys]),
+        [ItemName.KeyItem.HotelFrontKeys], [ItemName.KeyItem.HotelFrontKeys], [], [ItemName.KeyItem.HotelFrontKeys]),
     (Character.Amy, Area.Station, Area.Casino): (
         [ItemName.KeyItem.StationBackKeys], [ItemName.KeyItem.StationBackKeys], [ItemName.KeyItem.StationBackKeys],
         [ItemName.KeyItem.StationBackKeys]),
@@ -793,8 +787,8 @@ area_connections: Dict[Tuple[Character, Area, Area], Tuple[LogicItems, LogicItem
         [ItemName.KeyItem.HotelFrontKeys], [ItemName.KeyItem.HotelFrontKeys], [ItemName.KeyItem.HotelFrontKeys],
         [ItemName.KeyItem.HotelFrontKeys]),
     (Character.Gamma, Area.Hotel, Area.StationSquareMain): (
-        [ItemName.KeyItem.HotelFrontKeys], [ItemName.KeyItem.HotelFrontKeys], [ItemName.KeyItem.HotelFrontKeys],
-        [ItemName.KeyItem.HotelFrontKeys]),
+        [ItemName.KeyItem.HotelFrontKeys], [ItemName.KeyItem.HotelFrontKeys],
+        [[ItemName.KeyItem.HotelFrontKeys], [ItemName.Gamma.JetBooster]], [ItemName.KeyItem.HotelFrontKeys]),
     (Character.Gamma, Area.Station, Area.Casino): (
         [ItemName.KeyItem.StationBackKeys], [ItemName.KeyItem.StationBackKeys], [ItemName.KeyItem.StationBackKeys],
         [ItemName.KeyItem.StationBackKeys]),
@@ -1232,12 +1226,10 @@ sub_level_location_table: List[SubLevelLocation] = [
                      [Character.Sonic, Character.Knuckles, Character.Tails, Character.Amy, Character.Big],
                      [Character.Sonic, Character.Knuckles, Character.Tails, Character.Amy, Character.Big],
                      [Character.Sonic, Character.Knuckles, Character.Tails, Character.Amy, Character.Big]),
-    SubLevelLocation(25, Area.Jungle, SubLevel.SandHill, SubLevelMission.B, [Character.Tails],
-                     [Character.Tails, Character.Sonic], [Character.Tails, Character.Sonic],
-                     [Character.Tails, Character.Sonic]),
-    SubLevelLocation(26, Area.Jungle, SubLevel.SandHill, SubLevelMission.A, [Character.Tails],
-                     [Character.Tails, Character.Sonic], [Character.Tails, Character.Sonic],
-                     [Character.Tails, Character.Sonic]),
+    SubLevelLocation(25, Area.Jungle, SubLevel.SandHill, SubLevelMission.B, [Character.Tails], [Character.Tails],
+                     [Character.Tails, Character.Sonic], [Character.Tails, Character.Sonic]),
+    SubLevelLocation(26, Area.Jungle, SubLevel.SandHill, SubLevelMission.A, [Character.Tails], [Character.Tails],
+                     [Character.Tails, Character.Sonic], [Character.Tails, Character.Sonic]),
     SubLevelLocation(27, Area.MysticRuinsMain, SubLevel.SkyChaseAct1, SubLevelMission.B,
                      [Character.Tails, Character.Sonic], [Character.Tails, Character.Sonic],
                      [Character.Tails, Character.Sonic], [Character.Tails, Character.Sonic]),
