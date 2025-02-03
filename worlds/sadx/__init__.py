@@ -1,7 +1,7 @@
 import typing
 from typing import Dict, Any
 
-from BaseClasses import Tutorial, ItemClassification
+from BaseClasses import Tutorial
 from worlds.AutoWorld import WebWorld, World
 from .CharacterUtils import get_playable_characters
 from .Enums import Character, SADX_BASE_ID, Area, remove_character_suffix, pascal_to_space
@@ -46,6 +46,7 @@ class SonicAdventureDXWorld(World):
 
     tracker_world = {"map_page_folder": "tracker", "map_page_maps": "maps/maps.json",
                      "map_page_locations": "locations/locations.json"}
+    ut_can_gen_without_yaml = True
 
     def generate_early(self):
         self.starter_setup = generate_early_sadx(self, self.options)
