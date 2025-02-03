@@ -14,7 +14,7 @@ class ItemInfo:
 
 
 story_progression_item_table: List[ItemInfo] = [
-    ItemInfo(90, ItemName.Progression.Emblem, ItemClassification.progression),
+    ItemInfo(90, ItemName.Progression.Emblem, ItemClassification.progression_skip_balancing),
     ItemInfo(91, ItemName.Progression.ChaosPeace, ItemClassification.progression),
 ]
 

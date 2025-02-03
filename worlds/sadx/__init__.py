@@ -190,7 +190,7 @@ class SonicAdventureDXWorld(World):
     def generate_progression_data(self) -> typing.Dict[int, int]:
         progression_data = {}
         for ap_location in self.multiworld.get_locations(self.player):
-            if ap_location.item.classification == ItemClassification.progression:
+            if ap_location.item.advancement:
                 progression_data[ap_location.address] = ap_location.address
         return progression_data
 
