@@ -306,6 +306,7 @@ class PercentOverrides(OptionDict):
     """
     display_name = "Percent Overrides"
     valid_keys = Names.getValidPercentOverrides()
+    default = {}
 
 class WeaponGroups(OptionSet):
     """
@@ -348,7 +349,7 @@ class BossLogicLevel(Choice):
     display_name = "Boss Logic Level"
     option_easy = 0  # Logic adds in easier elements for completion
     option_normal = 1  # Standard logic
-    #option_hard = 2  # Requires skips to traverse regions.
+    option_hard = 2  # Requires skips to traverse regions.
     default = option_normal
 
 class CraftLogicLevel(Choice):
@@ -494,12 +495,15 @@ class StoryProgressionBalancing(Range):
     """
     range_start = 0
     range_end = 100
-    default = 50
+    default = 0
 
 class ShadowMod(Choice):
     """
-        Shadow Mod intended to be used.
-        Functionality expected on vanilla, or if not marked unknown.
+        Shadow Mod intended to be used. In order to use a mod you accept that the game may not yet
+        be fully supported and that bugs will occur.
+        Only vanilla is officially supported.
+        Only mods in the list have any testing or handling at all.
+        Minor mods will not affect memory and are likely to be fine.
     """
     display_name = "Shadow Mod"
     option_vanilla = "Vanilla"

@@ -1,4 +1,5 @@
 import asyncio
+import random
 import struct
 from datetime import datetime, timedelta
 import time
@@ -102,6 +103,8 @@ class GAME_ADDRESSES:
     boss_final_additional_unlock_address = 0x80577720
     CURRENT_STAGE_BASE_KEYSANITY_ADDRESS = 0x8057fb80
     LIVES_ADDRESS = 0x80576704
+
+    EXTRA_SAVE_DATA = 0x805780D0
 
     MENU_ENUM = 0x80583ACC
 
@@ -216,6 +219,20 @@ class ShTHCommandProcessor(ClientCommandProcessor):
             weapons = self.ctx.getWeapons(stage=stage, available=available, held=held)
             logger.info("Available weapons:\n%s", "\n".join([ w.replace("Weapon:", "") for w in weapons]))
 
+
+    def _cmd_vehicle(self, *args):
+        """Prints the current vehicle status to the client."""
+        if isinstance(self.ctx, ShTHContext):
+            #print(args)
+            if self.ctx.vehicle_logic == Options.VehicleLogic.option_false:
+                logger.error("Vehicle logic not enabled.")
+            else:
+                data = self.ctx.get_unlocked_vehicles()
+                for d in data:
+                    logger.info("%s : %s", d[0], "(Available)" if d[1] else "(Out Of Logic)")
+
+
+
     def _cmd_story(self, *args):
         """Sets the in-game story steps to an available stage."""
         if isinstance(self.ctx, ShTHContext):
@@ -226,7 +243,8 @@ class ShTHCommandProcessor(ClientCommandProcessor):
                 self.ctx.set_story_mode(stage)
             else:
                 available = self.ctx.get_story_accessible_stages()
-                logger.info(available)
+                available_names = [ Levels.LEVEL_ID_TO_LEVEL[n] for n in available]
+                logger.info(available_names)
 
     def _cmd_token(self, *args):
         if isinstance(self.ctx, ShTHContext):
@@ -254,6 +272,7 @@ class ShTHCommandProcessor(ClientCommandProcessor):
         reached_count = 0
         current_count = 0
         freq_or_avail_count = 0
+        completed = False
 
         (mission_clear_locations, mission_locations, end_location,
          enemysanity_locations, checkpointsanity_locations,
@@ -286,7 +305,13 @@ class ShTHCommandProcessor(ClientCommandProcessor):
                         reached_count = 0
                     else:
                         reached_count = max([ a[1].count for a in associated_locations if a[0] in checked])
-                    current_count = ctx.level_state["dark_progress"]
+                    if "dark_progress" in ctx.level_state:
+                        current_count = ctx.level_state["dark_progress"]
+                    else:
+                        current_count = None
+
+                    if reached_count >= required_count:
+                        completed = True
 
 
         if type == "hero":
@@ -314,7 +339,16 @@ class ShTHCommandProcessor(ClientCommandProcessor):
                         reached_count = 0
                     else:
                         reached_count = max([a[1].count for a in associated_locations if a[0] in checked])
-                    current_count = ctx.level_state["hero_progress"]
+
+                    if "hero_progress" in ctx.level_state:
+                        current_count = ctx.level_state["hero_progress"]
+                    else:
+                        current_count = None
+
+                    if reached_count >= required_count:
+                        completed = True
+
+
 
         if type == "darkclear":
             dark = [ m for m in Locations.MissionClearLocations if m.stageId == stage
@@ -337,6 +371,21 @@ class ShTHCommandProcessor(ClientCommandProcessor):
                          and info[unlock[0].item].alignmentId == dark.alignmentId and
                          info[unlock[0].item].type == "level_object"])
 
+                    current_count += len([unlock for unlock in ctx.items_to_handle if unlock[0].item in info and \
+                                         info[unlock[0].item].stageId == stage
+                                         and info[unlock[0].item].alignmentId == dark.alignmentId and
+                                         info[unlock[0].item].type == "level_object"])
+                    # Get dark id and lookup
+
+                    associated_location = [x.locationId for x in mission_clear_locations if
+                                            x.alignmentId == dark.alignmentId and
+                                            x.stageId == dark.stageId ][0]
+
+                    if associated_location in ctx.checked_locations:
+                        completed = True
+
+
+
         if type == "heroclear":
             dark = [ m for m in Locations.MissionClearLocations if m.stageId == stage
                   and m.alignmentId == MISSION_ALIGNMENT_HERO ]
@@ -358,6 +407,18 @@ class ShTHCommandProcessor(ClientCommandProcessor):
                                              info[unlock[0].item].stageId == stage
                                              and info[unlock[0].item].alignmentId == dark.alignmentId and
                                              info[unlock[0].item].type == "level_object"])
+
+                        current_count += len([unlock for unlock in ctx.items_to_handle if unlock[0].item in info and \
+                                             info[unlock[0].item].stageId == stage
+                                             and info[unlock[0].item].alignmentId == dark.alignmentId and
+                                             info[unlock[0].item].type == "level_object"])
+
+                        associated_location = [x.locationId for x in mission_clear_locations if
+                                               x.alignmentId == dark.alignmentId and
+                                               x.stageId == dark.stageId][0]
+
+                        if associated_location in ctx.checked_locations:
+                            completed = True
 
         if type == "gun":
             dark = [ m for m in Locations.EnemySanityLocations if m.stageId == stage
@@ -383,7 +444,13 @@ class ShTHCommandProcessor(ClientCommandProcessor):
                     reached_count = 0
                 else:
                     reached_count = max([a[1].count for a in associated_locations if a[0] in checked])
-                current_count = ctx.level_state["gun_progress"]
+                if "gun_progress" in ctx.level_state:
+                    current_count = ctx.level_state["gun_progress"]
+                else:
+                    current_count = None
+
+                if reached_count >= required_count:
+                    completed = True
 
         if type == "egg":
             dark = [ m for m in Locations.EnemySanityLocations if m.stageId == stage
@@ -409,7 +476,14 @@ class ShTHCommandProcessor(ClientCommandProcessor):
                     reached_count = 0
                 else:
                     reached_count = max([a[1].count for a in associated_locations if a[0] in checked])
-                current_count = ctx.level_state["egg_progress"]
+
+                if "egg_progress" in ctx.level_state:
+                    current_count = ctx.level_state["egg_progress"]
+                else:
+                    current_count = None
+
+                if reached_count >= required_count:
+                    completed = True
 
         if type == "alien":
             dark = [m for m in Locations.EnemySanityLocations if m.stageId == stage
@@ -435,9 +509,16 @@ class ShTHCommandProcessor(ClientCommandProcessor):
                     reached_count = 0
                 else:
                     reached_count = max([a[1].count for a in associated_locations if a[0] in checked])
-                current_count = ctx.level_state["alien_progress"]
 
-        return required_count, reached_count, current_count, freq_or_avail_count
+                if "alien_progress" in ctx.level_state:
+                    current_count = ctx.level_state["alien_progress"]
+                else:
+                    current_count = None
+
+                if reached_count >= required_count:
+                    completed = True
+
+        return required_count, reached_count, current_count, freq_or_avail_count, completed
 
 
     def get_required_tokens(self, ctx):
@@ -491,37 +572,146 @@ class ShTHCommandProcessor(ClientCommandProcessor):
         return token_requirements
 
 
-    def _cmd_sanity(self, *args):
-        """Prints the current weapons to the client."""
+    def _cmd_story_progression(self, *args):
         if isinstance(self.ctx, ShTHContext):
-            arguments = self.parse_args(args, value=False)
-            #print(arguments)
-            if self.ctx.last_level is None:
-                logger.info("You must be in a stage to use the sanity command.")
-            else:
-                valid_types = ['dark', 'hero', 'gun', 'egg', 'alien', 'darkclear', 'heroclear']
-                enemy_sanities = ['gun', 'alien', 'egg']
-                objective_sanities = ['dark', 'hero']
-                for type in valid_types:
-                    if type in arguments or len(arguments) == 0:
-                        if type in enemy_sanities and not self.ctx.enemy_sanity:
-                            break
-                        if type in objective_sanities and not self.ctx.objective_sanity:
-                            break
-                        details = self.get_required_and_active_count(self.ctx, self.ctx.last_level, type)
-                        if details is None:
-                            continue
+            arguments = self.parse_args(args)
+
+            quiet = False
+            if "q" in arguments:
+                quiet = True
+
+            available = self.ctx.get_story_accessible_stages()
+            types = ["heroclear", "darkclear"]
+            dataset = {}
+            for stage in available:
+                for valid_type in types:
+                    details = self.get_required_and_active_count(self.ctx, stage, valid_type)
+                    dataset[(stage,valid_type)] = details
+                    if quiet:
+                        continue
+
+                    if details is not None:
                         location_total_required = details[0]
                         location_reached_total = details[1]
                         current_count = details[2]
                         freq_or_avail = details[3]
+                        complete = details[4]
                         if location_total_required > 0:
-                            if "clear" in type:
-                                logger.info("%s sanity is %d/%d (%d available)", type.capitalize(),
-                                            current_count, location_total_required, freq_or_avail)
-                            else:
-                                logger.info("%s sanity is %d/%d (Current: %d) (Frequency %d)", type.capitalize(),
-                                            location_reached_total, location_total_required, current_count,freq_or_avail)
+                            if "clear" in valid_type and current_count is not None:
+                                logger.info("%s sanity for %s is %d/%d (%d available)%s", valid_type.capitalize(),
+                                            Levels.LEVEL_ID_TO_LEVEL[stage],
+                                            current_count, location_total_required,
+                                            freq_or_avail, "\t(Complete)" if complete else "")
+            return dataset
+
+
+
+
+
+    def _cmd_story_hint(self, *args):
+        data = self._cmd_story_progression("/q")
+
+        item_weights = {}
+
+        info = Items.GetItemLookupDict()
+
+        for item in data.items():
+            stage = item[0][0]
+            cleartype = item[0][1]
+            details = item[1]
+
+            alignment = None
+            if cleartype == "heroclear":
+                alignment = Levels.MISSION_ALIGNMENT_HERO
+            elif cleartype == "darkclear":
+                alignment = Levels.MISSION_ALIGNMENT_DARK
+
+            location_total_required = details[0]
+            location_reached_total = details[1]
+            current_count = details[2]
+            freq_or_avail = details[3]
+            complete = details[4]
+            if location_total_required == 0 or complete or alignment is None:
+                continue
+
+            left = location_total_required - current_count
+            if left <= 0:
+                continue
+
+            item_name = [ i.name for i in info.values() if i.stageId == stage and i.alignmentId == alignment ][0]
+            item_weights[item_name] = pow(1/left, 0.5)
+
+        if len(item_weights.keys()) == 0:
+            logger.info("Nothing to hint on")
+
+        print(item_weights)
+        randomised_item = random.choices(list(item_weights.keys()), k=1, weights=list(item_weights.values()))[0]
+        logger.info("Recommended item to hint for is:%s", randomised_item)
+
+        pass
+        #options = _cmd_story_progression("/q")
+
+    def _cmd_sanity(self, *args):
+        """Prints the current weapons to the client."""
+        if isinstance(self.ctx, ShTHContext):
+            arguments = self.parse_args(args)
+            #print(arguments)
+
+            stage = None
+            if "s" in arguments:
+                stage = arguments["s"]
+
+            if stage is None and (self.ctx.last_level is None or self.ctx.level_state.keys() == 0):
+                logger.info("You must be in a stage to use the sanity command.")
+            else:
+                stageId = None
+                if stage is None:
+                    stageId = self.ctx.last_level
+                else:
+                    stageId = stage
+                    if type(stage) == str:
+                        if stage.isdigit():
+                            stageId = int(stage)
+                        else:
+                            level_by_name = {v: k for k, v in Levels.LEVEL_ID_TO_LEVEL.items()}
+                            if stage in level_by_name:
+                                stageId = level_by_name[stage]
+
+                if stageId is not None:
+                    valid_types = ['dark', 'hero', 'gun', 'egg', 'alien', 'darkclear', 'heroclear']
+                    enemy_sanities = ['gun', 'alien', 'egg']
+                    objective_sanities = ['dark', 'hero']
+                    for valid_type in valid_types:
+                        if (valid_type in arguments.keys() or
+                                len(arguments) == 0 or
+                                (len(arguments) == 1 and stageId != self.ctx.last_level) ):
+                            if valid_type in enemy_sanities and not self.ctx.enemy_sanity:
+                                break
+                            if valid_type in objective_sanities and not self.ctx.objective_sanity:
+                                break
+                            details = self.get_required_and_active_count(self.ctx, stageId, valid_type)
+                            if details is None:
+                                continue
+                            location_total_required = details[0]
+                            location_reached_total = details[1]
+                            current_count = details[2]
+                            freq_or_avail = details[3]
+                            complete = details[4]
+                            if location_total_required > 0:
+                                if "clear" in valid_type and current_count is not None:
+                                    logger.info("%s sanity is %d/%d %s(%d available)", valid_type.capitalize(),
+                                                current_count, location_total_required,
+                                                "(Complete) " if complete else "",
+                                                freq_or_avail)
+                                elif current_count is not None:
+                                    logger.info("%s sanity is %d/%d (Current: %d) (Frequency %d)", valid_type.capitalize(),
+                                                location_reached_total, location_total_required, current_count,freq_or_avail)
+                                elif "clear" in valid_type:
+                                    pass
+                                else:
+                                    pass
+                else:
+                    logger.error("Invalid level provided")
 
 
 @dataclass
@@ -852,6 +1042,8 @@ class ShTHContext(CommonContext):
         self.select_bosses = False
         self.select_initialised = False
         self.weapon_delay = None
+        self.save_value = None
+        self.save_rejected = False
 
     async def disconnect(self, allow_autoreconnect: bool = False):
         self.auth = None
@@ -1082,6 +1274,9 @@ class ShTHContext(CommonContext):
             if "enemy_frequency" in slot_data:
                 self.enemy_frequency = slot_data["enemy_frequency"]
 
+            if "save_value" in slot_data:
+                self.save_value = slot_data["save_value"]
+
             if "shadow_mod" in slot_data:
                 mod = slot_data["shadow_mod"]
                 if mod == Options.ShadowMod.option_vanilla and self.game_id != bytes(SHADOW_THE_HEDGEHOG_GAME_ID, "utf-8"):
@@ -1206,6 +1401,23 @@ class ShTHContext(CommonContext):
         if not known_route:
             logger.info("Route currently unknown.")
 
+    def get_unlocked_vehicles(self):
+        if not self.auth:
+            return []
+
+        vehicle_data = Items.GetVehicles()
+        results = []
+
+        for vehicle in vehicle_data:
+            have_vehicle = False
+            if (vehicle.itemId in [ h[0].item for h in self.handled ] or
+                    [ vehicle.itemId in i[0].item for i in self.items_to_handle]):
+                have_vehicle = True
+
+            results.append((vehicle.name, have_vehicle))
+
+        return results
+
     def get_story_accessible_stages(self):
         if not self.auth:
             return False
@@ -1213,7 +1425,7 @@ class ShTHContext(CommonContext):
         results = []
         for stageId in Levels.ALL_STAGES:
             if is_level_accessible(self, stageId, story=True):
-                results.append(Levels.LEVEL_ID_TO_LEVEL[stageId])
+                results.append(stageId)
 
         return results
 
@@ -1274,6 +1486,9 @@ async def check_save_loaded(ctx):
     # Throw exception if save is not configured
     # If first load, set the memory to whether it can go in the save-data
 
+    if ctx.save_rejected:
+        return False
+
     loaded = False
 
     loaded_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.SAVE_DATA_LOADED, 1)
@@ -1288,6 +1503,18 @@ async def check_save_loaded(ctx):
         checkpointsanity_locations, charactersanity_locations,\
         token_locations, keysanity_locations, weaponsanity_locations, boss_locations,\
         warp_locations = Locations.GetAllLocationInfo()
+
+    random_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.EXTRA_SAVE_DATA, 8)
+    loaded_bytes = int.from_bytes(random_bytes, byteorder='big')
+
+    first_game_load = False
+    ctx.save_rejected = False
+    if loaded_bytes == 0:
+        first_game_load = True
+    elif loaded_bytes != ctx.save_value:
+        logger.error("Unrecognised save value. Please load from the correct/new save.")
+        ctx.save_rejected = True
+        loaded = False
 
     # TODO: Check for newly obtained instead of all
 
@@ -1304,6 +1531,9 @@ async def check_save_loaded(ctx):
             clear_address_rank = clear_address_data[1]
             clear_address_time = clear_address_data[2]
 
+            if not is_level_accessible(ctx, stage):
+                continue
+
             if ctx.story_mode_available and is_level_accessible(ctx, stage, story=True):
                 if stage not in ctx.available_levels:
                     ctx.available_levels.append(stage)
@@ -1316,21 +1546,25 @@ async def check_save_loaded(ctx):
 
             # Add handle that level must not be set to default time!
 
-            if ctx.minimum_rank != Options.MinimumRank.option_e:
-                rank_bytes = dolphin_memory_engine.read_bytes(clear_address_rank, 4)
-                rank = int.from_bytes(rank_bytes, byteorder='big')
-                if RankToOption(rank, ctx.minimum_rank):
-                    continue
-
             current_bytes = dolphin_memory_engine.read_bytes(clear_address, 1)
             current_status = int.from_bytes(current_bytes, byteorder='big')
 
             # TODO: Handle auto boss clears and completion based on time
 
             if current_status == 1:
+                if first_game_load:
+                    ctx.save_rejected = True
+                    logger.error("Game has preloaded but has clear data. Please start from a new save.")
+                    break
 
                 if time_data[0] == 99 and time_data[1] == 59 and time_data[2] == 99:
                     continue
+
+                if ctx.minimum_rank != Options.MinimumRank.option_e:
+                    rank_bytes = dolphin_memory_engine.read_bytes(clear_address_rank, 4)
+                    rank = int.from_bytes(rank_bytes, byteorder='big')
+                    if RankToOption(rank, ctx.minimum_rank):
+                        continue
 
                 cleared_missions.append((stage,alignment))
                 if stage not in per_stage:
@@ -1410,6 +1644,7 @@ async def check_save_loaded(ctx):
         if last_cutscene_id in (926, 8201, 8202, 8203, 8204):
             finished = True
 
+
         if len(messages) > 0:
             unsent_messages = [ message for message in messages if message not in ctx.checked_locations]
             #ctx.locations_checked = messages
@@ -1432,6 +1667,10 @@ async def check_save_loaded(ctx):
             ctx.expected_version_check = True
 
         # Check for mission completes
+
+    if loaded and first_game_load and not ctx.save_rejected:
+        new_bytes = ctx.save_value.to_bytes(8, byteorder='big')
+        writeBytes(GAME_ADDRESSES.EXTRA_SAVE_DATA, new_bytes)
 
     return loaded
 
@@ -1840,7 +2079,9 @@ def CheckAutoWarps(ctx):
             end_warp_location = [w for w in warp_locations if w.stageId == end_path_location]
             if len(end_warp_location) == 1 and end_warp_location[0].locationId not in ctx.checked_locations:
                 if end_warp_location[0].locationId not in found_warps:
-                    found_warps.append(end_warp_location[0].locationId)
+
+                    if is_level_accessible(ctx,end_warp_location[0].stageId, story=True):
+                        found_warps.append(end_warp_location[0].locationId)
 
     return found_warps
 

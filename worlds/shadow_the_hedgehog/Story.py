@@ -56,7 +56,7 @@ def ChoosePathOption(world, story_options):
         weights.append(1000 / pow((abs(chosen_index-i) + 1), 2))
 
     randomised_item = random.choices(story_options, k=1, weights=weights)[0]
-    print(story_options.index(randomised_item), weights, chosen_index)
+    #print(story_options.index(randomised_item), weights, chosen_index)
 
     # If 100: always the last item in the list
     # If 1, always the first item in the list

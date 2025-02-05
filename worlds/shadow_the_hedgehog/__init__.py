@@ -10,7 +10,7 @@ from .Items import *
 from .Locations import *
 
 from . import Options, Rules, Regions, Utils as ShadowUtils, Story
-from .Options import shadow_option_groups
+from .Options import shadow_option_groups, PercentOverrides
 
 
 def run_client():
@@ -72,6 +72,8 @@ class ShtHWorld(World):
 
     location_name_groups = Locations.getLocationGroups()
 
+
+
     def reinitialise(self):
         self.first_regions = []
         self.available_characters = []
@@ -81,6 +83,7 @@ class ShtHWorld(World):
         self.required_tokens = {}
         self.excess_item_count = 0
         self.shuffled_story_mode = None
+        self.random_value = None
 
         for token in TOKENS:
             self.required_tokens[token] = 0
@@ -115,7 +118,11 @@ class ShtHWorld(World):
 
     def calculate_object_discrepancies(self):
 
-        override_settings = self.options.percent_overrides
+        if type(self.options.percent_overrides) == PercentOverrides:
+            override_settings = self.options.percent_overrides.value
+        else:
+            override_settings = self.options.percent_overrides
+
         for stage in ALL_STAGES:
 
             related_clears = [ c for c in MissionClearLocations if c.stageId == stage]
@@ -165,10 +172,11 @@ class ShtHWorld(World):
 
                         if max_required > max_required_complete:
                             key = key_prefix + "." + Levels.LEVEL_ID_TO_LEVEL[stage]
-                            override_settings.value[key] = (max_required_complete * 100) / aliens.total_count
+                            override_settings[key] = (max_required_complete * 100) / aliens.total_count
                             #print("Had to adjust key for {key}".format(key=key))
     def generate_early(self):
-
+        random_bytes = self.generate_random_bytes()
+        self.random_value = int.from_bytes(random_bytes, byteorder='big')
         self.check_invalid_configurations()
 
         if self.options.level_progression != Options.LevelProgression.option_select:
@@ -177,8 +185,8 @@ class ShtHWorld(World):
             # TODO: Handle this / overwrite this with UT, check validity
             if self.options.story_progression_balancing > 0 and not hasattr(self.multiworld, "re_gen_passthrough"):
                 story_spheres = Story.DecideStoryPath(self, self.shuffled_story_mode)
-                print("Story Spheres", [ (s[0].stageId, s[0].alignmentId) if s[0] is not None else "Start"
-                                         for s in story_spheres])
+                #print("Story Spheres", [ (s[0].stageId, s[0].alignmentId) if s[0] is not None else "Start"
+                #                         for s in story_spheres])
                 new_overrides = Story.AlterOverridesForStoryPath(story_spheres, self.options.percent_overrides.value)
 
                 for override in new_overrides.items():
@@ -337,28 +345,28 @@ class ShtHWorld(World):
                     self.shuffled_story_mode = Story.StringToStory(passthrough["shuffled_story_mode"])
 
                 if "shadow_mod" in passthrough:
-                    self.shadow_mod = Story.StringToStory(passthrough["shadow_mod"])
+                    self.options.shadow_mod = passthrough["shadow_mod"]
 
                 if "weapon_groups" in passthrough:
-                    self.weapon_groups = Story.StringToStory(passthrough["weapon_groups"])
+                    self.options.weapon_groups = passthrough["weapon_groups"]
 
                 if "single_egg_dealer" in passthrough:
-                    self.single_egg_dealer = Story.StringToStory(passthrough["single_egg_dealer"])
+                    self.options.single_egg_dealer = passthrough["single_egg_dealer"]
 
                 if "single_black_doom" in passthrough:
-                    self.single_black_doom = Story.StringToStory(passthrough["single_black_doom"])
+                    self.options.single_black_doom = passthrough["single_black_doom"]
 
                 if "single_diablon" in passthrough:
-                    self.single_diablon = Story.StringToStory(passthrough["single_diablon"])
+                    self.options.single_diablon = passthrough["single_diablon"]
 
                 if "boss_logic_level" in passthrough:
-                    self.boss_logic_level = Story.StringToStory(passthrough["boss_logic_level"])
+                    self.options.boss_logic_level = passthrough["boss_logic_level"]
 
                 if "craft_logic_level" in passthrough:
-                    self.craft_logic_level = Story.StringToStory(passthrough["craft_logic_level"])
+                    self.options.craft_logic_level = passthrough["craft_logic_level"]
 
                 if "guaranteed_level_clear" in passthrough:
-                    self.guaranteed_level_clear = Story.StringToStory(passthrough["guaranteed_level_clear"])
+                    self.options.guaranteed_level_clear = passthrough["guaranteed_level_clear"]
 
         # Set maximum of levels required
         # Exclude missions listed in exclude_locations
@@ -504,6 +512,9 @@ class ShtHWorld(World):
 
         return res
 
+    def generate_random_bytes(self):
+        return self.multiworld.random.randbytes(8)
+
     def fill_slot_data(self):
         slot_data = {
             "check_level": None if len(self.first_regions) == 0 else self.first_regions[0],
@@ -570,14 +581,15 @@ class ShtHWorld(World):
             "single_diablon": self.options.single_diablon.value,
             "boss_logic_level": self.options.boss_logic_level.value,
             "craft_logic_level": self.options.craft_logic_level.value,
-            "guaranteed_level_clear": self.options.guaranteed_level_clear.value
+            "guaranteed_level_clear": self.options.guaranteed_level_clear.value,
+            "save_value": self.random_value
 
         }
         return slot_data
 
     def write_spoiler(self, spoiler_handle: typing.TextIO):
         if self.options.story_shuffle != Options.StoryShuffle.option_off:
-            spoiler_handle.write("Shuffled Story Path\n")
+            spoiler_handle.write(f"{self.multiworld.get_player_name(self.player)}'s Shuffled Story Path\n")
             for stage in self.shuffled_story_mode:
                 text = str(stage)
                 spoiler_handle.writelines(text)
