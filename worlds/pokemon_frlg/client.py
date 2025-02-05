@@ -42,6 +42,7 @@ TRACKER_EVENT_FLAGS = [
     "FLAG_RESCUED_SELPHY",
     "FLAG_LEARNED_YES_NAH_CHANSEY",
     "FLAG_DEFEATED_ROCKETS_IN_WAREHOUSE",  # Freed Pokémon in Rocket Warehouse
+    "FLAG_SYS_UNLOCKED_TANOBY_RUINS",
     "FLAG_SYS_CAN_LINK_WITH_RS",  # Restored Pokémon Network Machine
     "FLAG_DEFEATED_CHAMP_REMATCH",
     "FLAG_PURCHASED_LEMONADE"
@@ -295,7 +296,7 @@ class PokemonFRLGClient(BizHawkClient):
             local_set_events = {flag_name: False for flag_name in TRACKER_EVENT_FLAGS}
             local_set_fly_unlocks = {flag_name: False for flag_name in TRACKER_FLY_UNLOCK_FLAGS}
             local_hints = {flag_name: False for flag_name in HINT_FLAGS.keys()}
-            local_checked_locations = set()
+            local_checked_locations: Set[int] = set()
             caught_pokemon = 0
 
             # Check set flags

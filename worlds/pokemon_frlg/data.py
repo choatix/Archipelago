@@ -216,8 +216,7 @@ class SpeciesData:
 @dataclass
 class StarterData:
     species_id: int
-    player_address: Dict[str, int]
-    rival_address: Dict[str, int]
+    address: Dict[str, int]
 
 
 @dataclass
@@ -981,8 +980,7 @@ def _init() -> None:
     for name, starter_data in extracted_data["starter_pokemon"].items():
         data.starters[name] = StarterData(
             starter_data["species"],
-            starter_data["player_address"],
-            starter_data["rival_address"]
+            starter_data["address"]
         )
 
     # Create legendary pokemon data
@@ -1493,3 +1491,4 @@ LEGENDARY_POKEMON = frozenset([data.constants[species] for species in [
 ]])
 
 NATIONAL_ID_TO_SPECIES_ID = {species.national_dex_number: i for i, species in data.species.items()}
+NAME_TO_SPECIES_ID = {species.name: i for i, species in data.species.items()}

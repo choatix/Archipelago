@@ -38,6 +38,14 @@ class KantoOnly(Toggle):
     display_name = "Kanto Only"
 
 
+class RandomStartingTown(Toggle):
+    """
+    Randomizes the town that you start in. This includes any area that has a Pokemon Center except for Route 10 and
+    Indigo Plateau.
+    """
+    display_name = "Random Starting Town"
+
+
 class ShuffleBadges(DefaultOnToggle):
     """
     Shuffle Gym Badges into the general item pool. If turned off, Badges will be shuffled among themselves.
@@ -125,12 +133,20 @@ class Famesanity(Toggle):
     display_name = "Famesanity"
 
 
-class ShuffleFlyDestinationUnlocks(Toggle):
+class ShuffleFlyDestinationUnlocks(Choice):
     """
     Shuffles the ability to fly to Pokemon Centers into the pool. Entering the map that normally would unlock the
     fly destination gives a random item.
+
+    - Off: Fly Destination Unlocks are not shuffled.
+    - Exclude Indigo: Fly Destination Unlocks are shuffled. Indigo Plateau Fly Unlock is vanilla.
+    - All: Fly Destination Unlocks are shuffled.
     """
     display_name = "Shuffle Fly Destination Unlocks"
+    default = 0
+    option_off = 0
+    option_exclude_indigo = 1
+    option_all = 2
 
 
 class PokemonRequestLocations(Toggle):
@@ -766,10 +782,11 @@ class HmCompatibility(NamedRange):
     """
     display_name = "HM Compatibility"
     default = -1
-    range_start = 50
+    range_start = 0
     range_end = 100
     special_range_names = {
         "vanilla": -1,
+        "none": 0,
         "full": 100,
     }
 
@@ -784,6 +801,7 @@ class TmTutorCompatibility(NamedRange):
     range_end = 100
     special_range_names = {
         "vanilla": -1,
+        "none": 0,
         "full": 100,
     }
 
@@ -966,6 +984,7 @@ class PokemonFRLGOptions(PerGameCommonOptions):
 
     goal: Goal
     kanto_only: KantoOnly
+    random_starting_town: RandomStartingTown
 
     shuffle_badges: ShuffleBadges
     shuffle_hidden: ShuffleHiddenItems

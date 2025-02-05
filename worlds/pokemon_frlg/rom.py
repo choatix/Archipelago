@@ -671,6 +671,10 @@ def get_tokens(world: "PokemonFRLGWorld", game_revision: int) -> APTokenMixin:
     teas_split = 1 if world.options.split_teas else 0
     tokens.write_token(APTokenTypes.WRITE, options_address + 0x42, struct.pack("<B", teas_split))
 
+    # Set starting town
+    starting_town = data.constants[world.starting_town]
+    tokens.write_token(APTokenTypes.WRITE, options_address + 0x43, struct.pack("<B", starting_town))
+
     # Set free fly location
     tokens.write_token(APTokenTypes.WRITE, options_address + 0x44, struct.pack("<B", world.free_fly_location_id))
 
@@ -678,8 +682,7 @@ def get_tokens(world: "PokemonFRLGWorld", game_revision: int) -> APTokenMixin:
     tokens.write_token(APTokenTypes.WRITE, options_address + 0x45, struct.pack("<B", world.town_map_fly_location_id))
 
     # Set resort gorgeous mon
-    species_id = data.constants[world.resort_gorgeous_mon[0]]
-    tokens.write_token(APTokenTypes.WRITE, options_address + 0x46, struct.pack("<H", species_id))
+    tokens.write_token(APTokenTypes.WRITE, options_address + 0x46, struct.pack("<H", world.resort_gorgeous_mon))
 
     # Set intro species
     species_id = world.random.choice(list(data.species.keys()))
@@ -793,13 +796,8 @@ def _set_starters(world: "PokemonFRLGWorld", tokens: APTokenMixin, game_version_
         return
 
     for name, starter in world.modified_starters.items():
-        starter_address = data.rom_addresses[game_version_revision]["sStarterSpecies"] + (STARTER_INDEX[name] * 2)
-        tokens.write_token(APTokenTypes.WRITE, starter_address, struct.pack("<H", starter.species_id))
         tokens.write_token(APTokenTypes.WRITE,
-                           starter.player_address[game_version_revision],
-                           struct.pack("<H", starter.species_id))
-        tokens.write_token(APTokenTypes.WRITE,
-                           starter.rival_address[game_version_revision],
+                           starter.address[game_version_revision],
                            struct.pack("<H", starter.species_id))
 
 

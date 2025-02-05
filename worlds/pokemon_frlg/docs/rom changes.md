@@ -19,10 +19,15 @@ predetermined priority
 * The text displayed when a Trainer is about to send out a new Pokémon has been shortened so that you can still see the name of the Pokémon when deciding if you want to swap
 * Increased the rate at which a Pokémon's HP drains in battle to be based on the Pokémon's max HP
 * Added a GO HOME option to the menu that teleports you to Pallet Town
-* All evolution items (Moon Stone, Dragon Scale, etc.) have been turned into key items that can be used repeatadly. The items that have a held effect (Metal Coat, Deep Sea Scale, etc.) will give you both a held item version and key item version of the item when you get them.
-* Talking to the Mystery Gift Man on the 2nd floor of any Pokemon Center will allow you to respawn any static encounters you haven't caught yet.
-* Talking to the Wireless Club Attendant (left) on the 2nd floor of any Pokemon Center will let you fight a random uncatchable Pokemon in order to grind exp and money.
+* All evolution items (Moon Stone, Dragon Scale, etc.) have been turned into key items that can be used repeatadly. The items that have a held effect (Metal Coat, Deep Sea Scale, etc.) will give you both a held item version and key item version of the item when you get them
+* Talking to the Mystery Gift Man on the 2nd floor of any Pokemon Center will allow you to respawn any static encounters you haven't caught yet
+* Talking to the Wireless Club Attendant (left) on the 2nd floor of any Pokemon Center will let you fight a random uncatchable Pokemon in order to grind exp and money
 * The Pikachu tutorial in the intro is skipped
+* The intro sequence of the game has been changed:
+  * You now choose your starter Pokémon in the intro after you name your rival
+  * Your spawn point is in front of your house in Pallet Town instead of in your room
+  * The Professor Oak scene in Pallet Town where he takes you to his lab in removed
+  * Professor Oak's Lab starts at the point where you need to do the first rival battle. The trigger for the rival battle has been removed and the battle can be initiated by talking to him
 * The Old Man catching tutorial is skipped
 * Miguel's position in Mt. Moon will change based on which side you enter from
 * You are able to pick up both fossils in Mt. Moon after beating Miguel

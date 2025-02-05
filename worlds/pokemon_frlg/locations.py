@@ -81,7 +81,7 @@ fly_item_exclusion_map = {
     "Celadon City": "ITEM_FLY_CELADON",
     "Fuchsia City": "ITEM_FLY_FUCHSIA",
     "Cinnabar Island": "ITEM_FLY_CINNABAR",
-    "Indigo Plateau Exterior": "ITEM_FLY_INDIGO",
+    "Indigo Plateau": "ITEM_FLY_INDIGO",
     "Saffron City": "ITEM_FLY_SAFFRON",
     "One Island Town": "ITEM_FLY_ONE_ISLAND",
     "Two Island Town": "ITEM_FLY_TWO_ISLAND",
@@ -222,7 +222,8 @@ def set_free_fly(world: "PokemonFRLGWorld") -> None:
         "ITEM_FLY_SEVEN_ISLAND"
     ]
 
-    if world.options.viridian_city_roadblock == ViridianCityRoadblock.option_early_parcel:
+    if (world.options.viridian_city_roadblock == ViridianCityRoadblock.option_early_parcel and
+            not world.options.random_starting_town):
         item = PokemonFRLGItem("Oak's Parcel", ItemClassification.progression, None, world.player)
         state.collect(item, True)
 

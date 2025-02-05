@@ -78,9 +78,7 @@
     "has_water": false,
     "has_fishing": false,
     "kanto": true,
-    "locations": [
-      "PC_ITEM_POTION"
-    ],
+    "locations": [],
     "events": [],
     "exits": {},
     "warps": {
@@ -2609,7 +2607,7 @@
   },
   "REGION_INDIGO_PLATEAU_EXTERIOR/VISIT": {
     "parent_map": "MAP_INDIGO_PLATEAU_EXTERIOR",
-    "name": "Indigo Plateau Exterior Visit",
+    "name": "Indigo Plateau Visit",
     "encounter_region": null,
     "has_land": false,
     "has_water": false,
@@ -2624,7 +2622,7 @@
   },
   "REGION_INDIGO_PLATEAU_EXTERIOR/MAIN": {
     "parent_map": "MAP_INDIGO_PLATEAU_EXTERIOR",
-    "name": "Indigo Plateau Exterior",
+    "name": "Indigo Plateau",
     "encounter_region": null,
     "has_land": false,
     "has_water": false,
@@ -2633,8 +2631,8 @@
     "locations": [],
     "events": [],
     "exits": {
-      "REGION_INDIGO_PLATEAU_EXTERIOR/VISIT": "Indigo Plateau Exterior Visit",
-      "REGION_ROUTE23/NORTH": "Indigo Plateau Exterior Exit"
+      "REGION_INDIGO_PLATEAU_EXTERIOR/VISIT": "Indigo Plateau Visit",
+      "REGION_ROUTE23/NORTH": "Indigo Plateau Exit"
     },
     "warps": {
       "MAP_INDIGO_PLATEAU_EXTERIOR:0/MAP_INDIGO_PLATEAU_POKEMON_CENTER_1F:0": "Indigo Plateau Pokemon Center"
