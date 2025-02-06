@@ -83,6 +83,12 @@ class Capsule(Enum):
 class SubLevelMission(Enum):
     B = 0
     A = auto()
+    Sonic = auto()
+    Tails = auto()
+    Knuckles = auto()
+    Amy = auto()
+    Big = auto()
+    Gamma = auto()
 
 
 class LevelMission(Enum):

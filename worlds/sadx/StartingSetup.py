@@ -216,9 +216,14 @@ def get_possible_starting_area_information(character: Character, area: Area, opt
         for upgrade in upgrade_location_table:
             if upgrade.character == character and upgrade.area == area and not upgrade.get_logic_items(options):
                 possible_locations[area].append(None)
-    if options.sub_level_checks:
+    if options.sand_hill_check:
         for sub_level in sub_level_location_table:
-            if sub_level.subLevel == SubLevel.SandHill or sub_level.subLevel == SubLevel.TwinkleCircuit:
+            if sub_level.subLevel == SubLevel.SandHill:
+                if character in sub_level.get_logic_characters(options) and sub_level.area == area:
+                    possible_locations[area].append(None)
+    if options.twinkle_circuit_check:
+        for sub_level in sub_level_location_table:
+            if sub_level.subLevel == SubLevel.TwinkleCircuit and sub_level.subLevelMission == LevelMission.B:
                 if character in sub_level.get_logic_characters(options) and sub_level.area == area:
                     possible_locations[area].append(None)
     if options.sky_chase_checks:

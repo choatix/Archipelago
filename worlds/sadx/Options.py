@@ -355,17 +355,30 @@ class MissionBlackList(OptionSet):
     valid_keys = [str(i) for i in range(1, 61)]
 
 
-class SubLevelChecks(DefaultOnToggle):
-    """Determines whether beating Twinkle Circuit and Sand Hill grants checks (2 Locations)."""
-    display_name = "Sub-Level Checks"
+class TwinkleCircuitCheck(DefaultOnToggle):
+    """Determines whether beating Twinkle Circuit grants a check."""
+    display_name = "Twinkle Circuit Check"
 
 
-class SubLevelChecksHard(Toggle):
+class MultipleTwinkleCircuitChecks(Toggle):
     """
-    Determines whether beating the harder (points-based) Twinkle Circuit and Sand Hill missions grants checks (2 Locations).
-    Only works if sublevel checks are enabled.
+    If enabled, each character will have their own Twinkle Circuit check (5 extra locations).
+    Only works if Twinkle Circuit Check is enabled.
     """
-    display_name = "Hard Sub-Level Checks"
+    display_name = "Multiple Twinkle Circuit Checks"
+
+
+class SandHillCheck(DefaultOnToggle):
+    """Determines whether beating Sand Hill grants a check."""
+    display_name = "Sand Hill Check"
+
+
+class SandHillCheckHard(Toggle):
+    """
+    Determines whether beating the harder (points-based) Sand Hill mission grants a check.
+    Only works if Sand Hill Check is enabled.
+    """
+    display_name = "Hard Sand Hill Check"
 
 
 class SkyChaseChecks(DefaultOnToggle):
@@ -639,8 +652,10 @@ class SonicAdventureDXOptions(PerGameCommonOptions):
     mission_mode_checks: MissionChecks
     auto_start_missions: AutoStartMissions
     mission_blacklist: MissionBlackList
-    sub_level_checks: SubLevelChecks
-    sub_level_checks_hard: SubLevelChecksHard
+    twinkle_circuit_check: TwinkleCircuitCheck
+    twinkle_circuit_multiple_check: MultipleTwinkleCircuitChecks
+    sand_hill_check: SandHillCheck
+    sand_hill_check_hard: SandHillCheckHard
     sky_chase_checks: SkyChaseChecks
     sky_chase_checks_hard: SkyChaseChecksHard
 
@@ -745,8 +760,10 @@ sadx_option_groups = [
         MissionChecks,
         AutoStartMissions,
         MissionBlackList,
-        SubLevelChecks,
-        SubLevelChecksHard,
+        TwinkleCircuitCheck,
+        MultipleTwinkleCircuitChecks,
+        SandHillCheck,
+        SandHillCheckHard,
         SkyChaseChecks,
         SkyChaseChecksHard,
         EnemySanity,

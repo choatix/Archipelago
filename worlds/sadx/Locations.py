@@ -1,7 +1,7 @@
 from typing import List, TypedDict, Dict
 
 from BaseClasses import Location, Region
-from .Enums import Area, pascal_to_space, SADX_BASE_ID
+from .Enums import Area, pascal_to_space, SADX_BASE_ID, SubLevel, SubLevelMission
 from .Logic import level_location_table, upgrade_location_table, sub_level_location_table, field_emblem_location_table, \
     capsule_location_table, boss_location_table, mission_location_table, chao_egg_location_table, \
     chao_race_location_table, enemy_location_table
@@ -30,7 +30,13 @@ def get_location_from_upgrade() -> List[LocationInfo]:
 def get_location_from_sub_level() -> List[LocationInfo]:
     locations: List[LocationInfo] = []
     for sub_level in sub_level_location_table:
-        sub_level_name = f"{pascal_to_space(sub_level.subLevel.name)} (Sub-Level - Mission {sub_level.subLevelMission.name})"
+        if sub_level.subLevel == SubLevel.TwinkleCircuit:
+            if sub_level.subLevelMission == SubLevelMission.B:
+                sub_level_name = f"{pascal_to_space(sub_level.subLevel.name)} (Sub-Level)"
+            else:
+                sub_level_name = f"{pascal_to_space(sub_level.subLevel.name)} (Sub-Level - {sub_level.subLevelMission.name})"
+        else:
+            sub_level_name = f"{pascal_to_space(sub_level.subLevel.name)} (Sub-Level - Mission {sub_level.subLevelMission.name})"
         locations += [{"id": sub_level.locationId, "name": sub_level_name}]
     return locations
 

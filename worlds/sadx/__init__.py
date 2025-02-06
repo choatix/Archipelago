@@ -122,8 +122,10 @@ class SonicAdventureDXWorld(World):
                 self.options.mission_mode_checks.value = passthrough["MissionModeChecks"]
                 self.options.auto_start_missions.value = passthrough["AutoStartMissions"]
 
-                self.options.sub_level_checks.value = passthrough["SubLevelChecks"]
-                self.options.sub_level_checks_hard.value = passthrough["SubLevelChecksHard"]
+                self.options.twinkle_circuit_check.value = passthrough["TwinkleCircuitCheck"]
+                self.options.twinkle_circuit_multiple_check.value = passthrough["MultipleTwinkleCircuitChecks"]
+                self.options.sand_hill_check.value = passthrough["SandHillCheck"]
+                self.options.sand_hill_check_hard.value = passthrough["SandHillCheckHard"]
                 self.options.sky_chase_checks.value = passthrough["SkyChaseChecks"]
                 self.options.sky_chase_checks_hard.value = passthrough["SkyChaseChecksHard"]
 
@@ -266,8 +268,10 @@ class SonicAdventureDXWorld(World):
             "CasinopolisRingLink": self.options.casinopolis_ring_link.value,
             "HardRingLink": self.options.hard_ring_link.value,
             "RingLoss": self.options.ring_loss.value,
-            "SubLevelChecks": self.options.sub_level_checks.value,
-            "SubLevelChecksHard": self.options.sub_level_checks_hard.value,
+            "TwinkleCircuitCheck": self.options.twinkle_circuit_check.value,
+            "MultipleTwinkleCircuitChecks": self.options.twinkle_circuit_multiple_check.value,
+            "SandHillCheck": self.options.sand_hill_check.value,
+            "SandHillCheckHard": self.options.sand_hill_check_hard.value,
             "SkyChaseChecks": self.options.sky_chase_checks.value,
             "SkyChaseChecksHard": self.options.sky_chase_checks_hard.value,
 

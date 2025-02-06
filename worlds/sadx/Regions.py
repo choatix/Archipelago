@@ -114,6 +114,14 @@ def add_locations_to_region(region: Region, area: Area, character: Character, pl
 
 def get_location_ids_for_area(area: Area, character: Character, options: SonicAdventureDXOptions):
     location_ids = []
+    if area == Area.TwinkleParkLobby and options.twinkle_circuit_multiple_check:
+        for sub_level in sub_level_location_table:
+            if sub_level.subLevel == SubLevel.TwinkleCircuit:
+                if is_any_character_playable(sub_level.get_logic_characters(options), options):
+                    if character in sub_level.get_logic_characters(options):
+                        if sub_level.subLevelMission != SubLevelMission.B:
+                            location_ids.append(sub_level.locationId)
+
     for level in level_location_table:
         if level.area == area and level.character == character:
             if is_level_playable(level, options):
@@ -180,12 +188,19 @@ def add_locations_to_common_region(region: Region, player: int, options: SonicAd
 
 def get_location_ids_for_common_region(options):
     location_ids = []
-    if options.sub_level_checks:
+    if options.sand_hill_check:
         for sub_level in sub_level_location_table:
-            if sub_level.subLevel == SubLevel.SandHill or sub_level.subLevel == SubLevel.TwinkleCircuit:
+            if sub_level.subLevel == SubLevel.SandHill:
                 if is_any_character_playable(sub_level.get_logic_characters(options), options):
-                    if ((options.sub_level_checks_hard and sub_level.subLevelMission == SubLevelMission.A)
+                    if ((options.sand_hill_check_hard and sub_level.subLevelMission == SubLevelMission.A)
                             or sub_level.subLevelMission == SubLevelMission.B):
+                        location_ids.append(sub_level.locationId)
+
+    if options.twinkle_circuit_check and not options.twinkle_circuit_multiple_check:
+        for sub_level in sub_level_location_table:
+            if sub_level.subLevel == SubLevel.TwinkleCircuit:
+                if is_any_character_playable(sub_level.get_logic_characters(options), options):
+                    if sub_level.subLevelMission == SubLevelMission.B:
                         location_ids.append(sub_level.locationId)
     if options.sky_chase_checks:
         for sub_level in sub_level_location_table:
