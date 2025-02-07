@@ -1210,6 +1210,10 @@ def create_locations(world, regions: Dict[str, Region]):
     devil_doom_location = ShadowTheHedgehogLocation(world.player, end_location[0].name, end_location[0].locationId, end_region)
     end_region.locations.append(devil_doom_location)
 
+def increment_location_count(count, plus):
+    #print(f"Count={count} + {plus} = {count+plus}")
+    return count + plus
+
 def count_locations(world):
     count = 0
     (mission_clear_locations, mission_locations, progression_locations,
@@ -1240,7 +1244,7 @@ def count_locations(world):
 
     override_settings = world.options.percent_overrides
 
-    count += len(mission_clear_locations)
+    count = increment_location_count(count, len(mission_clear_locations))
 
     if world.options.objective_sanity:
         for location in mission_locations:
@@ -1259,7 +1263,7 @@ def count_locations(world):
 
             if location.count <= max_required:
                 if location.count % frequency_required == 0 or max_required == location.count:
-                    count += 1
+                    count = increment_location_count(count, 1)
 
     if world.options.enemy_sanity:
         for enemy in enemysanity_locations:
@@ -1278,23 +1282,23 @@ def count_locations(world):
 
             if enemy.count <= max_required:
                 if enemy.count % frequency_required == 0 or max_required == enemy.count:
-                    count += 1
+                    count = increment_location_count(count, 1)
 
     if world.options.checkpoint_sanity:
-        count += len(checkpointsanity_locations)
+        count = increment_location_count(count, len(checkpointsanity_locations))
 
     if world.options.character_sanity:
-        count += len(charactersanity_locations)
+        count = increment_location_count(count, len(charactersanity_locations))
 
     if world.options.key_sanity:
-        count += len(keysanity_locations)
+        count = increment_location_count(count, len(keysanity_locations))
 
-    count += len(boss_locations)
+    count = increment_location_count(count, len(boss_locations))
     #if world.options.include_last_way_shuffle and world.options.story_shuffle == Options.StoryShuffle.option_test3:
     #    count -= 1 # Devil Doom Boss
 
     if world.options.weapon_sanity_hold > 0:
-        count += len(weaponsanity_locations)
+        count = increment_location_count(count, len(weaponsanity_locations))
 
     # Progression locations are hardcoded and not pool-related
     #count += len(end_location)

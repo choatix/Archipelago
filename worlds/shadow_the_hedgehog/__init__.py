@@ -10,7 +10,7 @@ from .Items import *
 from .Locations import *
 
 from . import Options, Rules, Regions, Utils as ShadowUtils, Story
-from .Options import shadow_option_groups, PercentOverrides
+from .Options import shadow_option_groups, PercentOverrides, AutoClearMissions
 
 
 def run_client():
@@ -97,8 +97,10 @@ class ShtHWorld(World):
         Rules.set_rules(self.multiworld, self, self.player)
 
     def check_invalid_configurations(self):
-        if self.options.auto_clear_missions and not self.options.objective_sanity:
-            raise OptionError("Cannot auto clear missions alongside not objective sanity.")
+        if self.options.auto_clear_missions and not self.options.objective_sanity or \
+            (self.options.objective_sanity and not self.options.enemy_objective_sanity):
+            print("Shadow Auto clear has been disabled")
+            self.options.auto_clear_missions = AutoClearMissions(False)
 
         if (self.options.weapon_sanity_hold == Options.WeaponsanityHold.option_unlocked
                 and not self.options.weapon_sanity_unlock):
@@ -378,7 +380,7 @@ class ShtHWorld(World):
 
         Regions.early_region_checks(self)
 
-        item_count = Items.CountItems(self) - self.options.starting_stages
+        item_count = Items.CountItems(self)
         location_count = Locations.count_locations(self)
 
         if self.options.objective_item_percentage_available < self.options.objective_completion_percentage:

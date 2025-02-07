@@ -13,7 +13,7 @@ from BaseClasses import ItemClassification
 from CommonClient import ClientCommandProcessor, CommonContext, get_base_parser, gui_enabled, logger, server_loop
 from NetUtils import ClientStatus
 from .Options import WeaponsanityHold
-from . import Levels, Items, Locations, Junk, Utils as ShadowUtils, Weapons, Story
+from . import Levels, Items, Locations, Junk, Utils as ShadowUtils, Weapons, Story, BASE_ID
 from .Levels import *
 from .Locations import GetStageInformation, GetAlignmentsForStage, \
     GetStageEnemysanityInformation, MissionClearLocations
@@ -673,7 +673,8 @@ class ShTHCommandProcessor(ClientCommandProcessor):
                         if stage.isdigit():
                             stageId = int(stage)
                         else:
-                            level_by_name = {v: k for k, v in Levels.LEVEL_ID_TO_LEVEL.items()}
+                            stage = stage.upper()
+                            level_by_name = {v.upper(): k for k, v in Levels.LEVEL_ID_TO_LEVEL.items()}
                             if stage in level_by_name:
                                 stageId = level_by_name[stage]
 
@@ -1410,8 +1411,8 @@ class ShTHContext(CommonContext):
 
         for vehicle in vehicle_data:
             have_vehicle = False
-            if (vehicle.itemId in [ h[0].item for h in self.handled ] or
-                    [ vehicle.itemId in i[0].item for i in self.items_to_handle]):
+            if ((vehicle.itemId + BASE_ID) in [ h[0].item for h in self.handled ] or
+                    (vehicle.itemId + BASE_ID) in [i[0].item for i in self.items_to_handle]):
                 have_vehicle = True
 
             results.append((vehicle.name, have_vehicle))

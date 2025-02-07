@@ -113,14 +113,6 @@ def getObjectiveTypeAndPercentage(base_objective_type, item_name, options):
                                    TYPE_ID_OBJECTIVE_FREQUENCY):
             return None
 
-    if base_objective_type in (TYPE_ID_OBJECTIVE_AVAILABLE, TYPE_ID_OBJECTIVE,
-                               TYPE_ID_COMPLETION, TYPE_ID_OBJECTIVE_ENEMY,
-                               TYPE_ID_OBJECTIVE_ENEMY_AVAILABLE, TYPE_ID_OBJECTIVE_ENEMY_COMPLETION,
-                               TYPE_ID_OBJECTIVE_ENEMY_FREQUENCY, TYPE_ID_OBJECTIVE_FREQUENCY):
-        if isEnemyObjectiveLocation(item_name):
-            if not options.enemy_objective_sanity:
-                return None
-
     percentage = None
     round_method = None
     if base_objective_type == TYPE_ID_OBJECTIVE:
@@ -147,6 +139,15 @@ def getObjectiveTypeAndPercentage(base_objective_type, item_name, options):
         else:
             percentage = options.objective_item_percentage_available
             round_method = ceil
+
+    if base_objective_type in (TYPE_ID_OBJECTIVE_AVAILABLE, TYPE_ID_OBJECTIVE,
+                               TYPE_ID_COMPLETION, TYPE_ID_OBJECTIVE_ENEMY,
+                               TYPE_ID_OBJECTIVE_ENEMY_AVAILABLE, TYPE_ID_OBJECTIVE_ENEMY_COMPLETION,
+                               TYPE_ID_OBJECTIVE_ENEMY_FREQUENCY, TYPE_ID_OBJECTIVE_FREQUENCY):
+        if isEnemyObjectiveLocation(item_name):
+            if not options.enemy_objective_sanity:
+                return base_objective_type, 0, floor
+
 
     if base_objective_type == TYPE_ID_ENEMY:
         percentage = options.enemy_sanity_percentage
