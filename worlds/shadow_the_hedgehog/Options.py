@@ -276,6 +276,7 @@ class AutoClearMissions(DefaultOnToggle):
     """
         Set automatic clears for missions once objective criteria is achieved. When playing story mode, ensure
         that the player has access to a new stage before auto-clearing to improve tracking behaviour.
+        Auto clear is automatically disabled when playing on objective-less sanity.
     """
     display_name = "Auto Clear Missions"
 
