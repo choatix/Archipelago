@@ -14,6 +14,8 @@ from .Regions import create_sadx_regions, get_location_ids_for_area
 from .Rules import create_sadx_rules, LocationDistribution
 from .StartingSetup import StarterSetup, generate_early_sadx, write_sadx_spoiler, CharacterArea, level_areas
 
+sadx_version = 110
+
 
 class SonicAdventureDXWeb(WebWorld):
     theme = "partyTime"
@@ -34,7 +36,6 @@ class SonicAdventureDXWorld(World):
     starter_setup: StarterSetup = StarterSetup()
     item_distribution: ItemDistribution = ItemDistribution()
     location_distribution: LocationDistribution = LocationDistribution()
-
     item_name_to_id = {item.name: item.itemId + SADX_BASE_ID for item in item_name_to_info.values()}
     location_name_to_id = {loc["name"]: loc["id"] + SADX_BASE_ID for loc in all_location_table}
 
@@ -54,6 +55,7 @@ class SonicAdventureDXWorld(World):
         if hasattr(self.multiworld, "re_gen_passthrough"):
             if "Sonic Adventure DX" in self.multiworld.re_gen_passthrough:
                 passthrough = self.multiworld.re_gen_passthrough["Sonic Adventure DX"]
+
                 self.starter_setup.character = Character(passthrough["StartingCharacter"])
                 self.starter_setup.item = passthrough["StartingItem"]
                 self.starter_setup.area = Area(passthrough["StartingArea"])
@@ -157,6 +159,13 @@ class SonicAdventureDXWorld(World):
     # Returning slot_data so it regens, giving it back in multiworld.re_gen_passthrough
     @staticmethod
     def interpret_slot_data(slot_data: Dict[str, Any]) -> Dict[str, Any]:
+
+        if slot_data["ModVersion"] != sadx_version:
+            current_version = f"v{sadx_version // 100}.{(sadx_version // 10) % 10}.{sadx_version % 10}"
+            slot_version = f"v{slot_data['ModVersion'] // 100}.{(slot_data['ModVersion'] // 10) % 10}.{slot_data['ModVersion'] % 10}"
+
+            raise Exception(
+                f"SADX version error: The version of apworld used to generate this world ({slot_version}) does not match the version of your installed apworld ({current_version}).")
         return slot_data
 
     def create_item(self, name: str) -> SonicAdventureDXItem:
@@ -199,7 +208,7 @@ class SonicAdventureDXWorld(World):
 
     def fill_slot_data(self) -> Dict[str, Any]:
         return {
-            "ModVersion": 110,
+            "ModVersion": sadx_version,
             "GoalRequiresLevels": self.options.goal_requires_levels.value,
             "LevelsPercentage": self.options.levels_percentage.value,
             "GoalRequiresChaosEmeralds": self.options.goal_requires_chaos_emeralds.value,
