@@ -1730,7 +1730,6 @@ enemy_location_table: List[EnemyLocation] = [
     EnemyLocation(13003, Area.IceCap, Character.Sonic, 3, Enemy.IceBall, [], [], [], []),
     EnemyLocation(13004, Area.IceCap, Character.Sonic, 4, Enemy.BoaBoa, [], [], [], []),
     EnemyLocation(13005, Area.IceCap, Character.Sonic, 5, Enemy.IceBall, [], [], [], []),
-    EnemyLocation(13006, Area.IceCap, Character.Sonic, 6, Enemy.IceBall, [], [], [], []),
     EnemyLocation(12001, Area.Casinopolis, Character.Sonic, 1, Enemy.Spinner, [], [], [], []),
     EnemyLocation(12002, Area.Casinopolis, Character.Sonic, 2, Enemy.Spinner, [], [], [], []),
     EnemyLocation(12003, Area.Casinopolis, Character.Sonic, 3, Enemy.Spinner, [], [], [], []),
