@@ -31,17 +31,18 @@ class GoalRequiresChaosEmeralds(Toggle):
 class GoalRequiresEmblems(Toggle):
     """
     If enabled, you have to collect a certain number of emblems to unlock the last fight.
-    Enabling this will require at least 5 checks to add the 5 emblems to the pool.
+    The emblems are extra items added to the item pool, so they scale with the number of checks.
     """
     display_name = "Goal Requires Emblems"
 
 
 class EmblemPercentage(Range):
-    """If Emblems are part of the goal, percentage of the available emblems needed to unlock the final story."""
+    """If Emblems are part of the goal, percentage of the available emblems needed to unlock the final story.
+    75 means that from all of your remaining checks (after adding key items/characters/etc.), 75% will be emblems."""
     display_name = "Emblem Requirement Percentage"
     range_start = 1
-    range_end = 80
-    default = 80
+    range_end = 90
+    default = 75
 
 
 class GoalRequiresMissions(Toggle):
