@@ -1,7 +1,7 @@
 from typing import List, TypedDict, Dict
 
 from BaseClasses import Location, Region
-from .Enums import Area, pascal_to_space, SADX_BASE_ID, SubLevel, SubLevelMission
+from .Enums import pascal_to_space, SADX_BASE_ID, SubLevel, SubLevelMission, Character, level_areas
 from .Logic import level_location_table, upgrade_location_table, sub_level_location_table, field_emblem_location_table, \
     capsule_location_table, boss_location_table, mission_location_table, chao_egg_location_table, \
     chao_race_location_table, enemy_location_table
@@ -108,10 +108,19 @@ all_location_table: List[LocationInfo] = (
 )
 
 
-def get_location_name_by_level(level_name: str) -> List[str]:
-    return [location["name"] for location in get_location_from_level() if level_name in location["name"]] + \
-        [location["name"] for location in get_location_from_capsule() if level_name in location["name"]] + \
-        [location["name"] for location in get_location_from_enemies() if level_name in location["name"]]
+def get_location_name_by_level(level_name: str, character_name: str = None) -> List[str]:
+    if character_name:
+        locations = [location["name"] for location in get_location_from_level() if
+                     level_name in location["name"] and character_name in location["name"]]
+        locations += [location["name"] for location in get_location_from_capsule() if
+                      level_name in location["name"] and character_name in location["name"]]
+        locations += [location["name"] for location in get_location_from_enemies() if
+                      level_name in location["name"] and character_name in location["name"]]
+    else:
+        locations = [location["name"] for location in get_location_from_level() if level_name in location["name"]]
+        locations += [location["name"] for location in get_location_from_capsule() if level_name in location["name"]]
+        locations += [location["name"] for location in get_location_from_enemies() if level_name in location["name"]]
+    return locations
 
 
 group_location_table: Dict[str, List[str]] = {
@@ -125,19 +134,14 @@ group_location_table: Dict[str, List[str]] = {
     LocationName.Groups.ChaoEggs: [location["name"] for location in get_location_from_eggs()],
     LocationName.Groups.ChaoRaces: [location["name"] for location in get_location_from_races()],
     LocationName.Groups.Enemies: [location["name"] for location in get_location_from_enemies()],
-    pascal_to_space(Area.EmeraldCoast.name): get_location_name_by_level(pascal_to_space(Area.EmeraldCoast.name)),
-    pascal_to_space(Area.WindyValley.name): get_location_name_by_level(pascal_to_space(Area.WindyValley.name)),
-    pascal_to_space(Area.Casinopolis.name): get_location_name_by_level(pascal_to_space(Area.Casinopolis.name)),
-    pascal_to_space(Area.IceCap.name): get_location_name_by_level(pascal_to_space(Area.IceCap.name)),
-    pascal_to_space(Area.TwinklePark.name): get_location_name_by_level(pascal_to_space(Area.TwinklePark.name)),
-    pascal_to_space(Area.SpeedHighway.name): get_location_name_by_level(pascal_to_space(Area.SpeedHighway.name)),
-    pascal_to_space(Area.RedMountain.name): get_location_name_by_level(pascal_to_space(Area.RedMountain.name)),
-    pascal_to_space(Area.SkyDeck.name): get_location_name_by_level(pascal_to_space(Area.SkyDeck.name)),
-    pascal_to_space(Area.LostWorld.name): get_location_name_by_level(pascal_to_space(Area.LostWorld.name)),
-    pascal_to_space(Area.FinalEgg.name): get_location_name_by_level(pascal_to_space(Area.FinalEgg.name)),
-    pascal_to_space(Area.HotShelter.name): get_location_name_by_level(pascal_to_space(Area.HotShelter.name)),
-
 }
+
+for area in level_areas:
+    area_name = pascal_to_space(area.name)
+    group_location_table[area_name] = get_location_name_by_level(area_name)
+    for character in Character:
+        character_area_name = f"{area_name} ({character.name})"
+        group_location_table[character_area_name] = get_location_name_by_level(area_name, character.name)
 
 
 def get_location_by_id(location_id: int) -> LocationInfo:
