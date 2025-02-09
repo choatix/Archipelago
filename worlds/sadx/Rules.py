@@ -7,7 +7,7 @@ from .Locations import get_location_by_name, level_location_table, upgrade_locat
     LocationInfo, capsule_location_table, boss_location_table, mission_location_table, field_emblem_location_table
 from .Logic import LevelLocation, UpgradeLocation, SubLevelLocation, EmblemLocation, CharacterUpgrade, \
     CapsuleLocation, BossFightLocation, MissionLocation, chao_egg_location_table, ChaoEggLocation, \
-    chao_race_location_table, enemy_location_table, EnemyLocation
+    chao_race_location_table, enemy_location_table, EnemyLocation, fish_location_table, FishLocation
 from .Names import ItemName
 from .Regions import get_region_name
 
@@ -117,6 +117,12 @@ def add_enemy_rules(self, location_name: str, enemy: EnemyLocation):
         add_rule(location, lambda state, item=need: state.has(item, self.player))
 
 
+def add_fish_rules(self, location_name: str, fish: FishLocation):
+    location = self.multiworld.get_location(location_name, self.player)
+    for need in fish.get_logic_items(self.options):
+        add_rule(location, lambda state, item=need: state.has(item, self.player))
+
+
 def calculate_rules(self, location: LocationInfo):
     if location is None:
         return
@@ -150,6 +156,9 @@ def calculate_rules(self, location: LocationInfo):
     for enemy in enemy_location_table:
         if location["id"] == enemy.locationId:
             add_enemy_rules(self, location["name"], enemy)
+    for fish in fish_location_table:
+        if location["id"] == fish.locationId:
+            add_fish_rules(self, location["name"], fish)
 
 
 def create_sadx_rules(self, needed_emblems: int) -> LocationDistribution:

@@ -470,24 +470,29 @@ class GammaCapsuleSanity(DefaultOnToggle):
     display_name = "Gamma's Capsule Sanity"
 
 
-class LifeCapsuleSanity(Toggle):
+class LifeCapsuleSanity(DefaultOnToggle):
     """If capsule-sanity is on, the randomizer will include Life Capsules (103 Locations)."""
     display_name = "Life Capsule Sanity"
 
 
-class ShieldCapsuleSanity(Toggle):
+class ShieldCapsuleSanity(DefaultOnToggle):
     """If capsule-sanity is on, the randomizer will include  Shields and Magnetic Shields (78 Locations)."""
     display_name = "Shield Capsule Sanity"
 
 
-class PowerUpCapsuleSanity(Toggle):
+class PowerUpCapsuleSanity(DefaultOnToggle):
     """If capsule-sanity is on, the randomizer will include Invincibility, Speed Up and Bomb Capsules (70 Locations)."""
     display_name = "Power Up Capsule Sanity"
 
 
-class RingCapsuleSanity(Toggle):
+class RingCapsuleSanity(DefaultOnToggle):
     """If capsule-sanity is on, the randomizer will include 5, 10 and ? capsules (441 Locations)."""
     display_name = "Ring Capsule Sanity"
+
+
+class FishSanity(Toggle):
+    """Determines whether catching every type of fish grants checks (23 Locations)."""
+    display_name = "Enemy Sanity"
 
 
 class JunkFillPercentage(Range):
@@ -683,6 +688,8 @@ class SonicAdventureDXOptions(PerGameCommonOptions):
     powerup_capsule_sanity: PowerUpCapsuleSanity
     ring_capsule_sanity: RingCapsuleSanity
 
+    fish_sanity: FishSanity
+
     junk_fill_percentage: JunkFillPercentage
     trap_fill_percentage: TrapFillPercentage
     ice_trap_weight: IceTrapWeight
@@ -786,6 +793,7 @@ sadx_option_groups = [
         ShieldCapsuleSanity,
         PowerUpCapsuleSanity,
         RingCapsuleSanity,
+        FishSanity,
     ]),
     OptionGroup("Junk Options", [
         JunkFillPercentage,

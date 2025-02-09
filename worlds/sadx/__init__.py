@@ -154,6 +154,7 @@ class SonicAdventureDXWorld(World):
                 self.options.shield_capsule_sanity.value = passthrough["ShieldCapsuleSanity"]
                 self.options.powerup_capsule_sanity.value = passthrough["PowerUpCapsuleSanity"]
                 self.options.ring_capsule_sanity.value = passthrough["RingCapsuleSanity"]
+                self.options.fish_sanity.value = passthrough["FishSanity"]
 
     # For the universal tracker, doesn't get called in standard gen
     # Returning slot_data so it regens, giving it back in multiworld.re_gen_passthrough
@@ -267,6 +268,7 @@ class SonicAdventureDXWorld(World):
             "ShieldCapsuleSanity": self.options.shield_capsule_sanity.value,
             "PowerUpCapsuleSanity": self.options.powerup_capsule_sanity.value,
             "RingCapsuleSanity": self.options.ring_capsule_sanity.value,
+            "FishSanity": self.options.fish_sanity.value,
 
             "ProgressionItems": self.generate_progression_data(),
 

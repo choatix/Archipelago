@@ -4,7 +4,7 @@ from BaseClasses import Location, Region
 from .Enums import pascal_to_space, SADX_BASE_ID, SubLevel, SubLevelMission, Character, level_areas
 from .Logic import level_location_table, upgrade_location_table, sub_level_location_table, field_emblem_location_table, \
     capsule_location_table, boss_location_table, mission_location_table, chao_egg_location_table, \
-    chao_race_location_table, enemy_location_table
+    chao_race_location_table, enemy_location_table, fish_location_table
 from .Names import LocationName
 
 
@@ -93,6 +93,13 @@ def get_location_from_enemies() -> List[LocationInfo]:
     return locations
 
 
+def get_location_from_fish() -> List[LocationInfo]:
+    locations: List[LocationInfo] = []
+    for fish in fish_location_table:
+        locations += [{"id": fish.locationId, "name": fish.get_location_name()}]
+    return locations
+
+
 all_location_table: List[LocationInfo] = (
         get_location_from_level() +
         get_location_from_upgrade() +
@@ -104,18 +111,23 @@ all_location_table: List[LocationInfo] = (
         get_location_from_eggs() +
         get_location_from_races() +
         get_location_from_enemies() +
+        get_location_from_fish() +
         [{"id": 9, "name": "Perfect Chaos Fight"}]
 )
 
 
-def get_location_name_by_level(level_name: str, character_name: str = None) -> List[str]:
-    if character_name:
+def get_location_name_by_level(level_name: str, level_character: Character = None) -> List[str]:
+    if level_character:
         locations = [location["name"] for location in get_location_from_level() if
-                     level_name in location["name"] and character_name in location["name"]]
+                     level_name in location["name"] and level_character.name in location["name"]]
         locations += [location["name"] for location in get_location_from_capsule() if
-                      level_name in location["name"] and character_name in location["name"]]
+                      level_name in location["name"] and level_character.name in location["name"]]
         locations += [location["name"] for location in get_location_from_enemies() if
-                      level_name in location["name"] and character_name in location["name"]]
+                      level_name in location["name"] and level_character.name in location["name"]]
+        if level_character == Character.Big:
+            locations += [location["name"] for location in get_location_from_fish() if
+                          level_name in location["name"] and level_character.name in location["name"]]
+
     else:
         locations = [location["name"] for location in get_location_from_level() if level_name in location["name"]]
         locations += [location["name"] for location in get_location_from_capsule() if level_name in location["name"]]
@@ -134,6 +146,7 @@ group_location_table: Dict[str, List[str]] = {
     LocationName.Groups.ChaoEggs: [location["name"] for location in get_location_from_eggs()],
     LocationName.Groups.ChaoRaces: [location["name"] for location in get_location_from_races()],
     LocationName.Groups.Enemies: [location["name"] for location in get_location_from_enemies()],
+    LocationName.Groups.Fish: [location["name"] for location in get_location_from_fish()],
 }
 
 for area in level_areas:
@@ -141,7 +154,7 @@ for area in level_areas:
     group_location_table[area_name] = get_location_name_by_level(area_name)
     for character in Character:
         character_area_name = f"{area_name} ({character.name})"
-        group_location_table[character_area_name] = get_location_name_by_level(area_name, character.name)
+        group_location_table[character_area_name] = get_location_name_by_level(area_name, character)
 
 
 def get_location_by_id(location_id: int) -> LocationInfo:

@@ -11,7 +11,7 @@ from .CharacterUtils import get_playable_characters, are_character_upgrades_rand
 from .Enums import Character, Area, SubLevel, pascal_to_space, level_areas, LevelMission
 from .Locations import level_location_table, upgrade_location_table, sub_level_location_table, \
     field_emblem_location_table, boss_location_table, capsule_location_table, mission_location_table
-from .Logic import area_connections, chao_egg_location_table, enemy_location_table
+from .Logic import area_connections, chao_egg_location_table, enemy_location_table, fish_location_table
 from .Options import SonicAdventureDXOptions
 
 
@@ -271,6 +271,17 @@ def get_possible_starting_area_information(character: Character, area: Area, opt
             key = (character, area, actual_area_to)
             if key in area_connections and not area_connections[key][options.logic_level.value]:
                 if enemy.character == character and not enemy.get_logic_items(options):
+                    possible_locations[area].append(None)
+    if options.fish_sanity:
+        for fish in fish_location_table:
+            actual_area_to = fish.area
+            if options.entrance_randomizer:
+                for level_entrance, actual_level in level_mapping.items():
+                    if actual_level == fish.area:
+                        actual_area_to = level_entrance
+            key = (character, area, actual_area_to)
+            if key in area_connections and not area_connections[key][options.logic_level.value]:
+                if Character.Big == character and not fish.get_logic_items(options):
                     possible_locations[area].append(None)
 
     return possible_locations

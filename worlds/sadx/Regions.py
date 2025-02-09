@@ -11,7 +11,7 @@ from .Locations import SonicAdventureDXLocation, \
     upgrade_location_table, level_location_table, mission_location_table, boss_location_table, sub_level_location_table, \
     field_emblem_location_table
 from .Logic import area_connections, chao_egg_location_table, chao_race_location_table, enemy_location_table, \
-    capsule_location_table
+    capsule_location_table, fish_location_table
 from .Names import LocationName
 from .Options import SonicAdventureDXOptions
 from .StartingSetup import StarterSetup
@@ -155,6 +155,12 @@ def get_location_ids_for_area(area: Area, character: Character, options: SonicAd
                 if is_character_playable(enemy.character, options):
                     if character_has_enemy_sanity(enemy.character, options):
                         location_ids.append(enemy.locationId)
+
+    if options.fish_sanity:
+        for fish in fish_location_table:
+            if fish.area == area and Character.Big == character:
+                if is_character_playable(Character.Big, options):
+                    location_ids.append(fish.locationId)
 
     if options.boss_checks:
         for boss_fight in boss_location_table:

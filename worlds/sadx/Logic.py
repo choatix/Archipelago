@@ -1,7 +1,8 @@
 from dataclasses import dataclass
 from typing import Dict, Tuple, List, Union
 
-from .Enums import Character, Area, SubLevel, LevelMission, pascal_to_space, SubLevelMission, EVERYONE, Capsule, Enemy
+from .Enums import Character, Area, SubLevel, LevelMission, pascal_to_space, SubLevelMission, EVERYONE, Capsule, Enemy, \
+    Fish
 from .Names import ItemName, LocationName
 from .Names.LocationName import Boss
 from .Options import SonicAdventureDXOptions
@@ -221,6 +222,30 @@ class ChaoRaceLocation:
     locationId: int
     name: str
     area: Area
+
+
+@dataclass
+class FishLocation:
+    locationId: int
+    area: Area
+    fishType: Fish
+    normalLogicItems: List[str]
+    hardLogicItems: List[str]
+    expertDCLogicItems: List[str]
+    expertDXLogicItems: List[str]
+
+    def get_logic_items(self, options: SonicAdventureDXOptions) -> List[str]:
+        if options.logic_level.value == 3:
+            return self.expertDXLogicItems
+        elif options.logic_level.value == 2:
+            return self.expertDCLogicItems
+        elif options.logic_level.value == 1:
+            return self.hardLogicItems
+        else:
+            return self.normalLogicItems
+
+    def get_location_name(self) -> str:
+        return f"{pascal_to_space(self.area.name)} (Big) - {pascal_to_space(self.fishType.name)}"
 
 
 area_connections: Dict[Tuple[Character, Area, Area], Tuple[List[str], List[str], List[str]]] = {
@@ -2720,6 +2745,44 @@ capsule_location_table: List[CapsuleLocation] = [
                     [ItemName.Big.LifeBelt], [ItemName.Big.LifeBelt], [ItemName.Big.LifeBelt]),
     CapsuleLocation(63510, Area.HotShelter, Character.Big, 10, Capsule.TenRings, [ItemName.Big.LifeBelt],
                     [ItemName.Big.LifeBelt], [ItemName.Big.LifeBelt], [ItemName.Big.LifeBelt]),
+]
+
+fish_location_table: List[FishLocation] = [
+    FishLocation(950, Area.TwinklePark, Fish.LargemouthBass, [], [], [], []),
+    FishLocation(951, Area.TwinklePark, Fish.Piranha, [], [], [], []),
+    FishLocation(952, Area.TwinklePark, Fish.MechaFish,
+                 [ItemName.Big.Lure1, ItemName.Big.Lure2, ItemName.Big.Lure3, ItemName.Big.Lure4],
+                 [ItemName.Big.Lure1, ItemName.Big.Lure2, ItemName.Big.Lure3, ItemName.Big.Lure4],
+                 [ItemName.Big.Lure1, ItemName.Big.Lure2, ItemName.Big.Lure3, ItemName.Big.Lure4],
+                 [ItemName.Big.Lure1, ItemName.Big.Lure2, ItemName.Big.Lure3, ItemName.Big.Lure4]),
+    FishLocation(953, Area.EmeraldCoast, Fish.Hammerhead, [], [], [], []),
+    FishLocation(954, Area.EmeraldCoast, Fish.StripedBeakfish, [], [], [], []),
+    FishLocation(955, Area.EmeraldCoast, Fish.MechaFish, [], [], [], []),
+    FishLocation(956, Area.EmeraldCoast, Fish.Shark, [], [], [], []),
+    FishLocation(957, Area.EmeraldCoast, Fish.SeaBass, [], [], [], []),
+    FishLocation(958, Area.EmeraldCoast, Fish.RedSeaBream, [], [], [], []),
+    FishLocation(959, Area.EmeraldCoast, Fish.MorayEel, [], [], [], []),
+    FishLocation(960, Area.EmeraldCoast, Fish.BlueMarlin,
+                 [ItemName.Big.Lure1, ItemName.Big.Lure2, ItemName.Big.Lure3, ItemName.Big.Lure4],
+                 [ItemName.Big.Lure1, ItemName.Big.Lure2, ItemName.Big.Lure3, ItemName.Big.Lure4],
+                 [ItemName.Big.Lure1, ItemName.Big.Lure2, ItemName.Big.Lure3, ItemName.Big.Lure4],
+                 [ItemName.Big.Lure1, ItemName.Big.Lure2, ItemName.Big.Lure3, ItemName.Big.Lure4]),
+    FishLocation(961, Area.IceCap, Fish.Hammerhead, [], [], [], []),
+    FishLocation(962, Area.IceCap, Fish.MechaFish, [], [], [], []),
+    FishLocation(963, Area.IceCap, Fish.LargemouthBass, [], [], [], []),
+    FishLocation(964, Area.IceCap, Fish.Salmon, [], [], [], []),
+    FishLocation(965, Area.IceCap, Fish.Shark, [], [], [], []),
+    FishLocation(966, Area.IceCap, Fish.JapaneseEel, [], [], [], []),
+    FishLocation(967, Area.HotShelter, Fish.AnglerFish, [ItemName.Big.LifeBelt], [], [], []),
+    FishLocation(968, Area.HotShelter, Fish.Hammerhead, [], [], [], []),
+    FishLocation(969, Area.HotShelter, Fish.Oarfish, [ItemName.Big.LifeBelt], [], [], []),
+    FishLocation(970, Area.HotShelter, Fish.Shark, [], [], [], []),
+    FishLocation(971, Area.HotShelter, Fish.Coelacanth,
+                 [ItemName.Big.Lure1, ItemName.Big.Lure2, ItemName.Big.Lure3, ItemName.Big.Lure4],
+                 [ItemName.Big.Lure1, ItemName.Big.Lure2, ItemName.Big.Lure3, ItemName.Big.Lure4],
+                 [ItemName.Big.Lure1, ItemName.Big.Lure2, ItemName.Big.Lure3, ItemName.Big.Lure4],
+                 [ItemName.Big.Lure1, ItemName.Big.Lure2, ItemName.Big.Lure3, ItemName.Big.Lure4]),
+    FishLocation(972, Area.HotShelter, Fish.MorayEel, [ItemName.Big.LifeBelt], [], [], []),
 ]
 
 boss_location_table: List[BossFightLocation] = [
