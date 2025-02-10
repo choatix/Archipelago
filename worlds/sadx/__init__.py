@@ -111,6 +111,7 @@ class SonicAdventureDXWorld(World):
                 self.options.unify_egg_hornet.value = passthrough["UnifyEggHornet"]
 
                 self.options.field_emblems_checks.value = passthrough["FieldEmblemChecks"]
+                self.options.starting_character.value = passthrough["StartingCharacterOption"]
                 self.options.random_starting_location.value = passthrough["RandomStartingLocation"]
                 self.options.random_starting_location_per_character.value = passthrough[
                     "RandomStartingLocationPerCharacter"]
@@ -237,6 +238,7 @@ class SonicAdventureDXWorld(World):
             "LevelEntranceMap": {original.value: randomized.value for original, randomized in
                                  self.starter_setup.level_mapping.items()},
 
+            "StartingCharacterOption": self.options.starting_character.value,
             "RandomStartingLocation": self.options.random_starting_location.value,
             "RandomStartingLocationPerCharacter": self.options.random_starting_location_per_character.value,
             "GuaranteedLevel": self.options.guaranteed_level.value,

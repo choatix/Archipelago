@@ -84,6 +84,22 @@ class LogicLevel(Choice):
     default = 0
 
 
+class StartingCharacterOption(Choice):
+    """
+    Select which the character you will start with.
+    Choose between Random (0), Sonic (1), Tails (2), Knuckles (3), Amy (4), Big (5), and Gamma (6).
+    """
+    display_name = "Starting Character"
+    option_random_character = 0
+    option_sonic = 1
+    option_tails = 2
+    option_knuckles = 3
+    option_amy = 4
+    option_big = 5
+    option_gamma = 6
+    default = 0
+
+
 class RandomStartingLocation(DefaultOnToggle):
     """Randomize starting location. If false, you will start at Station Square."""
     display_name = "Random Starting Location"
@@ -610,6 +626,7 @@ class SonicAdventureDXOptions(PerGameCommonOptions):
     goal_requires_chao_races: GoalRequiresChaoRaces
 
     logic_level: LogicLevel
+    starting_character: StartingCharacterOption
     random_starting_location: RandomStartingLocation
     random_starting_location_per_character: RandomStartingLocationPerCharacter
     guaranteed_level: GuaranteedLevel
@@ -717,6 +734,7 @@ sadx_option_groups = [
         GoalRequiresBosses,
         GoalRequiresChaoRaces,
         LogicLevel,
+        StartingCharacterOption,
         RandomStartingLocation,
         RandomStartingLocationPerCharacter,
         GuaranteedLevel,

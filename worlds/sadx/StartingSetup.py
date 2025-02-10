@@ -41,7 +41,12 @@ def generate_early_sadx(world: World, options: SonicAdventureDXOptions) -> Start
 
     starter_setup = StarterSetup()
     possible_characters = get_playable_characters(options)
+
     world.random.shuffle(possible_characters)
+
+    if options.starting_character.value != 0:
+        possible_characters.remove(Character(options.starting_character.value))
+        possible_characters.insert(0, Character(options.starting_character.value))
 
     if options.entrance_randomizer:
         fixed_areas = {Area[re.sub(r' ', '', area)]: Area[re.sub(r' ', '', dest)]
@@ -105,6 +110,13 @@ def validate_settings(options):
     if not get_playable_characters(options):
         logging.warning(" -- SADX warning: Zero playable characters in settings. enabling Sonic as a failsafe.")
         options.playable_sonic.value = True
+
+    if options.starting_character.value > 0:
+        if Character(options.starting_character.value) not in get_playable_characters(options):
+            logging.warning(
+                " -- SADX warning: Starting character is not playable. Randomizing starting character.")
+            options.starting_character.value = 0
+
     if (not options.goal_requires_levels and not options.goal_requires_missions and not options.goal_requires_emblems
             and not options.goal_requires_chaos_emeralds and not options.goal_requires_bosses and not options.goal_requires_chao_races):
         logging.warning(" -- SADX warning: No goal requirement set. Enabling action stages requirement as a failsafe.")
@@ -312,5 +324,3 @@ def write_sadx_spoiler(world: World, spoiler_handle: TextIO, starter_setup: Star
         for original, randomized in starter_setup.level_mapping.items():
             text += f"- {pascal_to_space(original.name)} -> {pascal_to_space(randomized.name)}\n"
     spoiler_handle.writelines(text)
-
-
