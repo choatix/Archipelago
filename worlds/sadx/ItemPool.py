@@ -24,6 +24,11 @@ class ItemDistribution:
 def create_sadx_items(world: World, starter_setup: StarterSetup, options: SonicAdventureDXOptions):
     item_names = get_item_names(options, starter_setup)
 
+    # Remove the items that are already in the starting inventory
+    for item in world.options.start_inventory:
+        for _ in range(world.options.start_inventory[item]):
+            item_names.remove(item)
+
     # Calculate the number of items per type
     item_distribution = get_item_distribution(world, len(item_names), options)
 
@@ -67,6 +72,7 @@ def create_sadx_items(world: World, starter_setup: StarterSetup, options: SonicA
 
     if starter_setup.item:
         world.multiworld.push_precollected(world.create_item(starter_setup.item))
+
 
     world.multiworld.itempool += itempool
     return item_distribution
