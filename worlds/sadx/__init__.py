@@ -57,7 +57,6 @@ class SonicAdventureDXWorld(World):
                 passthrough = self.multiworld.re_gen_passthrough["Sonic Adventure DX"]
 
                 self.starter_setup.character = Character(passthrough["StartingCharacter"])
-                self.starter_setup.item = passthrough["StartingItem"]
                 self.starter_setup.area = Area(passthrough["StartingArea"])
                 self.starter_setup.charactersWithArea = [
                     CharacterArea(Character.Sonic, Area(passthrough["SonicStartingArea"])),
@@ -115,7 +114,6 @@ class SonicAdventureDXWorld(World):
                 self.options.random_starting_location.value = passthrough["RandomStartingLocation"]
                 self.options.random_starting_location_per_character.value = passthrough[
                     "RandomStartingLocationPerCharacter"]
-                self.options.guaranteed_level.value = passthrough["GuaranteedLevel"]
                 self.options.guaranteed_starting_checks.value = passthrough["GuaranteedStartingChecks"]
 
                 self.options.chao_egg_checks.value = passthrough["SecretChaoEggs"]
@@ -226,7 +224,6 @@ class SonicAdventureDXWorld(World):
             "MissionForPerfectChaos": self.location_distribution.missions_for_perfect_chaos,
             "BossesForPerfectChaos": self.location_distribution.bosses_for_perfect_chaos,
             "StartingCharacter": self.starter_setup.character.value,
-            "StartingItem": self.starter_setup.item,
             "StartingArea": self.starter_setup.area.value,
             "SonicStartingArea": self.starter_setup.get_starting_area(Character.Sonic).value,
             "TailsStartingArea": self.starter_setup.get_starting_area(Character.Tails).value,
@@ -241,7 +238,6 @@ class SonicAdventureDXWorld(World):
             "StartingCharacterOption": self.options.starting_character.value,
             "RandomStartingLocation": self.options.random_starting_location.value,
             "RandomStartingLocationPerCharacter": self.options.random_starting_location_per_character.value,
-            "GuaranteedLevel": self.options.guaranteed_level.value,
             "GuaranteedStartingChecks": self.options.guaranteed_starting_checks.value,
             "FieldEmblemChecks": self.options.field_emblems_checks.value,
             "SecretChaoEggs": self.options.chao_egg_checks.value,

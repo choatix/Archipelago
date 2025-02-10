@@ -70,10 +70,6 @@ def create_sadx_items(world: World, starter_setup: StarterSetup, options: SonicA
 
     world.multiworld.push_precollected(world.create_item(get_playable_character_item(starter_setup.character)))
 
-    if starter_setup.item:
-        world.multiworld.push_precollected(world.create_item(starter_setup.item))
-
-
     world.multiworld.itempool += itempool
     return item_distribution
 
@@ -132,8 +128,7 @@ def get_item_names(options: SonicAdventureDXOptions, starter_setup: StarterSetup
         ]
 
     item_names.remove(get_playable_character_item(starter_setup.character))
-    if starter_setup.item:
-        item_names.remove(starter_setup.item)
+
     return item_names
 
 

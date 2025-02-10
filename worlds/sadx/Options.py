@@ -110,11 +110,6 @@ class RandomStartingLocationPerCharacter(DefaultOnToggle):
     display_name = "Random Starting Location Per Character"
 
 
-class GuaranteedLevel(Toggle):
-    """Ensures access to a level from the start, even if it means giving you an item."""
-    display_name = "Guaranteed Level Access"
-
-
 class GuaranteedStartingChecks(Range):
     """Ensures at least this many checks in your starting location if possible."""
     display_name = "Guaranteed Starting Checks"
@@ -629,7 +624,6 @@ class SonicAdventureDXOptions(PerGameCommonOptions):
     starting_character: StartingCharacterOption
     random_starting_location: RandomStartingLocation
     random_starting_location_per_character: RandomStartingLocationPerCharacter
-    guaranteed_level: GuaranteedLevel
     guaranteed_starting_checks: GuaranteedStartingChecks
     entrance_randomizer: EntranceRandomizer
     level_entrance_plando: LevelEntrancePlando
@@ -737,7 +731,6 @@ sadx_option_groups = [
         StartingCharacterOption,
         RandomStartingLocation,
         RandomStartingLocationPerCharacter,
-        GuaranteedLevel,
         GuaranteedStartingChecks,
         EntranceRandomizer,
         LevelEntrancePlando,
