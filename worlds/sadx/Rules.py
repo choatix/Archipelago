@@ -24,7 +24,7 @@ def add_level_rules(self, location_name: str, level: LevelLocation):
     for need in level.get_logic_items(self.options):
         add_rule(location, lambda state, item=need: state.has(item, self.player))
     if self.options.lazy_fishing and level.character == Character.Big and (
-            level.levelMission == LevelMission.A or level.levelMission == LevelMission.S):
+            level.levelMission == LevelMission.B or level.levelMission == LevelMission.A or level.levelMission == LevelMission.S):
         add_rule(location, lambda state: state.has(ItemName.Big.PowerRod, self.player))
 
 

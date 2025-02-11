@@ -512,7 +512,7 @@ class LazyFishing(Toggle):
     """
     Enabling Lazy Fishing does two things:
     Grants infinite tension during fishing if you have the Power Rod upgrade.
-    Adds the Power Rod as a logic requirement for all fish in fish-sanity, A/S ranks and every "Keeper" mission for Big.
+    Adds the Power Rod as a logic requirement for all fish in fish-sanity, B/A/S ranks and every "Keeper" mission for Big.
     """
     display_name = "Lazy Fishing"
 
