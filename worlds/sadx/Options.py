@@ -226,16 +226,18 @@ class PlayableBig(DefaultOnToggle):
 
 class BaseActionStageMissionChoice(Choice):
     """
-        For missions, the options range from 3 to 0.
-        3 means Missions A, B, and C.
-        2 means Missions B and C.
-        1 means Mission C.
+        For missions, the options range from 0 to 4.
         0 means no missions at all (You can still play the character if they are enabled).
+        1 means Mission C.
+        2 means Missions B and C.
+        3 means Missions A, B, and C.
+        4 means Missions S, A, B, and C. S missions are extra hard times added by the mod. Not available in normal logic.
     """
     option_none = 0
     option_c = 1
     option_c_b = 2
     option_c_b_a = 3
+    option_c_b_a_s = 4
     default = 1
 
 

@@ -169,6 +169,13 @@ def validate_settings(options):
                 " -- SADX warning: Capsule-sanity is enabled but all capsule types are disabled. Enabling life capsules.")
             options.life_capsule_sanity.value = True
 
+    if options.logic_level.value == 0 and (
+            options.sonic_action_stage_missions.value == 4 or options.tails_action_stage_missions.value == 4
+            or options.knuckles_action_stage_missions.value == 4 or options.amy_action_stage_missions.value == 4
+            or options.big_action_stage_missions.value == 4 or options.gamma_action_stage_missions.value == 4):
+        raise OptionError(
+            " -- SADX error: S-Rank missions are not available for normal logic, please select a harder logic level.")
+
 
 def get_possible_starting_areas(world, character: Character, level_mapping: dict[Area, Area]) -> \
         dict[Area, int]:

@@ -113,6 +113,7 @@ class LevelMission(Enum):
     C = 0
     B = auto()
     A = auto()
+    S = auto()
 
 
 class SubLevel(Enum):
