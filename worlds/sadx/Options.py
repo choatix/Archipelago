@@ -63,6 +63,14 @@ class GoalRequiresBosses(Toggle):
     display_name = "Goal Requires Bosses"
 
 
+class BossPercentage(Range):
+    """If Bosses are part of the goal, Percentage of the available bosses that needed to be completed to unlock the final story."""
+    display_name = "Boss Requirement Percentage"
+    range_start = 25
+    range_end = 100
+    default = 100
+
+
 class GoalRequiresChaoRaces(Toggle):
     """If enabled, you have to beat all the chao races to unlock the last fight."""
     display_name = "Goal Requires Chao Races"
@@ -629,6 +637,7 @@ class SonicAdventureDXOptions(PerGameCommonOptions):
     goal_requires_missions: GoalRequiresMissions
     mission_percentage: MissionPercentage
     goal_requires_bosses: GoalRequiresBosses
+    boss_percentage: BossPercentage
     goal_requires_chao_races: GoalRequiresChaoRaces
 
     logic_level: LogicLevel
@@ -738,6 +747,7 @@ sadx_option_groups = [
         GoalRequiresMissions,
         MissionPercentage,
         GoalRequiresBosses,
+        BossPercentage,
         GoalRequiresChaoRaces,
         LogicLevel,
         StartingCharacterOption,

@@ -215,8 +215,11 @@ def create_sadx_rules(self, needed_emblems: int) -> LocationDistribution:
             for boss_fight in boss_location_table:
                 if location["id"] == boss_fight.locationId:
                     bosses_location_list.append(self.multiworld.get_location(boss_fight.get_boss_name(), self.player))
-        for boss_location in bosses_location_list:
-            add_rule(perfect_chaos_fight, lambda state, loc=boss_location: loc.can_reach(state))
+
+        self.random.shuffle(bosses_location_list)
+        num_locations = max(1, math.ceil(len(bosses_location_list) * self.options.boss_percentage.value / 100))
+        for location in bosses_location_list[:num_locations]:
+            add_rule(perfect_chaos_fight, lambda state, loc=location: loc.can_reach(state))
             bosses_for_perfect_chaos += 1
 
     if self.options.goal_requires_chao_races.value:
