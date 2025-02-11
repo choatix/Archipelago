@@ -118,13 +118,30 @@ class StartingCharacterOption(Choice):
     default = 0
 
 
-class RandomStartingLocation(DefaultOnToggle):
-    """Randomize starting location. If false, you will start at Station Square."""
-    display_name = "Random Starting Location"
+class StartingLocationOption(Choice):
+    """
+    Select in which location you would like to start.
+    Keep in mind that if there are no checks in that location for your character, another one will be chosen.
+    CChoose between Random (0), Station Square (Main) (1), Station (2), Hotel (3), Casino (4), Twinkle Park Lobby (5),
+    Mystic Ruins (Main) (6), Angel Island (7), Jungle (8) and EggCarrier (Outside) (9), EggCarrier (Inside) (10)
+    """
+    display_name = "Starting Location"
+    option_random_location = 0
+    option_station_square_main = 1
+    option_station = 2
+    option_hotel = 3
+    option_casino = 4
+    option_twinkle_park_lobby = 5
+    option_mystic_ruins_main = 6
+    option_angel_island = 7
+    option_jungle = 8
+    option_egg_carrier_outside = 9
+    option_egg_carrier_inside = 10
+    default = 0
 
 
 class RandomStartingLocationPerCharacter(DefaultOnToggle):
-    """If randomize starting location is enabled, each character will start in a random location."""
+    """If enabled, each character will start in a random location."""
     display_name = "Random Starting Location Per Character"
 
 
@@ -653,7 +670,7 @@ class SonicAdventureDXOptions(PerGameCommonOptions):
 
     logic_level: LogicLevel
     starting_character: StartingCharacterOption
-    random_starting_location: RandomStartingLocation
+    starting_location: StartingLocationOption
     random_starting_location_per_character: RandomStartingLocationPerCharacter
     guaranteed_starting_checks: GuaranteedStartingChecks
     entrance_randomizer: EntranceRandomizer
@@ -763,7 +780,7 @@ sadx_option_groups = [
         GoalRequiresChaoRaces,
         LogicLevel,
         StartingCharacterOption,
-        RandomStartingLocation,
+        StartingLocationOption,
         RandomStartingLocationPerCharacter,
         GuaranteedStartingChecks,
         EntranceRandomizer,
