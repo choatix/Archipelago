@@ -36,9 +36,19 @@ class GoalRequiresEmblems(Toggle):
     display_name = "Goal Requires Emblems"
 
 
+class MaximumEmblemCap(Range):
+    """
+    If Emblems are part of the goal, determines the maximum number of emblems that can be in the item pool.
+    If fewer available locations exist in the pool than this number, the number of available locations will be used instead.
+    """
+    display_name = "Max Emblem Cap"
+    range_start = 20
+    range_end = 1500
+    default = 130
+
+
 class EmblemPercentage(Range):
-    """If Emblems are part of the goal, percentage of the available emblems needed to unlock the final story.
-    75 means that from all of your remaining checks (after adding key items/characters/etc.), 75% will be emblems."""
+    """If Emblems are part of the goal, percentage of the available emblems needed to unlock the final story."""
     display_name = "Emblem Requirement Percentage"
     range_start = 1
     range_end = 90
@@ -633,6 +643,7 @@ class SonicAdventureDXOptions(PerGameCommonOptions):
     levels_percentage: LevelPercentage
     goal_requires_chaos_emeralds: GoalRequiresChaosEmeralds
     goal_requires_emblems: GoalRequiresEmblems
+    max_emblem_cap: MaximumEmblemCap
     emblems_percentage: EmblemPercentage
     goal_requires_missions: GoalRequiresMissions
     mission_percentage: MissionPercentage
@@ -743,6 +754,7 @@ sadx_option_groups = [
         LevelPercentage,
         GoalRequiresChaosEmeralds,
         GoalRequiresEmblems,
+        MaximumEmblemCap,
         EmblemPercentage,
         GoalRequiresMissions,
         MissionPercentage,

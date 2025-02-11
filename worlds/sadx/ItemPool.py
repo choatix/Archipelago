@@ -89,10 +89,13 @@ def get_item_distribution(world: World, starting_item_count: int, options: Sonic
             raise OptionError("SADX Error: There are not enough available locations to place Emblems. "
                               + "Please enable more more checks or change your goal. "
                               + "You need at least {} more locations.".format(5 - available_locations))
-        emblem_count_progressive = max(1, math.ceil(available_locations * options.emblems_percentage.value / 100.0))
-        emblem_count_non_progressive = available_locations - emblem_count_progressive
-        junk_count = math.floor(emblem_count_non_progressive * (options.junk_fill_percentage.value / 100.0))
-        emblem_count_non_progressive -= junk_count
+
+        total_emblems = min(available_locations, options.max_emblem_cap.value)
+        emblem_count_progressive = max(1, math.ceil(total_emblems * options.emblems_percentage.value / 100.0))
+        emblem_count_non_progressive = total_emblems - emblem_count_progressive
+        emblems_to_filler = math.floor(emblem_count_non_progressive * (options.junk_fill_percentage.value / 100.0))
+        junk_count = available_locations - total_emblems + emblems_to_filler
+        emblem_count_non_progressive -= emblems_to_filler
     # If not, all the remaining locations are filler
     else:
         emblem_count_progressive = 0

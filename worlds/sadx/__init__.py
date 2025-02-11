@@ -76,6 +76,7 @@ class SonicAdventureDXWorld(World):
                 self.options.goal_requires_chaos_emeralds.value = passthrough["GoalRequiresChaosEmeralds"]
                 self.options.goal_requires_emblems.value = passthrough["GoalRequiresEmblems"]
                 self.options.emblems_percentage.value = passthrough["EmblemsPercentage"]
+                self.options.max_emblem_cap.value = passthrough["MaximumEmblemCap"]
                 self.options.goal_requires_missions.value = passthrough["GoalRequiresMissions"]
                 self.options.mission_percentage.value = passthrough["MissionsPercentage"]
                 self.options.goal_requires_bosses.value = passthrough["GoalRequiresBosses"]
@@ -216,6 +217,7 @@ class SonicAdventureDXWorld(World):
             "GoalRequiresChaosEmeralds": self.options.goal_requires_chaos_emeralds.value,
             "GoalRequiresEmblems": self.options.goal_requires_emblems.value,
             "EmblemsPercentage": self.options.emblems_percentage.value,
+            "MaximumEmblemCap": self.options.max_emblem_cap.value,
             "GoalRequiresMissions": self.options.goal_requires_missions.value,
             "MissionsPercentage": self.options.mission_percentage.value,
             "GoalRequiresBosses": self.options.goal_requires_bosses.value,
