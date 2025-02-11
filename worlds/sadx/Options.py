@@ -505,7 +505,16 @@ class RingCapsuleSanity(DefaultOnToggle):
 
 class FishSanity(Toggle):
     """Determines whether catching every type of fish grants checks (23 Locations)."""
-    display_name = "Enemy Sanity"
+    display_name = "Fish Sanity"
+
+
+class LazyFishing(Toggle):
+    """
+    Enabling Lazy Fishing does two things:
+    Grants infinite tension during fishing if you have the Power Rod upgrade.
+    Adds the Power Rod as a logic requirement for all fish in fish-sanity, A/S ranks and every "Keeper" mission for Big.
+    """
+    display_name = "Lazy Fishing"
 
 
 class JunkFillPercentage(Range):
@@ -702,6 +711,7 @@ class SonicAdventureDXOptions(PerGameCommonOptions):
     ring_capsule_sanity: RingCapsuleSanity
 
     fish_sanity: FishSanity
+    lazy_fishing: LazyFishing
 
     junk_fill_percentage: JunkFillPercentage
     trap_fill_percentage: TrapFillPercentage
@@ -807,6 +817,7 @@ sadx_option_groups = [
         PowerUpCapsuleSanity,
         RingCapsuleSanity,
         FishSanity,
+        LazyFishing,
     ]),
     OptionGroup("Junk Options", [
         JunkFillPercentage,

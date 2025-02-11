@@ -2,7 +2,7 @@ import math
 
 from worlds.generic.Rules import add_rule
 from .CharacterUtils import get_playable_characters, is_level_playable, is_character_playable
-from .Enums import LevelMission
+from .Enums import LevelMission, Character
 from .Locations import get_location_by_name, level_location_table, upgrade_location_table, sub_level_location_table, \
     LocationInfo, capsule_location_table, boss_location_table, mission_location_table, field_emblem_location_table
 from .Logic import LevelLocation, UpgradeLocation, SubLevelLocation, EmblemLocation, CharacterUpgrade, \
@@ -23,6 +23,9 @@ def add_level_rules(self, location_name: str, level: LevelLocation):
     location = self.multiworld.get_location(location_name, self.player)
     for need in level.get_logic_items(self.options):
         add_rule(location, lambda state, item=need: state.has(item, self.player))
+    if self.options.lazy_fishing and level.character == Character.Big and (
+            level.levelMission == LevelMission.A or level.levelMission == LevelMission.S):
+        add_rule(location, lambda state: state.has(ItemName.Big.PowerRod, self.player))
 
 
 def add_upgrade_rules(self, location_name: str, upgrade: UpgradeLocation):
@@ -82,8 +85,11 @@ def add_mission_rules(self, location_name: str, mission: MissionLocation):
         for need in logic_items:
             add_rule(location, lambda state, item=need: state.has(item, self.player))
     else:
-        add_rule(location, lambda state, egg_requirements=logic_items: any(
-            all(state.has(item, self.player) for item in requirement_group) for requirement_group in egg_requirements))
+        add_rule(location, lambda state, requirements=logic_items: any(
+            all(state.has(item, self.player) for item in requirement_group) for requirement_group in requirements))
+    # If lazy fishing is enabled, we need the Big Power Rod for certain missions
+    if self.options.lazy_fishing and mission.missionNumber in [14, 29, 35, 44]:
+        add_rule(location, lambda state: state.has(ItemName.Big.PowerRod, self.player))
 
 
 def add_egg_rules(self, location_name: str, egg: ChaoEggLocation):
@@ -121,6 +127,8 @@ def add_fish_rules(self, location_name: str, fish: FishLocation):
     location = self.multiworld.get_location(location_name, self.player)
     for need in fish.get_logic_items(self.options):
         add_rule(location, lambda state, item=need: state.has(item, self.player))
+    if self.options.lazy_fishing:
+        add_rule(location, lambda state: state.has(ItemName.Big.PowerRod, self.player))
 
 
 def calculate_rules(self, location: LocationInfo):

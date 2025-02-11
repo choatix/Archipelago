@@ -51,7 +51,7 @@ character_upgrade_item_table: List[ItemInfo] = [
     ItemInfo(50, ItemName.Gamma.JetBooster, ItemClassification.progression),
     ItemInfo(51, ItemName.Gamma.LaserBlaster, ItemClassification.useful),
     ItemInfo(60, ItemName.Big.LifeBelt, ItemClassification.progression),
-    ItemInfo(61, ItemName.Big.PowerRod, ItemClassification.useful),
+    ItemInfo(61, ItemName.Big.PowerRod, ItemClassification.progression),
     ItemInfo(62, ItemName.Big.Lure1, ItemClassification.progression),
     ItemInfo(63, ItemName.Big.Lure2, ItemClassification.progression),
     ItemInfo(64, ItemName.Big.Lure3, ItemClassification.progression),
