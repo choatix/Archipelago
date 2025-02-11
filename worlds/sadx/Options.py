@@ -446,7 +446,10 @@ class SkyChaseChecksHard(Toggle):
 
 
 class EnemySanity(Toggle):
-    """Determines whether destroying enemies grants checks (710 Locations)."""
+    """
+    Determines whether destroying enemies grants checks (710 Locations).
+    You need to enable enemy-sanity for some characters for it to work.
+    """
     display_name = "Enemy Sanity"
 
 
@@ -481,7 +484,10 @@ class GammaEnemySanity(DefaultOnToggle):
 
 
 class CapsuleSanity(Toggle):
-    """Determines whether destroying capsules grants checks (692 Locations)."""
+    """
+    Determines whether destroying capsules grants checks (692 Locations).
+    You need to enable capsule-sanity for some characters and some types for it to work.
+    """
     display_name = "Capsule Sanity"
 
 
