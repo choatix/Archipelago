@@ -67,7 +67,8 @@ def generate_early_sadx(world: World, options: SonicAdventureDXOptions) -> Start
                                       count == max_count}
 
         if possible_starter_areas.keys():
-            if Area(options.starting_location.value - 1) in list(possible_starter_areas.keys()):
+            if options.starting_location.value > 0 and Area(options.starting_location.value - 1) in list(
+                    possible_starter_areas.keys()):
                 starter_setup.area = Area(options.starting_location.value - 1)
             else:
                 starter_setup.area = world.random.choice(list(possible_starter_areas.keys()))
