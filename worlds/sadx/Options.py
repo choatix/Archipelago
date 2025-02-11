@@ -221,11 +221,13 @@ class RingLoss(Choice):
     Classic (0): You lose all of your rings when hit.
     Modern (1): You lose 20 rings when hit.
     One Hit K.O. (2): You die immediately when hit.
+    One Hit K.O. No Shields (3): You die immediately when hit, and you can't use shields or invincibility power ups.
     """
     display_name = "Ring Loss"
     option_classic = 0
     option_modern = 1
     option_one_hit_k_o = 2
+    option_one_hit_k_o_no_shields = 3
     default = 0
 
 
