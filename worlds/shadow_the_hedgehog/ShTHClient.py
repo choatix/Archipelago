@@ -3558,22 +3558,24 @@ async def check_death(ctx: ShTHContext):
     if level_status_value == LevelStatusOptions.Restarting:
         ctx.restart = True
 
-    lives_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.LIVES_ADDRESS, 4)
-    life_count = int.from_bytes(lives_bytes, byteorder='big')
+    ctx.dead = False
 
-    if life_count > ctx.lives:
-        ctx.lives = life_count
-    elif life_count < ctx.lives:
-        if ctx.dead:
-            ctx.dead = False
-        ctx.lives = life_count
-        if ctx.debug_logging:
-            logger.error("Detected a death - lives!")
-        ctx.current_rings_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.RINGS_ADDRESS, 4)
-        #return True
+    #lives_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.LIVES_ADDRESS, 4)
+    #life_count = int.from_bytes(lives_bytes, byteorder='big')
 
-    if ctx.dead:
-        return None
+    #if life_count > ctx.lives:
+    #    ctx.lives = life_count
+    #elif life_count < ctx.lives:
+    #    if ctx.dead:
+    #        ctx.dead = False
+    #    ctx.lives = life_count
+    #    if ctx.debug_logging:
+    ##        logger.error("Detected a death - lives!")
+    #    ctx.current_rings_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.RINGS_ADDRESS, 4)
+    #    #return True
+
+    #if ctx.dead:
+    #    return None
 
     return False
 
@@ -3628,8 +3630,8 @@ async def dolphin_sync_task(ctx: ShTHContext):
                     check_cheats()
                     if level is not None:
                         await update_level_behaviour(ctx,level, death)
-                    else:
-                        ctx.lives = 0
+                    #else:
+                    #    ctx.lives = 0
 
                     await handle_ring_link(ctx, level, death)
 

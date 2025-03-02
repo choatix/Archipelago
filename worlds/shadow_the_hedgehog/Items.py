@@ -785,11 +785,12 @@ def get_item_groups():
 
     item_groups: typing.Dict[str, list] = {
         "Chaos Emeralds": [ e.name for e in emerald_items],
-        "Stage Items": [e.name for e in level_unlock_items],
+        "Unlocks": [e.name for e in level_unlock_items],
         "Weapons": [e.name for e in weapon_items],
         "Vehicles": [e.name for e in vehicle_items],
         "Vacuums": [w.name for w in weapon_items if "Vacuum" in w.name ],
-        "Rifles": [w.name for w in rifle_components]
+        "Rifles": [w.name for w in rifle_components],
+        "Junk": [w.name for w in junk_items]
     }
 
     return item_groups
