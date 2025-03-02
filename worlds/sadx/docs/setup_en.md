@@ -19,6 +19,14 @@
 5. Disable the "Steam Achievements Mod" if enabled.
 6. Disable the "Fixes, Adds, and Beta Restores" if enabled.
 
+## Generating the player configuration
+
+1. Download the sadx.apworld from the release page and double click it to install it and restart the Archipelago
+   launcher.
+2. On the AP Launcher click on `Generate Player Config`.
+3. Copy the `Sonic Adventure DX.yaml` file from the `Players/Templates` folder and edit it to your liking.
+4. Don't forget to remove the {number} from the `name` field, it should just be your nick and nothing else.
+
 ## Joining a MultiWorld Game
 
 1. Before launching the game, run the `SAModManager.exe`, select the SADX_Archipelago mod, and hit the `Configure Mod`
@@ -29,6 +37,14 @@
 4. For the `Password` field under `AP Settings`, enter the server password if one exists, otherwise leave blank.
 5. Click the `Save` button then hit `Save & Play` to launch the game.
 6. Create a new save file to start playing! Use the same save file to continue playing.
+
+## Using Universal Tracker
+
+1. Download and install the
+   latest [Universal Tracker](https://discord.com/channels/731205301247803413/1170094879142051912) version.
+2. Make sure you have installed the sadx.apworld for the current version by double-clicking it.
+3. Restart the Archipelago Launcher and open the Universal Tracker then connect with your server IP/port and slot name.
+    - You don't need the yaml in your players folder for the tracker to work.
 
 ## Supported and recommended mods
 
@@ -42,7 +58,8 @@
 - You get the SADX_Archipelago: DLL error - The specified module could not be found.
     - Make sure that the antivirus didn't delete the `/mods/SADX_Archipelago/sadx-classic-randomizer.dll` file.
 - You get error: The code execution cannot proceeD because MSVCP140.dll was not found.
-    - Install the .NET 8 from [Microsoft's website](https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/runtime-desktop-8.0.10-windows-x64-installer).
+    - Install the .NET 8
+      from [Microsoft's website](https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/runtime-desktop-8.0.10-windows-x64-installer).
 - The game closes when you press start.
     - This is a Steam input issue. Either run the game from Steam or adjust the "Desktop controller configuration" to
       just be a controller.
