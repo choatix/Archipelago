@@ -283,16 +283,9 @@ area_connections: Dict[Tuple[Character, Area, Area], Tuple[List[str], List[str],
                                                          ItemName.KeyItem.HotelFrontKey,
                                                          ItemName.KeyItem.HotelBackKey,
                                                          ItemName.KeyItem.Train,
-                                                         ItemName.KeyItem.Dynamite]], [[ItemName.KeyItem.IceStone,
-                                                                                        ItemName.KeyItem.StationBackKey,
-                                                                                        ItemName.KeyItem.Train,
-                                                                                        ItemName.KeyItem.Dynamite],
-                                                                                       [ItemName.KeyItem.IceStone,
-                                                                                        ItemName.KeyItem.StationFrontKey,
-                                                                                        ItemName.KeyItem.HotelFrontKey,
-                                                                                        ItemName.KeyItem.HotelBackKey,
-                                                                                        ItemName.KeyItem.Train,
-                                                                                        ItemName.KeyItem.Dynamite]]),
+                                                         ItemName.KeyItem.Dynamite]],
+                                                       [ItemName.KeyItem.IceStone, ItemName.KeyItem.Train,
+                                                        ItemName.KeyItem.Dynamite]),
     (Character.Sonic, Area.TwinkleParkLobby, Area.TwinklePark): ([], [], [], []),
     (Character.Sonic, Area.StationSquareMain, Area.SpeedHighway): (
         [ItemName.KeyItem.EmployeeCard], [ItemName.KeyItem.EmployeeCard], [], []),
@@ -481,11 +474,9 @@ area_connections: Dict[Tuple[Character, Area, Area], Tuple[List[str], List[str],
     (Character.Sonic, Area.TwinkleParkLobby, Area.StationSquareMain): (
         [ItemName.KeyItem.TwinkleParkTicket], [ItemName.KeyItem.TwinkleParkTicket], [], []),
     (Character.Sonic, Area.MysticRuinsMain, Area.AngelIsland): (
-        [ItemName.KeyItem.Dynamite], [ItemName.KeyItem.Dynamite], [ItemName.KeyItem.Dynamite],
-        [ItemName.KeyItem.Dynamite]),
+        [ItemName.KeyItem.Dynamite], [ItemName.KeyItem.Dynamite], [ItemName.KeyItem.Dynamite], []),
     (Character.Sonic, Area.AngelIsland, Area.MysticRuinsMain): (
-        [ItemName.KeyItem.Dynamite], [ItemName.KeyItem.Dynamite], [ItemName.KeyItem.Dynamite],
-        [ItemName.KeyItem.Dynamite]),
+        [ItemName.KeyItem.Dynamite], [ItemName.KeyItem.Dynamite], [ItemName.KeyItem.Dynamite], []),
     (Character.Sonic, Area.MysticRuinsMain, Area.Jungle): (
         [ItemName.KeyItem.JungleCart], [ItemName.KeyItem.JungleCart], [ItemName.KeyItem.JungleCart],
         [ItemName.KeyItem.JungleCart]),
@@ -540,10 +531,9 @@ area_connections: Dict[Tuple[Character, Area, Area], Tuple[List[str], List[str],
     (Character.Tails, Area.StationSquareMain, Area.TwinkleParkLobby): (
         [ItemName.KeyItem.TwinkleParkTicket], [ItemName.KeyItem.TwinkleParkTicket],
         [ItemName.KeyItem.TwinkleParkTicket],
-        [ItemName.KeyItem.TwinkleParkTicket]),
+        []),
     (Character.Tails, Area.TwinkleParkLobby, Area.StationSquareMain): (
-        [ItemName.KeyItem.TwinkleParkTicket], [ItemName.KeyItem.TwinkleParkTicket], [],
-        [ItemName.KeyItem.TwinkleParkTicket]),
+        [ItemName.KeyItem.TwinkleParkTicket], [ItemName.KeyItem.TwinkleParkTicket], [], []),
     (Character.Tails, Area.MysticRuinsMain, Area.AngelIsland): (
         [ItemName.KeyItem.Dynamite], [ItemName.KeyItem.Dynamite], [], []),
     (Character.Tails, Area.AngelIsland, Area.MysticRuinsMain): (
@@ -606,10 +596,9 @@ area_connections: Dict[Tuple[Character, Area, Area], Tuple[List[str], List[str],
     (Character.Knuckles, Area.StationSquareMain, Area.TwinkleParkLobby): (
         [ItemName.KeyItem.TwinkleParkTicket], [ItemName.KeyItem.TwinkleParkTicket],
         [ItemName.KeyItem.TwinkleParkTicket],
-        [ItemName.KeyItem.TwinkleParkTicket]),
+        []),
     (Character.Knuckles, Area.TwinkleParkLobby, Area.StationSquareMain): (
-        [ItemName.KeyItem.TwinkleParkTicket], [ItemName.KeyItem.TwinkleParkTicket], [],
-        [ItemName.KeyItem.TwinkleParkTicket]),
+        [ItemName.KeyItem.TwinkleParkTicket], [ItemName.KeyItem.TwinkleParkTicket], [], []),
     (Character.Knuckles, Area.MysticRuinsMain, Area.AngelIsland): (
         [ItemName.KeyItem.Dynamite], [ItemName.KeyItem.Dynamite], [], []),
     (Character.Knuckles, Area.AngelIsland, Area.MysticRuinsMain): (
@@ -673,7 +662,7 @@ area_connections: Dict[Tuple[Character, Area, Area], Tuple[List[str], List[str],
     (Character.Amy, Area.StationSquareMain, Area.TwinkleParkLobby): (
         [ItemName.KeyItem.TwinkleParkTicket], [ItemName.KeyItem.TwinkleParkTicket],
         [ItemName.KeyItem.TwinkleParkTicket],
-        [ItemName.KeyItem.TwinkleParkTicket]),
+        []),
     (Character.Amy, Area.TwinkleParkLobby, Area.StationSquareMain): (
         [ItemName.KeyItem.TwinkleParkTicket], [ItemName.KeyItem.TwinkleParkTicket], [], []),
     (Character.Amy, Area.MysticRuinsMain, Area.AngelIsland): (
