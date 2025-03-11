@@ -479,8 +479,7 @@ area_connections: Dict[Tuple[Character, Area, Area], Tuple[List[str], List[str],
         [ItemName.KeyItem.TwinkleParkTicket],
         []),
     (Character.Sonic, Area.TwinkleParkLobby, Area.StationSquareMain): (
-        [ItemName.KeyItem.TwinkleParkTicket], [ItemName.KeyItem.TwinkleParkTicket], [],
-        [ItemName.KeyItem.TwinkleParkTicket]),
+        [ItemName.KeyItem.TwinkleParkTicket], [ItemName.KeyItem.TwinkleParkTicket], [], []),
     (Character.Sonic, Area.MysticRuinsMain, Area.AngelIsland): (
         [ItemName.KeyItem.Dynamite], [ItemName.KeyItem.Dynamite], [ItemName.KeyItem.Dynamite],
         [ItemName.KeyItem.Dynamite]),
@@ -724,7 +723,8 @@ area_connections: Dict[Tuple[Character, Area, Area], Tuple[List[str], List[str],
         [ItemName.KeyItem.StationFrontKey]),
     (Character.Big, Area.StationSquareMain, Area.Hotel): (
         [ItemName.KeyItem.HotelFrontKey], [ItemName.KeyItem.HotelFrontKey], [ItemName.KeyItem.HotelFrontKey],
-        [ItemName.KeyItem.HotelFrontKey]),
+        [[ItemName.KeyItem.HotelFrontKey],
+         [ItemName.Big.LifeBelt]]),
     (Character.Big, Area.Hotel, Area.StationSquareMain): (
         [ItemName.KeyItem.HotelFrontKey], [ItemName.KeyItem.HotelFrontKey], [ItemName.KeyItem.HotelFrontKey],
         [ItemName.KeyItem.HotelFrontKey]),
@@ -794,7 +794,7 @@ area_connections: Dict[Tuple[Character, Area, Area], Tuple[List[str], List[str],
         [ItemName.KeyItem.HotelFrontKey]),
     (Character.Gamma, Area.Hotel, Area.StationSquareMain): (
         [ItemName.KeyItem.HotelFrontKey], [ItemName.KeyItem.HotelFrontKey],
-        [[ItemName.KeyItem.HotelFrontKey], [ItemName.Gamma.JetBooster]], [ItemName.KeyItem.HotelFrontKey]),
+        [[ItemName.KeyItem.HotelFrontKey], [ItemName.Gamma.JetBooster]], []),
     (Character.Gamma, Area.Station, Area.Casino): (
         [ItemName.KeyItem.StationBackKey], [ItemName.KeyItem.StationBackKey], [ItemName.KeyItem.StationBackKey],
         [ItemName.KeyItem.StationBackKey]),
@@ -802,8 +802,7 @@ area_connections: Dict[Tuple[Character, Area, Area], Tuple[List[str], List[str],
         [ItemName.KeyItem.StationBackKey], [ItemName.KeyItem.StationBackKey], [ItemName.KeyItem.StationBackKey],
         [ItemName.KeyItem.StationBackKey]),
     (Character.Gamma, Area.Hotel, Area.Casino): (
-        [ItemName.KeyItem.HotelBackKey], [ItemName.KeyItem.HotelBackKey], [ItemName.KeyItem.HotelBackKey],
-        [ItemName.KeyItem.HotelBackKey]),
+        [ItemName.KeyItem.HotelBackKey], [ItemName.KeyItem.HotelBackKey], [ItemName.KeyItem.HotelBackKey], []),
     (Character.Gamma, Area.Casino, Area.Hotel): (
         [ItemName.KeyItem.HotelBackKey], [ItemName.KeyItem.HotelBackKey], [ItemName.KeyItem.HotelBackKey],
         [ItemName.KeyItem.HotelBackKey]),
