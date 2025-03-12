@@ -452,8 +452,7 @@ area_connections: Dict[Tuple[Character, Area, Area], Tuple[List[str], List[str],
     (Character.Sonic, Area.StationSquareMain, Area.Station): (
         [ItemName.KeyItem.StationFrontKey], [ItemName.KeyItem.StationFrontKey], [], []),
     (Character.Sonic, Area.Station, Area.StationSquareMain): (
-        [ItemName.KeyItem.StationFrontKey], [ItemName.KeyItem.StationFrontKey], [ItemName.KeyItem.StationFrontKey],
-        [ItemName.KeyItem.StationFrontKey]),
+        [ItemName.KeyItem.StationFrontKey], [ItemName.KeyItem.StationFrontKey], [ItemName.KeyItem.StationFrontKey], []),
     (Character.Sonic, Area.StationSquareMain, Area.Hotel): (
         [ItemName.KeyItem.HotelFrontKey], [ItemName.KeyItem.HotelFrontKey], [], []),
     (Character.Sonic, Area.Hotel, Area.StationSquareMain): (
