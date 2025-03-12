@@ -81,6 +81,7 @@ class GAME_ADDRESSES:
 
     SPECIAL_WEAPONS_ADDRESS = 0x80578068
     SPECIAL_WEAPONS_ADDRESS_APPROVED = 0x80579FC4
+    ADDRESS_LAST_STORY_APPROVED = 0x80579F7C
     CURRENT_WEAPON_ID_ADDRESS = 0x805766F8
     CURRENT_AMMO_ADDRESS = 0x80576700
 
@@ -1612,7 +1613,8 @@ async def check_save_loaded(ctx):
 
         last_way_available_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.ADDRESS_LAST_STORY_OPTION, 1)
         is_last_way_available = int.from_bytes(last_way_available_bytes, byteorder='big')
-        if set_last_way and not ctx.include_last_way_shuffle:
+        if (set_last_way and
+                (not ctx.include_last_way_shuffle or not ctx.story_mode_available)):
             if is_last_way_available != 1:
                 set_to = 1
                 set_last_way_bytes = set_to.to_bytes(1, byteorder='big')
@@ -1630,6 +1632,7 @@ async def check_save_loaded(ctx):
                 set_to = 0
                 set_last_way_bytes = set_to.to_bytes(1, byteorder='big')
                 writeBytes(GAME_ADDRESSES.ADDRESS_LAST_STORY_OPTION, set_last_way_bytes)
+                writeBytes(GAME_ADDRESSES.ADDRESS_LAST_STORY_APPROVED, set_last_way_bytes)
 
         finished = False
 
@@ -3426,7 +3429,7 @@ async def update_level_behaviour(ctx, current_level, death):
                 [c.name for c in GAME_ADDRESSES.CharacterAddresses]
             )
 
-    if not ctx.level_state["characters_set"]:
+    if "characters_set" in ctx.level_state and not ctx.level_state["characters_set"]:
         for character in ctx.characters_met:
             relevantCharData = [c for c in GAME_ADDRESSES.CharacterAddresses if c.name == character]
             if len(relevantCharData) != 0:
