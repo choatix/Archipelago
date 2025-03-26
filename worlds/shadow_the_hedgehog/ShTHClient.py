@@ -13,7 +13,7 @@ from BaseClasses import ItemClassification
 from CommonClient import ClientCommandProcessor, CommonContext, get_base_parser, gui_enabled, logger, server_loop
 from NetUtils import ClientStatus
 from .Options import WeaponsanityHold
-from . import Levels, Items, Locations, Junk, Utils as ShadowUtils, Weapons, Story, BASE_ID
+from . import Levels, Items, Locations, Junk, Utils as ShadowUtils, Weapons, Story, BASE_ID, Objects
 from .Levels import *
 from .Locations import GetStageInformation, GetAlignmentsForStage, \
     GetStageEnemysanityInformation, MissionClearLocations
@@ -108,6 +108,7 @@ class GAME_ADDRESSES:
     EXTRA_SAVE_DATA = 0x805780D0
 
     MENU_ENUM = 0x80583ACC
+    LEVEL_SET_DATA = 0x809AF000
 
     CharacterAddresses = [
         CharacterAddress("Sonic", 0x8057D77B),
@@ -148,6 +149,59 @@ class MenuOptions:
     Story = 0x03
     StoryRecap = 0x05
     Select = 0x06
+
+
+
+
+memory_data = {}
+def ShowSETChanges(current_level):
+    global memory_data
+
+    if current_level is None:
+        memory_data = {}
+        return
+
+    length = Objects.GetSETFileLength(current_level)
+    if length is None or length == 0:
+        return
+
+    start_address = GAME_ADDRESSES.LEVEL_SET_DATA
+    set_item_count = length
+
+    #809AF000 + (2C * (109-1)) + 20
+
+    for i in range(0, set_item_count):
+        spawn_data = start_address  + (0x2C * i) + 0x20
+        object_type = spawn_data + 0x08
+        object_additional_pointer = None
+
+        loaded_bytes = dolphin_memory_engine.read_bytes(spawn_data+3, 1)
+        loaded_spawn_data = int.from_bytes(loaded_bytes, byteorder='big')
+
+        loaded_bytes = dolphin_memory_engine.read_bytes(object_type, 2)
+        loaded_object_type = int.from_bytes(loaded_bytes, byteorder='big')
+
+        if loaded_spawn_data == 0 and loaded_object_type == 0 and spawn_data in memory_data:
+            del memory_data[spawn_data]
+
+        if spawn_data not in memory_data:
+            memory_data[spawn_data] = [None, None]
+
+        last_known = memory_data[spawn_data]
+        last_known_spawn = last_known[0]
+
+        extra_data_pointer = spawn_data + 0x10
+
+        loaded_extra_pointer_bytes = dolphin_memory_engine.read_bytes(extra_data_pointer, 4)
+        loaded_extra_pointer = int.from_bytes(loaded_extra_pointer_bytes, byteorder='big')
+
+        loaded_from_extra_pointer_bytes = dolphin_memory_engine.read_bytes(loaded_extra_pointer, 100)
+
+        if last_known_spawn != loaded_spawn_data:
+            Objects.PrintSETChange(spawn_data, i, loaded_object_type, last_known_spawn, loaded_spawn_data,
+                                   loaded_from_extra_pointer_bytes)
+            memory_data[spawn_data] = [loaded_spawn_data, loaded_object_type]
+
 
 class ShTHCommandProcessor(ClientCommandProcessor):
     def __init__(self, ctx: CommonContext):
@@ -1555,9 +1609,10 @@ async def check_save_loaded(ctx):
 
             if current_status == 1:
                 if first_game_load:
-                    ctx.save_rejected = True
-                    logger.error("Game has preloaded but has clear data. Please start from a new save.")
-                    break
+                    pass
+                    #ctx.save_rejected = True
+                    #logger.error("Game has preloaded but has clear data. Please start from a new save.")
+                    #break
 
                 if time_data[0] == 99 and time_data[1] == 59 and time_data[2] == 99:
                     continue
@@ -2874,6 +2929,180 @@ async def check_junk(ctx, current_level, death):
         set_last_index(ctx, latest_index)
 
 
+async def handle_objects(ctx, current_level):
+
+    if ctx.level_state is None or len(ctx.level_state.keys()) == 0:
+        return
+
+    if "object_status" not in ctx.level_state:
+        ctx.level_state["object_status"] = {}
+
+    relevant_objects = Objects.GetDesirableObjectsForStage(current_level)
+    if relevant_objects is None or len(relevant_objects) == 0:
+        return
+
+    length = Objects.GetSETFileLength(current_level)
+    if length is None or length == 0:
+        return
+
+    force_despawn = 0x04
+    despawn_bytes = force_despawn.to_bytes(1, byteorder='big')
+
+    start_address = GAME_ADDRESSES.LEVEL_SET_DATA
+
+    vehicle_sanity = True
+    shadow_box_sanity = True
+    core_sanity = True
+    door_sanity = True
+
+    for object in relevant_objects:
+        object_index = object.index
+
+        spawn_data = start_address + (0x2C * object_index) + 0x20
+        spawn_base_byte = spawn_data + 0x03
+        object_type = spawn_data + 0x08
+        extra_data_pointer = spawn_data + 0x10
+
+        loaded_bytes = dolphin_memory_engine.read_bytes(spawn_base_byte, 1)
+        loaded_spawn_data = int.from_bytes(loaded_bytes, byteorder='big')
+
+        loaded_bytes = dolphin_memory_engine.read_bytes(object_type, 2)
+        loaded_object_type = int.from_bytes(loaded_bytes, byteorder='big')
+
+        expected_type = Objects.GetTypeId(object.object_type)
+
+        if expected_type is not None and Objects.GetTypeId(object.object_type) != loaded_object_type:
+            print("Failed to read type correctly", Objects.GetTypeId(object.object_type), loaded_object_type)
+
+        loaded_extra_pointer_bytes = dolphin_memory_engine.read_bytes(extra_data_pointer, 4)
+        loaded_extra_pointer = int.from_bytes(loaded_extra_pointer_bytes, byteorder='big')
+
+
+        if object.object_type == Objects.ObjectType.BOMB:
+            if True:
+                if loaded_spawn_data not in (0x00, 0x04):
+                    writeBytes(spawn_base_byte, despawn_bytes)
+
+        elif object.object_type == Objects.ObjectType.STANDARD_PULLEY:
+            if True:
+                if loaded_spawn_data not in (0x00, 0x04):
+                    writeBytes(spawn_base_byte, despawn_bytes)
+
+        elif object.object_type == Objects.ObjectType.ROCKET:
+            if True:
+                if loaded_spawn_data not in (0x00, 0x04):
+                    writeBytes(spawn_base_byte, despawn_bytes)
+
+        elif object.object_type == Objects.ObjectType.WARP_HOLE:
+            if True:
+                if loaded_spawn_data not in (0x00, 0x04):
+                    writeBytes(spawn_base_byte, despawn_bytes)
+
+        elif object.object_type == Objects.ObjectType.BOMB_SERVER:
+            if True:
+                if loaded_spawn_data not in (0x00, 0x04):
+                    writeBytes(spawn_base_byte, despawn_bytes)
+
+        elif object.object_type == Objects.ObjectType.HEAL_UNIT:
+            if True:
+                if loaded_spawn_data not in (0x00, 0x04):
+                    writeBytes(spawn_base_byte, despawn_bytes)
+
+        elif object.object_type == Objects.ObjectType.HEAL_SERVER:
+            if True:
+                if loaded_spawn_data not in (0x00, 0x04):
+                    writeBytes(spawn_base_byte, despawn_bytes)
+
+        elif object.object_type == Objects.ObjectType.LIGHT_DASH_TRAIL:
+            if True:
+                if loaded_spawn_data not in (0x00, 0x04):
+                    writeBytes(spawn_base_byte, despawn_bytes)
+
+        elif object.object_type == Objects.ObjectType.SPACE_PULLEY:
+            if True:
+                if loaded_spawn_data not in (0x00, 0x04):
+                    writeBytes(spawn_base_byte, despawn_bytes)
+
+        elif object.object_type == Objects.ObjectType.GUN_PULLEY:
+            if True:
+                if loaded_spawn_data not in (0x00, 0x04):
+                    writeBytes(spawn_base_byte, despawn_bytes)
+
+        elif object.object_type == Objects.ObjectType.CIRCUS_PULLEY:
+            if True:
+                if loaded_spawn_data not in (0x00, 0x04):
+                    writeBytes(spawn_base_byte, despawn_bytes)
+
+        elif vehicle_sanity and object.object_type == Objects.ObjectType.VEHICLE:
+            despawn = True
+            if object.extra == Objects.ObjectType.ObjectTypeVehicle.GUN_LIFT:
+                despawn = False
+            elif object.extra == Objects.ObjectType.ObjectTypeVehicle.AIR_SAUCER:
+                despawn = True
+            if despawn and loaded_spawn_data not in (0x00, 0x04):
+                writeBytes(spawn_base_byte, despawn_bytes)
+
+        if vehicle_sanity and object.object_type == Objects.ObjectType.LINKED_VEHICLE_ENEMY and \
+                object.extra == Objects.ObjectType.ObjectTypeVehicle.AIR_SAUCER:
+            if True:
+                OnAirSaucerBytesDiff = 0x5C
+                OnAirSaucerBytesAddress = loaded_extra_pointer + OnAirSaucerBytesDiff
+
+                loaded_bytes = dolphin_memory_engine.read_bytes(OnAirSaucerBytesAddress, 4)
+                current_riding_saucer_value = int.from_bytes(loaded_bytes, byteorder='big')
+                not_on_saucer = 0x00
+                if current_riding_saucer_value != not_on_saucer:
+                    not_on_air_saucer_bytes = not_on_saucer.to_bytes(4, byteorder='big')
+                    writeBytes(OnAirSaucerBytesAddress, not_on_air_saucer_bytes)
+
+            pass
+
+        if (shadow_box_sanity and object.object_type == Objects.ObjectType.SHADOW_BOX) or \
+            (core_sanity and object.object_type == Objects.ObjectType.ENERGY_CORE) \
+            :
+            # TODO: Check location status from archi, if already complete, no need to check
+            #
+            arch_location_complete = False
+
+            if object.index in ctx.level_state["object_status"]:
+                object_status = ctx.level_state["object_status"][object.index]
+                if object_status == 0x00:
+                    arch_location_complete = True
+
+            if not arch_location_complete:
+                if loaded_spawn_data == 0x00:
+                    ctx.level_state["object_status"][object.index] = 0x00
+                    print("You completed", object.name)
+
+
+        if door_sanity and object.object_type == Objects.ObjectType.KEY_DOOR:
+            arch_location_complete = False
+
+            # TODO: Consider other options with the door, such as:
+            # Always open
+            # Open on N Key
+            # Open on Global Key
+            # Prevent opening animation
+            # etc.
+
+            door_status_address = spawn_data + 1
+            loaded_bytes = dolphin_memory_engine.read_bytes(door_status_address, 1)
+            current_door_status = int.from_bytes(loaded_bytes, byteorder='big')
+
+            if object.index in ctx.level_state["object_status"]:
+                object_status = ctx.level_state["object_status"][object.index]
+                if object_status == 0x00:
+                    arch_location_complete = True
+
+            if not arch_location_complete:
+                if current_door_status == 0x40:
+                    ctx.level_state["object_status"][object.index] = 0x00
+                    print("You completed", object.name)
+
+
+
+
+
 async def update_level_behaviour(ctx, current_level, death):
     # based on the level
     # work out which addresses to use for checks for each mission objective
@@ -2882,7 +3111,8 @@ async def update_level_behaviour(ctx, current_level, death):
     # Set initial value (to level of value from server)
     # If higher than previous value, recognise as check and reduce by 1
 
-
+    await handle_objects(ctx, current_level)
+    ShowSETChanges(current_level)
 
     # Add handle for first load of level, when state is blank
 
@@ -3633,8 +3863,8 @@ async def dolphin_sync_task(ctx: ShTHContext):
                     check_cheats()
                     if level is not None:
                         await update_level_behaviour(ctx,level, death)
-                    #else:
-                    #    ctx.lives = 0
+                    else:
+                        ShowSETChanges(None)
 
                     await handle_ring_link(ctx, level, death)
 
