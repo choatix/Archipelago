@@ -128,7 +128,7 @@ class ShtHWorld(World):
         for stage in ALL_STAGES:
 
             related_clears = [ c for c in MissionClearLocations if c.stageId == stage]
-            related_es = [ e for e in EnemySanityLocations if e.stageId == stage ]
+            related_es = [ e for e in GetEnemySanityLocations() if e.stageId == stage ]
 
             for clear in related_clears:
                 clear_class = None
@@ -370,6 +370,36 @@ class ShtHWorld(World):
                 if "guaranteed_level_clear" in passthrough:
                     self.options.guaranteed_level_clear = passthrough["guaranteed_level_clear"]
 
+                if "object_unlocks" in passthrough:
+                    self.options.object_unlocks = passthrough["object_unlocks"]
+
+                if "object_pulleys" in passthrough:
+                    self.options.object_pulleys = passthrough["object_pulleys"]
+
+                if "object_ziplines" in passthrough:
+                    self.options.object_zipline = passthrough["object_ziplines"]
+
+                if "object_rockets" in passthrough:
+                    self.options.object_rockets = passthrough["object_rockets"]
+
+                if "object_light_dashes" in passthrough:
+                    self.options.object_light_dashes = passthrough["object_light_dashes"]
+
+                if "object_warp_holes" in passthrough:
+                    self.options.object_warp_holes = passthrough["object_warp_holes"]
+
+                if "shadow_boxes" in passthrough:
+                    self.options.shadow_boxes = passthrough["shadow_boxes"]
+
+                if "energy_cores" in passthrough:
+                    self.options.energy_cores = passthrough["energy_cores"]
+
+                if "door_sanity" in passthrough:
+                    self.options.door_sanity = passthrough["door_sanity"]
+
+                if "gold_beetle_sanity" in passthrough:
+                    self.options.gold_beetle_sanity = passthrough["gold_beetle_sanity"]
+
         # Set maximum of levels required
         # Exclude missions listed in exclude_locations
         maximum_force_missions = self.options.force_objective_sanity_max.value
@@ -435,7 +465,7 @@ class ShtHWorld(World):
                 raise OptionError(f"Stage specific variables uncompletable for stage:{Levels.LEVEL_ID_TO_LEVEL[missionClear.stageId]}"
                                   f"with {max_required_available} and {max_required_completion}")
 
-        for enemy in Locations.EnemySanityLocations:
+        for enemy in Locations.GetEnemySanityLocations():
             max_required_enemy = ShadowUtils.getMaxRequired(
                 ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_ENEMY,
                                                           enemy.mission_object_name, self.options),
@@ -584,7 +614,20 @@ class ShtHWorld(World):
             "boss_logic_level": self.options.boss_logic_level.value,
             "craft_logic_level": self.options.craft_logic_level.value,
             "guaranteed_level_clear": self.options.guaranteed_level_clear.value,
-            "save_value": self.random_value
+            "save_value": self.random_value,
+
+            "object_unlocks": self.options.object_unlocks.value,
+            "object_pulleys": self.options.object_pulleys.value,
+            "object_ziplines": self.options.object_ziplines.value,
+            "object_units": self.options.object_units.value,
+            "object_rockets": self.options.object_rockets.value,
+            "object_light_dashes": self.options.object_light_dashes.value,
+            "object_warp_holes": self.options.object_warp_holes.value,
+            "shadow_boxes": self.options.shadow_boxes.value,
+            "energy_cores": self.options.energy_cores.value,
+            "door_sanity": self.options.door_sanity.value,
+            "gold_beetle_sanity": self.options.gold_beetle_sanity.value
+
 
         }
         return slot_data

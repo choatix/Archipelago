@@ -13,7 +13,7 @@ from BaseClasses import ItemClassification
 from CommonClient import ClientCommandProcessor, CommonContext, get_base_parser, gui_enabled, logger, server_loop
 from NetUtils import ClientStatus
 from .Options import WeaponsanityHold
-from . import Levels, Items, Locations, Junk, Utils as ShadowUtils, Weapons, Story, BASE_ID, Objects
+from . import Levels, Items, Locations, Junk, Utils as ShadowUtils, Weapons, Story, BASE_ID, Objects, Names
 from .Levels import *
 from .Locations import GetStageInformation, GetAlignmentsForStage, \
     GetStageEnemysanityInformation, MissionClearLocations
@@ -170,7 +170,15 @@ def ShowSETChanges(current_level):
 
     #809AF000 + (2C * (109-1)) + 20
 
+    show_known = False
+    known_objects = [ s.index for s in Objects.GetDesirableObjectsForStage(current_level) ]
+
+    new_outputs = []
     for i in range(0, set_item_count):
+
+        if not show_known and i in known_objects:
+            continue
+
         spawn_data = start_address  + (0x2C * i) + 0x20
         object_type = spawn_data + 0x08
         object_additional_pointer = None
@@ -198,12 +206,32 @@ def ShowSETChanges(current_level):
         loaded_from_extra_pointer_bytes = dolphin_memory_engine.read_bytes(loaded_extra_pointer, 100)
 
         if last_known_spawn != loaded_spawn_data:
-            Objects.PrintSETChange(spawn_data, i, loaded_object_type, last_known_spawn, loaded_spawn_data,
+            outputs = Objects.PrintSETChange(spawn_data, i, loaded_object_type, last_known_spawn, loaded_spawn_data,
                                    loaded_from_extra_pointer_bytes)
             memory_data[spawn_data] = [loaded_spawn_data, loaded_object_type]
 
+            new_outputs.extend(outputs)
+
+    if new_outputs is not None and len(new_outputs) > 0:
+        new_outputs = sorted(new_outputs, key=lambda s:
+        #SETObject(ObjectType.BLACK_ASSASSIN, Levels.CURRENT_LEVEL, 24, '8', region=0)
+                             0 if not s.startswith("SETObject") else
+                             int(s.split(" ")[3].replace("'","").replace(",", ""))
+                             )
+
+        for line in new_outputs:
+            logger.info(line)
+
+
+def f1():
+    pass
 
 class ShTHCommandProcessor(ClientCommandProcessor):
+
+    reports = []
+    region = 0
+
+
     def __init__(self, ctx: CommonContext):
         super().__init__(ctx)
 
@@ -211,6 +239,22 @@ class ShTHCommandProcessor(ClientCommandProcessor):
         """Prints the current Dolphin status to the client."""
         if isinstance(self.ctx, ShTHContext):
             logger.info(f"Dolphin Status: {self.ctx.dolphin_status}")
+
+
+    def _cmd_print_report(self):
+        for p in self.reports:
+            print("index=", p[0], "region=", p[1], "counter=", self.reports.index(p))
+
+    def _cmd_region_break(self):
+        self.region += 1
+
+    def _cmd_region_clear(self):
+        self.region = 0
+        self.reports = []
+
+    def _cmd_set_r(self, *args):
+        arguments = self.parse_args(args)
+        self.reports.append((arguments["i"], self.region))
 
 
     def arg_finish(self, build, type, results, value):
@@ -332,7 +376,8 @@ class ShTHCommandProcessor(ClientCommandProcessor):
         (mission_clear_locations, mission_locations, end_location,
          enemysanity_locations, checkpointsanity_locations,
          charactersanity_locations, token_locations, keysanity_locations,
-         weaponsanity_locations, boss_locations, warp_locations) = Locations.GetAllLocationInfo()
+         weaponsanity_locations, boss_locations, warp_locations,
+         object_locations) = Locations.GetAllLocationInfo()
 
         info = Items.GetItemLookupDict()
 
@@ -476,7 +521,7 @@ class ShTHCommandProcessor(ClientCommandProcessor):
                             completed = True
 
         if type == "gun":
-            dark = [ m for m in Locations.EnemySanityLocations if m.stageId == stage
+            dark = [ m for m in Locations.GetEnemySanityLocations() if m.stageId == stage
                   and m.enemyClass == Locations.ENEMY_CLASS_GUN ]
             if len(dark) > 0:
                 dark = dark[0]
@@ -508,7 +553,7 @@ class ShTHCommandProcessor(ClientCommandProcessor):
                     completed = True
 
         if type == "egg":
-            dark = [ m for m in Locations.EnemySanityLocations if m.stageId == stage
+            dark = [ m for m in Locations.GetEnemySanityLocations() if m.stageId == stage
                      and m.enemyClass == Locations.ENEMY_CLASS_EGG ]
             if len(dark) > 0:
                 dark = dark[0]
@@ -541,7 +586,7 @@ class ShTHCommandProcessor(ClientCommandProcessor):
                     completed = True
 
         if type == "alien":
-            dark = [m for m in Locations.EnemySanityLocations if m.stageId == stage
+            dark = [m for m in Locations.GetEnemySanityLocations() if m.stageId == stage
                     and m.enemyClass == Locations.ENEMY_CLASS_ALIEN]
             if len(dark) > 0:
                 dark = dark[0]
@@ -1101,6 +1146,19 @@ class ShTHContext(CommonContext):
         self.save_value = None
         self.save_rejected = False
 
+        self.object_unlocks = False
+        self.object_pulleys = False
+        self.object_ziplines = False
+        self.object_units = False
+        self.object_rockets = False
+        self.object_light_dashes = False
+        self.object_warp_holes = False
+        self.shadow_boxes = False
+        self.energy_cores = False
+        self.door_sanity = False
+        self.gold_beetle_sanity = False
+
+
     async def disconnect(self, allow_autoreconnect: bool = False):
         self.auth = None
         self.current_stage_name = ""
@@ -1186,7 +1244,7 @@ class ShTHContext(CommonContext):
         (mission_clear_locations, mission_locations, end_location, enemy_locations,
             checkpointsanity_locations, charactersanity_locations,
          token_locations, keysanity_locations, weaponsanity_locations, boss_locations,
-         warp_locations) = Locations.GetAllLocationInfo()
+         warp_locations, object_locations) = Locations.GetAllLocationInfo()
 
         if self.character_sanity:
             characters = []
@@ -1350,6 +1408,41 @@ class ShTHContext(CommonContext):
                     logger.fatal("Wrong shadow mod detected")
                     self.invalid_rom = True
                     return
+
+
+
+            if "object_unlocks" in slot_data:
+                self.object_unlocks = slot_data["object_unlocks"]
+
+            if "object_pulleys" in slot_data:
+                self.object_pulleys = slot_data["object_pulleys"]
+
+            if "object_ziplines" in slot_data:
+                self.object_ziplines = slot_data["object_ziplines"]
+
+            if "object_units" in slot_data:
+                self.object_units = slot_data["object_units"]
+
+            if "object_rockets" in slot_data:
+                self.object_rockets = slot_data["object_rockets"]
+
+            if "object_light_dashes" in slot_data:
+                self.object_light_dashes = slot_data["object_light_dashes"]
+
+            if "object_warp_holes" in slot_data:
+                self.object_warp_holes = slot_data["object_warp_holes"]
+
+            if "shadow_boxes" in slot_data:
+                self.shadow_boxes = slot_data["shadow_boxes"]
+
+            if "energy_cores" in slot_data:
+                self.energy_cores = slot_data["energy_cores"]
+
+            if "door_sanity" in slot_data:
+                self.door_sanity = slot_data["door_sanity"]
+
+            if "gold_beetle_sanity" in slot_data:
+                self.gold_beetle_sanity = slot_data["gold_beetle_sanity"]
 
             self.restoreState()
             self.awaiting_server = False
@@ -1558,7 +1651,7 @@ async def check_save_loaded(ctx):
     mission_clear_locations, mission_locations, end_location, enemy_locations,\
         checkpointsanity_locations, charactersanity_locations,\
         token_locations, keysanity_locations, weaponsanity_locations, boss_locations,\
-        warp_locations = Locations.GetAllLocationInfo()
+        warp_locations, object_locations = Locations.GetAllLocationInfo()
 
     random_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.EXTRA_SAVE_DATA, 8)
     loaded_bytes = int.from_bytes(random_bytes, byteorder='big')
@@ -2101,7 +2194,7 @@ def CheckAutoWarps(ctx):
     (clear_locations, mission_locations, end_location,
      enemysanity_locations, checkpointsanity_locations, charactersanity_locations,
      token_locations, keysanity_locations, weaponsanity_locations, boss_locations,
-     warp_locations) = Locations.GetAllLocationInfo()
+     warp_locations, object_locations) = Locations.GetAllLocationInfo()
 
     story = ctx.shuffled_story_mode
     for path in story:
@@ -2157,7 +2250,7 @@ async def check_level_status(ctx):
     (clear_locations, mission_locations, end_location,
      enemysanity_locations, checkpointsanity_locations, charactersanity_locations,
      token_locations, keysanity_locations, weaponsanity_locations, boss_locations,
-     warp_locations) = Locations.GetAllLocationInfo()
+     warp_locations, object_locations) = Locations.GetAllLocationInfo()
 
     # Check mission clears and keys and clear checks from those not known to the server
     info = Items.GetItemLookupDict()
@@ -2523,7 +2616,7 @@ async def check_weapons(ctx, current_level):
     mission_clear_locations, mission_locations, end_location, enemysanity_locations, \
         checkpointsanity_locations, charactersanity_locations, \
         token_locations, keysanity_locations, weaponsanity_locations, boss_locations,\
-        warp_locations = Locations.GetAllLocationInfo()
+        warp_locations, object_locations = Locations.GetAllLocationInfo()
 
     messages = []
 
@@ -2945,16 +3038,56 @@ async def handle_objects(ctx, current_level):
     if length is None or length == 0:
         return
 
+    info = Items.GetItemLookupDict()
+    mission_clear_locations, mission_locations, end_location, enemysanity_locations, \
+        checkpointsanity_locations, charactersanity_locations, \
+        token_locations, keysanity_locations, weaponsanity_locations, boss_locations, \
+        warp_locations, object_locations = Locations.GetAllLocationInfo()
+
     force_despawn = 0x04
+    spawn_inform = 0x01
     despawn_bytes = force_despawn.to_bytes(1, byteorder='big')
+    spawn_bytes = spawn_inform.to_bytes(1, byteorder='big')
 
     start_address = GAME_ADDRESSES.LEVEL_SET_DATA
 
-    vehicle_sanity = True
-    shadow_box_sanity = True
-    core_sanity = True
-    door_sanity = True
+    object_unlocks = ctx.object_unlocks
+    vehicle_sanity = ctx.vehicle_logic
+    shadow_box_sanity = ctx.shadow_boxes
+    core_sanity = ctx.energy_cores
+    beetle_sanity = ctx.gold_beetle_sanity
+    door_sanity = ctx.door_sanity
+    warp_hole_sanity = ctx.object_warp_holes
+    pulley_sanity = ctx.object_pulleys
+    rocket_sanity = ctx.object_rockets
+    unit_sanity = ctx.object_units
+    trail_sanity = ctx.object_light_dashes
+    zip_sanity = ctx.object_ziplines
 
+    # Check whether certain items are unlocked
+
+    allowed_pulley = len([info[unlock[0].item].name for unlock in ctx.items_to_handle if unlock[0].item in info and \
+                       info[unlock[0].item].name == "Pulley"]) > 0
+
+    allowed_zipwire = len([info[unlock[0].item].name for unlock in ctx.items_to_handle if unlock[0].item in info and \
+                       info[unlock[0].item].name == "Zipwire"]) > 0
+
+    allowed_units = len([info[unlock[0].item].name for unlock in ctx.items_to_handle if unlock[0].item in info and \
+                       info[unlock[0].item].name == "Units"]) > 0
+
+    allowed_rockets = len([info[unlock[0].item].name for unlock in ctx.items_to_handle if unlock[0].item in info and \
+                       info[unlock[0].item].name == "Rocket"]) > 0
+
+    allowed_light_dashes = len([info[unlock[0].item].name for unlock in ctx.items_to_handle if unlock[0].item in info and \
+                       info[unlock[0].item].name == "Air Shoes"]) > 0
+
+    allowed_warp_holes = len([info[unlock[0].item].name for unlock in ctx.items_to_handle if unlock[0].item in info and \
+                       info[unlock[0].item].name == "Warp Holes"]) > 0
+
+    allowed_vehicles = [info[unlock[0].item] for unlock in ctx.items_to_handle if unlock[0].item in info and \
+                       info[unlock[0].item].type == "Vehicle"]
+
+    messages = []
     for object in relevant_objects:
         object_index = object.index
 
@@ -2972,111 +3105,226 @@ async def handle_objects(ctx, current_level):
         expected_type = Objects.GetTypeId(object.object_type)
 
         if expected_type is not None and Objects.GetTypeId(object.object_type) != loaded_object_type:
-            print("Failed to read type correctly", Objects.GetTypeId(object.object_type), loaded_object_type)
+            if loaded_object_type == 0x00:
+                break
+            print("Failed to read type correctly", Objects.GetTypeId(object.object_type), loaded_object_type,
+                  expected_type, object.index)
 
         loaded_extra_pointer_bytes = dolphin_memory_engine.read_bytes(extra_data_pointer, 4)
         loaded_extra_pointer = int.from_bytes(loaded_extra_pointer_bytes, byteorder='big')
 
+        despawn = False
+        spawn = False
 
         if object.object_type == Objects.ObjectType.BOMB:
-            if True:
-                if loaded_spawn_data not in (0x00, 0x04):
-                    writeBytes(spawn_base_byte, despawn_bytes)
+            if object_unlocks and unit_sanity and not allowed_units:
+                despawn = True
+                spawn = False
 
         elif object.object_type == Objects.ObjectType.STANDARD_PULLEY:
-            if True:
-                if loaded_spawn_data not in (0x00, 0x04):
-                    writeBytes(spawn_base_byte, despawn_bytes)
+            if object_unlocks and pulley_sanity and not allowed_pulley:
+                despawn = True
+                spawn = True
 
         elif object.object_type == Objects.ObjectType.ROCKET:
-            if True:
-                if loaded_spawn_data not in (0x00, 0x04):
-                    writeBytes(spawn_base_byte, despawn_bytes)
+            if object_unlocks and rocket_sanity and not allowed_rockets:
+                despawn = True
+                spawn = True
 
         elif object.object_type == Objects.ObjectType.WARP_HOLE:
-            if True:
-                if loaded_spawn_data not in (0x00, 0x04):
-                    writeBytes(spawn_base_byte, despawn_bytes)
+            if object_unlocks and warp_hole_sanity and not allowed_warp_holes:
+                despawn = True
+                spawn = True
 
         elif object.object_type == Objects.ObjectType.BOMB_SERVER:
-            if True:
-                if loaded_spawn_data not in (0x00, 0x04):
-                    writeBytes(spawn_base_byte, despawn_bytes)
+            if object_unlocks and unit_sanity and not allowed_units:
+                despawn = True
+                spawn = True
 
         elif object.object_type == Objects.ObjectType.HEAL_UNIT:
-            if True:
-                if loaded_spawn_data not in (0x00, 0x04):
-                    writeBytes(spawn_base_byte, despawn_bytes)
+            if object_unlocks and unit_sanity and not allowed_units:
+                despawn = True
+                spawn = False
 
         elif object.object_type == Objects.ObjectType.HEAL_SERVER:
-            if True:
-                if loaded_spawn_data not in (0x00, 0x04):
-                    writeBytes(spawn_base_byte, despawn_bytes)
+            if object_unlocks and unit_sanity and not allowed_units:
+                despawn = True
+                spawn = True
 
         elif object.object_type == Objects.ObjectType.LIGHT_DASH_TRAIL:
-            if True:
-                if loaded_spawn_data not in (0x00, 0x04):
-                    writeBytes(spawn_base_byte, despawn_bytes)
+            if object_unlocks and trail_sanity and not allowed_light_dashes:
+                despawn = True
+                spawn = True
 
-        elif object.object_type == Objects.ObjectType.SPACE_PULLEY:
-            if True:
-                if loaded_spawn_data not in (0x00, 0x04):
-                    writeBytes(spawn_base_byte, despawn_bytes)
+        elif object.object_type == Objects.ObjectType.SPACE_ZIPWIRE:
+            if object_unlocks and zip_sanity and not allowed_zipwire:
+                despawn = False
+                spawn = True
 
-        elif object.object_type == Objects.ObjectType.GUN_PULLEY:
-            if True:
-                if loaded_spawn_data not in (0x00, 0x04):
-                    writeBytes(spawn_base_byte, despawn_bytes)
+        elif object.object_type == Objects.ObjectType.GUN_ZIPWIRE:
+            if object_unlocks and zip_sanity and not allowed_zipwire:
+                despawn = True
+                spawn = True
 
-        elif object.object_type == Objects.ObjectType.CIRCUS_PULLEY:
-            if True:
-                if loaded_spawn_data not in (0x00, 0x04):
-                    writeBytes(spawn_base_byte, despawn_bytes)
+        elif object.object_type == Objects.ObjectType.CIRCUS_ZIPWIRE:
+            if object_unlocks and zip_sanity and not allowed_zipwire:
+                despawn = True
+                spawn = True
+
+        elif object.object_type == Objects.ObjectType.BALLOON_ZIPWIRE:
+            if object_unlocks and zip_sanity and not allowed_zipwire:
+                despawn = True
+                spawn = True
 
         elif vehicle_sanity and object.object_type == Objects.ObjectType.VEHICLE:
-            despawn = True
-            if object.extra == Objects.ObjectType.ObjectTypeVehicle.GUN_LIFT:
-                despawn = False
-            elif object.extra == Objects.ObjectType.ObjectTypeVehicle.AIR_SAUCER:
-                despawn = True
-            if despawn and loaded_spawn_data not in (0x00, 0x04):
-                writeBytes(spawn_base_byte, despawn_bytes)
+            spawn = True
+            if object.vehicle == Objects.ObjectType.ObjectTypeVehicle.GUN_LIFT:
+                despawn = len([ x for x in allowed_vehicles if x.name == Names.GetNameForVehicle("Gun Lift") ]) == 0
+            elif object.vehicle == Objects.ObjectType.ObjectTypeVehicle.AIR_SAUCER:
+                despawn = len([ x for x in allowed_vehicles if x.name == Names.GetNameForVehicle("Air Saucer") ]) == 0
+            elif object.vehicle == Objects.ObjectType.ObjectTypeVehicle.ARMORED_CAR:
+                despawn = len([ x for x in allowed_vehicles if x.name == Names.GetNameForVehicle("Armored Car") ]) == 0
+            elif object.vehicle == Objects.ObjectType.ObjectTypeVehicle.BLACK_VOLT:
+                despawn = len([ x for x in allowed_vehicles if x.name == Names.GetNameForVehicle("Black Volt") ]) == 0
+            elif object.vehicle == Objects.ObjectType.ObjectTypeVehicle.BLACK_TURRET:
+                despawn = len([ x for x in allowed_vehicles if x.name == Names.GetNameForVehicle("Black Turret") ]) == 0
+            elif object.vehicle == Objects.ObjectType.ObjectTypeVehicle.CONVERTIBLE:
+                despawn = len([ x for x in allowed_vehicles if x.name == Names.GetNameForVehicle("Convertible") ]) == 0
+            elif object.vehicle == Objects.ObjectType.ObjectTypeVehicle.GUN_CANNON:
+                despawn = len([ x for x in allowed_vehicles if x.name == Names.GetNameForVehicle("Gun Cannon") ]) == 0
+            elif object.vehicle == Objects.ObjectType.ObjectTypeVehicle.GUN_JUMPER:
+                despawn = len([ x for x in allowed_vehicles if x.name == Names.GetNameForVehicle("Gun Jumper") ]) == 0
+            elif object.vehicle == Objects.ObjectType.ObjectTypeVehicle.GUN_MOTORCYCLE:
+                despawn = len([ x for x in allowed_vehicles if x.name == Names.GetNameForVehicle("Gun Motorcycle") ]) == 0
+            elif object.vehicle == Objects.ObjectType.ObjectTypeVehicle.GUN_TURRET:
+                despawn = len([ x for x in allowed_vehicles if x.name == Names.GetNameForVehicle("Gun Turret") ]) == 0
+            elif object.vehicle == Objects.ObjectType.ObjectTypeVehicle.STANDARD_CAR:
+                despawn = len([ x for x in allowed_vehicles if x.name == Names.GetNameForVehicle("Standard Car") ]) == 0
 
-        if vehicle_sanity and object.object_type == Objects.ObjectType.LINKED_VEHICLE_ENEMY and \
-                object.extra == Objects.ObjectType.ObjectTypeVehicle.AIR_SAUCER:
-            if True:
-                OnAirSaucerBytesDiff = 0x5C
-                OnAirSaucerBytesAddress = loaded_extra_pointer + OnAirSaucerBytesDiff
+        elif vehicle_sanity and object.object_type == Objects.ObjectType.BLACK_WARRIOR and \
+                object.vehicle == Objects.ObjectType.ObjectTypeVehicle.AIR_SAUCER:
+            OnAirSaucerBytesDiff = 0x5C
+            OnAirSaucerBytesAddress = loaded_extra_pointer + OnAirSaucerBytesDiff
 
-                loaded_bytes = dolphin_memory_engine.read_bytes(OnAirSaucerBytesAddress, 4)
-                current_riding_saucer_value = int.from_bytes(loaded_bytes, byteorder='big')
-                not_on_saucer = 0x00
+            loaded_bytes = dolphin_memory_engine.read_bytes(OnAirSaucerBytesAddress, 4)
+            current_riding_saucer_value = int.from_bytes(loaded_bytes, byteorder='big')
+            not_on_saucer = 0x00
+            on_saucer = 0x01
+            if len([ x for x in allowed_vehicles if x.name == Names.GetNameForVehicle("Air Saucer") ]) == 0:
                 if current_riding_saucer_value != not_on_saucer:
                     not_on_air_saucer_bytes = not_on_saucer.to_bytes(4, byteorder='big')
                     writeBytes(OnAirSaucerBytesAddress, not_on_air_saucer_bytes)
+            else:
+                if current_riding_saucer_value != on_saucer:
+                    on_air_saucer_bytes = on_saucer.to_bytes(4, byteorder='big')
+                    writeBytes(OnAirSaucerBytesAddress, on_air_saucer_bytes)
 
-            pass
+        elif vehicle_sanity and object.object_type == Objects.ObjectType.BLACK_VOLT and \
+                object.vehicle == Objects.ObjectType.ObjectTypeVehicle.BLACK_VOLT:
+            OnAirSaucerBytesDiff = 0x38
+            OnAirSaucerBytesAddress = loaded_extra_pointer + OnAirSaucerBytesDiff
+
+            loaded_bytes = dolphin_memory_engine.read_bytes(OnAirSaucerBytesAddress, 4)
+            current_riding_saucer_value = int.from_bytes(loaded_bytes, byteorder='big')
+            black_volt_despawn_on_kill = 0x10
+            black_volt_rideable_on_kill = 0x11
+
+            if len([ x for x in allowed_vehicles if x.name == Names.GetNameForVehicle("Black Volt") ]) == 0:
+                if current_riding_saucer_value != black_volt_despawn_on_kill:
+                    despawn_on_kill_bytes = black_volt_despawn_on_kill.to_bytes(4, byteorder='big')
+                    writeBytes(OnAirSaucerBytesAddress, despawn_on_kill_bytes)
+            else:
+                if current_riding_saucer_value != black_volt_rideable_on_kill:
+                    spawn_on_kill_bytes = black_volt_rideable_on_kill.to_bytes(4, byteorder='big')
+                    writeBytes(OnAirSaucerBytesAddress, spawn_on_kill_bytes)
+
+        elif vehicle_sanity and object.object_type == Objects.ObjectType.BLACK_HAWK and \
+                object.vehicle == Objects.ObjectType.ObjectTypeVehicle.BLACK_HAWK:
+
+            OnAirSaucerBytesDiff = 0x38
+            OnAirSaucerBytesAddress = loaded_extra_pointer + OnAirSaucerBytesDiff
+
+            loaded_bytes = dolphin_memory_engine.read_bytes(OnAirSaucerBytesAddress, 4)
+            current_riding_saucer_value = int.from_bytes(loaded_bytes, byteorder='big')
+            black_hawk_despawn_on_kill = 0x00
+            black_hawk_rideable_on_kill = 0x01
+
+            if len([ x for x in allowed_vehicles if x.name == Names.GetNameForVehicle("Black Hawk") ]) == 0:
+                if current_riding_saucer_value != black_hawk_despawn_on_kill:
+                    despawn_on_kill_bytes = black_hawk_despawn_on_kill.to_bytes(4, byteorder='big')
+                    writeBytes(OnAirSaucerBytesAddress, despawn_on_kill_bytes)
+            elif True:
+                if current_riding_saucer_value != black_hawk_rideable_on_kill:
+                    spawn_on_kill_bytes = black_hawk_rideable_on_kill.to_bytes(4, byteorder='big')
+                    writeBytes(OnAirSaucerBytesAddress, spawn_on_kill_bytes)
+
+        elif vehicle_sanity and object.object_type == Objects.ObjectType.BLACK_ASSASSIN and \
+                object.vehicle == Objects.ObjectType.ObjectTypeVehicle.AIR_SAUCER:
+            OnAirSaucerBytesDiff = 0x1C
+            OnAirSaucerBytesAddress = loaded_extra_pointer + OnAirSaucerBytesDiff
+
+            loaded_bytes = dolphin_memory_engine.read_bytes(OnAirSaucerBytesAddress, 4)
+            current_riding_saucer_value = int.from_bytes(loaded_bytes, byteorder='big')
+            appear_type_warp = 0x02
+            appear_type_warp_saucer = 0x03
+            if len([ x for x in allowed_vehicles if x.name == Names.GetNameForVehicle("Air Saucer") ]) == 0:
+                if current_riding_saucer_value != appear_type_warp:
+                    not_on_air_saucer_bytes = appear_type_warp.to_bytes(4, byteorder='big')
+                    writeBytes(OnAirSaucerBytesAddress, not_on_air_saucer_bytes)
+            elif True:
+                if current_riding_saucer_value != appear_type_warp_saucer:
+                    on_air_saucer_bytes = appear_type_warp_saucer.to_bytes(4, byteorder='big')
+                    writeBytes(OnAirSaucerBytesAddress, on_air_saucer_bytes)
+
+        if despawn and loaded_spawn_data not in (0x00, 0x04):
+            writeBytes(spawn_base_byte, despawn_bytes)
+
+        if not despawn and spawn and loaded_spawn_data in (0x00, 0x04):
+            writeBytes(spawn_base_byte, spawn_bytes)
 
         if (shadow_box_sanity and object.object_type == Objects.ObjectType.SHADOW_BOX) or \
-            (core_sanity and object.object_type == Objects.ObjectType.ENERGY_CORE) \
+            (core_sanity and object.object_type == Objects.ObjectType.ENERGY_CORE) or \
+                (beetle_sanity and object.object_type == Objects.ObjectType.GOLD_BEETLE) \
             :
             # TODO: Check location status from archi, if already complete, no need to check
             #
-            arch_location_complete = False
+
+
+
+            expected_object_id, expected_object_name = Names.GetObjectLocationName(object)
+
+            related_locations = [l.locationId for l in object_locations if
+                                 l.name == expected_object_name]
+
+            arch_location_complete = len([l for l in related_locations if
+                                          l not in ctx.handled
+                                          and l not in ctx.checked_locations]) == 0
+
+            if object.object_type == Objects.ObjectType.SHADOW_BOX and object.index == 465:
+                print("Box?", object.index, loaded_spawn_data, related_locations, arch_location_complete)
 
             if object.index in ctx.level_state["object_status"]:
                 object_status = ctx.level_state["object_status"][object.index]
                 if object_status == 0x00:
+                    print("RecoBox?", object.index, loaded_spawn_data, related_locations)
                     arch_location_complete = True
 
             if not arch_location_complete:
                 if loaded_spawn_data == 0x00:
+                    print("NewBox?", object.index, loaded_spawn_data, related_locations)
                     ctx.level_state["object_status"][object.index] = 0x00
-                    print("You completed", object.name)
+                    messages.extend(related_locations)
 
 
         if door_sanity and object.object_type == Objects.ObjectType.KEY_DOOR:
-            arch_location_complete = False
+            expected_object_id, expected_object_name = Names.GetObjectLocationName(object)
+
+            related_locations = [l.locationId for l in object_locations if
+                            l.name == expected_object_name ]
+
+            arch_location_complete = len([ l for l in related_locations if
+                                           l not in ctx.handled
+                                           and l not in ctx.checked_locations]) == 0
 
             # TODO: Consider other options with the door, such as:
             # Always open
@@ -3097,10 +3345,12 @@ async def handle_objects(ctx, current_level):
             if not arch_location_complete:
                 if current_door_status == 0x40:
                     ctx.level_state["object_status"][object.index] = 0x00
-                    print("You completed", object.name)
+                    messages.extend(related_locations)
 
-
-
+    if len(messages) > 0:
+        # ctx.locations_checked = messages
+        message = [{"cmd": 'LocationChecks', "locations": messages}]
+        await ctx.send_msgs(message)
 
 
 async def update_level_behaviour(ctx, current_level, death):
@@ -3112,7 +3362,7 @@ async def update_level_behaviour(ctx, current_level, death):
     # If higher than previous value, recognise as check and reduce by 1
 
     await handle_objects(ctx, current_level)
-    ShowSETChanges(current_level)
+    # ShowSETChanges(current_level)
 
     # Add handle for first load of level, when state is blank
 
@@ -3120,7 +3370,7 @@ async def update_level_behaviour(ctx, current_level, death):
     mission_clear_locations, mission_locations, end_location, enemysanity_locations,\
         checkpointsanity_locations, charactersanity_locations,\
         token_locations, keysanity_locations, weaponsanity_locations, boss_locations,\
-        warp_locations = Locations.GetAllLocationInfo()
+        warp_locations, object_locations = Locations.GetAllLocationInfo()
 
     handle_count = 0
 

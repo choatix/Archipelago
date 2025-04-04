@@ -25,6 +25,7 @@ def get_max_stage_region_id(level_id: int, key: bool = True) -> str:
     region_name = "REGION_" + level_name + "_" + str(region_id)
     return region_name
 
+
 def character_name_to_region(name):
     return "REGION_" + name
 

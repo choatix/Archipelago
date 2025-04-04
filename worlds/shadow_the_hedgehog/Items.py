@@ -8,17 +8,18 @@ from typing import List, Optional
 
 from BaseClasses import Item, ItemClassification
 from worlds.AutoWorld import World
-from . import Locations, Weapons, Vehicle, Utils as ShadowUtils, Options, Levels
+from . import Weapons, Vehicle, Utils as ShadowUtils, Options, Levels
 from .Levels import LEVEL_ID_TO_LEVEL, ALL_STAGES, MISSION_ALIGNMENT_DARK, \
     MISSION_ALIGNMENT_HERO, MISSION_ALIGNMENT_NEUTRAL, ITEM_TOKEN_TYPE_STANDARD, ITEM_TOKEN_TYPE_FINAL, \
-    ITEM_TOKEN_TYPE_OBJECTIVE, ITEM_TOKEN_TYPE_ALIGNMENT, BOSS_STAGES, LAST_STORY_STAGES, ITEM_TOKEN_TYPE_BOSS, \
+    ITEM_TOKEN_TYPE_OBJECTIVE, ITEM_TOKEN_TYPE_ALIGNMENT, ITEM_TOKEN_TYPE_BOSS, \
     ITEM_TOKEN_TYPE_FINAL_BOSS
-from .Locations import MissionClearLocations, GetAlignmentsForStage
+from .Locations import MissionClearLocations, GetAlignmentsForStage,count_locations
 
 BASE_ID = 1743800000
 ITEM_ID_START_AT_WEAPONS = 2000
 ITEM_ID_START_AT_VEHICLES = 2500
 ITEM_ID_START_AT_RIFLE = 2600
+ITEM_ID_START_AT_OBJECTS = 2700
 ITEM_ID_START_AT_JUNK = 3000
 ITEM_ID_START_AT_MISSION = 1000
 ITEM_ID_START_AT_IMPORTANT = 10
@@ -438,10 +439,11 @@ def GetAllItemInfo():
     vehicle_items = GetVehicles()
 
     rifle_components = GetRifleComponents()
+    object_items = GetObjectItems()
 
     return (emerald_items, key_items, level_unlock_items, stage_objective_items, junk_items,
             token_items, weapon_items, vehicle_items, level_warp_items, rifle_components,
-            weapon_group_items)
+            weapon_group_items, object_items)
 
 useful_to_count = {
     "Egg Vacuum": 2,
@@ -486,7 +488,7 @@ def ChooseJunkItems(random, junk, options, junk_count):
 def CountItems(world: World):
     (emerald_items, key_items, level_unlock_items, stage_objective_items_x,
      junk_items, token_items, weapon_items, vehicle_items, warp_items, rifle_components,
-     weapon_group_items) = GetAllItemInfo()
+     weapon_group_items, object_items) = GetAllItemInfo()
 
     if not world.options.objective_sanity:
         stage_objective_items_x = []
@@ -545,6 +547,20 @@ def CountItems(world: World):
     if world.options.vehicle_logic:
         item_count = increment_item_count(item_count, len(vehicle_items))
 
+    if world.options.object_unlocks:
+        if world.options.object_pulleys:
+            item_count += 1
+        if world.options.object_ziplines:
+            item_count += 1
+        if world.options.object_units:
+            item_count += 1
+        if world.options.object_rockets:
+            item_count += 1
+        if world.options.object_light_dashes:
+            item_count += 1
+        if world.options.object_warp_holes:
+            item_count += 1
+
     return item_count
 
 def GetPotentialDowngradeItems(world, mw_stage_items=None):
@@ -553,7 +569,7 @@ def GetPotentialDowngradeItems(world, mw_stage_items=None):
     if mw_stage_items is None:
         (emerald_items, key_items, level_unlock_items, stage_objective_items,
          junk_items, token_items, weapon_items, vehicle_items, warp_items, rifle_components,
-         weapon_group_items) = GetAllItemInfo()
+         weapon_group_items, object_items) = GetAllItemInfo()
 
         # Handle available
 
@@ -595,7 +611,7 @@ def GetPotentialDowngradeItems(world, mw_stage_items=None):
 def GetShadowRifle():
     (emerald_items, key_items, level_unlock_items, stage_objective_items,
      junk_items, token_items, weapon_items, vehicle_items, warp_items, rifle_components,
-     weapon_group_items) = GetAllItemInfo()
+     weapon_group_items, object_items) = GetAllItemInfo()
 
     return [ w for w in weapon_items if w.name == 'Shadow Rifle' or w.name == 'Weapon:Shadow Rifle' ][0]
 
@@ -629,11 +645,28 @@ def increment_item_count(count, plus):
     return count + plus
 
 
+
+def GetObjectItems():
+    id_s = ITEM_ID_START_AT_OBJECTS
+    object_items = [
+
+    ItemInfo(id_s, "Pulley", ItemClassification.progression, None, None, "Object", None),
+    ItemInfo(id_s+1, "Air Shoes", ItemClassification.progression, None, None, "Object", None),
+    ItemInfo(id_s+2, "Rocket", ItemClassification.progression, None, None, "Object", None),
+    ItemInfo(id_s+3, "Zipwire", ItemClassification.progression, None, None, "Object", None),
+    ItemInfo(id_s+4, "Units", ItemClassification.progression, None, None, "Object", None),
+    ItemInfo(id_s+5, "Warp Holes", ItemClassification.progression, None, None, "Object", None)
+
+    ]
+
+    return object_items
+
+
 def PopulateItemPool(world : World, first_regions):
     # TODO: Do not add item for stages you start with
     (emerald_items, key_items, level_unlock_items, stage_objective_items,
      junk_items, token_items, weapon_items, vehicle_items, warp_items, rifle_components,
-     weapon_group_items) = GetAllItemInfo()
+     weapon_group_items, object_items) = GetAllItemInfo()
 
     if not world.options.objective_sanity:
         stage_objective_items = []
@@ -750,7 +783,40 @@ def PopulateItemPool(world : World, first_regions):
     if world.options.vehicle_logic:
         item_count = increment_item_count(item_count, len(mw_vehicle_items))
 
-    location_count = Locations.count_locations(world)
+    mw_object_items = []
+    if world.options.object_unlocks:
+        if world.options.object_pulleys:
+            mw_object_items.append(ShadowTheHedgehogItem
+                                   ([o for o in object_items if o.name == "Pulley"]
+                                    [0], world.player))
+            item_count += 1
+        if world.options.object_ziplines:
+            mw_object_items.append(ShadowTheHedgehogItem
+                                   ([o for o in object_items if o.name == "Zipwire"]
+                                    [0], world.player))
+            item_count += 1
+        if world.options.object_units:
+            mw_object_items.append(ShadowTheHedgehogItem
+                                   ([o for o in object_items if o.name == "Units"]
+                                    [0], world.player))
+            item_count += 1
+        if world.options.object_rockets:
+            mw_object_items.append(ShadowTheHedgehogItem
+                                   ([o for o in object_items if o.name == "Rocket"]
+                                    [0], world.player))
+            item_count += 1
+        if world.options.object_light_dashes:
+            mw_object_items.append(ShadowTheHedgehogItem
+                                   ([o for o in object_items if o.name == "Air Shoes"]
+                                    [0], world.player))
+            item_count += 1
+        if world.options.object_warp_holes:
+            mw_object_items.append(ShadowTheHedgehogItem
+                                   ([o for o in object_items if o.name == "Warp Holes"]
+                                    [0], world.player))
+            item_count += 1
+
+    location_count = count_locations(world)
 
     mw_useful_items = []
     junk_but_useful = [ j for j in junk_items if j.classification == ItemClassification.useful ]
@@ -778,10 +844,14 @@ def PopulateItemPool(world : World, first_regions):
     if world.options.vehicle_logic:
         world.multiworld.itempool += mw_vehicle_items
 
+    if world.options.object_unlocks:
+        world.multiworld.itempool += mw_object_items
+        pass
+
 def get_item_groups():
     (emerald_items, key_items, level_unlock_items, stage_objective_items,
      junk_items, token_items, weapon_items, vehicle_items, warp_items, rifle_components,
-     weapon_group_items) = GetAllItemInfo()
+     weapon_group_items, object_items) = GetAllItemInfo()
 
     item_groups: typing.Dict[str, list] = {
         "Chaos Emeralds": [ e.name for e in emerald_items],

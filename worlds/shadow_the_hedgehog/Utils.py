@@ -3,7 +3,7 @@ from typing import Tuple
 
 from . import Levels, Locations
 
-VERSION: Tuple[int, int, int] = (0, 1, 5)
+VERSION: Tuple[int, int, int] = (0, 2, 0)
 
 TYPE_ID_ENEMY = 0
 TYPE_ID_OBJECTIVE = 1
@@ -154,16 +154,16 @@ def getObjectiveTypeAndPercentage(base_objective_type, item_name, options):
         round_method = floor
 
     if base_objective_type == TYPE_ID_ENEMY_FREQUENCY:
-        percentage = options.enemy_frequency
+        percentage = 100 / options.enemy_frequency
         round_method = floor
 
     if base_objective_type == TYPE_ID_OBJECTIVE_FREQUENCY:
         if isEnemyObjectiveLocation(item_name):
             base_objective_type = TYPE_ID_OBJECTIVE_ENEMY_FREQUENCY
-            percentage = options.enemy_objective_frequency
+            percentage = 100 / options.enemy_objective_frequency
             round_method = floor
         else:
-            percentage = options.objective_frequency
+            percentage = 100 / options.objective_frequency
             round_method = floor
 
     return base_objective_type, percentage, round_method

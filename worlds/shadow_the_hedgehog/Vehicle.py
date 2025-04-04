@@ -1,5 +1,8 @@
 from dataclasses import dataclass
 
+from worlds.shadow_the_hedgehog import Items, Names
+
+
 @dataclass
 class VehicleInfo:
     game_id: int
@@ -8,7 +11,7 @@ class VehicleInfo:
 
     def __init__(self, id, name, stages):
         self.game_id = id
-        self.name = "Vehicle: " +name
+        self.name = Names.GetNameForVehicle(name)
         self.available_stages = stages
 
 VEHICLE_INFO = \
@@ -43,7 +46,7 @@ def GetRuleByVehicleRequirement(player, req):
     #    else:
     #        regions = p_regions
 
-    matches = [ v for v in VEHICLE_INFO if req == v.name or "Vehicle: "+req == v.name ]
+    matches = [ v for v in VEHICLE_INFO if Names.GetNameForVehicle(req) == v.name ]
 
     if len(matches) == 0:
         print("Something wrong here with", req, [ v.name for v in VEHICLE_INFO])

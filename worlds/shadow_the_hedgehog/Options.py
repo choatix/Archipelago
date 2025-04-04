@@ -155,9 +155,7 @@ class Keysanity(Toggle):
     """
     display_name = "Key Sanity"
 
-class Doorsanity(Toggle):
-    """Determines whether key door sanity is enabled."""
-    display_name = "Door Sanity"
+
 
 class Checkpointsanity(DefaultOnToggle):
     """
@@ -194,7 +192,7 @@ class WeaponsanityHold(Choice):
     default = 0
 
 class VehicleLogic(Toggle):
-    """Determines if vehicle logic is active. Does not currently affect gameplay."""
+    """Determines if vehicle logic is active. Vehicles will not be avialable for use until found."""
     display_name = "Vehicle Logic"
 
 class GaugeFiller(DefaultOnToggle):
@@ -458,7 +456,7 @@ class ObjectiveFrequency(Range):
     """
     display_name = "Objective Frequency"
     range_start = 1
-    range_end = 100
+    range_end = 10
     default = 100
 
 class EnemyObjectiveFrequency(Range):
@@ -467,7 +465,7 @@ class EnemyObjectiveFrequency(Range):
     """
     display_name = "Enemy Objective Frequency"
     range_start = 1
-    range_end = 100
+    range_end = 10
     default = 100
 
 class EnemyFrequency(Range):
@@ -476,7 +474,7 @@ class EnemyFrequency(Range):
     """
     display_name = "Enemy Frequency"
     range_start = 1
-    range_end = 100
+    range_end = 10
     default = 100
 
 class MinimumRank(Choice):
@@ -511,6 +509,71 @@ class ShadowMod(Choice):
     option_reloaded = "Reloaded"
     option_sx = "SX"
     default = option_vanilla
+
+
+class ObjectUnlocks(Toggle):
+    """
+    Overarching setting to enable/disable very object options.
+    """
+    display_name = "Object Unlocks"
+
+class ObjectPulleys(Toggle):
+    """
+        Whether pulleys need to be unlocked before they can be used.
+    """
+    display_name = "Objects: Pulleys"
+
+class ObjectZiplines(Toggle):
+    """
+        Whether ziplines need to be unlocked before they can be used.
+    """
+    display_name = "Objects: Ziplines"
+
+class ObjectUnits(Toggle):
+    """
+        Whether heal units and bombs, as associated servers need to be unlocked before they can be used.
+    """
+    display_name = "Objects: Units"
+
+class ObjectRockets(Toggle):
+    """
+        Whether rockets need to be unlocked before they can be used.
+    """
+    display_name = "Objects: Rockets"
+
+class ObjectLightDashes(Toggle):
+    """
+        Whether light dash trails of rings need to be unlocked before they can be used.
+    """
+    display_name = "Objects: Light Dashes"
+
+class ObjectWarpHoles(Toggle):
+    """
+        Whether warp holes need to be unlocked before they can be used.
+    """
+    display_name = "Objects: Warp Holes"
+
+class ShadowBoxes(Toggle):
+    """
+        Whether or not Special Weapon Boxes (Shadow crates) reward a check.
+    """
+    display_name = "Shadow Boxes"
+
+class GoldBeetleSanity(Toggle):
+    """
+        Whether or not Golden Beetles reward checks.
+    """
+    display_name = "Gold Beetle Sanity"
+
+class DoorSanity(Toggle):
+    """Determines whether key door sanity is enabled, i.e. opening the key door provides a check."""
+    display_name = "Door Sanity"
+
+class EnergyCores(Toggle):
+    """
+        Whether or not energy cores (Hero/Dark cores) reward a check.
+    """
+    display_name = "Energy Cores"
 
 @dataclass
 class ShadowTheHedgehogOptions(PerGameCommonOptions):
@@ -574,6 +637,17 @@ class ShadowTheHedgehogOptions(PerGameCommonOptions):
     weapon_groups: WeaponGroups
     story_progression_balancing: StoryProgressionBalancing
     shadow_mod: ShadowMod
+    object_unlocks: ObjectUnlocks
+    object_pulleys: ObjectPulleys
+    object_ziplines: ObjectZiplines
+    object_units: ObjectUnits
+    object_rockets: ObjectRockets
+    object_light_dashes: ObjectLightDashes
+    object_warp_holes: ObjectWarpHoles
+    shadow_boxes: ShadowBoxes
+    energy_cores: EnergyCores
+    door_sanity: DoorSanity
+    gold_beetle_sanity: GoldBeetleSanity
 
 shadow_option_groups = [
     OptionGroup("Goal",
