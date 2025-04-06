@@ -244,6 +244,19 @@ def lock_warp_items(multiworld, world, player):
         location.place_locked_item(
             mw_token_item)
 
+def CountRegionAccessibility(state, keys, data, ix):
+    #sum(
+    #    [data[r] for r in GetReachableRegions(state, keys) if r in keys]) >= ix)
+
+    keys = list(keys)
+    all_regions = []
+    for cycle,regions in state.reachable_regions.items():
+        all_regions.extend([ r.name for r in regions])
+
+    matching_counts = [ data[r] for r in all_regions if r in keys]
+    total_accessible = sum(matching_counts)
+
+    return total_accessible >= ix
 
 def set_rules(multiworld: MultiWorld, world: World, player: int):
 
@@ -292,10 +305,10 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
 
         id, name = Levels.GetLevelCompletionNames(clear.stageId, clear.alignmentId)
         try:
+            req_rule = lambda state: True
             level_rule = lambda state: True
             rule_change = False
 
-            req_rule = lambda state: True
             if clear.requirements is not None:
                 for req in clear.requirements:
                     lr = LevelRegion(clear.stageId, None, req)
@@ -303,11 +316,14 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
 
                     logic_type = REGION_RESTRICTION_REFERENCE_TYPES.BaseLogic
 
-                    req_rule = handle_path_rules(world.options, player, lr,
+                    req_rule_a = handle_path_rules(world.options, player, lr,
                                                  logic_type)
-                    if req_rule is not None:
+                    if req_rule_a is not None:
+                        req_rule = lambda state, z=req_rule, a=req_rule_a: \
+                            z(state) and a(state)
                         level_rule = lambda state, r_rule=req_rule, l_rule=level_rule: (
                                 r_rule(state) and l_rule(state))
+
                         rule_change = True
             if clear.craft_requirements is not None:
                 for req in clear.craft_requirements:
@@ -316,19 +332,25 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
 
                     logic_type = REGION_RESTRICTION_REFERENCE_TYPES.CraftLogic
 
-                    req_rule = handle_path_rules(world.options, player, lr,
+                    req_rule_b = handle_path_rules(world.options, player, lr,
                                                  logic_type)
-                    if req_rule is not None:
+                    if req_rule_b is not None:
+                        req_rule = lambda state, z=req_rule, b=req_rule_b: \
+                            z(state) and b(state)
                         level_rule = lambda state, r_rule=req_rule, l_rule=level_rule: (
                                 r_rule(state) and l_rule(state))
                         rule_change = True
 
             if clear.getDistribution() is not None:
-                for region_id in clear.getDistribution().keys():
-                    required_region = Regions.stage_id_to_region(clear.stageId, region_id)
-                    new_rule = lambda state, r_region=required_region: state.can_reach_region(r_region, player)
-                    level_rule = lambda state, l_rule=level_rule, n_rule=new_rule: n_rule(state) and l_rule(state)
-                    rule_change = True
+
+                # This functionality requires access to ALL to complete which is inflating
+                # When logically you can find with access to either
+                # But this also needs handling for objective-less
+                #for region_id in clear.getDistribution().keys():
+                #    required_region = Regions.stage_id_to_region(clear.stageId, region_id)
+                ##    new_rule = lambda state, r_region=required_region: state.can_reach_region(r_region, player)
+                #    level_rule = lambda state, l_rule=level_rule, n_rule=new_rule: n_rule(state) and l_rule(state)
+                #    rule_change = True
 
                 if clear.requirement_count is not None and world.options.objective_sanity:
 
@@ -344,30 +366,37 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
                         100, clear.stageId, clear.alignmentId,
                         override_settings)
 
-                    total = 1
-                    for region,count in clear.getDistribution().items():
-                        required_region = Regions.stage_id_to_region(clear.stageId, region)
-                        new_rule = lambda state, r_region=required_region: state.can_reach_region(r_region, player)
-                        if req_rule is not None:
-                            new_rule = lambda state, n_rule=new_rule, r_rule=req_rule: n_rule(state) and r_rule(state)
+                    progress_distribution = clear.getDistribution().items()
+                    progress_dist_by_name = {}
 
-                        for l in range(total, total+count+1):
-                            if l > max_required:
-                                break
-
-                            if l % frequency_required != 0 and max_required != l:
-                               continue
-
-                            location_id, objective_location_name = (
-                                GetLevelObjectNames(clear.stageId, clear.alignmentId, clear.mission_object_name,
-                                                    l))
-                            location = multiworld.get_location(objective_location_name, player)
-                            add_rule(location, new_rule)
-
+                    total = 0
+                    for region, count in progress_distribution:
+                        progress_dist_by_name[Regions.stage_id_to_region(clear.stageId, region)] = count
                         total += count
 
-                        if count > max_required:
+                    for l in range(1, total + 1):
+                        if l > max_required:
                             break
+
+                        if l % frequency_required != 0 and max_required != l:
+                            continue
+
+                        prog_rule = lambda state, ix=l, data=progress_dist_by_name, keys=progress_dist_by_name.keys() \
+                            : CountRegionAccessibility(state, keys, data, ix)
+
+                        location_id, objective_location_name = (
+                            GetLevelObjectNames(clear.stageId, clear.alignmentId, clear.mission_object_name,
+                                                l))
+                        location = multiworld.get_location(objective_location_name, player)
+
+                        progression_rule = lambda state, p_rule=prog_rule, r_rule=req_rule : \
+                            p_rule(state) and r_rule(state)
+
+                        add_rule(location, progression_rule)
+
+                        if l > max_required:
+                            break
+
 
             if clear.requirement_count is not None:
                 location = multiworld.get_location(name, player)
@@ -381,14 +410,49 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
                         override_settings)
 
                     new_rule = lambda state, itemname=item_name, count=max_required: state.has(itemname, player, count=count)
+
+                    progress_distribution = clear.getDistribution().items()
+                    progress_dist_by_name = {}
+
+                    total = 0
+                    for region, count in progress_distribution:
+                        progress_dist_by_name[Regions.stage_id_to_region(clear.stageId, region)] = count
+                        total += count
+
+                    finish_count = 1
+                    if not world.options.objective_sanity:
+                        finish_count = max_required
+                        if finish_count == 0:
+                            finish_count = 1
+
+                    # Enemy stage clears don't require completing objectives
+                    if clear.mission_object_name in ("Soldier", "Artificial Chaos", "Alien"):
+                        finish_count = 0
+
+                    prog_rule = lambda state, keys=progress_dist_by_name.keys(), data=progress_dist_by_name,\
+                                       ix=finish_count\
+                        : CountRegionAccessibility(state, keys, data, ix)
+
                     # Does this work as an AND or an OR?
-                    level_rule = lambda state, l_rule=level_rule, n_rule=new_rule: l_rule(state) and n_rule(state)
+                    level_rule = lambda state, l_rule=level_rule, n_rule=new_rule, p_rule=prog_rule:\
+                        l_rule(state) and n_rule(state) and p_rule(state)
                     add_rule(location, level_rule)
                     rule_change = True
-                elif rule_change:
-                    add_rule(location, level_rule)
-
             else:
+
+                # if equal to 1 there should only be one, and we need that region to finish
+                # e.g. goal ring, core, etc.
+                if clear.getDistribution() is not None:
+
+                    # This functionality requires access to ALL to complete which is inflating
+                    # When logically you can find with access to either
+                    # But this also needs handling for objective-less
+                    for region_id in clear.getDistribution().keys():
+                        required_region = Regions.stage_id_to_region(clear.stageId, region_id)
+                        new_rule = lambda state, r_region=required_region: state.can_reach_region(r_region, player)
+                        level_rule = lambda state, l_rule=level_rule, n_rule=new_rule: n_rule(state) and l_rule(state)
+                        rule_change = True
+
                 location = multiworld.get_location(name, player)
                 if rule_change:
                     add_rule(location, level_rule)
@@ -511,28 +575,31 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
                 100, enemy.stageId, enemy.enemyClass,
                 override_settings)
 
-            total = 1
-            for region, count in enemy.getDistribution().items():
-                required_region = Regions.stage_id_to_region(enemy.stageId, region)
-                new_rule = lambda state, r_region=required_region: state.can_reach_region(r_region, player)
-                new_rule = lambda state, n_rule=new_rule, r_rule=req_rule: n_rule(state) and r_rule(state)
 
-                for l in range(total, total + count + 1):
-                    if l > max_required:
-                        break
+            enemy_distribution = enemy.getDistribution().items()
+            enemy_dist_by_name = {}
 
-                    if l % frequency_required != 0 and max_required != l:
-                        continue
-
-                    location_id, objective_location_name = (
-                        GetEnemyLocationName(enemy.stageId, enemy.enemyClass, enemy.mission_object_name,
-                                            l))
-                    location = multiworld.get_location(objective_location_name, player)
-                    add_rule(location, new_rule)
-
+            total = 0
+            for region, count in enemy_distribution:
+                enemy_dist_by_name[Regions.stage_id_to_region(enemy.stageId, region)] = count
                 total += count
 
-                if count > max_required:
+            for l in range(1, total+1):
+                if l > max_required:
+                    break
+
+                if l % frequency_required != 0 and max_required != l:
+                    continue
+
+                new_rule = lambda state, ix=l, data=enemy_dist_by_name, keys=enemy_dist_by_name.keys()\
+                    : CountRegionAccessibility(state, keys, data, ix)
+                location_id, objective_location_name = (
+                    GetEnemyLocationName(enemy.stageId, enemy.enemyClass, enemy.mission_object_name,
+                                        l))
+                location = multiworld.get_location(objective_location_name, player)
+                add_rule(location, new_rule)
+
+                if l > max_required:
                     break
 
     e = multiworld.get_entrance("final-story-unlock", player)

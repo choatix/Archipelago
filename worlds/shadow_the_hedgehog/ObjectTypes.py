@@ -21,6 +21,7 @@ class ObjectType:
     ENERGY_CORE = 4
 
     LIGHT_DASH_TRAIL = 5
+
     STANDARD_PULLEY = 6
     SPACE_ZIPWIRE = 7
     GUN_ZIPWIRE = 8
@@ -39,6 +40,8 @@ class ObjectType:
 
     SMALL_BOMB = 20
     SMALL_BOMB_AUTO_DETONATE = 21
+    LIGHT_DASH_TRAIL_ANTI_TRAP = 22
+    WARP_HOLE_ANTI_TRAP = 23
 
     GUN_SOLIDER = 30
     GUN_BEETLE = 31

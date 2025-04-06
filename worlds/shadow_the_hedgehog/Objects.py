@@ -198,6 +198,12 @@ def GetTypeId(objectType):
     if objectType == ObjectType.SMALL_BOMB_AUTO_DETONATE:
         return 0xFA1
 
+    if objectType == ObjectType.LIGHT_DASH_TRAIL_ANTI_TRAP:
+        pass
+
+    if objectType == ObjectType.WARP_HOLE_ANTI_TRAP:
+        pass
+
     return None
 
 def CheckVehicleAttributes(objectType, extra_bytes):

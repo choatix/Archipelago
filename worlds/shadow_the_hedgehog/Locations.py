@@ -167,6 +167,7 @@ class EnemySanityLocation:
         return self
 
     def getDistribution(self):
+
         if self.distribution is not None:
             return self.distribution
         else:
@@ -383,7 +384,7 @@ MissionClearLocations = [
     MissionClearLocation(STAGE_MAD_MATRIX, MISSION_ALIGNMENT_DARK, 30, "Bomb")
         .setDistribution(
         {
-            REGION_INDICIES.MAD_MATRIX_GUN: 4
+            REGION_INDICIES.MAD_MATRIX_GUN: 30
         }
     ),
     MissionClearLocation(STAGE_MAD_MATRIX, MISSION_ALIGNMENT_NEUTRAL, None, None)
@@ -502,7 +503,7 @@ MissionClearLocations = [
     MissionClearLocation(STAGE_BLACK_COMET, MISSION_ALIGNMENT_HERO, None, None)
         .setDistribution(
         {
-            REGION_INDICIES.BLACK_COMET_WARP_HOLE: 1
+            REGION_INDICIES.BLACK_COMET_FLOATING_ENEMY_WALL: 1
         }
     ),
 
@@ -861,7 +862,8 @@ CheckpointLocations = \
         {
             0: [1],
             REGION_INDICIES.BLACK_COMET_AIR_SAUCER: [2,3],
-            REGION_INDICIES.BLACK_COMET_WARP_HOLE: [4,5,6,7,8]
+            REGION_INDICIES.BLACK_COMET_WARP_HOLE: [4,5,6],
+            REGION_INDICIES.BLACK_COMET_FLOATING_ENEMY_WALL: [7,8]
         }
     ),
     CheckpointLocation(STAGE_LAVA_SHELTER, 8)
@@ -1050,7 +1052,8 @@ KeyLocations = \
         .setDistribution(
         {
             REGION_INDICIES.BLACK_COMET_AIR_SAUCER: 2,
-            REGION_INDICIES.BLACK_COMET_WARP_HOLE: 3
+            REGION_INDICIES.BLACK_COMET_WARP_HOLE: 1,
+            REGION_INDICIES.BLACK_COMET_FLOATING_ENEMY_WALL: 2
         }
     ),
     KeyLocation(STAGE_LAVA_SHELTER)
