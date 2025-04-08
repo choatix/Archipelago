@@ -231,6 +231,13 @@ class RingLoss(Choice):
     default = 0
 
 
+class TrapLink(Toggle):
+    """
+    Whether your received traps are linked to other players
+    """
+    display_name = "Trap Link"
+
+
 class PlayableSonic(DefaultOnToggle):
     """Determines whether Sonic is playable."""
     display_name = "Playable Sonic"
@@ -691,6 +698,7 @@ class SonicAdventureDXOptions(PerGameCommonOptions):
     casinopolis_ring_link: CasinopolisRingLink
     hard_ring_link: HardRingLink
     ring_loss: RingLoss
+    trap_link: TrapLink
 
     playable_sonic: PlayableSonic
     playable_tails: PlayableTails
@@ -799,6 +807,7 @@ sadx_option_groups = [
         CasinopolisRingLink,
         HardRingLink,
         RingLoss,
+        TrapLink,
     ]),
     OptionGroup("Characters Options", [
         PlayableSonic,

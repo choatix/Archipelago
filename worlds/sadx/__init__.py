@@ -283,6 +283,7 @@ class SonicAdventureDXWorld(World):
             "CasinopolisRingLink": self.options.casinopolis_ring_link.value,
             "HardRingLink": self.options.hard_ring_link.value,
             "RingLoss": self.options.ring_loss.value,
+            "TrapLink": self.options.trap_link.value,
             "TwinkleCircuitCheck": self.options.twinkle_circuit_check.value,
             "MultipleTwinkleCircuitChecks": self.options.twinkle_circuit_multiple_check.value,
             "SandHillCheck": self.options.sand_hill_check.value,
