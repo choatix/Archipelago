@@ -1232,7 +1232,7 @@ mission_location_table: List[MissionLocation] = [
     MissionLocation(839, Area.Hotel, Area.EmeraldCoast, Character.Gamma, 39, [ItemName.Gamma.JetBooster],
                     [ItemName.Gamma.JetBooster], [ItemName.Gamma.JetBooster], [ItemName.Gamma.JetBooster]),
     MissionLocation(840, Area.MysticRuinsMain, Area.LostWorld, Character.Sonic, 40, [ItemName.Sonic.LightShoes],
-                    [ItemName.Sonic.LightShoes], [ItemName.Sonic.LightShoes], [ItemName.Sonic.LightShoes]),
+                    [ItemName.Sonic.LightShoes], [], []),
     MissionLocation(841, Area.Jungle, Area.LostWorld, Character.Sonic, 41, [ItemName.Sonic.LightShoes], [], [], []),
     MissionLocation(842, Area.EggCarrierInside, Area.HotShelter, Character.Gamma, 42, [], [], [], []),
     MissionLocation(843, Area.EggCarrierInside, Area.HotShelter, Character.Amy, 43, [], [], [], []),
