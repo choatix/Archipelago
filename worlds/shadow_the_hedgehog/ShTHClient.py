@@ -110,6 +110,10 @@ class GAME_ADDRESSES:
     MENU_ENUM = 0x80583ACC
     LEVEL_SET_DATA = 0x809AF000
 
+    CENTRAL_CITY_TIMER = 0x807D6924
+    COSMIC_FALL_TIMER = 0x807D6C18
+    LAST_WAY_TIMER = 0x807D6C90
+
     CharacterAddresses = [
         CharacterAddress("Sonic", 0x8057D77B),
         CharacterAddress("Tails", 0x8057D77F),
@@ -2184,6 +2188,31 @@ def check_cheats():
         new_bytes = new_value.to_bytes(4, byteorder='big')
         writeBytes(GAME_ADDRESSES.ADDRESS_WATCHED_CUTSCENES + 8, new_bytes)
 
+    ##
+    current_value_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.CENTRAL_CITY_TIMER, 4)
+    current_value = int.from_bytes(current_value_bytes, byteorder='big')
+
+    new_value = 0xFFFF
+    if current_value != new_value:
+        new_bytes = new_value.to_bytes(4, byteorder='big')
+        writeBytes(GAME_ADDRESSES.CENTRAL_CITY_TIMER, new_bytes)
+
+    current_value_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.COSMIC_FALL_TIMER, 4)
+    current_value = int.from_bytes(current_value_bytes, byteorder='big')
+
+    new_value = 0xFFFF
+    if current_value != new_value:
+        new_bytes = new_value.to_bytes(4, byteorder='big')
+        writeBytes(GAME_ADDRESSES.COSMIC_FALL_TIMER, new_bytes)
+
+    current_value_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.LAST_WAY_TIMER, 4)
+    current_value = int.from_bytes(current_value_bytes, byteorder='big')
+
+    new_value = 0xFFFF
+    if current_value != new_value:
+        new_bytes = new_value.to_bytes(4, byteorder='big')
+        writeBytes(GAME_ADDRESSES.LAST_WAY_TIMER, new_bytes)
+
 
 def CheckAutoWarps(ctx):
     found_warps = []
@@ -3072,8 +3101,11 @@ async def handle_objects(ctx, current_level):
     allowed_zipwire = len([info[unlock[0].item].name for unlock in ctx.items_to_handle if unlock[0].item in info and \
                        info[unlock[0].item].name == "Zipwire"]) > 0
 
-    allowed_units = len([info[unlock[0].item].name for unlock in ctx.items_to_handle if unlock[0].item in info and \
-                       info[unlock[0].item].name == "Units"]) > 0
+    allowed_heal_units = len([info[unlock[0].item].name for unlock in ctx.items_to_handle if unlock[0].item in info and \
+                       info[unlock[0].item].name == "Heal Units"]) > 0
+
+    allowed_bombs = len([info[unlock[0].item].name for unlock in ctx.items_to_handle if unlock[0].item in info and \
+                         info[unlock[0].item].name == "Bombs"]) > 0
 
     allowed_rockets = len([info[unlock[0].item].name for unlock in ctx.items_to_handle if unlock[0].item in info and \
                        info[unlock[0].item].name == "Rocket"]) > 0
@@ -3088,6 +3120,10 @@ async def handle_objects(ctx, current_level):
                        info[unlock[0].item].type == "Vehicle"]
 
     messages = []
+
+    states_to_add = {}
+    states_to_remove = []
+
     for object in relevant_objects:
         object_index = object.index
 
@@ -3117,89 +3153,165 @@ async def handle_objects(ctx, current_level):
         spawn = False
 
         if object.object_type == Objects.ObjectType.BOMB:
-            if object_unlocks and unit_sanity and not allowed_units:
+            object_name = "Object_Bombs"
+            if object_unlocks and unit_sanity and not allowed_bombs:
                 despawn = True
-                spawn = False
+                states_to_add[object_name] = False
+            else:
+                if object_name in ctx.level_state:
+                    spawn = True
+                    states_to_remove.append(object_name)
 
         elif object.object_type == Objects.ObjectType.STANDARD_PULLEY:
+            object_name = "Object_Pulley"
             if object_unlocks and pulley_sanity and not allowed_pulley:
                 despawn = True
-                spawn = True
+                states_to_add[object_name] = False
+            else:
+                if object_name in ctx.level_state:
+                    spawn = True
+                    states_to_remove.append(object_name)
 
         elif object.object_type == Objects.ObjectType.ROCKET:
+            object_name = "Object_Rocket"
             if object_unlocks and rocket_sanity and not allowed_rockets:
                 despawn = True
-                spawn = True
+                states_to_add[object_name] = False
+            else:
+                if object_name in ctx.level_state:
+                    spawn = True
+                    states_to_remove.append(object_name)
 
         elif object.object_type == Objects.ObjectType.WARP_HOLE:
+            object_name = "Object_WarpHole"
             if object_unlocks and warp_hole_sanity and not allowed_warp_holes:
                 despawn = True
-                spawn = True
+                states_to_add[object_name] = False
+            else:
+                if object_name in ctx.level_state:
+                    spawn = True
+                    states_to_remove.append(object_name)
 
         elif object.object_type == Objects.ObjectType.BOMB_SERVER:
-            if object_unlocks and unit_sanity and not allowed_units:
+            object_name = "Object_Bombs"
+            if object_unlocks and unit_sanity and not allowed_bombs:
                 despawn = True
-                spawn = True
+                states_to_add[object_name] = False
+            else:
+                if object_name in ctx.level_state:
+                    spawn = True
+                    states_to_remove.append(object_name)
 
         elif object.object_type == Objects.ObjectType.HEAL_UNIT:
-            if object_unlocks and unit_sanity and not allowed_units:
+            object_name = "Object_Heals"
+            if object_unlocks and unit_sanity and not allowed_heal_units:
                 despawn = True
-                spawn = False
+                states_to_add[object_name] = False
+            else:
+                if object_name in ctx.level_state:
+                    spawn = True
+                    states_to_remove.append(object_name)
 
         elif object.object_type == Objects.ObjectType.HEAL_SERVER:
-            if object_unlocks and unit_sanity and not allowed_units:
+            object_name = "Object_Heals"
+            if object_unlocks and unit_sanity and not allowed_heal_units:
                 despawn = True
-                spawn = True
+                states_to_add[object_name] = False
+            else:
+                if object_name in ctx.level_state:
+                    spawn = True
+                    states_to_remove.append(object_name)
 
         elif object.object_type == Objects.ObjectType.LIGHT_DASH_TRAIL:
+            object_name = "Object_LightDash"
             if object_unlocks and trail_sanity and not allowed_light_dashes:
                 despawn = True
-                spawn = True
+                states_to_add[object_name] = False
+            else:
+                if object_name in ctx.level_state:
+                    spawn = True
+                    states_to_remove.append(object_name)
 
         elif object.object_type == Objects.ObjectType.SPACE_ZIPWIRE:
+            object_name = "Object_Zipwire"
             if object_unlocks and zip_sanity and not allowed_zipwire:
-                despawn = False
-                spawn = True
+                despawn = True
+                states_to_add[object_name] = False
+            else:
+                if object_name in ctx.level_state:
+                    spawn = True
+                    states_to_remove.append(object_name)
 
         elif object.object_type == Objects.ObjectType.GUN_ZIPWIRE:
+            object_name = "Object_Zipwire"
             if object_unlocks and zip_sanity and not allowed_zipwire:
                 despawn = True
-                spawn = True
+                states_to_add[object_name] = False
+            else:
+                if object_name in ctx.level_state:
+                    spawn = True
+                    states_to_remove.append(object_name)
 
         elif object.object_type == Objects.ObjectType.CIRCUS_ZIPWIRE:
+            object_name = "Object_Zipwire"
             if object_unlocks and zip_sanity and not allowed_zipwire:
                 despawn = True
-                spawn = True
+                states_to_add[object_name] = False
+            else:
+                if object_name in ctx.level_state:
+                    spawn = True
+                    states_to_remove.append(object_name)
 
         elif object.object_type == Objects.ObjectType.BALLOON_ZIPWIRE:
+            object_name = "Object_Zipwire"
             if object_unlocks and zip_sanity and not allowed_zipwire:
                 despawn = True
-                spawn = True
+                states_to_add[object_name] = False
+            else:
+                if object_name in ctx.level_state:
+                    spawn = True
+                    states_to_remove.append(object_name)
 
         elif vehicle_sanity and object.object_type == Objects.ObjectType.VEHICLE:
-            spawn = True
+            spawn = False
+            spawn_name = None
             if object.vehicle == Objects.ObjectType.ObjectTypeVehicle.GUN_LIFT:
-                despawn = len([ x for x in allowed_vehicles if x.name == Names.GetNameForVehicle("Gun Lift") ]) == 0
+                spawn_name = "Gun Lift"
             elif object.vehicle == Objects.ObjectType.ObjectTypeVehicle.AIR_SAUCER:
-                despawn = len([ x for x in allowed_vehicles if x.name == Names.GetNameForVehicle("Air Saucer") ]) == 0
+                spawn_name = "Air Saucer"
             elif object.vehicle == Objects.ObjectType.ObjectTypeVehicle.ARMORED_CAR:
-                despawn = len([ x for x in allowed_vehicles if x.name == Names.GetNameForVehicle("Armored Car") ]) == 0
+                spawn_name = "Armored Car"
             elif object.vehicle == Objects.ObjectType.ObjectTypeVehicle.BLACK_VOLT:
-                despawn = len([ x for x in allowed_vehicles if x.name == Names.GetNameForVehicle("Black Volt") ]) == 0
+                spawn_name = "Black Volt"
             elif object.vehicle == Objects.ObjectType.ObjectTypeVehicle.BLACK_TURRET:
-                despawn = len([ x for x in allowed_vehicles if x.name == Names.GetNameForVehicle("Black Turret") ]) == 0
+                spawn_name = "Black Turret"
+            elif object.vehicle == Objects.ObjectType.ObjectTypeVehicle.BLACK_HAWK:
+                spawn_name = "Black Hawk"
             elif object.vehicle == Objects.ObjectType.ObjectTypeVehicle.CONVERTIBLE:
-                despawn = len([ x for x in allowed_vehicles if x.name == Names.GetNameForVehicle("Convertible") ]) == 0
+                spawn_name = "Convertible"
             elif object.vehicle == Objects.ObjectType.ObjectTypeVehicle.GUN_CANNON:
-                despawn = len([ x for x in allowed_vehicles if x.name == Names.GetNameForVehicle("Gun Cannon") ]) == 0
+                spawn_name = "Gun Cannon"
             elif object.vehicle == Objects.ObjectType.ObjectTypeVehicle.GUN_JUMPER:
-                despawn = len([ x for x in allowed_vehicles if x.name == Names.GetNameForVehicle("Gun Jumper") ]) == 0
+                spawn_name = "Gun Jumper"
             elif object.vehicle == Objects.ObjectType.ObjectTypeVehicle.GUN_MOTORCYCLE:
-                despawn = len([ x for x in allowed_vehicles if x.name == Names.GetNameForVehicle("Gun Motorcycle") ]) == 0
+                spawn_name = "Gun Motorcycle"
             elif object.vehicle == Objects.ObjectType.ObjectTypeVehicle.GUN_TURRET:
-                despawn = len([ x for x in allowed_vehicles if x.name == Names.GetNameForVehicle("Gun Turret") ]) == 0
+                spawn_name = "Gun Turret"
             elif object.vehicle == Objects.ObjectType.ObjectTypeVehicle.STANDARD_CAR:
-                despawn = len([ x for x in allowed_vehicles if x.name == Names.GetNameForVehicle("Standard Car") ]) == 0
+                spawn_name = "Standard Car"
+
+            if spawn_name is None:
+                print("Invalid vehicle")
+            else:
+                despawn = len([x for x in allowed_vehicles if x.name == Names.GetNameForVehicle(spawn_name)]) == 0
+
+                if despawn:
+                    states_to_add[spawn_name] = False
+                else:
+                    if spawn_name in ctx.level_state:
+                        print("Force spawn of vehicle as unlocked now", ctx.level_state)
+                        spawn = True
+                        states_to_remove.append(spawn_name)
 
         elif vehicle_sanity and object.object_type == Objects.ObjectType.BLACK_WARRIOR and \
                 object.vehicle == Objects.ObjectType.ObjectTypeVehicle.AIR_SAUCER:
@@ -3300,18 +3412,13 @@ async def handle_objects(ctx, current_level):
                                           l not in ctx.handled
                                           and l not in ctx.checked_locations]) == 0
 
-            if object.object_type == Objects.ObjectType.SHADOW_BOX and object.index == 465:
-                print("Box?", object.index, loaded_spawn_data, related_locations, arch_location_complete)
-
             if object.index in ctx.level_state["object_status"]:
                 object_status = ctx.level_state["object_status"][object.index]
                 if object_status == 0x00:
-                    print("RecoBox?", object.index, loaded_spawn_data, related_locations)
                     arch_location_complete = True
 
             if not arch_location_complete:
                 if loaded_spawn_data == 0x00:
-                    print("NewBox?", object.index, loaded_spawn_data, related_locations)
                     ctx.level_state["object_status"][object.index] = 0x00
                     messages.extend(related_locations)
 
@@ -3351,6 +3458,19 @@ async def handle_objects(ctx, current_level):
         # ctx.locations_checked = messages
         message = [{"cmd": 'LocationChecks', "locations": messages}]
         await ctx.send_msgs(message)
+
+    for key, value in states_to_add.items():
+        if key not in ctx.level_state:
+            print("Add to state", key, value)
+            ctx.level_state[key] = value
+
+    for entry in states_to_remove:
+        if entry in ctx.level_state:
+            print("Delete from state", entry)
+            del ctx.level_state[entry]
+            print("Delete from state", ctx.level_state)
+
+
 
 
 async def update_level_behaviour(ctx, current_level, death):

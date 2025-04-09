@@ -654,8 +654,9 @@ def GetObjectItems():
     ItemInfo(id_s+1, "Air Shoes", ItemClassification.progression, None, None, "Object", None),
     ItemInfo(id_s+2, "Rocket", ItemClassification.progression, None, None, "Object", None),
     ItemInfo(id_s+3, "Zipwire", ItemClassification.progression, None, None, "Object", None),
-    ItemInfo(id_s+4, "Units", ItemClassification.progression, None, None, "Object", None),
-    ItemInfo(id_s+5, "Warp Holes", ItemClassification.progression, None, None, "Object", None)
+    ItemInfo(id_s+4, "Heal Units", ItemClassification.progression, None, None, "Object", None),
+    ItemInfo(id_s+5, "Bombs", ItemClassification.progression, None, None, "Object", None),
+    ItemInfo(id_s+6, "Warp Holes", ItemClassification.progression, None, None, "Object", None)
 
     ]
 
@@ -797,9 +798,12 @@ def PopulateItemPool(world : World, first_regions):
             item_count += 1
         if world.options.object_units:
             mw_object_items.append(ShadowTheHedgehogItem
-                                   ([o for o in object_items if o.name == "Units"]
+                                   ([o for o in object_items if o.name == "Bombs"]
                                     [0], world.player))
-            item_count += 1
+            mw_object_items.append(ShadowTheHedgehogItem
+                                   ([o for o in object_items if o.name == "Heal Units"]
+                                    [0], world.player))
+            item_count += 2
         if world.options.object_rockets:
             mw_object_items.append(ShadowTheHedgehogItem
                                    ([o for o in object_items if o.name == "Rocket"]

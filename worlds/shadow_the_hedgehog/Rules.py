@@ -1,14 +1,14 @@
 import typing
 from math import ceil, floor
 
-from BaseClasses import MultiWorld, Region, Entrance
+from BaseClasses import MultiWorld, Region, Entrance, Item, ItemClassification
 from worlds.AutoWorld import World
 from worlds.generic.Rules import add_rule
 from . import Items, Levels, LEVEL_ID_TO_LEVEL, CharacterToLevel, ITEM_TOKEN_TYPE_FINAL, \
     MISSION_ALIGNMENT_DARK, MISSION_ALIGNMENT_HERO, ITEM_TOKEN_TYPE_OBJECTIVE, \
     ITEM_TOKEN_TYPE_STANDARD, ITEM_TOKEN_TYPE_ALIGNMENT, Utils, REGION_RESTRICTION_TYPES, Weapons, Regions, LevelRegion, \
     GetLevelObjectNames, Vehicle, Options, Locations, ITEM_TOKEN_TYPE_BOSS, ITEM_TOKEN_TYPE_FINAL_BOSS, \
-    REGION_RESTRICTION_REFERENCE_TYPES, GetEnemyLocationName
+    REGION_RESTRICTION_REFERENCE_TYPES, GetEnemyLocationName, Names
 from .Items import ShadowTheHedgehogItem, GetLevelTokenItems
 from .Locations import MissionClearLocations, LocationInfo, BossClearLocations
 from .Options import LevelProgression
@@ -107,7 +107,7 @@ def handle_path_rules(options, player, additional_level_region, path_type):
         if weapon_rule is not None:
             weapon_available = True
 
-        bomb_rule = lambda state: state.has("Units", player)
+        bomb_rule = lambda state: state.has("Bombs", player)
 
         if additional_level_region.stageId == Levels.STAGE_DEATH_RUINS:
             bombs_available = False
@@ -131,7 +131,7 @@ def handle_path_rules(options, player, additional_level_region, path_type):
         if weapon_rule is not None:
             weapon_available = True
 
-        unit_rule = lambda state: state.has("Units", player)
+        unit_rule = lambda state: state.has("Heal Units", player)
 
         if additional_level_region.stageId == Levels.STAGE_THE_DOOM:
             units_available = True
@@ -244,19 +244,29 @@ def lock_warp_items(multiworld, world, player):
         location.place_locked_item(
             mw_token_item)
 
-def CountRegionAccessibility(state, keys, data, ix):
+def CountRegionAccessibility(state, keys, data, ix, player):
     #sum(
     #    [data[r] for r in GetReachableRegions(state, keys) if r in keys]) >= ix)
 
+    # This method uses events but they show up in spoiler log and look bad so use other method
+    # Which uses reachable regions instead of events
+
+    #keys = list(keys)
+    # all_regions = [ a.name for a in  state.reachable_regions[player]]
+    # matching_counts = [ data[r] for r in all_regions if r in keys]
+    #total_accessible = sum(matching_counts)
+    #return total_accessible >= ix
+
     keys = list(keys)
-    all_regions = []
-    for cycle,regions in state.reachable_regions.items():
-        all_regions.extend([ r.name for r in regions])
 
-    matching_counts = [ data[r] for r in all_regions if r in keys]
-    total_accessible = sum(matching_counts)
+    total = 0
+    for key in keys:
+        #print("Does player have", key)
+        if state.has(key, player):
+            total += data[key]
 
-    return total_accessible >= ix
+    #print("total is", total)
+    return total >= ix
 
 def set_rules(multiworld: MultiWorld, world: World, player: int):
 
@@ -265,15 +275,38 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
     if world.options.level_progression != LevelProgression.option_select:
         Regions.connect_by_story_mode(multiworld, world, player, world.shuffled_story_mode)
 
+    for stage in Levels.ALL_STAGES:
+        if stage in Levels.BOSS_STAGES:
+            continue
+
+        if stage not in world.available_levels:
+            continue
+
+        view_name = Names.GetDistributionRegionEventName(stage, 0)
+
+        event_location = multiworld.get_location(view_name, player)
+        event_location.access_rule = lambda state, r=stage_id_to_region(stage,
+                                                                        0): \
+            state.can_reach_region(r, player)
+
+        event_location.place_locked_item(Item(view_name,
+                                              ItemClassification.progression, None, player))
+
     for additional_level_region in Levels.INDIVIDUAL_LEVEL_REGIONS:
         if additional_level_region.stageId not in world.available_levels:
             continue
 
+        if world.options.logic_level != Options.LogicLevel.option_hard \
+            and additional_level_region.restrictionType == REGION_RESTRICTION_TYPES.HardLogicOnly:
+            #print("Skip--", additional_level_region)
+            continue
+
         from_regions = additional_level_region.fromRegions
+        new_region_name = stage_id_to_region(additional_level_region.stageId, additional_level_region.regionIndex)
 
         for region_from in from_regions:
             base_region_name = stage_id_to_region(additional_level_region.stageId, region_from)
-            new_region_name = stage_id_to_region(additional_level_region.stageId, additional_level_region.regionIndex)
+
 
             base_region = world.get_region(base_region_name)
             new_region = world.get_region(new_region_name)
@@ -293,6 +326,18 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
 
             connect(world.player, base_region_name+ ">" + "(" + str(additional_level_region.restrictionType) + ")" + new_region_name,
                     base_region, new_region, rule)
+
+        view_name = Names.GetDistributionRegionEventName(additional_level_region.stageId, additional_level_region.regionIndex)
+
+        event_location = multiworld.get_location(view_name, player)
+        event_location.access_rule = lambda state, r=stage_id_to_region(additional_level_region.stageId,
+                                                                        additional_level_region.regionIndex): \
+            state.can_reach_region(r, player)
+
+        event_location.place_locked_item(Item(view_name,
+                                              ItemClassification.progression, None, player))
+
+            # TODO: Add logic here for obtaining access
 
     override_settings = world.options.percent_overrides
     lock_warp_items(multiworld, world, world.player)
@@ -371,7 +416,7 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
 
                     total = 0
                     for region, count in progress_distribution:
-                        progress_dist_by_name[Regions.stage_id_to_region(clear.stageId, region)] = count
+                        progress_dist_by_name[Names.GetDistributionRegionEventName(clear.stageId, region)] = count
                         total += count
 
                     for l in range(1, total + 1):
@@ -382,7 +427,7 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
                             continue
 
                         prog_rule = lambda state, ix=l, data=progress_dist_by_name, keys=progress_dist_by_name.keys() \
-                            : CountRegionAccessibility(state, keys, data, ix)
+                            : CountRegionAccessibility(state, keys, data, ix, player)
 
                         location_id, objective_location_name = (
                             GetLevelObjectNames(clear.stageId, clear.alignmentId, clear.mission_object_name,
@@ -416,7 +461,7 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
 
                     total = 0
                     for region, count in progress_distribution:
-                        progress_dist_by_name[Regions.stage_id_to_region(clear.stageId, region)] = count
+                        progress_dist_by_name[Names.GetDistributionRegionEventName(clear.stageId, region)] = count
                         total += count
 
                     finish_count = 1
@@ -431,7 +476,7 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
 
                     prog_rule = lambda state, keys=progress_dist_by_name.keys(), data=progress_dist_by_name,\
                                        ix=finish_count\
-                        : CountRegionAccessibility(state, keys, data, ix)
+                        : CountRegionAccessibility(state, keys, data, ix, player)
 
                     # Does this work as an AND or an OR?
                     level_rule = lambda state, l_rule=level_rule, n_rule=new_rule, p_rule=prog_rule:\
@@ -563,6 +608,10 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
 
     if world.options.enemy_sanity:
         for enemy in Locations.GetEnemySanityLocations():
+
+            if enemy.stageId not in world.available_levels:
+                continue
+
             max_required = ShadowUtils.getMaxRequired(
                 ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_ENEMY,
                                                           enemy.mission_object_name, world.options),
@@ -581,7 +630,7 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
 
             total = 0
             for region, count in enemy_distribution:
-                enemy_dist_by_name[Regions.stage_id_to_region(enemy.stageId, region)] = count
+                enemy_dist_by_name[Names.GetDistributionRegionEventName(enemy.stageId, region)] = count
                 total += count
 
             for l in range(1, total+1):
@@ -592,7 +641,7 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
                     continue
 
                 new_rule = lambda state, ix=l, data=enemy_dist_by_name, keys=enemy_dist_by_name.keys()\
-                    : CountRegionAccessibility(state, keys, data, ix)
+                    : CountRegionAccessibility(state, keys, data, ix, player)
                 location_id, objective_location_name = (
                     GetEnemyLocationName(enemy.stageId, enemy.enemyClass, enemy.mission_object_name,
                                         l))

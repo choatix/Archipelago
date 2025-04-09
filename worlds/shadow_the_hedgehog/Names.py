@@ -270,6 +270,83 @@ class REGION_INDICIES:
     THE_LAST_WAY_LIGHT_DASH_EASY = 5
 
 
+LEVEL_ID_TO_LEVEL = {
+    STAGE_WESTOPOLIS: "Westopolis",
+    STAGE_DIGITAL_CIRCUIT: "Digital Circuit",
+    STAGE_GLYPHIC_CANYON: "Glyphic Canyon",
+    STAGE_LETHAL_HIGHWAY : "Lethal Highway",
+    STAGE_CRYPTIC_CASTLE : "Cryptic Castle",
+    STAGE_PRISON_ISLAND : "Prison Island",
+    STAGE_CIRCUS_PARK : "Circus Park",
+    STAGE_CENTRAL_CITY : "Central City",
+    STAGE_THE_DOOM : "The Doom",
+    STAGE_SKY_TROOPS : "Sky Troops",
+    STAGE_MAD_MATRIX : "Mad Matrix",
+    STAGE_DEATH_RUINS : "Death Ruins",
+    STAGE_THE_ARK : "The Ark",
+    STAGE_AIR_FLEET : "Air Fleet",
+    STAGE_IRON_JUNGLE : "Iron Jungle",
+    STAGE_SPACE_GADGET : "Space Gadget",
+    STAGE_LOST_IMPACT : "Lost Impact",
+    STAGE_GUN_FORTRESS : "Gun Fortress",
+    STAGE_BLACK_COMET : "Black Comet",
+    STAGE_LAVA_SHELTER : "Lava Shelter",
+    STAGE_COSMIC_FALL : "Cosmic Fall",
+    STAGE_FINAL_HAUNT : "Final Haunt",
+
+    STAGE_THE_LAST_WAY : "The Last Way",
+
+    BOSS_BLACK_BULL_LH: "Black Bull Lethal Highway",
+    BOSS_EGG_BREAKER_CC: "Egg Breaker Cryptic Castle",
+    BOSS_HEAVY_DOG: "Heavy Dog",
+    BOSS_EGG_BREAKER_MM: "Egg Breaker Mad Matrix",
+    BOSS_BLACK_BULL_DR: "Black Bull Death Ruins",
+    BOSS_BLUE_FALCON: "Blue Falcon",
+    BOSS_EGG_BREAKER_IJ:"Egg Breaker Iron Jungle",
+    BOSS_BLACK_DOOM_GF: "Black Doom Gun Fortress",
+    BOSS_DIABLON_GF: "Diablon Gun Fortress",
+    BOSS_EGG_DEALER_BC: "Egg Dealer Black Comet",
+    BOSS_DIABLON_BC: "Diablon Black Comet",
+    BOSS_EGG_DEALER_LS : "Egg Dealer Lava Shelter",
+    BOSS_EGG_DEALER_CF: "Egg Dealer Cosmic Fall",
+    BOSS_BLACK_DOOM_CF: "Black Doom Cosmic Fall",
+    BOSS_BLACK_DOOM_FH : "Black Doom Final Haunt",
+    BOSS_DIABLON_FH: "Diablon Final Haunt",
+
+
+    BOSS_DEVIL_DOOM: "Devil Doom"
+}
+
+ALIGNMENT_TO_STRING = \
+{
+    0: "Dark",
+    1: "Neutral",
+    2: "Hero"
+}
+
+def GetMissionClearEventName(stageId, alignmentId):
+    view_name = f"Story_{LEVEL_ID_TO_LEVEL[stageId]}_{ALIGNMENT_TO_STRING[alignmentId]}".replace(" ", "_").upper()
+    return view_name
+
+def GetDistributionRegionEventName(stageId, index):
+    stage_name = LEVEL_ID_TO_LEVEL[stageId]
+    region_name = "DISTRIBUTION_" + stage_name.upper().replace(" ", "_")+"_ENTRANCE"
+    if index == 0:
+        return region_name
+
+    for name,lookup_index in REGION_INDICIES.__dict__.items():
+        if name.startswith(stage_name.upper().replace(" ","_")) and \
+            index == lookup_index :
+            region_name = "DISTRIBUTION_" + name
+
+    return region_name
+
+def GetBossClearEventName(stageId, from_id, alignment_id):
+    view_name = ("Story_" + LEVEL_ID_TO_LEVEL[stageId] +
+                 f"_{from_id}_{alignment_id}")\
+    .replace(" ", "_").upper()
+    return view_name
+
 def GetObjectLocationName(object: SETObject):
     id_name = int(str(LOCATION_ID_PLUS_O) + str(2) + str(object.stage) + "0" + str(object.index))
     view_name = LEVEL_ID_TO_LEVEL[object.stage] + "-" + object.name

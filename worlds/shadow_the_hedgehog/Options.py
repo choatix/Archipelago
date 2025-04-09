@@ -258,9 +258,9 @@ class ExceedingItemsFiller(Choice):
 class RingLink(Choice):
     """
     Whether your in-level ring gain/loss is linked to other players.
-    Off disabled the feature.
-    On enables the feature excluding special cases.
-    Unsafe disables ring link during Circus Park missions and during the final boss.
+    Off disables the feature.
+    On enables the feature excluding the special cases listed below.
+    Unsafe enables ring link during Circus Park missions and during Devil Doom.
 
     """
     option_off = 0
@@ -457,7 +457,7 @@ class ObjectiveFrequency(Range):
     display_name = "Objective Frequency"
     range_start = 1
     range_end = 10
-    default = 100
+    default = 1
 
 class EnemyObjectiveFrequency(Range):
     """
@@ -466,7 +466,7 @@ class EnemyObjectiveFrequency(Range):
     display_name = "Enemy Objective Frequency"
     range_start = 1
     range_end = 10
-    default = 100
+    default = 1
 
 class EnemyFrequency(Range):
     """
@@ -475,7 +475,7 @@ class EnemyFrequency(Range):
     display_name = "Enemy Frequency"
     range_start = 1
     range_end = 10
-    default = 100
+    default = 1
 
 class MinimumRank(Choice):
     """Minimum rank required to get the location clear check."""

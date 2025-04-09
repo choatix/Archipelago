@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from math import floor
 from typing import Dict, Optional
 
-from BaseClasses import Location, Region
+from BaseClasses import Location, Region, ItemClassification, Item
 from . import Regions, Levels, Weapons, Objects, Options, Names
 from .Levels import *
 from . import Utils as ShadowUtils
@@ -16,7 +16,7 @@ from .Objects import GetEnemyDistributionInStageByBaseType
 class ShadowTheHedgehogLocation(Location):
     game: str = "Shadow The Hedgehog"
 
-    def __init__(self, player, location_name, location_id, region):
+    def __init__(self, player, location_name, location_id, region=None):
         super().__init__(player, location_name, location_id, region)
 
 LOCATION_TYPE_MISSION_CLEAR = 1
@@ -851,8 +851,7 @@ CheckpointLocations = \
         .setDistribution(
         {
             0: [1],
-            REGION_INDICIES.GUN_FORTRESS_ZIPWIRE_NORMAL: [2],
-            REGION_INDICIES.GUN_FORTRESS_PULLEY: [3],
+            REGION_INDICIES.GUN_FORTRESS_PULLEY: [2,3],
             REGION_INDICIES.GUN_FORTRESS_ROCKET_NORMAL: [4,5,6],
             REGION_INDICIES.GUN_FORTRESS_KEY_OR_ZIPLINE: [7]
         }
@@ -1372,6 +1371,8 @@ def create_locations(world, regions: Dict[str, Region]):
      token_locations, keysanity_locations, weaponsanity_locations, boss_locations,
      warp_locations, object_locations) = GetAllLocationInfo()
 
+    menu_region = regions["Menu"]
+
     for location in clear_locations:
         if location.stageId not in world.available_levels:
             #print("skip:", location.name, location.stageId)
@@ -1520,12 +1521,12 @@ def create_locations(world, regions: Dict[str, Region]):
         within_region.locations.append(warp_location)
 
     if world.options.rifle_components:
-        menu_region = regions["Menu"]
         rifle_location = ShadowTheHedgehogLocation(world.player, "Complete Shadow Rifle", LOCATION_ID_SHADOW_RIFLE_COMPLETE, menu_region)
         menu_region.locations.append(rifle_location)
 
     if world.options.shadow_boxes:
-        for box_location in [ x for x in object_locations if x.other == ObjectType.SHADOW_BOX]:
+        for box_location in [ x for x in object_locations if x.other == ObjectType.SHADOW_BOX and
+                              x.stageId in world.available_levels]:
             stage_region_name = Regions.stage_id_to_region(box_location.stageId, box_location.regionId)
             stage_region = regions[stage_region_name]
             box_location = ShadowTheHedgehogLocation(world.player, box_location.name,
@@ -1534,7 +1535,8 @@ def create_locations(world, regions: Dict[str, Region]):
 
     if world.options.energy_cores:
 
-        for core_location in [ x for x in object_locations if x.other == ObjectType.ENERGY_CORE]:
+        for core_location in [ x for x in object_locations if x.other == ObjectType.ENERGY_CORE and
+                               x.stageId in world.available_levels]:
             if core_location.regionId is not None:
                 stage_region_name = Regions.stage_id_to_region(core_location.stageId, core_location.regionId)
                 stage_region = regions[stage_region_name]
@@ -1546,7 +1548,8 @@ def create_locations(world, regions: Dict[str, Region]):
 
     if world.options.door_sanity:
 
-        for door_location in [ x for x in object_locations if x.other == ObjectType.KEY_DOOR]:
+        for door_location in [ x for x in object_locations if x.other == ObjectType.KEY_DOOR and
+                               x.stageId in world.available_levels]:
             stage_region_name = Regions.stage_id_to_region(door_location.stageId, door_location.regionId)
             stage_region = regions[stage_region_name]
             door_location = ShadowTheHedgehogLocation(world.player, door_location.name,
@@ -1555,13 +1558,18 @@ def create_locations(world, regions: Dict[str, Region]):
 
     if world.options.gold_beetle_sanity:
 
-        for beetle_location in [ x for x in object_locations if x.other == ObjectType.GOLD_BEETLE]:
+        for beetle_location in [ x for x in object_locations if x.other == ObjectType.GOLD_BEETLE and
+                                 x.stageId in world.available_levels]:
             stage_region_name = Regions.stage_id_to_region(beetle_location.stageId, beetle_location.regionId)
             stage_region = regions[stage_region_name]
             beetle_location = ShadowTheHedgehogLocation(world.player, beetle_location.name,
                                                        beetle_location.locationId, stage_region)
             stage_region.locations.append(beetle_location)
 
+    if world.options.level_progression != Options.LevelProgression.option_select:
+        SetStoryClearEvents(world, world.player, menu_region)
+
+    SetRegionEvents(world, world.player, menu_region)
 
     end_region = regions["DevilDoom"]
     devil_doom_location = ShadowTheHedgehogLocation(world.player, end_location[0].name, end_location[0].locationId, end_region)
@@ -1659,16 +1667,20 @@ def count_locations(world):
         count = increment_location_count(count, len(weaponsanity_locations))
 
     if world.options.shadow_boxes:
-        count = increment_location_count(count, len([x for x in object_locations if x.other == ObjectType.SHADOW_BOX]))
+        count = increment_location_count(count, len([x for x in object_locations if x.other == ObjectType.SHADOW_BOX
+                                                     if x.stageId in world.available_levels]))
 
     if world.options.gold_beetle_sanity:
-        count = increment_location_count(count, len([x for x in object_locations if x.other == ObjectType.GOLD_BEETLE]))
+        count = increment_location_count(count, len([x for x in object_locations if x.other == ObjectType.GOLD_BEETLE
+                                                     if x.stageId in world.available_levels]))
 
     if world.options.energy_cores:
-        count = increment_location_count(count, len([x for x in object_locations if x.other == ObjectType.ENERGY_CORE]))
+        count = increment_location_count(count, len([x for x in object_locations if x.other == ObjectType.ENERGY_CORE
+                                                     if x.stageId in world.available_levels]))
 
     if world.options.door_sanity:
-        count = increment_location_count(count, len([x for x in object_locations if x.other == ObjectType.KEY_DOOR]))
+        count = increment_location_count(count, len([x for x in object_locations if x.other == ObjectType.KEY_DOOR
+                                                     if x.stageId in world.available_levels]))
 
     # Progression locations are hardcoded and not pool-related
     #count += len(end_location)
@@ -1777,21 +1789,82 @@ def getLocationGroups():
 
     l_info = GetLocationInfoDict()
 
+    new_groups = {}
     for level in Levels.LEVEL_ID_TO_LEVEL.keys():
         if level in Levels.BOSS_STAGES:
             continue
         group_name = Levels.LEVEL_ID_TO_LEVEL[level]
-        groups[group_name] = [ x.name for x in l_info.values() if x.stageId == level]
+        results = [ x.name for x in l_info.values() if x.stageId == level]
+        new_groups[group_name] = results
 
+        for key, values in groups.items():
+            new_key = group_name + " " + key
+            values = [ v for v in values if v in results ]
+            if len(values) > 1:
+                new_groups[new_key] = values
+
+    for key,value in new_groups.items():
+        new_groups[key] = value
 
     return groups
 
 
+def SetStoryClearEvents(world, player, menu_region):
+    story_clear_events = []
+    for clear in MissionClearLocations:
+        if clear.stageId not in world.available_levels:
+            continue
+
+        if clear.stageId == Levels.STAGE_THE_LAST_WAY and not world.options.include_last_way_shuffle:
+            continue
+
+        if clear.stageId in Levels.BOSS_STAGES:
+            continue
+
+        view_name = Names.GetMissionClearEventName(clear.stageId, clear.alignmentId)
+        story_clear_event = ShadowTheHedgehogLocation(player, view_name, None, menu_region)
+        #print("clearx", view_name)
+        #story_clear_event.place_locked_item(Item(view_name, ItemClassification.progression, None, player))
+        story_clear_event.show_in_spoiler = True
+        story_clear_events.append(story_clear_event)
+
+    for w in [l for l in world.shuffled_story_mode if l.boss is not None]:
+        view_name = Names.GetBossClearEventName(w.boss, w.start_stage_id, w.alignment_id)
+        print("wn", view_name)
+        story_clear_event = ShadowTheHedgehogLocation(player, view_name, None, menu_region)
+        #story_clear_event.place_locked_item(Item(view_name, ItemClassification.progression, None, player))
+        story_clear_event.show_in_spoiler = True
+        story_clear_events.append(story_clear_event)
 
 
+    menu_region.locations.extend(story_clear_events)
+    return story_clear_events
 
+def SetRegionEvents(world, player, menu_region):
+    region_events = []
+    for level in Levels.ALL_STAGES:
+        if level in BOSS_STAGES:
+            continue
 
+        if level not in world.available_levels:
+            continue
 
+        view_name = Names.GetDistributionRegionEventName(level, 0)
+        region_event = ShadowTheHedgehogLocation(player, view_name, None, menu_region)
+        region_event.show_in_spoiler = False
+        region_events.append(region_event)
 
+    for region in Levels.INDIVIDUAL_LEVEL_REGIONS:
+        if region.stageId not in world.available_levels:
+            continue
 
+        if world.options.logic_level != Options.LogicLevel.option_hard \
+            and region.restrictionType == REGION_RESTRICTION_TYPES.HardLogicOnly:
+            continue
 
+        view_name = Names.GetDistributionRegionEventName(region.stageId, region.regionIndex)
+        region_event = ShadowTheHedgehogLocation(player, view_name, None, menu_region)
+        region_event.show_in_spoiler = False
+        region_events.append(region_event)
+
+    menu_region.locations.extend(region_events)
