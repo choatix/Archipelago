@@ -114,6 +114,9 @@ class GAME_ADDRESSES:
     COSMIC_FALL_TIMER = 0x807D6C18
     LAST_WAY_TIMER = 0x807D6C90
 
+    SUBTITLE_INFO = 0x8057FA6C
+    LAST_SUBTITLE_TEXT = 0x80573340
+
     CharacterAddresses = [
         CharacterAddress("Sonic", 0x8057D77B),
         CharacterAddress("Tails", 0x8057D77F),
@@ -1162,6 +1165,14 @@ class ShTHContext(CommonContext):
         self.door_sanity = False
         self.gold_beetle_sanity = False
 
+        self.last_subtitle_text_pointer = None
+        self.last_subtitle_default_text = None
+        self.last_subtitle_ttl = None
+        self.last_subtitle_ttl_pointer = None
+        self.last_save_index = None
+        self.last_save_index_message = None
+        self.last_subtitle_base_pointer = None
+
 
     async def disconnect(self, allow_autoreconnect: bool = False):
         self.auth = None
@@ -1465,6 +1476,7 @@ class ShTHContext(CommonContext):
                 for item in args["items"]:
                     self.items_to_handle.append((item, self.last_rcvd_index))
                     self.last_rcvd_index += 1
+                    print("lrcvdi", self.last_rcvd_index, item)
             self.items_to_handle.sort(key=lambda v: v[1])
         elif cmd == "Retrieved":
             pass
@@ -2776,15 +2788,34 @@ def get_last_index_storage_location(ctx):
     return [ l[1] for l in GetStageUnlockAddresses().items() if l[0] == ctx.level_buffer ][0]
 
 def get_last_index(ctx):
-    decided_last_index_address = get_last_index_storage_location(ctx)
+    if ctx.last_save_index is None:
+        decided_last_index_address = get_last_index_storage_location(ctx)
+        if decided_last_index_address is None:
+            return -1
 
-    if decided_last_index_address is None:
-        return -1
+        current_potential_bytes = dolphin_memory_engine.read_bytes(decided_last_index_address, 4)
+        current_potential = int.from_bytes(current_potential_bytes[1:3], byteorder="big")
+        print("Get last index message", current_potential, decided_last_index_address)
+        ctx.last_save_index = current_potential
 
-    current_potential_bytes = dolphin_memory_engine.read_bytes(decided_last_index_address, 4)
-    current_potential = int.from_bytes(current_potential_bytes[1:3], byteorder="big")
+    return ctx.last_save_index
 
-    return current_potential
+
+def get_last_index_message(ctx):
+    if ctx.last_save_index is None:
+        decided_last_index_address = get_last_index_storage_location(ctx)
+        if decided_last_index_address is None:
+            return -1
+
+        current_potential_bytes = dolphin_memory_engine.read_bytes(decided_last_index_address, 4)
+        current_potential = int.from_bytes(current_potential_bytes[1:3], byteorder="big")
+        print("Get last index message", current_potential, decided_last_index_address)
+        ctx.last_save_index = current_potential
+
+    if ctx.last_save_index_message is None:
+        ctx.last_save_index_message = ctx.last_save_index
+
+    return ctx.last_save_index_message
 
 
 def set_last_index(ctx, new_value):
@@ -2798,6 +2829,17 @@ def set_last_index(ctx, new_value):
     current_potential_bytes[2] = bytes_to_manip[1]
     potential_bytes = bytes(current_potential_bytes)
     writeBytes(decided_last_index_address, potential_bytes)
+    ctx.last_save_index = new_value
+
+def set_last_index_message(ctx, new_value):
+    # Check not to overwrite a higher value
+    if ctx.last_save_index is None:
+        ctx.last_save_index = 0
+
+    if ctx.last_save_index <= new_value:
+        set_last_index(ctx, new_value)
+
+    ctx.last_save_index_message = new_value
 
 def should_send_ring_link(ctx, death):
     should_send = True
@@ -3472,6 +3514,150 @@ async def handle_objects(ctx, current_level):
 
 
 
+def TextToShadowBytes(message):
+    shadow_bytes = []
+    for c in message:
+        shadow_bytes.append(0)
+        shadow_bytes.append(ord(c))
+
+    shadow_bytes.extend([0,0])
+    return bytes(bytearray(shadow_bytes))
+
+
+def DisplayMessages(ctx):
+    display_time = 0xFF
+
+    info = Items.GetItemLookupDict()
+
+    last_index = get_last_index_message(ctx)
+    print("last index is", last_index, ctx.last_subtitle_text_pointer)
+    latest_index = None
+    displayable = False
+
+    if last_index is not None and ctx.last_subtitle_text_pointer is None:
+        # get the next message to display
+        latest_index = None
+        message = None
+
+        rec_info = None
+
+        messages = []
+        messages.extend(ctx.handled)
+        messages.extend(ctx.items_to_handle)
+
+        if len(messages) == 0:
+            print("No messages to handle")
+            return
+
+        next_messages = [ l[1] for l in messages if l[1] > last_index]
+        if len(next_messages) == 0:
+            return
+        next_message = next_messages[0]
+
+        print("nm is", next_message, "vs", last_index)
+
+        if next_message > last_index:
+            rec_info = [ m[0] for m in messages if m[1] == next_message ][0]
+            print("nm more", rec_info)
+
+        if rec_info is not None:
+            message = f"Received {info[rec_info.item].name}"
+
+        if message is not None:
+            displayable = DisplayMessageInGame(ctx, message, display_time)
+            if displayable:
+                latest_index = next_message
+
+    elif ctx.last_subtitle_text_pointer is not None:
+        DisplayMessageInGame(ctx, None, None)
+
+    if displayable and latest_index is not None:
+        print("Dispayable, set next")
+        set_last_index_message(ctx, latest_index)
+
+def DisplayMessageInGame(ctx, message, display_time):
+
+    if message is not None:
+        print("Display:", message)
+
+    is_subtitle_active_address = GAME_ADDRESSES.SUBTITLE_INFO
+    subtitle_reference_pointer_address = is_subtitle_active_address + (4*7)
+
+    subtitle_data_pointer_offset = (16*3)
+    subtitle_data_display_time_offset = (3*4)
+
+    subtitle_active_bytes = dolphin_memory_engine.read_bytes(is_subtitle_active_address, 4)
+    subtitle_active = int.from_bytes(subtitle_active_bytes, byteorder="big")
+
+    message_state_changed = False
+    # Wait until subtitle is active
+    if subtitle_active == 0xFFFFFFFF:
+        message_state_changed = True
+
+    subtitle_reference_active = None
+    if not message_state_changed:
+        subtitle_reference_pointer_bytes = dolphin_memory_engine.read_bytes(subtitle_reference_pointer_address, 4)
+        subtitle_reference_pointer = int.from_bytes(subtitle_reference_pointer_bytes, byteorder="big")
+
+        subtitle_reference_active_address = subtitle_reference_pointer + subtitle_data_pointer_offset
+        subtitle_reference_active_bytes = dolphin_memory_engine.read_bytes(subtitle_reference_active_address, 4)
+
+        ctx.last_subtitle_base_pointer = subtitle_reference_active_bytes
+        if ctx.last_subtitle_base_pointer is not None and ctx.last_subtitle_base_pointer != subtitle_reference_active_bytes:
+            message_state_changed = True
+
+        subtitle_reference_active = int.from_bytes(subtitle_reference_active_bytes, byteorder="big")
+
+    if message_state_changed:
+        if ctx.last_subtitle_text_pointer is not None:
+            writeBytes(ctx.last_subtitle_text_pointer, ctx.last_subtitle_default_text)
+            ctx.last_subtitle_text_pointer = None
+            ctx.last_subtitle_default_text = None
+
+        if ctx.last_subtitle_ttl is not None:
+            writeBytes(ctx.last_subtitle_ttl_pointer, ctx.last_subtitle_ttl)
+            ctx.last_subtitle_ttl = None
+            ctx.last_subtitle_ttl_pointer = None
+
+        ctx.last_subtitle_base_pointer = None
+
+        print("Message stopped being displayed")
+        # check last known information for ttl and message data and restore it!
+        return False
+
+    if message is None:
+        return None
+
+
+
+    ttl_address = subtitle_reference_active+subtitle_data_display_time_offset
+    subtitle_ttl_bytes = dolphin_memory_engine.read_bytes(ttl_address, 4)
+    ttl_bytes = display_time.to_bytes(4, byteorder='big')
+
+    if subtitle_ttl_bytes != ttl_bytes:
+        print("Show message for:", ttl_bytes)
+        writeBytes(ttl_address, ttl_bytes)
+        ctx.last_subtitle_ttl = subtitle_ttl_bytes
+        ctx.last_subtitle_ttl_pointer = ttl_address
+
+    text_pointer_address = GAME_ADDRESSES.LAST_SUBTITLE_TEXT
+    text_pointer_bytes = dolphin_memory_engine.read_bytes(text_pointer_address, 4)
+    text_pointer = int.from_bytes(text_pointer_bytes, byteorder="big")
+
+    shadow_message_bytes = TextToShadowBytes(message)
+
+
+    current_subtitle_bytes = dolphin_memory_engine.read_bytes(text_pointer, len(shadow_message_bytes))
+    if current_subtitle_bytes != shadow_message_bytes:
+        print("Display as message", message)
+        writeBytes(text_pointer, shadow_message_bytes)
+        ctx.last_subtitle_text_pointer = text_pointer
+        ctx.last_subtitle_default_text = current_subtitle_bytes
+
+
+    return True
+
+
 
 async def update_level_behaviour(ctx, current_level, death):
     # based on the level
@@ -3483,6 +3669,7 @@ async def update_level_behaviour(ctx, current_level, death):
 
     await handle_objects(ctx, current_level)
     # ShowSETChanges(current_level)
+    DisplayMessages(ctx)
 
     # Add handle for first load of level, when state is blank
 

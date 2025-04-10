@@ -14,6 +14,8 @@ DESIRABLE_OBJECTS_MAD_MATRIX  = [
     SETObject(ObjectType.LIGHT_DASH_TRAIL, Levels.STAGE_MAD_MATRIX, 269, "Light Dash Into Red"),
     SETObject(ObjectType.LIGHT_DASH_TRAIL, Levels.STAGE_MAD_MATRIX, 350, "Light Dash Out Of Red"),
     SETObject(ObjectType.LIGHT_DASH_TRAIL, Levels.STAGE_MAD_MATRIX, 552, "Light Dash Within Yellow"),
+    SETObject(ObjectType.LIGHT_DASH_TRAIL_ANTI_TRAP, Levels.STAGE_MAD_MATRIX, 328, 'Light Dash Near Red/Yellow',
+              region=REGION_INDICIES.MAD_MATRIX_GUN),
 
     SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_MAD_MATRIX, 500, "Shadow Box Near Red",
               region=REGION_INDICIES.MAD_MATRIX_GUN),
@@ -40,8 +42,7 @@ DESIRABLE_OBJECTS_MAD_MATRIX  = [
     SETObject(ObjectType.BLACK_HAWK, Levels.STAGE_MAD_MATRIX, 502, '11', region=REGION_INDICIES.MAD_MATRIX_GUN),
     SETObject(ObjectType.BLACK_HAWK, Levels.STAGE_MAD_MATRIX, 503, '12', region=REGION_INDICIES.MAD_MATRIX_GUN),
     SETObject(ObjectType.EGG_PAWN, Levels.STAGE_MAD_MATRIX, 327, '13', region=REGION_INDICIES.MAD_MATRIX_GUN),
-    SETObject(ObjectType.LIGHT_DASH_TRAIL, Levels.STAGE_MAD_MATRIX, 328, '14',
-              region=REGION_INDICIES.MAD_MATRIX_GUN),
+
     SETObject(ObjectType.EGG_PAWN, Levels.STAGE_MAD_MATRIX, 445, '15', region=REGION_INDICIES.MAD_MATRIX_GUN),
     SETObject(ObjectType.EGG_PAWN, Levels.STAGE_MAD_MATRIX, 451, '16', region=REGION_INDICIES.MAD_MATRIX_GUN),
     SETObject(ObjectType.EGG_PAWN, Levels.STAGE_MAD_MATRIX, 449, '17', region=REGION_INDICIES.MAD_MATRIX_GUN),
