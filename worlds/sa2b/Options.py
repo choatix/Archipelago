@@ -4,6 +4,9 @@ from Options import Choice, Range, Option, OptionGroup, Toggle, DeathLink, Defau
 
 from .Names import LocationName
 
+from Options import Choice, Range, Option, Toggle, DeathLink, DefaultOnToggle, OptionList, ItemDict, LocationSet, T, \
+    FreeText, OptionSet, PerGameCommonOptions, OptionGroup, PlandoBosses
+from worlds.ladx.Options import DefaultOffToggle
 
 class Goal(Choice):
     """
@@ -520,7 +523,7 @@ class LevelGateCosts(Choice):
     option_low = 0
     option_medium = 1
     option_high = 2
-    default = 0
+    default = 2
 
 
 class MaximumEmblemCap(Range):
@@ -601,6 +604,7 @@ class ChaoStats(Range):
     """
     Determines the highest level in each Chao Stat that grants checks
     (Swim, Fly, Run, Power)
+    This is the default
     """
     display_name = "Chao Stats"
     range_start = 0
@@ -692,6 +696,16 @@ class BlackMarketPriceMultiplier(Range):
     range_end = 40
     default = 1
 
+class BlackMarketPriceMultiplierMin(Range):
+    """
+    Determines how many rings the Black Market items cost
+    The base ring costs of items in the Black Market range from 50-100,
+    and are then multiplied by this value
+    """
+    display_name = "Black Market Price Multiplier"
+    range_start = 0
+    range_end = 40
+    default = 1
 
 class ShuffleStartingChaoEggs(DefaultOnToggle):
     """
@@ -706,6 +720,17 @@ class ChaoEntranceRandomization(Toggle):
     """
     display_name = "Chao Entrance Randomization"
 
+class ChaosDrivesJunk(DefaultOnToggle):
+    """
+    Determines whether the starting Chao eggs in the gardens are random
+    """
+    display_name = "Chaos Drives as Junk"
+
+class RequiredMissions(LocationSet):
+    """
+    Determines whether the starting Chao eggs in the gardens are random
+    """
+    display_name = "Required Missions List"
 
 class RequiredCannonsCoreMissions(Choice):
     """
@@ -728,6 +753,14 @@ class BaseMissionCount(Range):
     range_start = 1
     range_end = 5
     default = 2
+
+class BaseLevelCount(BaseMissionCount):
+    """
+    Base class for mission count options
+    """
+    range_start = 1
+    range_end = 5
+    default = 5
 
 
 class SonicMissionCount(BaseMissionCount):
@@ -1117,6 +1150,7 @@ class VoiceShuffle(Choice):
     option_rude = 2
     option_chao = 3
     option_singularity = 4
+    option_shuffled_no_omochao = 5
     default = 0
 
 
@@ -1155,6 +1189,229 @@ class LogicDifficulty(Choice):
     option_expert = 2
     default = 0
 
+class LevelWeights(DefaultOnToggle):
+    """
+        Whether to use level weights as an option
+    """
+    exists = True
+
+class CityEscapeLevels(BaseLevelCount):
+    """
+        Maximum number of City Escape levels
+    """
+    display_name = "City Escape Levels"
+
+class WildCanyonLevels(BaseLevelCount):
+    """
+        Maximum number of Wild Canyon levels
+    """
+    display_name = "Wild Canyon Levels"
+
+class PrisonLaneLevels(BaseLevelCount):
+    """
+        Maximum number of Prison Lane levels
+    """
+    display_name = "Prison Lane Levels"
+
+class MetalHarborLevels(BaseLevelCount):
+    """
+        Maximum number of Metal Harbor levels
+    """
+    display_name = "Metal Harbor Levels"
+
+class PumpkinHillLevels(BaseLevelCount):
+    """
+        Maximum number of Pumpkin Hill levels
+    """
+    display_name = "Pumpkin Hill Levels"
+
+class GreenForestLevels(BaseLevelCount):
+    """
+        Maximum number of Green Forest levels
+    """
+    display_name = "Green Forest Levels"
+
+class MissionStreetLevels(BaseLevelCount):
+    """
+        Maximum number of Mission Street levels
+    """
+    display_name = "Mission Street Levels"
+
+class AquaticMineLevels(BaseLevelCount):
+    """
+        Maximum number of Aquatic Mine levels
+    """
+    display_name = "Aquatic Mine Levels"
+
+class Route101Levels(BaseLevelCount):
+    """
+        Maximum number of Route 101 levels
+    """
+    display_name = "Route 101 Levels"
+
+class HiddenBaseLevels(BaseLevelCount):
+    """
+        Maximum number of Hidden Base levels
+    """
+    display_name = "Hidden Base Levels"
+
+class PyramidCaveLevels(BaseLevelCount):
+    """
+        Maximum number of Pyramid Cave levels
+    """
+    display_name = "Pyramid Cave Levels"
+
+class DeathChamberLevels(BaseLevelCount):
+    """
+        Maximum number of Death Chamber levels
+    """
+    display_name = "Death ChamberLevels"
+
+class EternalEngineLevels(BaseLevelCount):
+    """
+        Maximum number of Eternal Engine levels
+    """
+    display_name = "Eternal Engine Levels"
+
+class MeteorHerdLevels(BaseLevelCount):
+    """
+        Maximum number of Meteor Herd levels
+    """
+    display_name = "Meteor Herd Levels"
+
+class CrazyGadgetLevels(BaseLevelCount):
+    """
+        Maximum number of Crazy Gadget levels
+    """
+    display_name = "Crazy Gadget Levels"
+
+class FinalRushLevels(BaseLevelCount):
+    """
+        Maximum number of Final Rush levels
+    """
+    display_name = "Final Rush Levels"
+
+class IronGateLevels(BaseLevelCount):
+    """
+        Maximum number of Iron Gate levels
+    """
+    display_name = "Iron Gate Levels"
+class DryLagoonLevels(BaseLevelCount):
+    """
+        Maximum number of Dry Lagoon levels
+    """
+    display_name = "Dry Lagoon Levels"
+
+class SandOceanLevels(BaseLevelCount):
+    """
+        Maximum number of Sand Ocean levels
+    """
+    display_name = "Sand Ocean Levels"
+
+class RadicalHighwayLevels(BaseLevelCount):
+    """
+        Maximum number of Radical Highway levels
+    """
+    display_name = "Radical Highway Levels"
+
+class EggQuartersLevels(BaseLevelCount):
+    """
+        Maximum number of Egg Quarters levels
+    """
+    display_name = "Egg Quarters Levels"
+
+class LostColonyLevels(BaseLevelCount):
+    """
+        Maximum number of Lost Colony levels
+    """
+    display_name = "Lost Colony Levels"
+
+class WeaponsBedLevels(BaseLevelCount):
+    """
+        Maximum number of Weapons Bed levels
+    """
+    display_name = "Weapons Bed Levels"
+
+class SecurityHallLevels(BaseLevelCount):
+    """
+        Maximum number of Security Hall levels
+    """
+    display_name = "Security Hall Levels"
+
+class WhiteJungleLevels(BaseLevelCount):
+    """
+        Maximum number of White Jungle levels
+    """
+    display_name = "White Jungle Levels"
+
+class Route280Levels(BaseLevelCount):
+    """
+        Maximum number of Route 280 levels
+    """
+    display_name = "Route 280 Levels"
+
+class SkyRailLevels(BaseLevelCount):
+    """
+        Maximum number of Sky Rail evels
+    """
+    display_name = "Sky Rail Levels"
+
+class MadSpaceLevels(BaseLevelCount):
+    """
+        Maximum number of Mad Space levels
+    """
+    display_name = "Mad Space Levels"
+
+class CosmicWallLevels(BaseLevelCount):
+    """
+        Maximum number of Cosmic Wall levels
+    """
+    display_name = "Cosmic Wall Levels"
+
+class FinalChaseLevels(BaseLevelCount):
+    """
+        Maximum number of Final Chase levels
+    """
+    display_name = "Final Chase Levels"
+
+class AdditionalChaoNames(OptionSet):
+    """
+        List of additional chao names to use
+    """
+    display_name = "Additional Chao Names"
+    default = []
+
+class AdditionalTrapNames(OptionSet):
+    """
+        List of additional trap names to use
+    """
+    display_name = "Additional Trap Names"
+    default = []
+
+class OnlyAdditionalChaoNames(DefaultOffToggle):
+    """
+    Determines whether to replace all Chao Names with the custom list
+    """
+    display_name = "Replace Chao Names"
+
+class OnlyAdditionalTrapNames(DefaultOffToggle):
+    """
+    Determines whether tp replace all Trap Names with the custom list
+    """
+    display_name = "Replace Traps"
+
+class MissionShuffleParameters(OptionSet):
+    """
+    Parameters to determine some forced restrictions on some mission shuffle behaviours
+    """
+    display_name = "Shuffle Params"
+
+class DisallowOnlyM2(DefaultOffToggle):
+    """
+    Option to disallow only M2 as a valid level choice
+    """
+    display_name = "Disallow Only M2"
+
 
 sa2b_option_groups = [
     OptionGroup("General Options", [
@@ -1189,6 +1446,7 @@ sa2b_option_groups = [
         BlackMarketSlots,
         BlackMarketUnlockCosts,
         BlackMarketPriceMultiplier,
+        BlackMarketPriceMultiplierMin,
         ChaoRaceDifficulty,
         ChaoKarateDifficulty,
         ChaoStadiumChecks,
@@ -1297,6 +1555,40 @@ sa2b_option_groups = [
         VoiceShuffle,
         Narrator,
     ]),
+
+    OptionGroup("Level Weighting", [
+        LevelWeights,
+        CityEscapeLevels,
+        WildCanyonLevels,
+        PrisonLaneLevels,
+        MetalHarborLevels,
+        GreenForestLevels,
+        PumpkinHillLevels,
+        MissionStreetLevels,
+        AquaticMineLevels,
+        Route101Levels,
+        HiddenBaseLevels,
+        PyramidCaveLevels,
+        DeathChamberLevels,
+        EternalEngineLevels,
+        MeteorHerdLevels,
+        CrazyGadgetLevels,
+        FinalRushLevels,
+        IronGateLevels,
+        DryLagoonLevels,
+        SandOceanLevels,
+        RadicalHighwayLevels,
+        EggQuartersLevels,
+        LostColonyLevels,
+        WeaponsBedLevels,
+        SecurityHallLevels,
+        WhiteJungleLevels,
+        Route280Levels,
+        SkyRailLevels,
+        MadSpaceLevels,
+        CosmicWallLevels,
+        FinalChaseLevels
+    ]),
 ]
 
 @dataclass
@@ -1330,6 +1622,7 @@ class SA2BOptions(PerGameCommonOptions):
     black_market_slots: BlackMarketSlots
     black_market_unlock_costs: BlackMarketUnlockCosts
     black_market_price_multiplier: BlackMarketPriceMultiplier
+    black_market_price_multiplier_min: BlackMarketPriceMultiplierMin
     chao_race_difficulty: ChaoRaceDifficulty
     chao_karate_difficulty: ChaoKarateDifficulty
     chao_stadium_checks: ChaoStadiumChecks
@@ -1430,3 +1723,45 @@ class SA2BOptions(PerGameCommonOptions):
     ring_link: RingLink
     trap_link: TrapLink
     death_link: DeathLink
+
+    level_weights: LevelWeights
+    city_escape_levels: CityEscapeLevels
+    wild_canyon_levels: WildCanyonLevels
+    prison_lane_levels: PrisonLaneLevels
+    metal_harbor_levels: MetalHarborLevels
+    green_forest_levels: GreenForestLevels
+    pumpkin_hill_levels: PumpkinHillLevels
+    mission_street_levels: MissionStreetLevels
+    aquatic_mine_levels: AquaticMineLevels
+    route_101_levels: Route101Levels
+    hidden_base_levels: HiddenBaseLevels
+    pyramid_cave_levels: PyramidCaveLevels
+    death_chamber_levels: DeathChamberLevels
+    eternal_engine_levels: EternalEngineLevels
+    meteor_herd_levels: MeteorHerdLevels
+    crazy_gadget_levels: CrazyGadgetLevels
+    final_rush_levels: FinalRushLevels
+    iron_gate_levels: IronGateLevels
+    dry_lagoon_levels: DryLagoonLevels
+    sand_ocean_levels: SandOceanLevels
+    radical_highway_levels: RadicalHighwayLevels
+    egg_quarters_levels: EggQuartersLevels
+    lost_colony_levels: LostColonyLevels
+    weapons_bed_levels: WeaponsBedLevels
+    security_hall_levels: SecurityHallLevels
+    white_jungle_levels: WhiteJungleLevels
+    route_280_levels: Route280Levels
+    sky_rail_levels: SkyRailLevels
+    mad_space_levels: MadSpaceLevels
+    cosmic_wall_levels: CosmicWallLevels
+    final_chase_levels: FinalChaseLevels
+
+    chaos_drives_enabled: ChaosDrivesJunk
+    required_missions: RequiredMissions
+    additional_chao_names: AdditionalChaoNames
+    additional_trap_names: AdditionalTrapNames
+    replace_chao_names: OnlyAdditionalChaoNames
+    replace_trap_names: OnlyAdditionalTrapNames
+    disallow_only_M2: DisallowOnlyM2
+
+    mission_shuffle_parameters: MissionShuffleParameters

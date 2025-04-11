@@ -3,10 +3,13 @@ import math
 
 from BaseClasses import MultiWorld, Region, Entrance, ItemClassification
 from worlds.AutoWorld import World
+
+
+from . import Missions
 from .Items import SA2BItem, minigame_trap_table
 from .Locations import *
 from .Names import LocationName, ItemName
-from .GateBosses import get_boss_name, all_gate_bosses_table, king_boom_boo
+from .GateBosses import get_boss_name, all_gate_bosses_table, king_boom_boo, hot_shot, big_foot, egg_golem_eggman
 
 
 class LevelGate:
@@ -712,6 +715,67 @@ def create_regions(multiworld: MultiWorld, world: World, player: int, active_loc
 
     multiworld.regions += conditional_regions
 
+def handle_level_gate_regions(multiworld: MultiWorld, player: int, names: dict[str, int], gate_region: str,
+                              gates: typing.List[LevelGate], gate_index: int, level: int):
+
+    conditions = lambda x: True
+
+    level_name = shuffleable_regions[gates[gate_index].gate_levels[level]]
+
+    if level_name == "Final Chase":
+        conditions = lambda state : state.has(ItemName.shadow_ancient_light, player)
+    elif level_name == "Final Rush":
+        conditions = lambda state: state.has(ItemName.sonic_ancient_light, player)
+    elif level_name == "Sand Ocean":
+        conditions = lambda state: state.has(ItemName.eggman_jet_engine, player)
+    elif level_name == "Cosmic Wall":
+        conditions = lambda state: state.has(ItemName.eggman_laser_blaster, player)
+    elif level_name == "Eternal Engine":
+        conditions = lambda state: state.has(ItemName.tails_laser_blaster, player)
+
+    connect(multiworld, player, names, gate_region, shuffleable_regions[gates[gate_index].gate_levels[level]],
+            conditions)
+
+def handle_boss_gate(multiworld: MultiWorld, player: int, names: dict[str, int], gates: typing.List[LevelGate],
+                     gate_bosses: dict, prior_region: str, gate_region: str, gate_boss_region: str, gate_index: int):
+    connect(multiworld, player, names, prior_region, gate_boss_region,
+            lambda state: (state.has(ItemName.emblem, player, gates[gate_index].gate_emblem_count)))
+
+    if gate_bosses[gate_index] == all_gate_bosses_table[king_boom_boo]:
+        connect(multiworld, player, names, gate_boss_region, gate_region,
+                lambda state: (state.has(ItemName.knuckles_shovel_claws, player)))
+    #elif gate_bosses[gate_index] == all_gate_bosses_table[hot_shot]:
+    #    connect(multiworld, player, names, gate_boss_region, gate_region,
+    #            lambda state: (state.has(ItemName.sonic_bounce_bracelet, player)))
+    #elif gate_bosses[gate_index] == all_gate_bosses_table[big_foot]:
+    #    connect(multiworld, player, names, gate_boss_region, gate_region,
+    #            lambda state: (state.has(ItemName.sonic_bounce_bracelet, player)))
+    else:
+        connect(multiworld, player, names, gate_boss_region, gate_region)
+
+    for i in range(len(gates[gate_index].gate_levels)):
+        handle_level_gate_regions(multiworld, player, names, gate_region, gates, gate_index, i)
+
+def handle_gates(multiworld: MultiWorld, player: int, names: dict, gates: typing.List[LevelGate], gate_bosses: dict):
+    gates_len = len(gates)
+
+    for i in range(len(gates[0].gate_levels)):
+        handle_level_gate_regions(multiworld, player, names, LocationName.gate_0_region, gates, 0, i)
+
+    if gates_len >= 2:
+        handle_boss_gate(multiworld, player, names, gates, gate_bosses, LocationName.gate_0_region, LocationName.gate_1_region, LocationName.gate_1_boss_region, 1)
+
+    if gates_len >= 3:
+        handle_boss_gate(multiworld, player, names, gates, gate_bosses, LocationName.gate_1_region, LocationName.gate_2_region, LocationName.gate_2_boss_region, 2)
+
+    if gates_len >= 4:
+        handle_boss_gate(multiworld, player, names, gates, gate_bosses, LocationName.gate_2_region, LocationName.gate_3_region, LocationName.gate_3_boss_region, 3)
+
+    if gates_len >= 5:
+        handle_boss_gate(multiworld, player, names, gates, gate_bosses, LocationName.gate_3_region, LocationName.gate_4_region, LocationName.gate_4_boss_region, 4)
+
+    if gates_len >= 6:
+        handle_boss_gate(multiworld, player, names, gates, gate_bosses, LocationName.gate_4_region, LocationName.gate_5_region, LocationName.gate_5_boss_region, 5)
 
 def connect_regions(multiworld: MultiWorld, world: World, player: int, gates: typing.List[LevelGate], cannon_core_emblems, gate_bosses, boss_rush_bosses, first_cannons_core_mission: str, final_cannons_core_mission: str):
     names: typing.Dict[str, int] = {}
@@ -778,74 +842,77 @@ def connect_regions(multiworld: MultiWorld, world: World, player: int, gates: ty
         connect(multiworld, player, names, LocationName.gate_0_region, LocationName.biolizard_region,
                 lambda state: (state.has_all_counts(trap_item_mapping, player)))
 
-    for i in range(len(gates[0].gate_levels)):
-        connect(multiworld, player, names, LocationName.gate_0_region, shuffleable_regions[gates[0].gate_levels[i]])
-
     gates_len = len(gates)
-    if gates_len >= 2:
-        connect(multiworld, player, names, LocationName.gate_0_region, LocationName.gate_1_boss_region,
-                lambda state: (state.has(ItemName.emblem, player, gates[1].gate_emblem_count)))
+    handle_gates(multiworld, player, names, gates, gate_bosses)
 
-        if gate_bosses[1] == all_gate_bosses_table[king_boom_boo]:
-            connect(multiworld, player, names, LocationName.gate_1_boss_region, LocationName.gate_1_region,
-                    lambda state: (state.has(ItemName.knuckles_shovel_claws, player)))
-        else:
-            connect(multiworld, player, names, LocationName.gate_1_boss_region, LocationName.gate_1_region)
+    # for i in range(len(gates[0].gate_levels)):
+    #     connect(multiworld, player, names, LocationName.gate_0_region, shuffleable_regions[gates[0].gate_levels[i]])
+    #
 
-        for i in range(len(gates[1].gate_levels)):
-            connect(multiworld, player, names, LocationName.gate_1_region, shuffleable_regions[gates[1].gate_levels[i]])
-
-    if gates_len >= 3:
-        connect(multiworld, player, names, LocationName.gate_1_region, LocationName.gate_2_boss_region,
-                lambda state: (state.has(ItemName.emblem, player, gates[2].gate_emblem_count)))
-
-        if gate_bosses[2] == all_gate_bosses_table[king_boom_boo]:
-            connect(multiworld, player, names, LocationName.gate_2_boss_region, LocationName.gate_2_region,
-                    lambda state: (state.has(ItemName.knuckles_shovel_claws, player)))
-        else:
-            connect(multiworld, player, names, LocationName.gate_2_boss_region, LocationName.gate_2_region)
-
-        for i in range(len(gates[2].gate_levels)):
-            connect(multiworld, player, names, LocationName.gate_2_region, shuffleable_regions[gates[2].gate_levels[i]])
-
-    if gates_len >= 4:
-        connect(multiworld, player, names, LocationName.gate_2_region, LocationName.gate_3_boss_region,
-                lambda state: (state.has(ItemName.emblem, player, gates[3].gate_emblem_count)))
-
-        if gate_bosses[3] == all_gate_bosses_table[king_boom_boo]:
-            connect(multiworld, player, names, LocationName.gate_3_boss_region, LocationName.gate_3_region,
-                    lambda state: (state.has(ItemName.knuckles_shovel_claws, player)))
-        else:
-            connect(multiworld, player, names, LocationName.gate_3_boss_region, LocationName.gate_3_region)
-
-        for i in range(len(gates[3].gate_levels)):
-            connect(multiworld, player, names, LocationName.gate_3_region, shuffleable_regions[gates[3].gate_levels[i]])
-
-    if gates_len >= 5:
-        connect(multiworld, player, names, LocationName.gate_3_region, LocationName.gate_4_boss_region,
-                lambda state: (state.has(ItemName.emblem, player, gates[4].gate_emblem_count)))
-
-        if gate_bosses[4] == all_gate_bosses_table[king_boom_boo]:
-            connect(multiworld, player, names, LocationName.gate_4_boss_region, LocationName.gate_4_region,
-                    lambda state: (state.has(ItemName.knuckles_shovel_claws, player)))
-        else:
-            connect(multiworld, player, names, LocationName.gate_4_boss_region, LocationName.gate_4_region)
-
-        for i in range(len(gates[4].gate_levels)):
-            connect(multiworld, player, names, LocationName.gate_4_region, shuffleable_regions[gates[4].gate_levels[i]])
-
-    if gates_len >= 6:
-        connect(multiworld, player, names, LocationName.gate_4_region, LocationName.gate_5_boss_region,
-                lambda state: (state.has(ItemName.emblem, player, gates[5].gate_emblem_count)))
-
-        if gate_bosses[5] == all_gate_bosses_table[king_boom_boo]:
-            connect(multiworld, player, names, LocationName.gate_5_boss_region, LocationName.gate_5_region,
-                    lambda state: (state.has(ItemName.knuckles_shovel_claws, player)))
-        else:
-            connect(multiworld, player, names, LocationName.gate_5_boss_region, LocationName.gate_5_region)
-
-        for i in range(len(gates[5].gate_levels)):
-            connect(multiworld, player, names, LocationName.gate_5_region, shuffleable_regions[gates[5].gate_levels[i]])
+    # if gates_len >= 2:
+    #     connect(multiworld, player, names, LocationName.gate_0_region, LocationName.gate_1_boss_region,
+    #             lambda state: (state.has(ItemName.emblem, player, gates[1].gate_emblem_count)))
+    #
+    #     if gate_bosses[1] == all_gate_bosses_table[king_boom_boo]:
+    #         connect(multiworld, player, names, LocationName.gate_1_boss_region, LocationName.gate_1_region,
+    #                 lambda state: (state.has(ItemName.knuckles_shovel_claws, player)))
+    #     else:
+    #         connect(multiworld, player, names, LocationName.gate_1_boss_region, LocationName.gate_1_region)
+    #
+    #     for i in range(len(gates[1].gate_levels)):
+    #         connect(multiworld, player, names, LocationName.gate_1_region, shuffleable_regions[gates[1].gate_levels[i]])
+    #
+    # if gates_len >= 3:
+    #     connect(multiworld, player, names, LocationName.gate_1_region, LocationName.gate_2_boss_region,
+    #             lambda state: (state.has(ItemName.emblem, player, gates[2].gate_emblem_count)))
+    #
+    #     if gate_bosses[2] == all_gate_bosses_table[king_boom_boo]:
+    #         connect(multiworld, player, names, LocationName.gate_2_boss_region, LocationName.gate_2_region,
+    #                 lambda state: (state.has(ItemName.knuckles_shovel_claws, player)))
+    #     else:
+    #         connect(multiworld, player, names, LocationName.gate_2_boss_region, LocationName.gate_2_region)
+    #
+    #     for i in range(len(gates[2].gate_levels)):
+    #         connect(multiworld, player, names, LocationName.gate_2_region, shuffleable_regions[gates[2].gate_levels[i]])
+    #
+    # if gates_len >= 4:
+    #     connect(multiworld, player, names, LocationName.gate_2_region, LocationName.gate_3_boss_region,
+    #             lambda state: (state.has(ItemName.emblem, player, gates[3].gate_emblem_count)))
+    #
+    #     if gate_bosses[3] == all_gate_bosses_table[king_boom_boo]:
+    #         connect(multiworld, player, names, LocationName.gate_3_boss_region, LocationName.gate_3_region,
+    #                 lambda state: (state.has(ItemName.knuckles_shovel_claws, player)))
+    #     else:
+    #         connect(multiworld, player, names, LocationName.gate_3_boss_region, LocationName.gate_3_region)
+    #
+    #     for i in range(len(gates[3].gate_levels)):
+    #         connect(multiworld, player, names, LocationName.gate_3_region, shuffleable_regions[gates[3].gate_levels[i]])
+    #
+    # if gates_len >= 5:
+    #     connect(multiworld, player, names, LocationName.gate_3_region, LocationName.gate_4_boss_region,
+    #             lambda state: (state.has(ItemName.emblem, player, gates[4].gate_emblem_count)))
+    #
+    #     if gate_bosses[4] == all_gate_bosses_table[king_boom_boo]:
+    #         connect(multiworld, player, names, LocationName.gate_4_boss_region, LocationName.gate_4_region,
+    #                 lambda state: (state.has(ItemName.knuckles_shovel_claws, player)))
+    #     else:
+    #         connect(multiworld, player, names, LocationName.gate_4_boss_region, LocationName.gate_4_region)
+    #
+    #     for i in range(len(gates[4].gate_levels)):
+    #         connect(multiworld, player, names, LocationName.gate_4_region, shuffleable_regions[gates[4].gate_levels[i]])
+    #
+    # if gates_len >= 6:
+    #     connect(multiworld, player, names, LocationName.gate_4_region, LocationName.gate_5_boss_region,
+    #             lambda state: (state.has(ItemName.emblem, player, gates[5].gate_emblem_count)))
+    #
+    #     if gate_bosses[5] == all_gate_bosses_table[king_boom_boo]:
+    #         connect(multiworld, player, names, LocationName.gate_5_boss_region, LocationName.gate_5_region,
+    #                 lambda state: (state.has(ItemName.knuckles_shovel_claws, player)))
+    #     else:
+    #         connect(multiworld, player, names, LocationName.gate_5_boss_region, LocationName.gate_5_region)
+    #
+    #     for i in range(len(gates[5].gate_levels)):
+    #         connect(multiworld, player, names, LocationName.gate_5_region, shuffleable_regions[gates[5].gate_levels[i]])
 
     if gates_len == 1:
         connect(multiworld, player, names, LocationName.gate_0_region, LocationName.chao_race_beginner_region)
@@ -1389,6 +1456,16 @@ def connect_regions(multiworld: MultiWorld, world: World, player: int, gates: ty
                 connect(multiworld, player, names, LocationName.cannon_core_region, LocationName.animal_dragon)
 
     if world.options.black_market_slots.value > 0:
+
+        # coin_checks_per_gate = world.options.black_market_slots.value / (gates_len)
+        # for index in range(1, world.options.black_market_slots.value + 1):
+        #         gate_val = math.ceil(index / coin_checks_per_gate) - 1
+        #         gate_region = multiworld.get_region("Gate " + str(gate_val), player)
+        #
+        #         location_name = LocationName.chao_black_market_base + str(index)
+        #         location = multiworld.get_location(location_name, player)
+        #         #gate_region.locations.append(location)
+
         connect(multiworld, player, names, LocationName.gate_0_region, LocationName.black_market_region)
 
 
