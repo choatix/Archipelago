@@ -1412,6 +1412,12 @@ class DisallowOnlyM2(DefaultOffToggle):
     """
     display_name = "Disallow Only M2"
 
+class DisallowM2ThenM5(DefaultOnToggle):
+    """
+    Option to disallow only M2 as a valid level choice
+    """
+    display_name = "Disallow M2 Then M5"
+
 
 sa2b_option_groups = [
     OptionGroup("General Options", [
@@ -1763,5 +1769,6 @@ class SA2BOptions(PerGameCommonOptions):
     replace_chao_names: OnlyAdditionalChaoNames
     replace_trap_names: OnlyAdditionalTrapNames
     disallow_only_M2: DisallowOnlyM2
+    disallow_M2_then_M5: DisallowM2ThenM5
 
     mission_shuffle_parameters: MissionShuffleParameters

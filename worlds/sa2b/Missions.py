@@ -126,49 +126,49 @@ mission_orders: typing.List[typing.List[int]] = [
 ]
 
 
-### 0: Sonic
-### 1: Tails
-### 2: Knuckles
-### 3: Shadow
-### 4: Eggman
-### 5: Rouge
-### 6: Kart
-### 7: Cannon's Core
+MISSION_STYLE_SONIC = 0
+MISSION_STYLE_TAILS = 1
+MISSION_STYLE_KNUCKLES = 2
+MISSION_STYLE_SHADOW = 3
+MISSION_STYLE_EGGMAN = 4
+MISSION_STYLE_ROUGE = 5
+MISSION_STYLE_KART = 6
+MISSION_STYLE_CANNONS_CORE = 7
 
 level_styles: typing.List[int] = [
-    0,
-    2,
-    1,
-    0,
-    0,
-    2,
-    1,
-    2,
-    6,
-    1,
-    0,
-    2,
-    1,
-    2,
-    0,
-    0,
+    MISSION_STYLE_SONIC,
+    MISSION_STYLE_KNUCKLES,
+    MISSION_STYLE_TAILS,
+    MISSION_STYLE_SONIC,
+    MISSION_STYLE_SONIC,
+    MISSION_STYLE_KNUCKLES,
+    MISSION_STYLE_TAILS,
+    MISSION_STYLE_KNUCKLES,
+    MISSION_STYLE_KART,
+    MISSION_STYLE_TAILS,
+    MISSION_STYLE_SONIC,
+    MISSION_STYLE_KNUCKLES,
+    MISSION_STYLE_TAILS,
+    MISSION_STYLE_KNUCKLES,
+    MISSION_STYLE_SONIC,
+    MISSION_STYLE_SONIC,
 
-    4,
-    5,
-    4,
-    3,
-    5,
-    4,
-    4,
-    5,
-    3,
-    6,
-    3,
-    5,
-    4,
-    3,
+    MISSION_STYLE_EGGMAN,
+    MISSION_STYLE_ROUGE,
+    MISSION_STYLE_EGGMAN,
+    MISSION_STYLE_SHADOW,
+    MISSION_STYLE_ROUGE,
+    MISSION_STYLE_EGGMAN,
+    MISSION_STYLE_EGGMAN,
+    MISSION_STYLE_ROUGE,
+    MISSION_STYLE_SHADOW,
+    MISSION_STYLE_KART,
+    MISSION_STYLE_SHADOW,
+    MISSION_STYLE_ROUGE,
+    MISSION_STYLE_EGGMAN,
+    MISSION_STYLE_SHADOW,
 
-    7
+    MISSION_STYLE_CANNONS_CORE
 ]
 
 def get_stage_name_prefixes():
@@ -476,7 +476,7 @@ def get_mission_table(multiworld: MultiWorld, world: World, player: int, mission
                 required_missions = required[level_name]
 
             if disallow_only_M2:
-                if mission_count == 1 and level_style != 3:
+                if mission_count == 1 and level_style != MISSION_STYLE_KART:
                     first_mission_options.remove(2)
 
             if not world.options.animalsanity:
@@ -510,6 +510,13 @@ def get_mission_table(multiworld: MultiWorld, world: World, player: int, mission
                 valid_options = [mission for mission in level_active_missions if mission in first_mission_options
                                                           and mission not in excluded_missions and
                                                          (mission in required_missions if use_required else True)]
+
+                if 2 in valid_options and world.options.disallow_M2_then_M5 and mission_count == 2 and \
+                    5 in required_missions:
+                    print("Handle invalid M2 as first")
+                    valid_options.remove(2)
+
+
                 if len(valid_options) == 0:
                     valid_options = [1]
                     print("Error, invalid pick for:", mission_count, required_missions, use_required, level_name)
@@ -519,36 +526,36 @@ def get_mission_table(multiworld: MultiWorld, world: World, player: int, mission
 
             level_active_missions.remove(first_mission)
 
-            for mission in required_missions:
-                if mission not in level_chosen_missions and mission not in excluded_missions:
-                    level_chosen_missions.append(mission)
+            #for mission in required_missions:
+            #    if mission not in level_chosen_missions and mission not in excluded_missions:
+            #        level_chosen_missions.append(mission)
 
             multiworld.random.shuffle(level_active_missions)
-
-            #forces = force_mission_position[level_name]
-            #for f in forces.items():
-            #    force_mission = f[0]
-            #    force_position_tuple = f[1]
-            #    force_position_value = force_position_tuple[0] - 1
-            #    force_position_route = force_position_tuple[1]
-
-            #    if force_position_value == 1:
-            #        continue
-
-            #    if force_position_value == 1 and force_position_route:
-            #        pass
-            #    else:
-            #        pass
 
             # Place Active Missions in the chosen mission list
             for mission in level_active_missions:
                 mission_number = len(level_chosen_missions) + 1
 
+                if world.options.disallow_M2_then_M5 and first_mission == 2 and \
+                    mission_number == 1 and mission == 5:
+                    level_active_missions.append(mission)
+                    continue
+
                 if mission_number == mission_count:
                     break
 
+                if len(required_missions) > 0 and\
+                    mission_count - mission_number <= len(required_missions) \
+                        and mission not in required_missions:
+                        print(required_missions, mission_count, mission_number, level_name, first_mission,
+                              level_chosen_missions)
+                        level_active_missions.append(mission)
+                        continue
+
                 if mission not in level_chosen_missions and mission not in excluded_missions:
                     level_chosen_missions.append(mission)
+                    if mission in required_missions:
+                        required_missions.remove(mission)
 
 
             #if world.options.mission_shuffle:
