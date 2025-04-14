@@ -8,6 +8,7 @@ from .Enums import Character, SADX_BASE_ID, Area, remove_character_suffix, pasca
 from .ItemPool import create_sadx_items, get_item_names, ItemDistribution
 from .Items import SonicAdventureDXItem, group_item_table, item_name_to_info, filler_item_table
 from .Locations import all_location_table, group_location_table
+from .Logic import mission_location_table
 from .Names import ItemName, LocationName
 from .Options import sadx_option_groups, SonicAdventureDXOptions
 from .Regions import create_sadx_regions, get_location_ids_for_area
@@ -124,6 +125,7 @@ class SonicAdventureDXWorld(World):
                     "ChaoRacesLevelsToAccessPercentage"]
                 self.options.mission_mode_checks.value = passthrough["MissionModeChecks"]
                 self.options.auto_start_missions.value = passthrough["AutoStartMissions"]
+                self.options.mission_blacklist.value = list(passthrough["BlackListMissions"].keys())
 
                 self.options.twinkle_circuit_check.value = passthrough["TwinkleCircuitCheck"]
                 self.options.twinkle_circuit_multiple_check.value = passthrough["MultipleTwinkleCircuitChecks"]
@@ -250,7 +252,13 @@ class SonicAdventureDXWorld(World):
             "ChaoRacesLevelsToAccessPercentage": self.options.chao_races_levels_to_access_percentage.value,
             "MissionModeChecks": self.options.mission_mode_checks.value,
             "AutoStartMissions": self.options.auto_start_missions.value,
-            "MissionBlackList": {mission: mission for mission in self.options.mission_blacklist.value},
+
+            "MissionBlackList": {
+                mission.missionNumber: mission.missionNumber
+                for mission in mission_location_table
+                if str(mission.missionNumber) in self.options.mission_blacklist.value
+                or str(mission.character.name) in self.options.mission_blacklist.value
+            },
 
             "EnemySanity": self.options.enemy_sanity.value,
             "SonicEnemySanity": self.options.sonic_enemy_sanity.value,
