@@ -178,6 +178,8 @@ def get_location_ids_for_area(area: Area, character: Character, options: SonicAd
         for mission in mission_location_table:
             if str(mission.missionNumber) in options.mission_blacklist.value:
                 continue
+            if str(mission.character.name) in options.mission_blacklist.value:
+                continue
             if mission.objectiveArea == area and mission.character == character:
                 if is_character_playable(mission.character, options):
                     location_ids.append(mission.locationId)

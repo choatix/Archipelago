@@ -199,6 +199,8 @@ def create_sadx_rules(self, needed_emblems: int) -> LocationDistribution:
         for mission in mission_location_table:
             if str(mission.missionNumber) in self.options.mission_blacklist.value:
                 continue
+            if str(mission.character.name) in self.options.mission_blacklist.value:
+                continue
             if is_character_playable(mission.character, self.options) and self.options.mission_mode_checks:
                 mission_location_list.append(self.multiworld.get_location(mission.get_mission_name(), self.player))
 

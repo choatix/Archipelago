@@ -250,7 +250,7 @@ class SonicAdventureDXWorld(World):
             "ChaoRacesLevelsToAccessPercentage": self.options.chao_races_levels_to_access_percentage.value,
             "MissionModeChecks": self.options.mission_mode_checks.value,
             "AutoStartMissions": self.options.auto_start_missions.value,
-            "MissionBlackList": {int(mission): int(mission) for mission in self.options.mission_blacklist.value},
+            "MissionBlackList": {mission: mission for mission in self.options.mission_blacklist.value},
 
             "EnemySanity": self.options.enemy_sanity.value,
             "SonicEnemySanity": self.options.sonic_enemy_sanity.value,
