@@ -73,3 +73,5 @@
 - Failed to generate the world.
     - Try updating your Archipelago mod to the latest version (at least 0.5.0).
     - Try enabling more options in the yaml, being too restrictive will prevent the world from generating.
+- While playing with Metal Sonic enabled, some checks aren't being sent correctly.
+    - Disable the Metal Sonic code, this mod is not compatible with it.
