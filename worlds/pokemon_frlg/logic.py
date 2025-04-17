@@ -2,7 +2,6 @@ import re
 from typing import TYPE_CHECKING, Dict, List
 from BaseClasses import CollectionState
 from .data import data, EvolutionMethodEnum
-from .items import offset_item_value
 from .options import (PokemonFRLGOptions, CeruleanCaveRequirement, EliteFourRequirement, FlashRequired,
                       PewterCityRoadblock, Route22GateRequirement, Route23GuardRequirement, SeviiIslandPasses,
                       ViridianCityRoadblock, ViridianGymRequirement)
@@ -245,9 +244,12 @@ def can_evolve(state: CollectionState, player: int, world: "PokemonFRLGWorld", p
     pokemon = re.sub(r'\d+', '', pokemon)
     if state.has(pokemon, player):
         if evolution_data.method == EvolutionMethodEnum.ITEM:
-            return state.has(world.item_id_to_name[offset_item_value(evolution_data.param)], player)
-        elif evolution_data.method == EvolutionMethodEnum.FRIENDSHIP:
-            return has_n_gyms(state, player, 4)
-        else:
+            return state.has(world.item_id_to_name[evolution_data.param], player)
+        elif evolution_data.method == EvolutionMethodEnum.ITEM_HELD:
+            return state.has_all([world.item_id_to_name[evolution_data.param],
+                                  world.item_id_to_name[evolution_data.param2]],
+                                 player)
+        elif evolution_data.method in range(EvolutionMethodEnum.LEVEL, EvolutionMethodEnum.ITEM):
             return has_n_gyms(state, player, evolution_data.param / 7)
+        return True
     return False

@@ -4,9 +4,9 @@ from typing import TYPE_CHECKING, Dict, List, Set, Tuple
 
 from .data import (data, LEGENDARY_POKEMON, NUM_REAL_SPECIES, NAME_TO_SPECIES_ID, EncounterSpeciesData, EventData,
                    LearnsetMove, SpeciesData, TrainerPokemonData)
-from .options import (GameVersion, HmCompatibility, RandomizeAbilities, RandomizeLegendaryPokemon, RandomizeMiscPokemon,
-                      RandomizeMoves, RandomizeStarters, RandomizeTrainerParties, RandomizeTypes, RandomizeWildPokemon,
-                      TmTutorCompatibility, WildPokemonGroups)
+from .options import (Dexsanity, GameVersion, HmCompatibility, RandomizeAbilities, RandomizeLegendaryPokemon,
+                      RandomizeMiscPokemon, RandomizeMoves, RandomizeStarters, RandomizeTrainerParties, RandomizeTypes,
+                      RandomizeWildPokemon, TmTutorCompatibility, WildPokemonGroups)
 from .util import bool_array_to_int, int_to_bool_array, HM_TO_COMPATIBILITY_ID
 
 if TYPE_CHECKING:
@@ -47,7 +47,7 @@ _HM_MOVES = frozenset({
     data.constants["MOVE_DIVE"]
 })
 
-_MOVE_BLACKLIST = frozenset({
+_DUMMY_MOVES = frozenset({
     data.constants["MOVE_NONE"],
     data.constants["MOVE_STRUGGLE"]
 })
@@ -112,12 +112,6 @@ _DUNGEON_GROUPS: Dict[str, str] = {
     "MAP_CERULEAN_CAVE_B1F": "MAP_CERULEAN_CAVE"
 }
 
-STARTER_INDEX: Dict[str, int] = {
-    "STARTER_POKEMON_BULBASAUR": 0,
-    "STARTER_POKEMON_SQUIRTLE": 1,
-    "STARTER_POKEMON_CHARMANDER": 2,
-}
-
 # The tuple represnts (trainer name, starter index in party, starter evolution stage)
 _RIVAL_STARTER_POKEMON: List[Tuple[str, int, int]] = [
     [
@@ -164,16 +158,24 @@ def _get_random_type(random: "Random") -> int:
     return picked_type
 
 
-def _get_random_move(random: "Random", blacklist: Set[int]) -> int:
-    merged_blacklist = _HM_MOVES | _MOVE_BLACKLIST | blacklist
-    allowed_moves = [i for i in range(data.constants["MOVES_COUNT"]) if i not in merged_blacklist]
+def _get_random_move(random: "Random", blacklists: List[Set[int]]) -> int:
+    blacklist_length = len(blacklists)
+    allowed_moves = list()
+
+    while len(allowed_moves) == 0:
+        merged_blacklist = _HM_MOVES | _DUMMY_MOVES
+        for i in range(blacklist_length):
+            merged_blacklist |= blacklists[i]
+        allowed_moves = [i for i in range(data.constants["MOVES_COUNT"]) if i not in merged_blacklist]
+        blacklist_length -= 1
+
     return random.choice(allowed_moves)
 
 
-def _get_random_damaging_move(random: "Random", blacklist: Set[int]) -> int:
+def _get_random_damaging_move(random: "Random", blacklists: List[Set[int]]) -> int:
     non_damage_blacklist = {i for i in range(data.constants["MOVES_COUNT"]) if i not in _DAMAGING_MOVES}
-    merged_blacklist = blacklist | non_damage_blacklist
-    return _get_random_move(random, merged_blacklist)
+    blacklists.insert(0, non_damage_blacklist)
+    return _get_random_move(random, blacklists)
 
 
 def _filter_species_by_nearby_bst(species: List[SpeciesData], target_bst: int) -> List[SpeciesData]:
@@ -284,10 +286,12 @@ def randomize_abilities(world: "PokemonFRLGWorld") -> None:
         return
 
     allowed_abilities = list(range(data.constants["ABILITIES_COUNT"]))
-    allowed_abilities.remove(data.constants["ABILITY_NONE"])
-    allowed_abilities.remove(data.constants["ABILITY_CACOPHONY"])
-    for ability_id in world.blacklisted_abilities:
-        allowed_abilities.remove(ability_id)
+    world.blacklisted_abilities.add(data.constants["ABILITY_NONE"])
+    world.blacklisted_abilities.add(data.constants["ABILITY_CACOPHONY"])
+    allowed_abilities = [ability for ability in allowed_abilities
+                         if ability not in world.blacklisted_abilities]
+    if len(allowed_abilities) == 0:
+        allowed_abilities.append(data.constants["ABILITY_NONE"])
 
     if world.options.abilities == RandomizeAbilities.option_follow_evolutions:
         already_randomized = set()
@@ -337,7 +341,7 @@ def randomize_moves(world: "PokemonFRLGWorld") -> None:
         while old_learnset[move_index].move_id == 0:
             if world.options.moves == RandomizeMoves.option_start_with_four_moves:
                 new_move = _get_random_move(world.random,
-                                            {move.move_id for move in new_learnset} | world.blacklisted_moves)
+                                            [{move.move_id for move in new_learnset}, world.blacklisted_moves])
             else:
                 new_move = 0
             new_learnset.append(LearnsetMove(old_learnset[move_index].level, new_move))
@@ -345,10 +349,10 @@ def randomize_moves(world: "PokemonFRLGWorld") -> None:
 
         while move_index < len(old_learnset):
             if move_index == 3:
-                new_move = _get_random_damaging_move(world.random, {move.move_id for move in new_learnset})
+                new_move = _get_random_damaging_move(world.random, [{move.move_id for move in new_learnset}])
             else:
                 new_move = _get_random_move(world.random,
-                                            {move.move_id for move in new_learnset} | world.blacklisted_moves)
+                                            [{move.move_id for move in new_learnset}, world.blacklisted_moves])
             new_learnset.append(LearnsetMove(old_learnset[move_index].level, new_move))
             move_index += 1
 
@@ -395,13 +399,18 @@ def randomize_wild_encounters(world: "PokemonFRLGWorld") -> None:
     route_21_randomized = False
 
     placed_species = set()
-    priority_species = list()
+    priority_species = set()
     if world.options.pokemon_request_locations:
-        priority_species.append(data.constants["SPECIES_MAGIKARP"])
+        priority_species.add(data.constants["SPECIES_MAGIKARP"])
         if not world.options.kanto_only:
-            priority_species.append(data.constants["SPECIES_HERACROSS"])
+            priority_species.add(data.constants["SPECIES_HERACROSS"])
             if world.options.famesanity:
-                priority_species.extend([data.constants["SPECIES_TOGEPI"], data.constants["SPECIES_TOGETIC"]])
+                priority_species.update([data.constants["SPECIES_TOGEPI"], data.constants["SPECIES_TOGETIC"]])
+    if world.options.dexsanity != Dexsanity.special_range_names["none"]:
+        dexsanity_priority_locations = [loc for loc in world.options.priority_locations.value
+                                        if loc.startswith("Pokedex -")]
+        for location in dexsanity_priority_locations:
+            priority_species.add(NAME_TO_SPECIES_ID[location.split("-")[1].strip()])
 
     map_names = list(world.modified_maps.keys())
     world.random.shuffle(map_names)
@@ -698,7 +707,7 @@ def randomize_legendaries(world: "PokemonFRLGWorld") -> None:
             world.modified_events[name].name,
             item,
             world.modified_events[name].parent_region_id,
-            world.modified_events[name].tags
+            world.modified_events[name].category
         )
 
         world.modified_events[name] = new_event
@@ -761,7 +770,7 @@ def randomize_misc_pokemon(world: "PokemonFRLGWorld") -> None:
             world.modified_events[name].name,
             item,
             world.modified_events[name].parent_region_id,
-            world.modified_events[name].tags
+            world.modified_events[name].category
         )
 
         world.modified_events[name] = new_event
@@ -845,59 +854,16 @@ def randomize_tm_moves(world: "PokemonFRLGWorld") -> None:
     new_moves: Set[int] = set()
 
     for i in range(50):
-        new_move = None
-        remaining_moves = len(world.required_tm_tutor_moves - new_moves - world.blacklisted_moves)
-        if remaining_moves > 0:
-            if remaining_moves == (50 - i):
-                chance = 100
-            else:
-                chance = 3
-
-            select_required = False
-            if 0 < chance < 100:
-                v = world.random.randrange(0, 100)
-                if v < chance:
-                    select_required = True
-
-            if select_required or chance == 100:
-                m = world.required_tm_tutor_moves - new_moves
-                new_move = world.random.choice(list(m))
-
-        if new_move is None:
-            new_move = _get_random_move(world.random, new_moves | world.blacklisted_moves)
-
+        new_move = _get_random_move(world.random, [new_moves, world.blacklisted_moves])
         new_moves.add(new_move)
         world.modified_tmhm_moves[i] = new_move
 
 
 def randomize_tutor_moves(world: "PokemonFRLGWorld") -> List[int]:
-    banned_moves = set()
-    banned_moves.union(set(world.modified_tmhm_moves))
-    banned_moves.union(set(world.blacklisted_moves))
-    new_moves = set()
+    new_moves = []
 
     for i in range(15):
-        new_move = None
-        remaining_moves = len(world.required_tm_tutor_moves - new_moves - banned_moves)
-        if remaining_moves > 0:
-            if remaining_moves == (15 - i):
-                chance = 100
-            else:
-                chance = 3
+        new_move = _get_random_move(world.random, [set(new_moves), world.blacklisted_moves])
+        new_moves.append(new_move)
 
-            select_required = False
-            if 0 < chance < 100:
-                v = world.random.randrange(0, 100)
-                if v < chance:
-                    select_required = True
-
-            if select_required or chance == 100:
-                m = world.required_tm_tutor_moves - new_moves
-                new_move = world.random.choice(list(m))
-
-        if new_move is None:
-            new_move = _get_random_move(world.random, new_moves | banned_moves)
-
-        new_moves.add(new_move)
-
-    return list(new_moves)
+    return new_moves
