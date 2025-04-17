@@ -31,17 +31,28 @@ class GoalRequiresChaosEmeralds(Toggle):
 class GoalRequiresEmblems(Toggle):
     """
     If enabled, you have to collect a certain number of emblems to unlock the last fight.
-    Enabling this will require at least 5 checks to add the 5 emblems to the pool.
+    The emblems are extra items added to the item pool, so they scale with the number of checks.
     """
     display_name = "Goal Requires Emblems"
+
+
+class MaximumEmblemCap(Range):
+    """
+    If Emblems are part of the goal, determines the maximum number of emblems that can be in the item pool.
+    If fewer available locations exist in the pool than this number, the number of available locations will be used instead.
+    """
+    display_name = "Max Emblem Cap"
+    range_start = 20
+    range_end = 1500
+    default = 130
 
 
 class EmblemPercentage(Range):
     """If Emblems are part of the goal, percentage of the available emblems needed to unlock the final story."""
     display_name = "Emblem Requirement Percentage"
     range_start = 1
-    range_end = 80
-    default = 80
+    range_end = 90
+    default = 75
 
 
 class GoalRequiresMissions(Toggle):
@@ -62,6 +73,14 @@ class GoalRequiresBosses(Toggle):
     display_name = "Goal Requires Bosses"
 
 
+class BossPercentage(Range):
+    """If Bosses are part of the goal, Percentage of the available bosses that needed to be completed to unlock the final story."""
+    display_name = "Boss Requirement Percentage"
+    range_start = 25
+    range_end = 100
+    default = 100
+
+
 class GoalRequiresChaoRaces(Toggle):
     """If enabled, you have to beat all the chao races to unlock the last fight."""
     display_name = "Goal Requires Chao Races"
@@ -72,28 +91,58 @@ class LogicLevel(Choice):
     Determines the logic the randomizer will use.
     Normal Logic (0): Very forgiving, ideal if you are not used to this game or its location checks.
     Hard Logic (1): Less forgiving logic, some checks require performing spindash jumps or dying to get the check.
-    Expert Logic (2): The most unforgiving logic, some checks require performing out-of-bounds jumps.
+    Expert DC Logic (2): The most unforgiving logic, some checks require performing out-of-bounds jumps (DC conversion).
+    Expert DX Logic (3): The most unforgiving logic, some checks require performing out-of-bounds jumps (vanilla DX).
     """
     display_name = "Logic Level"
     option_normal_logic = 0
     option_hard_logic = 1
-    option_expert_logic = 2
+    option_expert_dc_logic = 2
+    option_expert_dx_logic = 3
     default = 0
 
 
-class RandomStartingLocation(DefaultOnToggle):
-    """Randomize starting location. If false, you will start at Station Square."""
-    display_name = "Random Starting Location"
+class StartingCharacterOption(Choice):
+    """
+    Select which the character you will start with.
+    Choose between Random (0), Sonic (1), Tails (2), Knuckles (3), Amy (4), Big (5), and Gamma (6).
+    """
+    display_name = "Starting Character"
+    option_random_character = 0
+    option_sonic = 1
+    option_tails = 2
+    option_knuckles = 3
+    option_amy = 4
+    option_big = 5
+    option_gamma = 6
+    default = 0
+
+
+class StartingLocationOption(Choice):
+    """
+    Select in which location you would like to start.
+    Keep in mind that if there are no checks in that location for your character, another one will be chosen.
+    CChoose between Random (0), Station Square (Main) (1), Station (2), Hotel (3), Casino (4), Twinkle Park Lobby (5),
+    Mystic Ruins (Main) (6), Angel Island (7), Jungle (8) and EggCarrier (Outside) (9), EggCarrier (Inside) (10)
+    """
+    display_name = "Starting Location"
+    option_random_location = 0
+    option_station_square_main = 1
+    option_station = 2
+    option_hotel = 3
+    option_casino = 4
+    option_twinkle_park_lobby = 5
+    option_mystic_ruins_main = 6
+    option_angel_island = 7
+    option_jungle = 8
+    option_egg_carrier_outside = 9
+    option_egg_carrier_inside = 10
+    default = 0
 
 
 class RandomStartingLocationPerCharacter(DefaultOnToggle):
-    """If randomize starting location is enabled, each character will start in a random location."""
+    """If enabled, each character will start in a random location."""
     display_name = "Random Starting Location Per Character"
-
-
-class GuaranteedLevel(Toggle):
-    """Ensures access to a level from the start, even if it means giving you an item."""
-    display_name = "Guaranteed Level Access"
 
 
 class GuaranteedStartingChecks(Range):
@@ -172,12 +221,21 @@ class RingLoss(Choice):
     Classic (0): You lose all of your rings when hit.
     Modern (1): You lose 20 rings when hit.
     One Hit K.O. (2): You die immediately when hit.
+    One Hit K.O. No Shields (3): You die immediately when hit, and you can't use shields or invincibility power ups.
     """
     display_name = "Ring Loss"
     option_classic = 0
     option_modern = 1
     option_one_hit_k_o = 2
+    option_one_hit_k_o_no_shields = 3
     default = 0
+
+
+class TrapLink(Toggle):
+    """
+    Whether your received traps are linked to other players
+    """
+    display_name = "Trap Link"
 
 
 class PlayableSonic(DefaultOnToggle):
@@ -212,16 +270,18 @@ class PlayableBig(DefaultOnToggle):
 
 class BaseActionStageMissionChoice(Choice):
     """
-        For missions, the options range from 3 to 0.
-        3 means Missions A, B, and C.
-        2 means Missions B and C.
-        1 means Mission C.
+        For missions, the options range from 0 to 4.
         0 means no missions at all (You can still play the character if they are enabled).
+        1 means Mission C.
+        2 means Missions B and C.
+        3 means Missions A, B, and C.
+        4 means Missions S, A, B, and C. S missions are extra hard times added by the mod. Not available in normal logic.
     """
     option_none = 0
     option_c = 1
     option_c_b = 2
     option_c_b_a = 3
+    option_c_b_a_s = 4
     default = 1
 
 
@@ -347,23 +407,37 @@ class MissionBlackList(OptionSet):
     Mission 53 (Triple Jump in the Snowboard section of Ice Cap).
     Mission 54 (Flags in the Snowboard section of Ice Cap).
     Mission 58 (Flags in the rolling bounce section of Lost World).
+    Also, you can blacklist all the missions by using the character names. i.e. {'Big', 'Sonic'}
     """
     display_name = "Mission Blacklist"
     default = {'49', '53', '54', '58'}
-    valid_keys = [str(i) for i in range(1, 61)]
+    valid_keys = [str(i) for i in range(1, 61)] + ["Sonic", "Tails", "Knuckles", "Amy", "Big", "Gamma"]
 
 
-class SubLevelChecks(DefaultOnToggle):
-    """Determines whether beating Twinkle Circuit and Sand Hill grants checks (2 Locations)."""
-    display_name = "Sub-Level Checks"
+class TwinkleCircuitCheck(DefaultOnToggle):
+    """Determines whether beating Twinkle Circuit grants a check."""
+    display_name = "Twinkle Circuit Check"
 
 
-class SubLevelChecksHard(Toggle):
+class MultipleTwinkleCircuitChecks(Toggle):
     """
-    Determines whether beating the harder (points-based) Twinkle Circuit and Sand Hill missions grants checks (2 Locations).
-    Only works if sublevel checks are enabled.
+    If enabled, each character will have their own Twinkle Circuit check (5 extra locations).
+    Only works if Twinkle Circuit Check is enabled.
     """
-    display_name = "Hard Sub-Level Checks"
+    display_name = "Multiple Twinkle Circuit Checks"
+
+
+class SandHillCheck(DefaultOnToggle):
+    """Determines whether beating Sand Hill grants a check."""
+    display_name = "Sand Hill Check"
+
+
+class SandHillCheckHard(Toggle):
+    """
+    Determines whether beating the harder (points-based) Sand Hill mission grants a check.
+    Only works if Sand Hill Check is enabled.
+    """
+    display_name = "Hard Sand Hill Check"
 
 
 class SkyChaseChecks(DefaultOnToggle):
@@ -380,7 +454,10 @@ class SkyChaseChecksHard(Toggle):
 
 
 class EnemySanity(Toggle):
-    """Determines whether destroying enemies grants checks (710 Locations)."""
+    """
+    Determines whether destroying enemies grants checks (710 Locations).
+    You need to enable enemy-sanity for some characters for it to work.
+    """
     display_name = "Enemy Sanity"
 
 
@@ -415,7 +492,10 @@ class GammaEnemySanity(DefaultOnToggle):
 
 
 class CapsuleSanity(Toggle):
-    """Determines whether destroying capsules grants checks (692 Locations)."""
+    """
+    Determines whether destroying capsules grants checks (692 Locations).
+    You need to enable capsule-sanity for some characters and some types for it to work.
+    """
     display_name = "Capsule Sanity"
 
 
@@ -454,24 +534,38 @@ class GammaCapsuleSanity(DefaultOnToggle):
     display_name = "Gamma's Capsule Sanity"
 
 
-class LifeCapsuleSanity(Toggle):
+class LifeCapsuleSanity(DefaultOnToggle):
     """If capsule-sanity is on, the randomizer will include Life Capsules (103 Locations)."""
     display_name = "Life Capsule Sanity"
 
 
-class ShieldCapsuleSanity(Toggle):
+class ShieldCapsuleSanity(DefaultOnToggle):
     """If capsule-sanity is on, the randomizer will include  Shields and Magnetic Shields (78 Locations)."""
     display_name = "Shield Capsule Sanity"
 
 
-class PowerUpCapsuleSanity(Toggle):
+class PowerUpCapsuleSanity(DefaultOnToggle):
     """If capsule-sanity is on, the randomizer will include Invincibility, Speed Up and Bomb Capsules (70 Locations)."""
     display_name = "Power Up Capsule Sanity"
 
 
-class RingCapsuleSanity(Toggle):
+class RingCapsuleSanity(DefaultOnToggle):
     """If capsule-sanity is on, the randomizer will include 5, 10 and ? capsules (441 Locations)."""
     display_name = "Ring Capsule Sanity"
+
+
+class FishSanity(Toggle):
+    """Determines whether catching every type of fish grants checks (23 Locations)."""
+    display_name = "Fish Sanity"
+
+
+class LazyFishing(Toggle):
+    """
+    Enabling Lazy Fishing does two things:
+    Grants infinite tension during fishing if you have the Power Rod upgrade.
+    Adds the Power Rod as a logic requirement for all fish in fish-sanity, B/A/S ranks and every "Keeper" mission for Big.
+    """
+    display_name = "Lazy Fishing"
 
 
 class JunkFillPercentage(Range):
@@ -582,16 +676,18 @@ class SonicAdventureDXOptions(PerGameCommonOptions):
     levels_percentage: LevelPercentage
     goal_requires_chaos_emeralds: GoalRequiresChaosEmeralds
     goal_requires_emblems: GoalRequiresEmblems
+    max_emblem_cap: MaximumEmblemCap
     emblems_percentage: EmblemPercentage
     goal_requires_missions: GoalRequiresMissions
     mission_percentage: MissionPercentage
     goal_requires_bosses: GoalRequiresBosses
+    boss_percentage: BossPercentage
     goal_requires_chao_races: GoalRequiresChaoRaces
 
     logic_level: LogicLevel
-    random_starting_location: RandomStartingLocation
+    starting_character: StartingCharacterOption
+    starting_location: StartingLocationOption
     random_starting_location_per_character: RandomStartingLocationPerCharacter
-    guaranteed_level: GuaranteedLevel
     guaranteed_starting_checks: GuaranteedStartingChecks
     entrance_randomizer: EntranceRandomizer
     level_entrance_plando: LevelEntrancePlando
@@ -603,6 +699,7 @@ class SonicAdventureDXOptions(PerGameCommonOptions):
     casinopolis_ring_link: CasinopolisRingLink
     hard_ring_link: HardRingLink
     ring_loss: RingLoss
+    trap_link: TrapLink
 
     playable_sonic: PlayableSonic
     playable_tails: PlayableTails
@@ -637,8 +734,10 @@ class SonicAdventureDXOptions(PerGameCommonOptions):
     mission_mode_checks: MissionChecks
     auto_start_missions: AutoStartMissions
     mission_blacklist: MissionBlackList
-    sub_level_checks: SubLevelChecks
-    sub_level_checks_hard: SubLevelChecksHard
+    twinkle_circuit_check: TwinkleCircuitCheck
+    twinkle_circuit_multiple_check: MultipleTwinkleCircuitChecks
+    sand_hill_check: SandHillCheck
+    sand_hill_check_hard: SandHillCheckHard
     sky_chase_checks: SkyChaseChecks
     sky_chase_checks_hard: SkyChaseChecksHard
 
@@ -665,6 +764,9 @@ class SonicAdventureDXOptions(PerGameCommonOptions):
     powerup_capsule_sanity: PowerUpCapsuleSanity
     ring_capsule_sanity: RingCapsuleSanity
 
+    fish_sanity: FishSanity
+    lazy_fishing: LazyFishing
+
     junk_fill_percentage: JunkFillPercentage
     trap_fill_percentage: TrapFillPercentage
     ice_trap_weight: IceTrapWeight
@@ -686,15 +788,17 @@ sadx_option_groups = [
         LevelPercentage,
         GoalRequiresChaosEmeralds,
         GoalRequiresEmblems,
+        MaximumEmblemCap,
         EmblemPercentage,
         GoalRequiresMissions,
         MissionPercentage,
         GoalRequiresBosses,
+        BossPercentage,
         GoalRequiresChaoRaces,
         LogicLevel,
-        RandomStartingLocation,
+        StartingCharacterOption,
+        StartingLocationOption,
         RandomStartingLocationPerCharacter,
-        GuaranteedLevel,
         GuaranteedStartingChecks,
         EntranceRandomizer,
         LevelEntrancePlando,
@@ -704,6 +808,7 @@ sadx_option_groups = [
         CasinopolisRingLink,
         HardRingLink,
         RingLoss,
+        TrapLink,
     ]),
     OptionGroup("Characters Options", [
         PlayableSonic,
@@ -743,8 +848,10 @@ sadx_option_groups = [
         MissionChecks,
         AutoStartMissions,
         MissionBlackList,
-        SubLevelChecks,
-        SubLevelChecksHard,
+        TwinkleCircuitCheck,
+        MultipleTwinkleCircuitChecks,
+        SandHillCheck,
+        SandHillCheckHard,
         SkyChaseChecks,
         SkyChaseChecksHard,
         EnemySanity,
@@ -766,6 +873,8 @@ sadx_option_groups = [
         ShieldCapsuleSanity,
         PowerUpCapsuleSanity,
         RingCapsuleSanity,
+        FishSanity,
+        LazyFishing,
     ]),
     OptionGroup("Junk Options", [
         JunkFillPercentage,
