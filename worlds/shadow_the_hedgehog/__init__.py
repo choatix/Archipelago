@@ -1,4 +1,3 @@
-import random
 from typing import ClassVar, Tuple, Any
 from BaseClasses import  Tutorial
 from Options import OptionError
@@ -413,11 +412,11 @@ class ShtHWorld(World):
         item_count = Items.CountItems(self)
         location_count = Locations.count_locations(self)
 
-        if self.options.objective_item_percentage_available < self.options.objective_completion_percentage:
-            raise OptionError("Invalid available percentage versus requirement")
+        #if self.options.objective_item_percentage_available < self.options.objective_completion_percentage:
+        #    raise OptionError("Invalid available percentage versus requirement")
 
-        if self.options.objective_completion_enemy_percentage < self.options.objective_completion_enemy_percentage:
-            raise OptionError("Invalid available enemy percentage versus requirement")
+        #if self.options.objective_completion_enemy_percentage < self.options.objective_completion_enemy_percentage:
+        #    raise OptionError("Invalid available enemy percentage versus requirement")
 
         # TODO: Check all options don't contradict one another from percent_overrides
 

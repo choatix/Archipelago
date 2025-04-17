@@ -87,4 +87,11 @@ DESIRABLE_OBJECTS_MAD_MATRIX  = [
     SETObject(ObjectType.EGG_PAWN, Levels.STAGE_MAD_MATRIX, 286, '43', region=REGION_INDICIES.MAD_MATRIX_RED_ENTRY),
     SETObject(ObjectType.EGG_PAWN, Levels.STAGE_MAD_MATRIX, 287, '44', region=REGION_INDICIES.MAD_MATRIX_RED_ENTRY),
 
+    SETObject(ObjectType.ENERGY_CORE_IN_WOOD_BOX, Levels.STAGE_MAD_MATRIX, 504, 'Dark Core in Box',
+              region=REGION_INDICIES.MAD_MATRIX_GUN),
+SETObject(ObjectType.WARP_HOLE, Levels.STAGE_MAD_MATRIX, 105, 'Other Warp Hole',
+              region=REGION_INDICIES.MAD_MATRIX_GUN),
+SETObject(ObjectType.EGG_PAWN, Levels.STAGE_MAD_MATRIX, 289, 'Mystery Egg Pawn',
+              region=REGION_INDICIES.MAD_MATRIX_GUN),
+
 ]

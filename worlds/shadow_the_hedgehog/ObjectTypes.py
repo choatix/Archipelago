@@ -17,6 +17,7 @@ class ObjectType:
         GUN_TURRET = 10
         BLACK_TURRET = 11
         GUN_LIFT = 12
+        GUN_LIFT_FAST = 13
 
     ENERGY_CORE = 4
 
@@ -63,6 +64,9 @@ class ObjectType:
     BLACK_LARVAE = 47
 
     ARTIFICIAL_CHAOS = 48
+
+    ENERGY_CORE_IN_WOOD_BOX = 49
+    ENERGY_CORE_IN_METAL_BOX = 50
 
 
 class SETObject:

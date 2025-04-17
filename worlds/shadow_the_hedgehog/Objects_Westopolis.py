@@ -3,6 +3,21 @@ from .ObjectTypes import ObjectType, SETObject
 from .Names import REGION_INDICIES
 
 DESIRABLE_OBJECTS_WESTOPOLIS  = [
+
+    SETObject(ObjectType.ENERGY_CORE, Levels.STAGE_WESTOPOLIS, 492, "Dark Energy Core",
+              region=0),
+    SETObject(ObjectType.STANDARD_PULLEY, Levels.STAGE_WESTOPOLIS, 518, "Key 2 Pulley"),
+    SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_WESTOPOLIS, 482, "Special Weapons Box",
+              region=0),
+    SETObject(ObjectType.KEY_DOOR, Levels.STAGE_WESTOPOLIS, 332, "Secret Door",
+              region=REGION_INDICIES.WESTOPOLIS_KEY_DOOR),
+    SETObject(ObjectType.VEHICLE, Levels.STAGE_WESTOPOLIS, 333, "Secret Armored Car",
+              vehicle=ObjectType.ObjectTypeVehicle.ARMORED_CAR,
+              region=REGION_INDICIES.WESTOPOLIS_KEY_DOOR),
+    SETObject(ObjectType.VEHICLE, Levels.STAGE_WESTOPOLIS, 516, "Car",
+              vehicle=ObjectType.ObjectTypeVehicle.STANDARD_CAR,
+              region=0),
+
 SETObject(ObjectType.GUN_SOLIDER, Levels.STAGE_WESTOPOLIS, 69, '0', region=0),
 SETObject(ObjectType.BLACK_WING, Levels.STAGE_WESTOPOLIS, 199, '1', region=0),
 SETObject(ObjectType.GUN_SOLIDER, Levels.STAGE_WESTOPOLIS, 207, '2', region=0),
@@ -78,7 +93,8 @@ SETObject(ObjectType.BLACK_WARRIOR, Levels.STAGE_WESTOPOLIS, 406, '72', region=0
 SETObject(ObjectType.GUN_SOLIDER, Levels.STAGE_WESTOPOLIS, 411, '73', region=0),
 SETObject(ObjectType.BLACK_WARRIOR, Levels.STAGE_WESTOPOLIS, 407, '74', region=0),
 SETObject(ObjectType.GUN_SOLIDER, Levels.STAGE_WESTOPOLIS, 412, '75', region=0),
-SETObject(ObjectType.GOLD_BEETLE, Levels.STAGE_WESTOPOLIS, 489, 'Gold Beetle', region=0),
+SETObject(ObjectType.GOLD_BEETLE, Levels.STAGE_WESTOPOLIS, 489, 'Gold Beetle',
+          region=REGION_INDICIES.WESTOPOLIS_GOLD_BEETLE),
 SETObject(ObjectType.GUN_SOLIDER, Levels.STAGE_WESTOPOLIS, 450, '77', region=0),
 SETObject(ObjectType.GUN_BEETLE, Levels.STAGE_WESTOPOLIS, 454, '78', region=0),
 SETObject(ObjectType.BLACK_WARRIOR, Levels.STAGE_WESTOPOLIS, 459, '79', region=0),

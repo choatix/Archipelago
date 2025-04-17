@@ -17,16 +17,9 @@ from .Regions import character_name_to_region, stage_id_to_region, region_name_f
 from . import Utils as ShadowUtils
 
 def GetKeyRule(stage, player):
-    rule = lambda state: True
-    for keyData in [ k for k in Locations.KeyLocations if k.stageId == stage]:
-        regions = set(keyData.region)
-        for region in regions:
-            region_name = Regions.stage_id_to_region(stage, region)
-            rule = lambda state, r=rule, r_name=region_name: r(
-                state) and state.can_reach_region(
-                r_name, player)
-
-    return rule
+    keys = [ k for k in Locations.KeyLocations if k.stageId == stage]
+    regions = set([ Names.GetDistributionRegionEventName(stage, k) for k in keys])
+    return lambda state, ri=regions: state.has_all(ri, player)
 
 def GetRelevantTokenItem(token: LocationInfo):
     level_token_items = GetLevelTokenItems()
@@ -117,7 +110,7 @@ def handle_path_rules(options, player, additional_level_region, path_type):
             rule = weapon_rule
         elif bombs_available and weapon_available and options.weapon_sanity_unlock and \
             options.object_units:
-            rule = lambda state: weapon_rule(state) or bomb_rule(state)
+            rule = lambda state, wr=weapon_rule, br=bomb_rule: wr(state) or br(state)
         elif not weapon_available and options.object_units:
             rule = bomb_rule
 
@@ -141,9 +134,17 @@ def handle_path_rules(options, player, additional_level_region, path_type):
             rule = weapon_rule
         elif units_available and weapon_available and \
                 options.object_units:
-            rule = lambda state: weapon_rule(state) or unit_rule(state)
+            rule = lambda state, wr=weapon_rule, ur=unit_rule: wr(state) or ur(state)
         elif not weapon_available and options.object_units:
             rule = unit_rule
+
+    elif region_restriction == REGION_RESTRICTION_TYPES.GoldBeetle:
+        if options.logic_level == Options.LogicLevel.option_easy:
+            rule = Weapons.GetRuleByWeaponRequirement(player, Weapons.WeaponAttributes.VACUUM,
+                                                      additional_level_region.stageId,
+                                                      additional_level_region.fromRegions)
+        elif options.logic_level == Options.LogicLevel.option_normal:
+            rule = Weapons.GetRuleByWeaponRequirement(player, None, additional_level_region.stageId, additional_level_region.fromRegions)
 
     elif options.weapon_sanity_unlock and Levels.IsWeaponsanityRestriction(region_restriction):
         if region_restriction == REGION_RESTRICTION_TYPES.Torch:
@@ -161,9 +162,6 @@ def handle_path_rules(options, player, additional_level_region, path_type):
         elif region_restriction == REGION_RESTRICTION_TYPES.Gun:
             rule = Weapons.GetRuleByWeaponRequirement(player, Weapons.WeaponAttributes.SHOT,
                                                       additional_level_region.stageId, additional_level_region.fromRegions)
-
-        elif region_restriction == REGION_RESTRICTION_TYPES.Heal:
-           pass
 
         elif region_restriction == REGION_RESTRICTION_TYPES.AnyStageWeapon:
             rule = Weapons.GetRuleByWeaponRequirement(player, None, additional_level_region.stageId, additional_level_region.fromRegions)
@@ -244,8 +242,9 @@ def lock_warp_items(multiworld, world, player):
         location.place_locked_item(
             mw_token_item)
 
-def CountRegionAccessibility(state, keys, data, ix, player):
+def CountRegionAccessibility(state, keys, data, ix, player, perc=100):
     #sum(
+
     #    [data[r] for r in GetReachableRegions(state, keys) if r in keys]) >= ix)
 
     # This method uses events but they show up in spoiler log and look bad so use other method
@@ -259,13 +258,32 @@ def CountRegionAccessibility(state, keys, data, ix, player):
 
     keys = list(keys)
 
-    total = 0
-    for key in keys:
-        #print("Does player have", key)
-        if state.has(key, player):
-            total += data[key]
+    # Which is better, % of total, or % of each region?
 
-    #print("total is", total)
+    total = 0
+    all = True
+    values = []
+    for key in keys:
+
+        count_in_region = data[key]
+        #print("Does player have", key, count_in_region)
+        if count_in_region > 0:
+            if state.has(key, player):
+                #print("player have", key, count_in_region)
+                values.append(count_in_region)
+            else:
+                #print("Doesn't player have", key, count_in_region)
+                all = False
+
+    for i in values:
+        if all:
+            total += i
+        else:
+            total += floor(i * (perc / 100))
+
+    if all:
+        total = floor(total * (perc / 100))
+
     return total >= ix
 
 def set_rules(multiworld: MultiWorld, world: World, player: int):
@@ -618,6 +636,13 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
                 enemy.total_count, enemy.stageId, enemy.enemyClass,
                 override_settings)
 
+            perc_required = ShadowUtils.getPercRequired(
+                ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_ENEMY,
+                                                          enemy.mission_object_name, world.options),
+                enemy.stageId, enemy.enemyClass,
+                override_settings)
+
+
             frequency_required = ShadowUtils.getMaxRequired(
                 ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_ENEMY_FREQUENCY,
                                                           enemy.mission_object_name, world.options),
@@ -626,6 +651,7 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
 
 
             enemy_distribution = enemy.getDistribution().items()
+            #print("ED=", enemy.stageId, enemy_distribution)
             enemy_dist_by_name = {}
 
             total = 0
@@ -640,8 +666,9 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
                 if l % frequency_required != 0 and max_required != l:
                     continue
 
-                new_rule = lambda state, ix=l, data=enemy_dist_by_name, keys=enemy_dist_by_name.keys()\
-                    : CountRegionAccessibility(state, keys, data, ix, player)
+                new_rule = lambda state, ix=l, data=enemy_dist_by_name, keys=enemy_dist_by_name.keys(),\
+                    p=perc_required\
+                    : CountRegionAccessibility(state, keys, data, ix, player, p)
                 location_id, objective_location_name = (
                     GetEnemyLocationName(enemy.stageId, enemy.enemyClass, enemy.mission_object_name,
                                         l))

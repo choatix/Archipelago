@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from math import floor
 from typing import Dict, Optional
 
-from BaseClasses import Location, Region, ItemClassification, Item
+from BaseClasses import Location, Region, ItemClassification, Item, LocationProgressType
 from . import Regions, Levels, Weapons, Objects, Options, Names
 from .Levels import *
 from . import Utils as ShadowUtils
@@ -208,14 +208,9 @@ class KeyLocation:
 
 
     def setDistribution(self, dist):
-        total = 0
-        if type(dist) is set:
-            return self
-        for region,count in dist.items():
-            for c in range(0, count):
-                self.region[total] = region
-                total += 1
-
+        for region, available in dist.items():
+            for l in available:
+                self.region[l - 1] = region
         return self
 
     def getRegion(self, index):
@@ -330,7 +325,7 @@ MissionClearLocations = [
             0: 1,
             REGION_INDICIES.CENTRAL_CITY_BOMB_OR_BAZOOKA: 2,
             REGION_INDICIES.CENTRAL_CITY_TRAVERSE_EASY: 1,
-            REGION_INDICIES.CENTRAL_CITY_ROCKET: 1
+            REGION_INDICIES.CENTRAL_CITY_ROCKET_2: 1
         }
     ),
     MissionClearLocation(STAGE_CENTRAL_CITY, MISSION_ALIGNMENT_HERO, 20, "Little Bomb")
@@ -774,7 +769,7 @@ CheckpointLocations = \
             0: [2, 3],
             REGION_INDICIES.CENTRAL_CITY_BOMB_OR_BAZOOKA: [1],
             REGION_INDICIES.CENTRAL_CITY_BOMB_OR_BAZOOKA_2: [4],
-            REGION_INDICIES.CENTRAL_CITY_ROCKET: [5,6]
+            REGION_INDICIES.CENTRAL_CITY_ROCKET_2: [5,6]
         }
     ),
     CheckpointLocation(STAGE_THE_DOOM, 6)
@@ -852,8 +847,7 @@ CheckpointLocations = \
         {
             0: [1],
             REGION_INDICIES.GUN_FORTRESS_PULLEY: [2,3],
-            REGION_INDICIES.GUN_FORTRESS_ROCKET_NORMAL: [4,5,6],
-            REGION_INDICIES.GUN_FORTRESS_KEY_OR_ZIPLINE: [7]
+            REGION_INDICIES.GUN_FORTRESS_ROCKET_NORMAL: [4,5,6,7]
         }
     ),
     CheckpointLocation(STAGE_BLACK_COMET, 8)
@@ -878,7 +872,7 @@ CheckpointLocations = \
         {
             REGION_INDICIES.COSMIC_FALL_ZIPWIRE: [1],
             REGION_INDICIES.COSMIC_FALL_PULLEY_NORMAL: [2,3,4,5,6],
-            REGION_INDICIES.COSMIC_FALL_LD_OR_JUMPER: [7]
+            REGION_INDICIES.COSMIC_FALL_ROCKET: [7]
         }
     ),
 
@@ -908,185 +902,185 @@ KeyLocations = \
     KeyLocation(STAGE_WESTOPOLIS)
         .setDistribution(
         {
-            0: 4,
-            REGION_INDICIES.WESTOPOLIS_PULLEY: 1
+            0: [1,3,4,5],
+            REGION_INDICIES.WESTOPOLIS_PULLEY: [2]
         }
     ),
     KeyLocation(STAGE_DIGITAL_CIRCUIT)
         .setDistribution(
         {
-            0: 4,
-            REGION_INDICIES.DIGITAL_CIRCUIT_DARK_WARP_HOLE: 1
+            0: [1,2,3,4],
+            REGION_INDICIES.DIGITAL_CIRCUIT_DARK_WARP_HOLE: [5]
         }
     ),
     KeyLocation(STAGE_GLYPHIC_CANYON)
         .setDistribution(
         {
-            0: 3,
-            REGION_INDICIES.GLYPHIC_CANYON_PULLEY: 2
+            0: [1,2,3],
+            REGION_INDICIES.GLYPHIC_CANYON_PULLEY: [4,5]
         }
     ),
     KeyLocation(STAGE_LETHAL_HIGHWAY)
         .setDistribution(
         {
-            0: 3,
-            REGION_INDICIES.LETHAL_HIGHWAY_ROCKET: 1,
-            REGION_INDICIES.LETHAL_HIGHWAY_PULLEY: 1,
+            0: [1,2,3],
+            REGION_INDICIES.LETHAL_HIGHWAY_ROCKET: [4],
+            REGION_INDICIES.LETHAL_HIGHWAY_PULLEY: [5],
         }
     ),
     KeyLocation(STAGE_CRYPTIC_CASTLE)
         .setDistribution(
         {
-            REGION_INDICIES.CRYPTIC_CASTLE_BALLOON: 1,
-            REGION_INDICIES.CRYPTIC_CASTLE_HAWK: 1,
-            REGION_INDICIES.CRYPTIC_CASTLE_BOMB_EASY_2: 3
+            REGION_INDICIES.CRYPTIC_CASTLE_BALLOON: [1],
+            REGION_INDICIES.CRYPTIC_CASTLE_HAWK: [2],
+            REGION_INDICIES.CRYPTIC_CASTLE_BOMB_EASY_2: [3,4,5]
         }
     ),
     KeyLocation(STAGE_PRISON_ISLAND)
         .setDistribution(
         {
-            0: 1,
-            REGION_INDICIES.PRISON_ISLAND_AIR_SAUCER: 4,
+            0: [1],
+            REGION_INDICIES.PRISON_ISLAND_AIR_SAUCER: [2,3,4,5],
         }
     ),
     KeyLocation(STAGE_CIRCUS_PARK)
         .setDistribution(
         {
-            REGION_INDICIES.CIRCUS_PARK_ZIP_WIRE: 1,
-            REGION_INDICIES.CIRCUS_PARK_ROCKET_EASY: 2,
-            REGION_INDICIES.CIRCUS_PARK_ROCKET: 1,
-            REGION_INDICIES.CIRCUS_PARK_PULLEY: 1
+            REGION_INDICIES.CIRCUS_PARK_ZIP_WIRE: [1],
+            REGION_INDICIES.CIRCUS_PARK_ROCKET_EASY: [2,3],
+            REGION_INDICIES.CIRCUS_PARK_ROCKET: [4],
+            REGION_INDICIES.CIRCUS_PARK_PULLEY: [5]
         }
     ),
     KeyLocation(STAGE_CENTRAL_CITY)
         .setDistribution(
         {
-            0: 1,
-            REGION_INDICIES.CENTRAL_CITY_BOMB_OR_BAZOOKA: 1,
-            REGION_INDICIES.CENTRAL_CITY_BOMB_OR_BAZOOKA_2: 1,
-            REGION_INDICIES.CENTRAL_CITY_ROCKET: 1,
-            REGION_INDICIES.CENTRAL_CITY_BOMB_OR_BAZOOKA_3: 1,
+            0: [2],
+            REGION_INDICIES.CENTRAL_CITY_BOMB_OR_BAZOOKA: [1],
+            REGION_INDICIES.CENTRAL_CITY_BOMB_OR_BAZOOKA_2: [3],
+            REGION_INDICIES.CENTRAL_CITY_ROCKET_2: [4],
+            REGION_INDICIES.CENTRAL_CITY_BOMB_OR_BAZOOKA_3: [5],
         }
     ),
     KeyLocation(STAGE_THE_DOOM)
         .setDistribution(
         {
-            0: 2,
-            REGION_INDICIES.THE_DOOM_BOMBS: 2,
-            REGION_INDICIES.THE_DOOM_PULLEY_2: 1,
+            0: [1,2],
+            REGION_INDICIES.THE_DOOM_BOMBS: [3,5],
+            REGION_INDICIES.THE_DOOM_PULLEY_2: [4],
         }
     ),
     KeyLocation(STAGE_SKY_TROOPS)
         .setDistribution(
         {
-            REGION_INDICIES.SKY_TROOPS_GUN_JUMPER_EASY: 1,
-            REGION_INDICIES.SKY_TROOPS_ROCKET_NORMAL: 1,
-            REGION_INDICIES.SKY_TROOPS_ROCKET: 2,
-            REGION_INDICIES.SKY_TROOPS_HAWK_OR_VOLT: 1
+            REGION_INDICIES.SKY_TROOPS_GUN_JUMPER_EASY: [1],
+            REGION_INDICIES.SKY_TROOPS_ROCKET_NORMAL: [2],
+            REGION_INDICIES.SKY_TROOPS_ROCKET: [3,4],
+            REGION_INDICIES.SKY_TROOPS_HAWK_OR_VOLT: [5]
         }
     ),
     KeyLocation(STAGE_MAD_MATRIX)
         .setDistribution(
         {
-            REGION_INDICIES.MAD_MATRIX_GUN: 1,
-            REGION_INDICIES.MAD_MATRIX_YELLOW_ENTRY: 1,
-            REGION_INDICIES.MAD_MATRIX_GREEN_PROGRESSION: 1,
-            REGION_INDICIES.MAD_MATRIX_RED_ENTRY: 2,
+            REGION_INDICIES.MAD_MATRIX_GUN: [1],
+            REGION_INDICIES.MAD_MATRIX_YELLOW_ENTRY: [2],
+            REGION_INDICIES.MAD_MATRIX_GREEN_PROGRESSION: [3],
+            REGION_INDICIES.MAD_MATRIX_RED_ENTRY: [4,5],
         }
     ),
     KeyLocation(STAGE_DEATH_RUINS)
         .setDistribution(
         {
-            REGION_INDICIES.DEATH_RUINS_PULLEY: 3,
-            REGION_INDICIES.DEATH_RUINS_WALLS: 2
+            REGION_INDICIES.DEATH_RUINS_PULLEY: [1,2],
+            REGION_INDICIES.DEATH_RUINS_WALLS: [3,4,5]
         }
     ),
     KeyLocation(STAGE_THE_ARK)
         .setDistribution(
         {
-            0: 1,
-            REGION_INDICIES.THE_ARK_BLACK_VOLT: 4
+            0: [1],
+            REGION_INDICIES.THE_ARK_BLACK_VOLT: [2,3,4,5]
         }
     ),
     KeyLocation(STAGE_AIR_FLEET)
         .setDistribution(
         {
-            REGION_INDICIES.AIR_FLEET_PULLEY: 5
+            REGION_INDICIES.AIR_FLEET_PULLEY: [1,2,3,4,5]
         }
     ),
     KeyLocation(STAGE_IRON_JUNGLE)
         .setDistribution(
         {
-            REGION_INDICIES.IRON_JUNGLE_ROCKET: 1,
-            REGION_INDICIES.IRON_JUNGLE_LIGHT_DASH: 4
+            REGION_INDICIES.IRON_JUNGLE_ROCKET: [1],
+            REGION_INDICIES.IRON_JUNGLE_LIGHT_DASH: [2,3,4,5]
         }
     ),
     KeyLocation(STAGE_SPACE_GADGET)
         .setDistribution(
         {
-            0: 2,
-            REGION_INDICIES.SPACE_GADGET_AIR_SAUCER: 3
+            0: [1,2],
+            REGION_INDICIES.SPACE_GADGET_AIR_SAUCER: [3,4,5]
         }
     ),
     KeyLocation(STAGE_LOST_IMPACT)
         .setDistribution(
         {
-            0: 1,
-            REGION_INDICIES.LOST_IMPACT_GUN_LIFT: 2,
-            REGION_INDICIES.LOST_IMPACT_ROCKET: 1,
-            REGION_INDICIES.LOST_IMPACT_BOMB_WALL: 1
+            0: [1],
+            REGION_INDICIES.LOST_IMPACT_GUN_LIFT: [2,4],
+            REGION_INDICIES.LOST_IMPACT_ROCKET: [3],
+            REGION_INDICIES.LOST_IMPACT_BOMB_WALL: [5]
         }
     ),
     KeyLocation(STAGE_GUN_FORTRESS)
         .setDistribution(
         {
-            0: 1,
-            REGION_INDICIES.GUN_FORTRESS_ZIPWIRE_NORMAL: 1,
-            REGION_INDICIES.GUN_FORTRESS_ZIPWIRE: 1,
-            REGION_INDICIES.GUN_FORTRESS_ROCKET_NORMAL: 1,
-            REGION_INDICIES.GUN_FORTRESS_KEY_OR_ZIPLINE: 1
+            0: [1],
+            REGION_INDICIES.GUN_FORTRESS_ZIPWIRE_NORMAL: [2],
+            REGION_INDICIES.GUN_FORTRESS_ZIPWIRE: [3],
+            REGION_INDICIES.GUN_FORTRESS_ROCKET_NORMAL: [4, 5]
         }
     ),
     KeyLocation(STAGE_BLACK_COMET)
         .setDistribution(
         {
-            REGION_INDICIES.BLACK_COMET_AIR_SAUCER: 2,
-            REGION_INDICIES.BLACK_COMET_WARP_HOLE: 1,
-            REGION_INDICIES.BLACK_COMET_FLOATING_ENEMY_WALL: 2
+            REGION_INDICIES.BLACK_COMET_AIR_SAUCER: [1,2],
+            REGION_INDICIES.BLACK_COMET_WARP_HOLE: [3],
+            REGION_INDICIES.BLACK_COMET_FLOATING_ENEMY_WALL: [4,5]
         }
     ),
     KeyLocation(STAGE_LAVA_SHELTER)
         .setDistribution(
         {
-            0: 1,
-            REGION_INDICIES.LAVA_SHELTER_PULLEY: 1,
-            REGION_INDICIES.LAVA_SHELTER_PULLEY_OR_LAVA: 2,
-            REGION_INDICIES.LAVA_SHELTER_PULLEY_DARK: 1
+            0: [1],
+            REGION_INDICIES.LAVA_SHELTER_PULLEY: [2],
+            REGION_INDICIES.LAVA_SHELTER_PULLEY_OR_LAVA: [3,5],
+            REGION_INDICIES.LAVA_SHELTER_PULLEY_DARK: [4]
         }
     ),
     KeyLocation(STAGE_COSMIC_FALL)
         .setDistribution(
         {
-            REGION_INDICIES.COSMIC_FALL_PULLEY_NORMAL: 3,
-            REGION_INDICIES.COSMIC_FALL_GUN_JUMPER: 2,
+            REGION_INDICIES.COSMIC_FALL_PULLEY_NORMAL: [1,2,3],
+            REGION_INDICIES.COSMIC_FALL_GUN_JUMPER: [4],
+            REGION_INDICIES.COSMIC_FALL_LD_OR_JUMPER: [5]
         }
     ),
     KeyLocation(STAGE_FINAL_HAUNT)
         .setDistribution(
         {
-            0: 2,
-            REGION_INDICIES.FINAL_HAUNT_HARD_VACUUM_OR_BLACK_VOLT: 1,
-            REGION_INDICIES.FINAL_HAUNT_BLACK_VOLT_2: 1,
-            REGION_INDICIES.FINAL_HAUNT_LIGHT_DASH: 1
+            0: [1,2],
+            REGION_INDICIES.FINAL_HAUNT_ROCKET_NORMAL: [3],
+            REGION_INDICIES.FINAL_HAUNT_BLACK_VOLT_2: [4],
+            REGION_INDICIES.FINAL_HAUNT_LIGHT_DASH: [5]
         }
     ),
 
     KeyLocation(STAGE_THE_LAST_WAY)
         .setDistribution(
         {
-            0: 1,
-            REGION_INDICIES.THE_LAST_WAY_BLACK_VOLT: 3,
-            REGION_INDICIES.THE_LAST_WAY_VOLT_OR_WARP: 1
+            0: [1],
+            REGION_INDICIES.THE_LAST_WAY_BLACK_VOLT: [2,3,4],
+            REGION_INDICIES.THE_LAST_WAY_VOLT_OR_WARP: [5]
         }
     ),
 
@@ -1535,8 +1529,9 @@ def create_locations(world, regions: Dict[str, Region]):
 
     if world.options.energy_cores:
 
-        for core_location in [ x for x in object_locations if x.other == ObjectType.ENERGY_CORE and
-                               x.stageId in world.available_levels]:
+        for core_location in [ x for x in object_locations if (x.other == ObjectType.ENERGY_CORE or
+                                 x.other == ObjectType.ENERGY_CORE_IN_WOOD_BOX) and
+                                                              x.stageId in world.available_levels]:
             if core_location.regionId is not None:
                 stage_region_name = Regions.stage_id_to_region(core_location.stageId, core_location.regionId)
                 stage_region = regions[stage_region_name]
@@ -1676,6 +1671,7 @@ def count_locations(world):
 
     if world.options.energy_cores:
         count = increment_location_count(count, len([x for x in object_locations if x.other == ObjectType.ENERGY_CORE
+                                                     or x.other == ObjectType.ENERGY_CORE_IN_WOOD_BOX
                                                      if x.stageId in world.available_levels]))
 
     if world.options.door_sanity:
@@ -1783,7 +1779,8 @@ def getLocationGroups():
         "Objects": [c.name for c in object_locations],
         "Shadow Boxes": [c.name for c in object_locations if c.other == ObjectType.SHADOW_BOX],
         "Gold Beetles": [c.name for c in object_locations if c.other == ObjectType.GOLD_BEETLE],
-        "Cores": [c.name for c in object_locations if c.other == ObjectType.ENERGY_CORE],
+        "Cores": [c.name for c in object_locations if c.other == ObjectType.ENERGY_CORE or
+                  c.other == ObjectType.ENERGY_CORE_IN_WOOD_BOX],
         "Key Doors": [c.name for c in object_locations if c.other == ObjectType.KEY_DOOR]
     }
 
@@ -1830,7 +1827,6 @@ def SetStoryClearEvents(world, player, menu_region):
 
     for w in [l for l in world.shuffled_story_mode if l.boss is not None]:
         view_name = Names.GetBossClearEventName(w.boss, w.start_stage_id, w.alignment_id)
-        print("wn", view_name)
         story_clear_event = ShadowTheHedgehogLocation(player, view_name, None, menu_region)
         #story_clear_event.place_locked_item(Item(view_name, ItemClassification.progression, None, player))
         story_clear_event.show_in_spoiler = True
@@ -1865,6 +1861,7 @@ def SetRegionEvents(world, player, menu_region):
         view_name = Names.GetDistributionRegionEventName(region.stageId, region.regionIndex)
         region_event = ShadowTheHedgehogLocation(player, view_name, None, menu_region)
         region_event.show_in_spoiler = False
+        region_event.progress_type = LocationProgressType.PRIORITY
         region_events.append(region_event)
 
     menu_region.locations.extend(region_events)

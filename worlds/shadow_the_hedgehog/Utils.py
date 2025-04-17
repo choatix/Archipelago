@@ -31,6 +31,15 @@ def getRequiredCount(total, percentage,
 
     return int(required_count)
 
+def getRequiredPercentage(percentage,
+                     round_method=ceil,
+                     override=None):
+
+    if override is not None:
+        percentage = override
+
+    return percentage
+
 
 def getOverwriteRequiredCount(override_settings, stageId, alignmentId, typeId):
     key = "{type}.{stageName}"
@@ -131,13 +140,16 @@ def getObjectiveTypeAndPercentage(base_objective_type, item_name, options):
         else:
             percentage = options.objective_completion_percentage
             round_method = floor
+
     if base_objective_type == TYPE_ID_OBJECTIVE_AVAILABLE:
         if isEnemyObjectiveLocation(item_name):
             base_objective_type = TYPE_ID_OBJECTIVE_ENEMY_AVAILABLE
-            percentage = options.objective_item_enemy_percentage_available
+            percentage = options.objective_completion_enemy_percentage *\
+                          ((100 + options.objective_item_percentage_available)/100)
             round_method = ceil
         else:
-            percentage = options.objective_item_percentage_available
+            percentage = options.objective_completion_percentage *\
+                          ((100 + options.objective_item_percentage_available)/100)
             round_method = ceil
 
     if base_objective_type in (TYPE_ID_OBJECTIVE_AVAILABLE, TYPE_ID_OBJECTIVE,
@@ -196,3 +208,17 @@ def getMaxRequired(type_default_percentage, total:int, stageId:int, alignmentId:
         return FrequencyPercentageToIncrementer(max_required, round_method)
 
     return max_required
+
+def getPercRequired(type_default_percentage, stageId:int, alignmentId:int, override_settings):
+    if type_default_percentage is None:
+        return 100
+
+    type_value = type_default_percentage[0]
+    default_percentage = type_default_percentage[1]
+    round_method = type_default_percentage[2]
+
+
+    override_total = getOverwriteRequiredCount(override_settings, stageId, alignmentId, type_value)
+    max_perc_required = getRequiredPercentage(default_percentage, override=override_total, round_method=round_method)
+
+    return max_perc_required
