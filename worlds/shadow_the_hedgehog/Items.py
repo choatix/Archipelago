@@ -829,7 +829,7 @@ def PopulateItemPool(world : World, first_regions):
             mw_useful_items.extend([ ShadowTheHedgehogItem(item, world.player) for _ in range(0, useful_to_count[item.name])])
 
 
-    junk_count = location_count - item_count - len(mw_useful_items)
+    junk_count = (location_count - item_count - len(mw_useful_items))
     mw_junk_items = [ ShadowTheHedgehogItem(i, world.player) for i in ChooseJunkItems(world.random, junk_items, world.options, junk_count) ]
 
     if world.options.goal_chaos_emeralds:

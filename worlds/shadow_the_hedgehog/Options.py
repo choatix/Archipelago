@@ -120,22 +120,21 @@ class ObjectiveCompletionEnemyPercentage(Range):
 
 class ObjectiveItemPercentageAvailable(Range):
     """
-        When playing Objective Sanity, determine the percentage of items required to finish stages left in the pool.
-        This number MUST be higher than the required amount to clear.
-        This number can exceed 100% if you want more items than there are to add,
-        so long as you have location space.
+        When playing Objective Sanity, determine the percentage of items required to finish stages added alongside
+        your provided completion percentage.
     """
     display_name = "Objective Item Percentage"
-    range_start = 1
-    range_end = 1000
-    default = 100
+    range_start = 0
+    range_end = 900
+    default = 0
 
 class ObjectiveItemEnemyPercentageAvailable(Range):
-    """When playing Objective Sanity, determine the percentage of items for enemy objectives required to finish stages left in the pool."""
+    """When playing Objective Enemy Sanity, determine the percentage of items required to finish stages added alongside
+        your provided completion percentage."""
     display_name = "Objective Item Enemy Percentage"
-    range_start = 1
-    range_end = 1000
-    default = 100
+    range_start = 0
+    range_end = 900
+    default = 0
 
 class EnemyObjectiveSanity(DefaultOnToggle):
     """Determines if enemy-based objective checks are enabled."""

@@ -5,7 +5,6 @@ from .Objects_CentralCity import DESIRABLE_OBJECTS_CENTRAL_CITY
 from .Objects_CircusPark import DESIRABLE_OBJECTS_CIRCUS_PARK
 
 from .Objects_CosmicFall import DESIRABLE_OBJECTS_COSMIC_FALL
-from .Objects_All import DESIRABLE_OBJECTS_ALL
 from .Objects_CrypticCastle import DESIRABLE_OBJECTS_CRYPTIC_CASTLE
 from .Objects_AirFleet import DESIRABLE_OBJECTS_AIR_FLEET
 from .Objects_DeathRuins import DESIRABLE_OBJECTS_DEATH_RUINS
@@ -25,6 +24,7 @@ from .Objects_TheArk import DESIRABLE_OBJECTS_THE_ARK
 from .Objects_TheDoom import DESIRABLE_OBJECTS_THE_DOOM
 from .Objects_TheLastWay import DESIRABLE_OBJECTS_THE_LAST_WAY
 from .Objects_Westopolis import DESIRABLE_OBJECTS_WESTOPOLIS
+from .Objects_Bosses import DESIRABLE_OBJECTS_BOSSES
 
 ENEMY_CLASS_ALIEN = 0
 ENEMY_CLASS_GUN = 1
@@ -35,7 +35,8 @@ LOCATION_ID_PLUS = 100068
 
 def GetObjectChecks():
     object_check_types = [ObjectType.GOLD_BEETLE, ObjectType.SHADOW_BOX,
-                          ObjectType.ENERGY_CORE, ObjectType.KEY_DOOR]
+                          ObjectType.ENERGY_CORE, ObjectType.KEY_DOOR,
+                          ObjectType.ENERGY_CORE_IN_WOOD_BOX]
 
     object_checks = [ d for d in DESIRABLE_OBJECTS if d.object_type in object_check_types ]
     return object_checks
@@ -204,9 +205,15 @@ def GetTypeId(objectType):
     if objectType == ObjectType.WARP_HOLE_ANTI_TRAP:
         pass
 
+    if objectType == ObjectType.ENERGY_CORE_IN_WOOD_BOX:
+        return 0x09
+
+    if objectType == ObjectType.ENERGY_CORE_IN_METAL_BOX:
+        return 0x0A
+
     return None
 
-def CheckVehicleAttributes(objectType, extra_bytes):
+def CheckVehicleAttributes(objectType, extra_bytes, index):
 
     if objectType == "Server":
         byte = extra_bytes[3]
@@ -270,16 +277,46 @@ def CheckVehicleAttributes(objectType, extra_bytes):
         group_count = extra_bytes[(7*4)+3]
         return f"Black Larvae ({group_count})"
 
+    if objectType in ("Wood Box", "Metal Box"):
+
+        box_type = extra_bytes[0:4]
+        box_item_bytes = extra_bytes[4:8]
+        capsule_type = extra_bytes[8:12]
+        weapon_type = extra_bytes[12:16]
+        core_type = extra_bytes[16:20]
+
+        box_item = int.from_bytes(box_item_bytes, byteorder='big')
+
+        type_name = "Box"
+        if box_item == 0x00:
+            type_name = "Empty Box"
+        elif box_item == 0x01:
+            type_name = "Item In Box"
+        elif box_item == 0x02:
+            type_name = "Weapon In Box"
+        elif box_item == 0x03:
+            type_name = "Rings in Box"
+        elif box_item == 0x04:
+            type_name = "Heal Unit In Box"
+        elif box_item == 0x05:
+            type_name = "Core in Box"
+        else:
+            print("Unknown box type:", type_name, box_item_bytes, box_item, index)
+
+        return type_name
+
+    elif objectType == "Weapon Box":
+        box_type = extra_bytes[0:4]
+        box_weapon_bytes = extra_bytes[4:8]
+        return "Weapon Box"
+
 
     return objectType
 
 
 DESIRABLE_OBJECTS = []
 
-
-DESIRABLE_OBJECTS.extend(DESIRABLE_OBJECTS_ALL)
 DESIRABLE_OBJECTS.extend(DESIRABLE_OBJECTS_WESTOPOLIS)
-
 DESIRABLE_OBJECTS.extend(DESIRABLE_OBJECTS_DIGITAL_CIRCUIT)
 DESIRABLE_OBJECTS.extend(DESIRABLE_OBJECTS_GLYPHIC_CANYON)
 DESIRABLE_OBJECTS.extend(DESIRABLE_OBJECTS_LETHAL_HIGHWAY)
@@ -302,6 +339,7 @@ DESIRABLE_OBJECTS.extend(DESIRABLE_OBJECTS_LAVA_SHELTER)
 DESIRABLE_OBJECTS.extend(DESIRABLE_OBJECTS_COSMIC_FALL)
 DESIRABLE_OBJECTS.extend(DESIRABLE_OBJECTS_FINAL_HAUNT)
 DESIRABLE_OBJECTS.extend(DESIRABLE_OBJECTS_THE_LAST_WAY)
+DESIRABLE_OBJECTS.extend(DESIRABLE_OBJECTS_BOSSES)
 
 def GetDesirableObjectsForStage(stage):
     return [ o for o in DESIRABLE_OBJECTS if o.stage == stage]
@@ -343,7 +381,7 @@ def TypeToString(type):
         return "Unbreakable Box"
 
     elif type == 0x0C:
-        return "Box"
+        return "Weapon Box"
 
     elif type == 0x0D:
         return "GUN Bomb"
@@ -563,11 +601,7 @@ def PrintSETChange(address, index, type, previous, new, additional_bytes):
     #    return
 
     typeString = TypeToString(type)
-
-    #if typeString == "Small Bomb":
-    #    return []
-
-    typeString = CheckVehicleAttributes(typeString, additional_bytes)
+    typeString = CheckVehicleAttributes(typeString, additional_bytes, index)
 
     found = False
     for v in ObjectType.__dict__.items():
@@ -582,7 +616,9 @@ def PrintSETChange(address, index, type, previous, new, additional_bytes):
 
     handle_types = []
     unhandled_types = ["Destructible",
-                       "City Laser", "Rings"]
+                       "City Laser", "Rings", "Box", "Empty Box",
+                       "Item In Box", "Weapon In Box", "Rings in Box",
+                       "Heal Unit In Box", "Weapon Box"]
 
     if len(handle_types) > 0 and typeString not in handle_types:
         return []
@@ -689,6 +725,43 @@ def GetSETFileLength(level):
         return 446 + 97
     elif level == Levels.STAGE_THE_LAST_WAY:
         return 457 + 40
+
+    elif level == Levels.BOSS_BLACK_BULL_LH:
+        return 51
+    elif level == Levels.BOSS_EGG_BREAKER_CC:
+        return 18
+    elif level == Levels.BOSS_HEAVY_DOG:
+        return 7
+    elif level == Levels.BOSS_EGG_BREAKER_MM:
+        return 35
+    elif level == Levels.BOSS_BLACK_BULL_DR:
+        return 20
+    elif level == Levels.BOSS_BLUE_FALCON:
+        return 12
+    elif level == Levels.BOSS_EGG_BREAKER_IJ:
+        return 22
+
+
+    elif level == Levels.BOSS_DIABLON_GF:
+        return 19
+    elif level == Levels.BOSS_BLACK_DOOM_GF:
+        return 13
+    elif level == Levels.BOSS_DIABLON_BC:
+        return 14
+    elif level == Levels.BOSS_EGG_DEALER_BC:
+        return 161
+    elif level == Levels.BOSS_EGG_DEALER_LS:
+        return 145
+    elif level == Levels.BOSS_EGG_DEALER_CF:
+        return 137
+    elif level == Levels.BOSS_BLACK_DOOM_CF:
+        return 15
+    elif level == Levels.BOSS_DIABLON_FH:
+        return 15
+    elif level == Levels.BOSS_BLACK_DOOM_FH:
+        return 11
+
+
 
     # Could add boxsanity for bosses too?
 

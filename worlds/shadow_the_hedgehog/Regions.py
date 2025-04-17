@@ -324,7 +324,7 @@ def connect_by_story_mode(multiworld: MultiWorld, world, player: int, order: typ
         start_region = world.get_region(start_base_region_name)
 
         if path.boss is not None:
-            if path.boss in world.available_levels:# and path.end_stage_id is not None:
+            if path.boss in world.available_levels: # and path.end_stage_id is not None:
                 boss_base_region_name = stage_id_to_region(path.boss)
                 boss_base_region = world.get_region(boss_base_region_name)
 
@@ -338,7 +338,7 @@ def connect_by_story_mode(multiworld: MultiWorld, world, player: int, order: typ
 
                 event_location = multiworld.get_location(view_name, player)
                 event_location.access_rule = (lambda state, n=boss_name, br=start_base_region_name: (
-                    state.can_reach_location(n, player) and
+                    (True if n == 'Boss:Devil Doom' else state.can_reach_location(n, player)) and
                     state.can_reach_region(br, player)))
 
                 item_name = f"Story Access Through {Names.LEVEL_ID_TO_LEVEL[path.boss]}"

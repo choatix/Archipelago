@@ -1171,7 +1171,7 @@ class ShTHContext(CommonContext):
         self.last_subtitle_ttl_pointer = None
         self.last_save_index = None
         self.last_save_index_message = None
-        self.last_subtitle_base_pointer = None
+        self.last_subtitle_message_base_pointer = None
 
 
     async def disconnect(self, allow_autoreconnect: bool = False):
@@ -3317,7 +3317,8 @@ async def handle_objects(ctx, current_level):
         elif vehicle_sanity and object.object_type == Objects.ObjectType.VEHICLE:
             spawn = False
             spawn_name = None
-            if object.vehicle == Objects.ObjectType.ObjectTypeVehicle.GUN_LIFT:
+            if object.vehicle == Objects.ObjectType.ObjectTypeVehicle.GUN_LIFT or \
+                object.vehicle == Objects.ObjectType.ObjectTypeVehicle.GUN_LIFT_FAST  :
                 spawn_name = "Gun Lift"
             elif object.vehicle == Objects.ObjectType.ObjectTypeVehicle.AIR_SAUCER:
                 spawn_name = "Air Saucer"
@@ -3343,7 +3344,7 @@ async def handle_objects(ctx, current_level):
                 spawn_name = "Standard Car"
 
             if spawn_name is None:
-                print("Invalid vehicle")
+                print("Invalid vehicle:", object.vehicle, object.index)
             else:
                 despawn = len([x for x in allowed_vehicles if x.name == Names.GetNameForVehicle(spawn_name)]) == 0
 
@@ -3437,13 +3438,33 @@ async def handle_objects(ctx, current_level):
             writeBytes(spawn_base_byte, spawn_bytes)
 
         if (shadow_box_sanity and object.object_type == Objects.ObjectType.SHADOW_BOX) or \
-            (core_sanity and object.object_type == Objects.ObjectType.ENERGY_CORE) or \
-                (beetle_sanity and object.object_type == Objects.ObjectType.GOLD_BEETLE) \
-            :
-            # TODO: Check location status from archi, if already complete, no need to check
-            #
+            (core_sanity and object.object_type == Objects.ObjectType.ENERGY_CORE or \
+            object.object_type == Objects.ObjectType.ENERGY_CORE_IN_WOOD_BOX):
 
+            expected_object_id, expected_object_name = Names.GetObjectLocationName(object)
 
+            related_locations = [l.locationId for l in object_locations if
+                                 l.name == expected_object_name]
+
+            arch_location_complete = len([l for l in related_locations if
+                                          l not in ctx.handled
+                                          and l not in ctx.checked_locations]) == 0
+
+            #if object.object_type == Objects.ObjectType.GOLD_BEETLE and not arch_location_complete:
+            #    print("check beetle", object.index, expected_object_id, expected_object_name,
+            #          related_locations, arch_location_complete, loaded_spawn_data)
+
+            if object.index in ctx.level_state["object_status"]:
+                object_status = ctx.level_state["object_status"][object.index]
+                if object_status == 0x00:
+                    arch_location_complete = True
+
+            if not arch_location_complete:
+                if loaded_spawn_data == 0x00:
+                    ctx.level_state["object_status"][object.index] = 0x00
+                    messages.extend(related_locations)
+
+        if beetle_sanity and object.object_type == Objects.ObjectType.GOLD_BEETLE:
 
             expected_object_id, expected_object_name = Names.GetObjectLocationName(object)
 
@@ -3456,12 +3477,12 @@ async def handle_objects(ctx, current_level):
 
             if object.index in ctx.level_state["object_status"]:
                 object_status = ctx.level_state["object_status"][object.index]
-                if object_status == 0x00:
+                if object_status in (0x00, 0x08):
                     arch_location_complete = True
 
             if not arch_location_complete:
-                if loaded_spawn_data == 0x00:
-                    ctx.level_state["object_status"][object.index] = 0x00
+                if loaded_spawn_data in (0x00, 0x08):
+                    ctx.level_state["object_status"][object.index] = 0x08
                     messages.extend(related_locations)
 
 
@@ -3530,7 +3551,6 @@ def DisplayMessages(ctx):
     info = Items.GetItemLookupDict()
 
     last_index = get_last_index_message(ctx)
-    print("last index is", last_index, ctx.last_subtitle_text_pointer)
     latest_index = None
     displayable = False
 
@@ -3546,7 +3566,6 @@ def DisplayMessages(ctx):
         messages.extend(ctx.items_to_handle)
 
         if len(messages) == 0:
-            print("No messages to handle")
             return
 
         next_messages = [ l[1] for l in messages if l[1] > last_index]
@@ -3554,11 +3573,8 @@ def DisplayMessages(ctx):
             return
         next_message = next_messages[0]
 
-        print("nm is", next_message, "vs", last_index)
-
         if next_message > last_index:
             rec_info = [ m[0] for m in messages if m[1] == next_message ][0]
-            print("nm more", rec_info)
 
         if rec_info is not None:
             message = f"Received {info[rec_info.item].name}"
@@ -3572,13 +3588,9 @@ def DisplayMessages(ctx):
         DisplayMessageInGame(ctx, None, None)
 
     if displayable and latest_index is not None:
-        print("Dispayable, set next")
         set_last_index_message(ctx, latest_index)
 
 def DisplayMessageInGame(ctx, message, display_time):
-
-    if message is not None:
-        print("Display:", message)
 
     is_subtitle_active_address = GAME_ADDRESSES.SUBTITLE_INFO
     subtitle_reference_pointer_address = is_subtitle_active_address + (4*7)
@@ -3594,17 +3606,17 @@ def DisplayMessageInGame(ctx, message, display_time):
     if subtitle_active == 0xFFFFFFFF:
         message_state_changed = True
 
+    if message_state_changed and subtitle_active != ctx.last_subtitle_message_base_pointer:
+        message_state_changed = True
+
     subtitle_reference_active = None
     if not message_state_changed:
+        ctx.last_subtitle_message_base_pointer = subtitle_active
         subtitle_reference_pointer_bytes = dolphin_memory_engine.read_bytes(subtitle_reference_pointer_address, 4)
         subtitle_reference_pointer = int.from_bytes(subtitle_reference_pointer_bytes, byteorder="big")
 
         subtitle_reference_active_address = subtitle_reference_pointer + subtitle_data_pointer_offset
         subtitle_reference_active_bytes = dolphin_memory_engine.read_bytes(subtitle_reference_active_address, 4)
-
-        ctx.last_subtitle_base_pointer = subtitle_reference_active_bytes
-        if ctx.last_subtitle_base_pointer is not None and ctx.last_subtitle_base_pointer != subtitle_reference_active_bytes:
-            message_state_changed = True
 
         subtitle_reference_active = int.from_bytes(subtitle_reference_active_bytes, byteorder="big")
 
@@ -3621,13 +3633,12 @@ def DisplayMessageInGame(ctx, message, display_time):
 
         ctx.last_subtitle_base_pointer = None
 
-        print("Message stopped being displayed")
+        #print("Message stopped being displayed")
         # check last known information for ttl and message data and restore it!
         return False
 
     if message is None:
         return None
-
 
 
     ttl_address = subtitle_reference_active+subtitle_data_display_time_offset
@@ -3668,7 +3679,9 @@ async def update_level_behaviour(ctx, current_level, death):
     # If higher than previous value, recognise as check and reduce by 1
 
     await handle_objects(ctx, current_level)
-    # ShowSETChanges(current_level)
+
+    #ShowSETChanges(current_level)
+
     DisplayMessages(ctx)
 
     # Add handle for first load of level, when state is blank
