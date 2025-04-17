@@ -17,8 +17,10 @@ from .Regions import character_name_to_region, stage_id_to_region, region_name_f
 from . import Utils as ShadowUtils
 
 def GetKeyRule(stage, player):
-    keys = [ k for k in Locations.KeyLocations if k.stageId == stage]
-    regions = set([ Names.GetDistributionRegionEventName(stage, k) for k in keys])
+    relevant_key_base = [ k for k in Locations.KeyLocations if k.stageId == stage]
+    key_regions = relevant_key_base[0].region
+    regions = set([ Names.GetDistributionRegionEventName(stage, k) for k in key_regions])
+    print("Key rule = has", relevant_key_base, key_regions, regions)
     return lambda state, ri=regions: state.has_all(ri, player)
 
 def GetRelevantTokenItem(token: LocationInfo):
