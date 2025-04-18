@@ -505,7 +505,8 @@ MissionClearLocations = [
     MissionClearLocation(STAGE_LAVA_SHELTER, MISSION_ALIGNMENT_DARK, 5, "Defense")
         .setDistribution(
         {
-            0: 4,
+            0: 1,
+            REGION_INDICIES.LAVA_SHELTER_PULLEY_OR_LAVA: 3,
             REGION_INDICIES.LAVA_SHELTER_PULLEY_DARK: 1
         }
     ),

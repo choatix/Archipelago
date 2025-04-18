@@ -132,17 +132,20 @@ def create_regions(world) -> Dict[str, Region]:
                              x not in Levels.LAST_STORY_STAGES ]
     if world.options.guaranteed_level_clear:
         limited_by_first = Locations.GetStagesWithNoRequirements(world)
+        backup_limited = limited_first_stages
         limited_first_stages = [ l for l in limited_first_stages if l in limited_by_first]
+        if len(limited_first_stages) == 0:
+            limited_first_stages = backup_limited
 
-    if (world.options.level_progression != Options.LevelProgression.option_story and
-            world.multiworld.plando_items is not None and world.player in world.multiworld.plando_items):
-
-        items = world.multiworld.plando_items[world.player]
-        item_details = [ item_info[i.item].stageId for i in items if item_info[i.item].type == 'level_object']
-        limited_first_stages = [ l for l in limited_first_stages if l not in item_details]
-
-
-        print(world.multiworld.plando_items[world.player])
+    #if (world.options.level_progression != Options.LevelProgression.option_story and
+    #        world.multiworld.plando_items is not None and world.player in world.multiworld.plando_items):
+#
+#        items = world.multiworld.plando_items[world.player]
+#        item_details = [ item_info[i.item].stageId for i in items if item_info[i.item].type == 'level_object']
+#        limited_first_stages = [ l for l in limited_first_stages if l not in item_details]
+#
+#
+#        print(world.multiworld.plando_items[world.player])
 
 
 
