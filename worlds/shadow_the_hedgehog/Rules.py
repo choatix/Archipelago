@@ -20,7 +20,6 @@ def GetKeyRule(stage, player):
     relevant_key_base = [ k for k in Locations.KeyLocations if k.stageId == stage]
     key_regions = relevant_key_base[0].region
     regions = set([ Names.GetDistributionRegionEventName(stage, k) for k in key_regions])
-    print("Key rule = has", relevant_key_base, key_regions, regions)
     return lambda state, ri=regions: state.has_all(ri, player)
 
 def GetRelevantTokenItem(token: LocationInfo):
@@ -252,41 +251,44 @@ def CountRegionAccessibility(state, keys, data, ix, player, perc=100):
     # This method uses events but they show up in spoiler log and look bad so use other method
     # Which uses reachable regions instead of events
 
-    #keys = list(keys)
-    # all_regions = [ a.name for a in  state.reachable_regions[player]]
-    # matching_counts = [ data[r] for r in all_regions if r in keys]
-    #total_accessible = sum(matching_counts)
-    #return total_accessible >= ix
+    use_event_method = True
+    if use_event_method:
+        keys = list(keys)
 
-    keys = list(keys)
+        # Which is better, % of total, or % of each region?
 
-    # Which is better, % of total, or % of each region?
+        total = 0
+        all = True
+        values = []
+        for key in keys:
 
-    total = 0
-    all = True
-    values = []
-    for key in keys:
+            count_in_region = data[key]
+            # print("Does player have", key, count_in_region)
+            if count_in_region > 0:
+                if state.has(key, player):
+                    # print("player have", key, count_in_region)
+                    values.append(count_in_region)
+                else:
+                    # print("Doesn't player have", key, count_in_region)
+                    all = False
 
-        count_in_region = data[key]
-        #print("Does player have", key, count_in_region)
-        if count_in_region > 0:
-            if state.has(key, player):
-                #print("player have", key, count_in_region)
-                values.append(count_in_region)
+        for i in values:
+            if all:
+                total += i
             else:
-                #print("Doesn't player have", key, count_in_region)
-                all = False
+                total += floor(i * (perc / 100))
 
-    for i in values:
         if all:
-            total += i
-        else:
-            total += floor(i * (perc / 100))
+            total = floor(total * (perc / 100))
 
-    if all:
-        total = floor(total * (perc / 100))
+        return total >= ix
+    else:
+        keys = list(keys)
+        all_regions = [ a.name for a in  state.reachable_regions[player]]
+        matching_counts = [ data[r] for r in all_regions if r in keys]
+        total_accessible = sum(matching_counts)
+        return total_accessible >= ix
 
-    return total >= ix
 
 def set_rules(multiworld: MultiWorld, world: World, player: int):
 
@@ -310,7 +312,7 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
             state.can_reach_region(r, player)
 
         event_location.place_locked_item(Item(view_name,
-                                              ItemClassification.progression, None, player))
+                                              ItemClassification.progression_skip_balancing, None, player))
 
     for additional_level_region in Levels.INDIVIDUAL_LEVEL_REGIONS:
         if additional_level_region.stageId not in world.available_levels:
@@ -355,7 +357,7 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
             state.can_reach_region(r, player)
 
         event_location.place_locked_item(Item(view_name,
-                                              ItemClassification.progression, None, player))
+                                              ItemClassification.progression_skip_balancing, None, player))
 
             # TODO: Add logic here for obtaining access
 

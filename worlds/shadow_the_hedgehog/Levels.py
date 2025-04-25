@@ -74,35 +74,7 @@ def IsObjectRestriction(restriction_type):
                REGION_RESTRICTION_TYPES.Zipwire]
     return restriction_type in object_restrictions
 
-class REGION_RESTRICTION_TYPES:
-    KeyDoor = 1
-    BlackHawk = 2
-    BlackVolt = 3
-    Torch = 4
-    AirSaucer = 5
-    Car = 6
-    GunJumper = 7
-    LongRangeGun = 8
-    GunLift = 9
-    NoRestriction = 10
-    Vacuum = 11
-    Gun = 12
-    Heal = 13,
-    BlackArmsTurret = 14
-    GunTurret = 15
-    ShootOrTurret = 16
-    AnyStageWeapon = 17
-    ShadowRifle = 18
 
-    HealCannonOrLongRangeGun = 19
-    Pulley = 20
-    WarpHole = 21
-    Rocket = 22
-    Zipwire = 23
-    Explosion = 24 # Access to Bazooka, or Bombs
-    LightDash = 25
-    HardLogicOnly = 26
-    GoldBeetle = 27
 
 
 
@@ -150,6 +122,85 @@ class LevelRegion:
             self.fromRegions = fromRegion
 
         return self
+
+
+def IsLogicLevelApplicable(region, options, starting_items):
+    region_restriction = region.restrictionType
+
+    if region_restriction == REGION_RESTRICTION_TYPES.HardLogicOnly:
+        if options.logic_level != Options.LogicLevel.option_hard:
+            return False
+
+    if region.logicType == Options.LogicLevel.option_easy and \
+            options.logic_level  != Options.LogicLevel.option_easy:
+        return False
+
+    if region.logicType == Options.LogicLevel.option_hard and \
+            options.logic_level  == Options.LogicLevel.option_hard:
+        return False
+
+    if region_restriction == REGION_RESTRICTION_TYPES.ShootOrTurret and \
+            not (options.weapon_sanity_unlock and options.vehicle_logic):
+        return False
+
+    if region_restriction == REGION_RESTRICTION_TYPES.ShootOrTurret and "Vehicle:Gun Turret" in starting_items:
+        return False
+
+    if region_restriction == REGION_RESTRICTION_TYPES.Explosion and not \
+        ( options.weapon_sanity_unlock and options.object_units):
+        return False
+
+    if region_restriction == REGION_RESTRICTION_TYPES.Explosion and "Bombs" in starting_items:
+        return False
+
+    if IsWeaponsanityRestriction(region_restriction) and not options.weapon_sanity_unlock:
+        return False
+
+    if IsVeichleSanityRestriction(region_restriction) and not options.vehicle_logic:
+        return False
+
+    if IsObjectRestriction(region_restriction):
+        if not options.object_unlocks:
+            return False
+        if (region_restriction == REGION_RESTRICTION_TYPES.Zipwire and
+                (not options.object_ziplines or "Zipwire" in starting_items)):
+            return False
+        if (region_restriction == REGION_RESTRICTION_TYPES.LightDash and
+                (not options.object_light_dashes or "Air Shoes" in starting_items)):
+            return False
+        if (region_restriction == REGION_RESTRICTION_TYPES.WarpHole and
+                (not options.object_warp_holes or "Warp Hole" in starting_items)):
+            return False
+        if (region_restriction == REGION_RESTRICTION_TYPES.Rocket and
+                (not options.object_rockets or "Rocket" in starting_items)):
+            return False
+        if (region_restriction == REGION_RESTRICTION_TYPES.Pulley and
+                (not options.object_pulleys or "Pulley" in starting_items)):
+            return False
+
+
+    return True
+
+def GetBaseAccessibleRegions(stages, options, starting_items):
+    accessible = {}
+    for level in stages:
+        accessible[level] = [0]
+    for i in INDIVIDUAL_LEVEL_REGIONS:
+        if i.stageId not in accessible:
+            continue
+        if not IsLogicLevelApplicable(i, options, starting_items):
+            for f in i.fromRegions:
+                if f in accessible[i.stageId]:
+                    accessible[i.stageId].append(i.regionIndex)
+                    break
+
+    result = []
+    for stage,regions in accessible.items():
+        for r in regions:
+            result.append((stage, r))
+
+    return result
+
 
 
 INDIVIDUAL_LEVEL_REGIONS = \
@@ -496,9 +547,16 @@ LevelRegion(STAGE_FINAL_HAUNT, REGION_INDICIES.FINAL_HAUNT_HARD_VACUUM_OR_BLACK_
                     REGION_RESTRICTION_TYPES.NoRestriction)
     .setFromRegion([REGION_INDICIES.FINAL_HAUNT_VACUUM_HARD,
                     REGION_INDICIES.FINAL_HAUNT_BLACK_VOLT]),
+
+LevelRegion(STAGE_FINAL_HAUNT, REGION_INDICIES.FINAL_HAUNT_SHIELD_COUNT_2,
+                    REGION_RESTRICTION_TYPES.NoRestriction)
+    .setFromRegion([REGION_INDICIES.FINAL_HAUNT_SHIELD_4,
+                    REGION_INDICIES.FINAL_HAUNT_BLACK_VOLT]),
+
 LevelRegion(STAGE_FINAL_HAUNT, REGION_INDICIES.FINAL_HAUNT_ROCKET_NORMAL,
                     REGION_RESTRICTION_TYPES.Rocket)
-    .setLogicType(Options.LogicLevel.option_hard),
+    .setLogicType(Options.LogicLevel.option_hard)
+    .setFromRegion(REGION_INDICIES.FINAL_HAUNT_HARD_VACUUM_OR_BLACK_VOLT),
 LevelRegion(STAGE_FINAL_HAUNT, REGION_INDICIES.FINAL_HAUNT_BLACK_VOLT_2,
                     REGION_RESTRICTION_TYPES.BlackVolt),
 LevelRegion(STAGE_FINAL_HAUNT, REGION_INDICIES.FINAL_HAUNT_KEY_DOOR,
@@ -506,9 +564,38 @@ LevelRegion(STAGE_FINAL_HAUNT, REGION_INDICIES.FINAL_HAUNT_KEY_DOOR,
     .setFromRegion(REGION_INDICIES.FINAL_HAUNT_ROCKET_NORMAL),
 LevelRegion(STAGE_FINAL_HAUNT, REGION_INDICIES.FINAL_HAUNT_LIGHT_DASH,
                     REGION_RESTRICTION_TYPES.LightDash)
+    .setLogicType(Options.LogicLevel.option_hard)
     .setFromRegion(REGION_INDICIES.FINAL_HAUNT_ROCKET_NORMAL),
+
+LevelRegion(STAGE_FINAL_HAUNT, REGION_INDICIES.FINAL_HAUNT_SHIELD_COUNT_3,
+                    REGION_RESTRICTION_TYPES.BlackVolt)
+    .setLogicType(Options.LogicLevel.option_hard),
+
 LevelRegion(STAGE_FINAL_HAUNT, REGION_INDICIES.FINAL_HAUNT_KEY_DOOR_2,
-                    REGION_RESTRICTION_TYPES.KeyDoor),
+                    REGION_RESTRICTION_TYPES.KeyDoor)
+    .setFromRegion(REGION_INDICIES.FINAL_HAUNT_LIGHT_DASH),
+
+LevelRegion(STAGE_FINAL_HAUNT, REGION_INDICIES.FINAL_HAUNT_SHIELD_4,
+                    REGION_RESTRICTION_TYPES.BlackVolt)
+    .setLogicType(Options.LogicLevel.option_easy)
+    .setFromRegion(REGION_INDICIES.FINAL_HAUNT_LIGHT_DASH),
+
+
+
+
+#    FINAL_HAUNT_VACUUM = 1
+ #   FINAL_HAUNT_VACUUM_HARD = 2
+ #   FINAL_HAUNT_BLACK_VOLT = 3
+ #   FINAL_HAUNT_HARD_VACUUM_OR_BLACK_VOLT = 4
+ ##   FINAL_HAUNT_SHIELD_COUNT_2 = 5
+ #   FINAL_HAUNT_ROCKET_NORMAL = 6
+ ##   FINAL_HAUNT_BLACK_VOLT_2 = 7
+ #   FINAL_HAUNT_KEY_DOOR = 8
+ #   FINAL_HAUNT_LIGHT_DASH = 9
+ #   FINAL_HAUNT_SHIELD_3_BASE_ACCESS = 10
+ #   FINAL_HAUNT_SHIELD_COUNT_3 = 11
+ #   FINAL_HAUNT_KEY_DOOR_2 = 12
+ #   FINAL_HAUNT_SHIELD_4 = 13
 
 
 LevelRegion(STAGE_THE_LAST_WAY, REGION_INDICIES.THE_LAST_WAY_BLACK_VOLT,

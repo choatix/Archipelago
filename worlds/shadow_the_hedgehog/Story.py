@@ -1,5 +1,6 @@
 import copy
 import logging
+import math
 from dataclasses import dataclass
 
 from Options import OptionError
@@ -44,7 +45,12 @@ def SortByAvailableLength(item):
     return len(item[1])
 
 def ChoosePathOption(world, story_options):
+
+    # Increase likelihood of taking hero/dark path depending on goal conditions
+
     balancing_value = world.options.story_progression_balancing
+    hero_ratio_base = world.options.goal_hero_missions + 1
+    dark_ratio_base = world.options.goal_dark_missions + 1
 
     sorted_options = sorted(story_options, key=SortByAvailableLength)
 
@@ -53,10 +59,21 @@ def ChoosePathOption(world, story_options):
 
     weights = []
     for i in range(0, len(story_options)):
-        weights.append(1000 / pow((abs(chosen_index-i) + 1), 2))
+        story_option_path = story_options[i][0]
+        weight_value = 1000 / pow((abs(chosen_index-i) + 1), 2)
+
+        if story_option_path.alignmentId == Levels.MISSION_ALIGNMENT_DARK:
+            weight_value *= (dark_ratio_base/hero_ratio_base)
+
+        if story_option_path.alignmentId == Levels.MISSION_ALIGNMENT_HERO:
+            weight_value *= (hero_ratio_base/dark_ratio_base)
+
+        weights.append(weight_value)
+
 
     randomised_item = world.random.choices(story_options, k=1, weights=weights)[0]
-    #print(story_options.index(randomised_item), weights, chosen_index)
+
+    #print("SOI", story_options.index(randomised_item), weights, chosen_index)
 
     # If 100: always the last item in the list
     # If 1, always the first item in the list
@@ -111,8 +128,10 @@ def DecideStoryPath(world, story):
 
     stage = starting_stage[0]
 
-    stage_count = len([ x for x in Levels.ALL_STAGES if x not in Levels.BOSS_STAGES and
-                        Levels.LEVEL_ID_TO_LEVEL[x] not in world.options.excluded_stages])
+    stages = [ x for x in Levels.ALL_STAGES if x not in Levels.BOSS_STAGES and
+                        x in world.available_story_levels]
+
+    stage_count = len(stages)
 
     available_stages = [stage.end_stage_id]
     available_missions = []
@@ -131,8 +150,12 @@ def DecideStoryPath(world, story):
             option_available_missions.append(option)
 
             TraversePath(story, option_available_stages, option_available_missions)
-            if len(option_available_stages) > len(available_stages):
-                options.append((option, option_available_stages, option_available_missions))
+            #if len(option_available_stages) > len(available_stages):
+            options.append((option, option_available_stages, option_available_missions))
+
+        non_empty_routes = [ e for e in options if len(e[1]) > len(available_stages)]
+        if len(non_empty_routes) > 0:
+            options = non_empty_routes
 
         choice = ChoosePathOption(world, options)
         chosen_option = choice[0]
@@ -149,33 +172,10 @@ def AlterOverridesForStoryPath(spheres, current_overrides):
     first_sphere_size = len(spheres[0][1])
     new_sphere_size = first_sphere_size
 
-    intended_percentage = {
-        0: 1,
-        1: 2,
-        2: 3,
-        3: 4,
-        4: 5,
-        5: 10,
-        6: 12,
-        7: 15,
-        8: 15,
-        9: 20,
-        10: 25,
-        11: 30,
-        12: 35,
-        13: 40,
-        14: 50,
-        15: 60,
-        16: 75,
-        17: 80,
-        18: 85,
-        19: 90,
-        20: 95,
-        21: 98,
-        22: 99,
-        23: 100
-    }
-
+    # TODO: These percentages should work based on any already set value / default for each key
+    # Calculate percentages based on story accessibility and total available stages as % not available (100 - a)
+    # Alter when using select progression (up or down?)
+    # e.g. 1 region out of 23 => a = 4, change value to 4
 
     new_overrides = {}
 
@@ -194,14 +194,16 @@ def AlterOverridesForStoryPath(spheres, current_overrides):
                        "H") + "." +
                       Levels.LEVEL_ID_TO_LEVEL[sphere_mission.stageId])
 
-        percent_value = intended_percentage[new_sphere_size]
+        total_stages = 23
+        base_percent_value = new_sphere_size / total_stages
+        current_override_value = 1
+        if sphere_key_a in current_overrides:
+            current_override_value = current_overrides[sphere_key_a] / 100
+
+        use_percent_value = math.floor(base_percent_value * current_override_value * 100)
+
         new_sphere_size = len(sphere[1])
-
-        new_overrides[sphere_key] = percent_value
-
-        if sphere_key_a in current_overrides and current_overrides[sphere_key_a] < percent_value:
-            current_overrides[sphere_key_a] = percent_value
-
+        new_overrides[sphere_key] = use_percent_value
 
     return new_overrides
 
@@ -384,12 +386,33 @@ def ChaosShuffle(world):
             if not boss_assigned:
                 step.boss = None
 
-            if world.options.guaranteed_level_clear and step.start_stage_id is None and len(SafeStartingStages) > 0:
-                step.end_stage_id = world.random.choice(SafeStartingStages)
-                stages_to_assign.remove(step.end_stage_id)
-                first_stage = step.end_stage_id
-                if force_path is not None and force_path[0] == 0:
-                    force_path[0] = first_stage
+            if step.start_stage_id is None:
+                print("Check story start")
+                if len(world.options.plando_starting_stages.value) > 0:
+                    rev_level_map = {v: k for k, v in Levels.LEVEL_ID_TO_LEVEL.items()}
+                    first_stage_name = world.random.choice(list(world.options.plando_starting_stages.value))
+                    first_stage = rev_level_map[first_stage_name]
+                    step.end_stage_id = first_stage
+                    stages_to_assign.remove(step.end_stage_id)
+                    if force_path is not None and force_path[0] == 0:
+                        force_path[0] = first_stage
+
+                elif (len(SafeStartingStages) > 0 and
+                      world.options.starting_level_method == Options.StartingLevelMethod.option_clear_stage):
+                    step.end_stage_id = world.random.choice(SafeStartingStages)
+                    stages_to_assign.remove(step.end_stage_id)
+                    first_stage = step.end_stage_id
+                    if force_path is not None and force_path[0] == 0:
+                        force_path[0] = first_stage
+
+                else:
+                    step.end_stage_id = stages_to_assign.pop()
+                    first_stage = step.end_stage_id
+                    if force_path is not None and force_path[0] == 0:
+                        force_path[0] = first_stage
+
+                print("First is...", first_stage)
+
             elif len(stages_to_assign) > 0:
                 step.end_stage_id = stages_to_assign.pop()
                 if step.end_stage_id == step.start_stage_id and len(stages_to_assign) != 0:

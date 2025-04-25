@@ -60,7 +60,7 @@ class GoalFinalBosses(Range):
     """
         Determines what percentage of final boss missions are required for completion, rounded up.
     """
-    display_name = "Goal: Bosses"
+    display_name = "Goal: Final Bosses"
     range_start = 0
     range_end = 100
     default = 0
@@ -417,12 +417,18 @@ class StoryBossCount(Range):
     range_end = 3
     default = 1
 
-class GuaranteedLevelClear(DefaultOnToggle):
+class StartingLevelMethod(Choice):
     """
-        Ensures the first available stage in shuffled story mode is a completable mission out the gate.
-        This option is ignored should you disable all stages meeting this criteria.
+        Ensures clearable neutral stages are picked first for starting stages.
+        None: Starting behaviour has no factors.
+        Clear Stage: First stage non-objectivesanity mission can be cleared.
+        Stage + Item: First stage, plus an item that progresses through that stage. Only picks one item.
     """
-    display_name = "Guaranteed Level Clear"
+    display_name = "Starting Level Method"
+    option_none = 0
+    option_clear_stage = 1
+    option_stage_and_item = 2
+    default = option_none
 
 class SingleEggDealer(Toggle):
     """
@@ -489,11 +495,25 @@ class MinimumRank(Choice):
 class StoryProgressionBalancing(Range):
     """
         Story progression balancing to determine sphering for story stages.
+        Higher numbers choose routes leading to more stages available in one go.
+        Lower numbers choose smaller story progression, but will stay lower progression for longer.
         Refer to the documentation for more information.
     """
-    range_start = 0
+    range_start = 1
     range_end = 100
-    default = 0
+    default = 25 # Decide this value
+
+class StoryProgressionBalancingPasses(Range):
+    """
+        Story progression balancing passes to make, using balancing value.
+        Use 0 to disable story progression balancing.
+        Each pass selects a route, reducing the counts required to progress through story missions.
+        The lowest value from all passes will be used.
+    """
+    option_off = 0
+    range_start = 0
+    range_end = 5
+    default = 1
 
 class ShadowMod(Choice):
     """
@@ -574,6 +594,37 @@ class EnergyCores(Toggle):
     """
     display_name = "Energy Cores"
 
+class PlandoStartingStages(OptionSet):
+    """
+        Force this selection of stages to be chosen first.
+    """
+    display_name = "Plando Starting Stages"
+    valid_keys = [i for i in Names.getLevelNames() ]
+
+
+class StoryAndSelectStartTogether(DefaultOnToggle):
+    """
+        Force story mode's start point to be one of the starting select stages (for both mode)
+    """
+
+    display_name = "Story And Select Start Together"
+
+class StartInventoryExcessItems(DefaultOnToggle):
+    """
+        Add items to start inventory if not enough locations found.
+    """
+    display_name = "Start Inventory Excess Items"
+
+class SelectPercentage(Range):
+    """
+        Percent of stage unlock items to include in the item pool when playing
+        on 'Both' story and select mode.
+    """
+
+    range_start = 0
+    range_end = 100
+    default_value = range_end
+
 @dataclass
 class ShadowTheHedgehogOptions(PerGameCommonOptions):
     #goal: Goal
@@ -597,7 +648,6 @@ class ShadowTheHedgehogOptions(PerGameCommonOptions):
     character_sanity: CharacterSanity
     enemy_sanity: Enemysanity
     key_sanity: Keysanity
-    #door_sanity: Doorsanity
     checkpoint_sanity: Checkpointsanity
     enemy_sanity_percentage: EnemySanityPercentage
     starting_stages: StartingStages
@@ -623,7 +673,7 @@ class ShadowTheHedgehogOptions(PerGameCommonOptions):
     include_last_way_shuffle: IncludeLastStoryShuffle
     secret_story_progression: SecretStoryProgression
     story_boss_count: StoryBossCount
-    guaranteed_level_clear: GuaranteedLevelClear
+    starting_level_method: StartingLevelMethod
     single_egg_dealer: SingleEggDealer
     single_black_doom: SingleBlackDoom
     single_diablon: SingleDiablon
@@ -635,6 +685,7 @@ class ShadowTheHedgehogOptions(PerGameCommonOptions):
     minimum_rank: MinimumRank
     weapon_groups: WeaponGroups
     story_progression_balancing: StoryProgressionBalancing
+    story_progression_balancing_passes: StoryProgressionBalancingPasses
     shadow_mod: ShadowMod
     object_unlocks: ObjectUnlocks
     object_pulleys: ObjectPulleys
@@ -647,6 +698,11 @@ class ShadowTheHedgehogOptions(PerGameCommonOptions):
     energy_cores: EnergyCores
     door_sanity: DoorSanity
     gold_beetle_sanity: GoldBeetleSanity
+    plando_starting_stages: PlandoStartingStages
+    story_and_select_start_together: StoryAndSelectStartTogether
+    start_inventory_excess_items: StartInventoryExcessItems
+    select_percentage: SelectPercentage
+
 
 shadow_option_groups = [
     OptionGroup("Goal",
@@ -665,7 +721,7 @@ shadow_option_groups = [
                                   MinimumRank, EnemyFrequency, EnemyObjectiveFrequency,
                                   ObjectiveFrequency, BossLogicLevel, CraftLogicLevel], True),
     OptionGroup("Story", [LevelProgression, IncludeLastStoryShuffle, SecretStoryProgression,
-                          StoryBossCount, GuaranteedLevelClear,
+                          StoryBossCount, StartingLevelMethod,
                           SingleDiablon, SingleBlackDoom, SingleEggDealer,
                           StoryProgressionBalancing ]),
     OptionGroup("Junk", [ExceedingItemsFiller, GaugeFiller], True),

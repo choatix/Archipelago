@@ -2,6 +2,7 @@ import typing
 from typing import Dict
 
 from BaseClasses import Region, Entrance, MultiWorld, Item, ItemClassification
+from Options import OptionError
 from . import Levels, Items, Weapons, Story, GetLevelCompletionNames, Locations, Options, Names
 from .Options import LevelProgression
 from .Story import PathInfo
@@ -96,6 +97,7 @@ def early_region_checks(world):
         if level == Levels.STAGE_THE_LAST_WAY and last_way_required:
             world.available_levels.append(level)
 
+    world.available_story_levels = available_story_stages
 
     for char_name in Levels.CharacterToLevel.keys():
         levels_in = Levels.CharacterToLevel[char_name]
@@ -119,6 +121,7 @@ def create_regions(world) -> Dict[str, Region]:
     regions: Dict[str, Region] = {}
     stages = Levels.ALL_STAGES
     item_info = Items.GetItemLookupDict()
+    name_map = {v.name: v for k, v in item_info.items()}
 
     stage_regions = []
     region_to_stage_id = {}
@@ -127,39 +130,64 @@ def create_regions(world) -> Dict[str, Region]:
     last_way_standard = (world.options.level_progression == Options.LevelProgression.option_select
                          or not world.options.include_last_way_shuffle or not world.options.story_shuffle == Options.StoryShuffle.option_chaos)
 
+    first_stages_selections = []
+    within_selections = []
+    remaining_first_stages = [x for x in world.available_levels if x not in Levels.BOSS_STAGES and
+                              x not in Levels.LAST_STORY_STAGES ]
 
-    limited_first_stages = [ x for x in world.available_levels if x not in Levels.BOSS_STAGES and
-                             x not in Levels.LAST_STORY_STAGES ]
-    if world.options.guaranteed_level_clear:
-        limited_by_first = Locations.GetStagesWithNoRequirements(world)
-        backup_limited = limited_first_stages
-        limited_first_stages = [ l for l in limited_first_stages if l in limited_by_first]
-        if len(limited_first_stages) == 0:
-            limited_first_stages = backup_limited
+    if (world.options.level_progression != Options.LevelProgression.option_story and
+            world.multiworld.plando_items is not None and world.player in world.multiworld.plando_items):
 
-    #if (world.options.level_progression != Options.LevelProgression.option_story and
-    #        world.multiworld.plando_items is not None and world.player in world.multiworld.plando_items):
-#
-#        items = world.multiworld.plando_items[world.player]
-#        item_details = [ item_info[i.item].stageId for i in items if item_info[i.item].type == 'level_object']
-#        limited_first_stages = [ l for l in limited_first_stages if l not in item_details]
-#
-#
-#        print(world.multiworld.plando_items[world.player])
+            items = [ i for i in world.multiworld.plando_items[world.player] if i["from_pool"] and i["force"] ]
+            item_details = [ item_info[i.item].stageId for i in items if name_map[i["item"]].type == 'level_object']
+            banned_by_plando = [ l for l in remaining_first_stages if l in item_details]
+
+            if len(banned_by_plando) > 0:
+                remaining_first_stages = [ s for s in remaining_first_stages if s not in banned_by_plando ]
 
 
+    if world.options.level_progression == Options.LevelProgression.option_both and \
+        world.options.story_and_select_start_together:
+        #print("Check together")
+        first_choice = [ s.end_stage_id for s in world.shuffled_story_mode if s.start_stage_id is None][0]
+        first_stages_selections.append([first_choice])
+        within_selections.append(first_choice)
+        remaining_first_stages = [l for l in remaining_first_stages if l not in within_selections]
+
+    if world.options.plando_starting_stages:
+        rev_level_map = {v: k for k, v in Levels.LEVEL_ID_TO_LEVEL.items()}
+        plando_starting_stages = [ rev_level_map[x] for x in world.options.plando_starting_stages]
+        plando_first_stages = [l for l in plando_starting_stages if l not in within_selections and l in remaining_first_stages]
+        #print("plando firsts left", plando_starting_stages, within_selections, plando_first_stages)
+        first_stages_selections.append(plando_first_stages)
+        within_selections.extend(plando_first_stages)
+        remaining_first_stages = [l for l in remaining_first_stages if l not in within_selections]
+
+    if world.options.starting_level_method == Options.StartingLevelMethod.option_clear_stage:
+        clearable = Locations.GetStagesWithNoRequirements(world)
+        clearable_stages = [l for l in clearable if l not in within_selections and l in remaining_first_stages]
+        first_stages_selections.append(clearable_stages)
+        within_selections.extend(clearable_stages)
+        remaining_first_stages = [l for l in remaining_first_stages if l not in within_selections]
+
+    if len(remaining_first_stages) > 0:
+        first_stages_selections.append(remaining_first_stages)
+        within_selections.extend(remaining_first_stages)
+
+
+    #print("Check starting stages", first_stages_selections)
 
     for level_id in stages:
         if level_id not in world.available_levels:
-            print("Level not available:", Levels.LEVEL_ID_TO_LEVEL[level_id])
             continue
         base_region_name = stage_id_to_region(level_id, 0)
         new_region = Region(base_region_name, world.player, world.multiworld)
         regions[base_region_name] = new_region
         stage_regions.append(new_region)
-        if level_id not in Levels.BOSS_STAGES and level_id not in Levels.LAST_STORY_STAGES:
-            if level_id in limited_first_stages:
-                possible_first_regions.append(new_region)
+        #if level_id not in Levels.BOSS_STAGES and level_id not in Levels.LAST_STORY_STAGES:
+        #    if level_id in within_selections:
+        #        possible_first_regions.append(new_region)
+        #print("Add r", new_region, level_id)
         region_to_stage_id[new_region] = level_id
 
         for additional_region in [ r for r in Levels.INDIVIDUAL_LEVEL_REGIONS if r.stageId == level_id]:
@@ -176,9 +204,34 @@ def create_regions(world) -> Dict[str, Region]:
             connect(world.player, "stage-access:"+Levels.LEVEL_ID_TO_LEVEL[level_id],
                     new_story_region, new_region)
 
+
     if world.options.level_progression != Options.LevelProgression.option_story:
-        first_regions = world.random.sample(possible_first_regions, world.options.starting_stages.value)
-        world.first_regions = [ region_to_stage_id[region] for region in first_regions]
+        starting_stage_count = world.options.starting_stages.value
+
+        #print("Select picking", starting_stage_count, possible_first_regions, first_stages_selections)
+
+        if starting_stage_count > len(possible_first_regions) and \
+            len(first_stages_selections) > 0:
+
+            while len(first_stages_selections) > 0 and len(possible_first_regions) < starting_stage_count:
+                first_choices = first_stages_selections.pop(0)
+                backup_picks = starting_stage_count - len(possible_first_regions)
+                #print("backups", len(first_choices), len(possible_first_regions), backup_picks)
+
+                if backup_picks >= len(first_choices):
+                    possible_first_regions.extend(first_choices)
+                else:
+                    possible_first_regions.extend(world.random.sample(
+                        first_choices, backup_picks))
+
+        if starting_stage_count > len(possible_first_regions):
+            starting_stage_count = len(possible_first_regions)
+
+        #print("Possible regions=", possible_first_regions)
+        first_stages = world.random.sample(possible_first_regions, starting_stage_count)
+        #print("First select regions are:", first_stages)
+
+        world.first_regions = first_stages
 
     if world.options.level_progression != Options.LevelProgression.option_select:
         stage_ids = [ start.end_stage_id for start in world.shuffled_story_mode if start.start_stage_id is None ]
@@ -493,3 +546,82 @@ def connect(player: int, name: str,
     connection.connect(target_region)
 
     return connection
+
+def IsMatch(l1, l2):
+    for l in l1:
+        if l in l2:
+            return True
+    return False
+
+# Find starting items to provide automatically
+def FindStartingItems(world):
+
+    starting_stages = []
+
+    if world.options.level_progression != Options.LevelProgression.option_select:
+        first_story_stage = [ s.end_stage_id for s in world.shuffled_story_mode if s.start_stage_id is None][0]
+        starting_stages.append(first_story_stage)
+
+    if world.options.level_progression != Options.LevelProgression.option_story:
+        starting_stages.extend(world.first_regions)
+
+    # TODO
+    # Handle which regions the player has default access too owing to logic level
+    # Use this as the limiter for base regions
+
+    if len(world.starting_items) == 0:
+        if len(world.options.start_inventory.value.keys()) > 0:
+            world.starting_items.extend(world.options.start_inventory.value.keys())
+
+    base_regions_by_logic = Levels.GetBaseAccessibleRegions(starting_stages, world.options, world.starting_items)
+
+    base_from_regions = [ str(s[0]) + "/" + str(s[1]) for s in base_regions_by_logic ]
+
+    escape_options = set([ r.restrictionType for r in Levels.INDIVIDUAL_LEVEL_REGIONS if r.stageId in starting_stages and \
+                     IsMatch(base_from_regions, [ str(r.stageId)+"/"+str(fr) for fr in r.fromRegions])
+                           and str(r.stageId ) + "/" + str(r.regionIndex) not in base_from_regions])
+
+    item_options = []
+    for option in escape_options:
+        if option == Names.REGION_RESTRICTION_TYPES.Pulley:
+            item_options.append("Pulley")
+        if option == Names.REGION_RESTRICTION_TYPES.Heal:
+            item_options.append("Weapon:Heal Cannon")
+        if option == Names.REGION_RESTRICTION_TYPES.AirSaucer:
+            item_options.append("Vehicle:Air Saucer")
+        if option == Names.REGION_RESTRICTION_TYPES.BlackArmsTurret:
+            item_options.append("Vehicle:Black Turret")
+        if option == Names.REGION_RESTRICTION_TYPES.BlackHawk:
+            item_options.append("Vehicle:Black Hawk")
+        if option == Names.REGION_RESTRICTION_TYPES.BlackVolt:
+            item_options.append("Vehicle:Black Volt")
+        if option == Names.REGION_RESTRICTION_TYPES.Explosion:
+            item_options.append("Bombs")
+        if option == Names.REGION_RESTRICTION_TYPES.GunTurret:
+            item_options.append("Gun Turret")
+        if option == Names.REGION_RESTRICTION_TYPES.LightDash:
+            item_options.append("Air Shoes")
+        if option == Names.REGION_RESTRICTION_TYPES.Rocket:
+            item_options.append("Rocket")
+        if option == Names.REGION_RESTRICTION_TYPES.Torch:
+            item_options.append("Weapon:Cryptic Torch")
+        if option == Names.REGION_RESTRICTION_TYPES.GunJumper:
+            item_options.append("Vehicle:Gun Jumper")
+        if option == Names.REGION_RESTRICTION_TYPES.WarpHole:
+            item_options.append("Warp Holes")
+        if option == Names.REGION_RESTRICTION_TYPES.Zipwire:
+            item_options.append("Zipwire")
+        if option == Names.REGION_RESTRICTION_TYPES.Vacuum:
+            item_options.append("Weapon:Vacuum Pod")
+
+    if len(item_options) == 0:
+        print("Unknown error with obtaining anti-lock mechanism")
+        raise OptionError("Invalid item options")
+
+    print("Safety unlock options:", item_options)
+
+    return [world.random.choice(item_options)]
+
+
+
+

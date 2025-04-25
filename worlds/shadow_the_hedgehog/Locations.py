@@ -534,8 +534,8 @@ MissionClearLocations = [
         .setDistribution(
         {
             REGION_INDICIES.FINAL_HAUNT_VACUUM: 1,
-            REGION_INDICIES.FINAL_HAUNT_BLACK_VOLT: 1,
-            REGION_INDICIES.FINAL_HAUNT_LIGHT_DASH: 2
+            REGION_INDICIES.FINAL_HAUNT_SHIELD_COUNT_2: 1,
+            REGION_INDICIES.FINAL_HAUNT_SHIELD_COUNT_3: 2
         }
     ),
     MissionClearLocation(STAGE_FINAL_HAUNT, MISSION_ALIGNMENT_HERO, None, None)
@@ -847,7 +847,8 @@ CheckpointLocations = \
         .setDistribution(
         {
             0: [1],
-            REGION_INDICIES.GUN_FORTRESS_PULLEY: [2,3],
+            REGION_INDICIES.GUN_FORTRESS_PULLEY: [2],
+            REGION_INDICIES.GUN_FORTRESS_ZIPWIRE: [3],
             REGION_INDICIES.GUN_FORTRESS_ROCKET_NORMAL: [4,5,6,7]
         }
     ),
@@ -855,8 +856,8 @@ CheckpointLocations = \
         .setDistribution(
         {
             0: [1],
-            REGION_INDICIES.BLACK_COMET_AIR_SAUCER: [2,3],
-            REGION_INDICIES.BLACK_COMET_WARP_HOLE: [4,5,6],
+            REGION_INDICIES.BLACK_COMET_AIR_SAUCER: [2],
+            REGION_INDICIES.BLACK_COMET_WARP_HOLE: [3,4,5,6],
             REGION_INDICIES.BLACK_COMET_FLOATING_ENEMY_WALL: [7,8]
         }
     ),
@@ -1821,15 +1822,12 @@ def SetStoryClearEvents(world, player, menu_region):
 
         view_name = Names.GetMissionClearEventName(clear.stageId, clear.alignmentId)
         story_clear_event = ShadowTheHedgehogLocation(player, view_name, None, menu_region)
-        #print("clearx", view_name)
-        #story_clear_event.place_locked_item(Item(view_name, ItemClassification.progression, None, player))
         story_clear_event.show_in_spoiler = True
         story_clear_events.append(story_clear_event)
 
     for w in [l for l in world.shuffled_story_mode if l.boss is not None]:
         view_name = Names.GetBossClearEventName(w.boss, w.start_stage_id, w.alignment_id)
         story_clear_event = ShadowTheHedgehogLocation(player, view_name, None, menu_region)
-        #story_clear_event.place_locked_item(Item(view_name, ItemClassification.progression, None, player))
         story_clear_event.show_in_spoiler = True
         story_clear_events.append(story_clear_event)
 
@@ -1866,3 +1864,6 @@ def SetRegionEvents(world, player, menu_region):
         region_events.append(region_event)
 
     menu_region.locations.extend(region_events)
+
+
+

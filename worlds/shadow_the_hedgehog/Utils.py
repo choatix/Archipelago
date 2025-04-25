@@ -3,7 +3,7 @@ from typing import Tuple
 
 from . import Levels, Locations
 
-VERSION: Tuple[int, int, int] = (0, 2, 0)
+VERSION: Tuple[int, int, int] = (0, 2, 1)
 
 TYPE_ID_ENEMY = 0
 TYPE_ID_OBJECTIVE = 1
@@ -202,6 +202,7 @@ def getMaxRequired(type_default_percentage, total:int, stageId:int, alignmentId:
     round_method = type_default_percentage[2]
 
     override_total = getOverwriteRequiredCount(override_settings, stageId, alignmentId, type_value)
+    #print("ot=", override_settings, override_total)
     max_required = getRequiredCount(total, default_percentage, override=override_total, round_method=round_method)
 
     if type_value in [ TYPE_ID_ENEMY_FREQUENCY, TYPE_ID_OBJECTIVE_FREQUENCY, TYPE_ID_OBJECTIVE_ENEMY_FREQUENCY]:

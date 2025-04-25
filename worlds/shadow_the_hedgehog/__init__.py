@@ -1,5 +1,8 @@
+import math
 from typing import ClassVar, Tuple, Any
-from BaseClasses import  Tutorial
+
+import worlds.ffmq
+from BaseClasses import Tutorial, CollectionState
 from Options import OptionError
 from worlds.AutoWorld import WebWorld
 from worlds.LauncherComponents import Component, SuffixIdentifier, Type, components, launch_subprocess
@@ -78,11 +81,13 @@ class ShtHWorld(World):
         self.available_characters = []
         self.available_weapons = []
         self.available_levels = []
+        self.story_available_levels = []
         self.token_locations = []
         self.required_tokens = {}
         self.excess_item_count = 0
         self.shuffled_story_mode = None
         self.random_value = None
+        self.starting_items = []
 
         for token in TOKENS:
             self.required_tokens[token] = 0
@@ -94,20 +99,44 @@ class ShtHWorld(World):
 
     def set_rules(self):
         Rules.set_rules(self.multiworld, self, self.player)
+        sphere_one_useful = []
+        while len(sphere_one_useful) == 0:
+            sphere_one_locs = self.multiworld.get_reachable_locations(CollectionState(self.multiworld), self.player)
+            sphere_one_useful = [s for s in sphere_one_locs if not s.locked]
+
+            if len(sphere_one_useful) > 0:
+                break
+
+            locked_items = [ c for c in sphere_one_locs if c.locked and c not in self.starting_items]
+            for item in locked_items:
+                print("Locked item given:", item.item.name)
+                self.starting_items.append(item)
+                item = Item(item.item.name,ItemClassification.progression, None, self.player)
+                self.multiworld.push_precollected(item)
+
+            if len(locked_items) != 0:
+                continue
+
+            push_items = Regions.FindStartingItems(self)
+            for item in push_items:
+                print("Push emergency item:", item)
+                self.starting_items.append(item)
+                self.multiworld.push_precollected(self.create_item(item))
+
+
 
     def check_invalid_configurations(self):
         if self.options.auto_clear_missions and not self.options.objective_sanity or \
             (self.options.objective_sanity and not self.options.enemy_objective_sanity):
-            print("Shadow Auto clear has been disabled")
             self.options.auto_clear_missions = AutoClearMissions(False)
 
         if (self.options.weapon_sanity_hold == Options.WeaponsanityHold.option_unlocked
                 and not self.options.weapon_sanity_unlock):
-            raise OptionError("Cannot use unlock mode for weapons without weaponsanity lock.")
+            self.options.weapon_sanity_hold = Options.WeaponsanityHold(Options.WeaponsanityHold.option_on)
 
         if self.options.level_progression == Options.LevelProgression.option_select and \
             self.options.starting_stages == 0:
-            raise OptionError("Cannot start select mode with 0 starting stages")
+            self.options.starting_stages = Options.StartingStages(1)
 
         if self.options.shadow_mod.value != Options.ShadowMod.option_vanilla and\
             self.options.character_sanity:
@@ -116,6 +145,90 @@ class ShtHWorld(World):
         if self.options.shadow_mod.value == Options.ShadowMod.option_reloaded and \
             self.options.key_sanity:
             raise OptionError("Key/RSR sanity not supported in Reloaded at this time.")
+
+        if self.options.story_shuffle == Options.StoryShuffle.option_off and \
+            self.options.include_last_way_shuffle:
+
+            # If story is off, last way cannot be shuffled
+            self.options.include_last_way_shuffle = Options.IncludeLastStoryShuffle(False)
+
+        if self.options.story_shuffle == Options.LevelProgression.option_select and \
+            self.options.include_last_way_shuffle:
+
+            # If story is off, last way cannot be shuffled
+            self.options.include_last_way_shuffle = Options.IncludeLastStoryShuffle(False)
+
+        if self.options.story_shuffle == Options.LevelProgression.option_select and \
+            self.options.story_shuffle:
+
+            # If story is off, last way cannot be shuffled
+            self.options.story_shuffle = Options.StoryShuffle(False)
+
+        if (not (self.options.objective_sanity or
+            self.options.enemy_objective_sanity) and self.options.story_progression_balancing_passes > 0):
+            self.options.story_progression_balancing_passes = Options.StoryProgressionBalancingPasses(0)
+
+        if (self.options.story_progression_balancing_passes > 0  and
+                self.options.story_shuffle == Options.LevelProgression.option_select):
+            self.options.story_progression_balancing_passes = Options.StoryProgressionBalancingPasses(0)
+
+        if self.options.level_progression != Options.LevelProgression.option_both and \
+            self.options.select_percentage != 100:
+            self.options.select_percentage = 100
+
+    def calculate_non_objective_sanity_maximums(self):
+        relevant_mission_clears =  [m for m in MissionClearLocations if
+                                    (m.stageId, m.alignmentId) in [ (n[0], n[1]) for n in MINIMUM_STAGE_REQUIREMENTS ]
+                                    and m.stageId in self.available_levels]
+        for clear in relevant_mission_clears:
+            min_requirement_item = [ n for n in MINIMUM_STAGE_REQUIREMENTS if
+                                     n[0] == clear.stageId and \
+                                     n[1] == clear.alignmentId][0]
+
+            base_objective_data = ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_COMPLETION,
+                                                          clear.mission_object_name, self.options)
+
+            type_value = base_objective_data[0]
+
+            max_required = ShadowUtils.getMaxRequired(
+                base_objective_data,
+                clear.requirement_count, clear.stageId, clear.alignmentId,
+                self.options.percent_overrides)
+
+            if max_required <= min_requirement_item[2]:
+                # print("YX", clear, min_requirement_item[2], max_required)
+                # Change the value in override settings to increase manually
+
+                key = ""
+                if type_value == ShadowUtils.TYPE_ID_COMPLETION:
+                    if clear.alignmentId == Levels.MISSION_ALIGNMENT_DARK:
+                        key = "CD."+Levels.LEVEL_ID_TO_LEVEL[clear.stageId]
+                    elif clear.alignmentId == Levels.MISSION_ALIGNMENT_HERO:
+                        key = "CH."+Levels.LEVEL_ID_TO_LEVEL[clear.stageId]
+
+                if type_value == ShadowUtils.TYPE_ID_OBJECTIVE_ENEMY_COMPLETION:
+                    if clear.alignmentId == Levels.MISSION_ALIGNMENT_DARK:
+                        key = "OECD."+Levels.LEVEL_ID_TO_LEVEL[clear.stageId]
+                    elif clear.alignmentId == Levels.MISSION_ALIGNMENT_HERO:
+                        key = "OECH."+Levels.LEVEL_ID_TO_LEVEL[clear.stageId]
+
+                expected_base_value = ceil((min_requirement_item[2]+1) * 100 / clear.requirement_count)
+
+                while max_required <= min_requirement_item[2]:
+                    if key not in self.options.percent_overrides or \
+                        self.options.percent_overrides[key] < expected_base_value:
+                        self.options.percent_overrides.value[key]  = expected_base_value
+                    else:
+                        self.options.percent_overrides.value[key] += 1
+                    if self.options.percent_overrides.value[key] > 100:
+                        raise OptionError("Unable to handle to avoid minimum requirements.")
+                    print("Increment override % to", self.options.percent_overrides[key], max_required)
+
+                    max_required = ShadowUtils.getMaxRequired(
+                        base_objective_data,
+                        clear.requirement_count, clear.stageId, clear.alignmentId,
+                        self.options.percent_overrides)
+
 
     def calculate_object_discrepancies(self):
 
@@ -182,18 +295,6 @@ class ShtHWorld(World):
 
         if self.options.level_progression != Options.LevelProgression.option_select:
             self.shuffled_story_mode = Story.GetStoryMode(self)
-
-            # TODO: Handle this / overwrite this with UT, check validity
-            if self.options.story_progression_balancing > 0 and not hasattr(self.multiworld, "re_gen_passthrough"):
-                story_spheres = Story.DecideStoryPath(self, self.shuffled_story_mode)
-                #print("Story Spheres", [ (s[0].stageId, s[0].alignmentId) if s[0] is not None else "Start"
-                #                         for s in story_spheres])
-                new_overrides = Story.AlterOverridesForStoryPath(story_spheres, self.options.percent_overrides.value)
-
-                for override in new_overrides.items():
-                    self.options.percent_overrides.value[override[0]] = override[1]
-            #elif hasattr(self.multiworld, "re_gen_passthrough"):
-            #    print("o=", self.options.percent_overrides)
 
         else:
             self.shuffled_story_mode = Story.DefaultStoryMode
@@ -366,8 +467,8 @@ class ShtHWorld(World):
                 if "craft_logic_level" in passthrough:
                     self.options.craft_logic_level = passthrough["craft_logic_level"]
 
-                if "guaranteed_level_clear" in passthrough:
-                    self.options.guaranteed_level_clear = passthrough["guaranteed_level_clear"]
+                if "starting_level_method" in passthrough:
+                    self.options.starting_level_method = passthrough["starting_level_method"]
 
                 if "object_unlocks" in passthrough:
                     self.options.object_unlocks = passthrough["object_unlocks"]
@@ -399,6 +500,12 @@ class ShtHWorld(World):
                 if "gold_beetle_sanity" in passthrough:
                     self.options.gold_beetle_sanity = passthrough["gold_beetle_sanity"]
 
+                if "plando_starting_stages" in passthrough:
+                    self.options.plando_starting_stages = passthrough["plando_starting_stages"]
+
+                if "story_and_select_start_together" in passthrough:
+                    self.options.story_and_select_start_together = passthrough["story_and_select_start_together"]
+
         # Set maximum of levels required
         # Exclude missions listed in exclude_locations
         maximum_force_missions = self.options.force_objective_sanity_max.value
@@ -408,6 +515,28 @@ class ShtHWorld(World):
         mission_total = 0
 
         Regions.early_region_checks(self)
+
+        if self.options.starting_level_method == Options.StartingLevelMethod.option_stage_and_item:
+            extra_items = Regions.FindStartingItems(self)
+            for item in extra_items:
+                self.starting_items.append(item)
+                self.multiworld.push_precollected(self.create_item(item))
+
+        if self.options.level_progression != Options.LevelProgression.option_select and \
+            self.options.story_progression_balancing_passes > 0 and not hasattr(self.multiworld, "re_gen_passthrough"):
+
+            balancing_overrides = {}
+            for i in range(0, self.options.story_progression_balancing_passes):
+                story_spheres = Story.DecideStoryPath(self, self.shuffled_story_mode)
+                new_overrides = Story.AlterOverridesForStoryPath(story_spheres, self.options.percent_overrides.value)
+
+                for override in new_overrides.items():
+                    if override[0] in balancing_overrides and balancing_overrides[override[0]] <= override[1]:
+                        continue
+                    balancing_overrides[override[0]] = override[1]
+
+            for override in balancing_overrides.items():
+                self.options.percent_overrides.value[override[0]] = override[1]
 
         item_count = Items.CountItems(self)
         location_count = Locations.count_locations(self)
@@ -427,11 +556,15 @@ class ShtHWorld(World):
                 if len(potential_downgrades) < item_count - location_count - len(removals):
                     c = item_count - location_count - len(potential_downgrades)
                     print("Issue with counts", item_count, location_count, len(potential_downgrades), c)
-                    raise OptionError("Not enough locations to fill even with downgrades::"+str(c))
+
+                    # Throw random items into start inventory, if disabled, throw an error
+                    if not self.options.start_inventory_excess_items:
+                        raise OptionError("Not enough locations to fill even with downgrades::"+str(c))
+
                 self.excess_item_count = item_count - location_count
 
         elif self.options.exceeding_items_filler == Options.ExceedingItemsFiller.option_off and \
-            location_count < item_count:
+            location_count < item_count and not self.options.start_inventory_excess_items:
             raise OptionError("Invalid count of items present:"+str(location_count)+" vs "+str(item_count))
 
         for missionClear in Locations.MissionClearLocations:
@@ -476,9 +609,16 @@ class ShtHWorld(World):
         if not self.options.objective_sanity and self.options.enemy_sanity:
             self.calculate_object_discrepancies()
 
+        if not self.options.objective_sanity:
+            self.calculate_non_objective_sanity_maximums()
+
         if self.options.objective_sanity and self.options.force_objective_sanity_chance > 0\
                 and self.options.force_objective_sanity_max > 0:
-            for locationData in Locations.MissionClearLocations:
+
+            MissionLocations = Locations.MissionClearLocations
+            self.random.shuffle(MissionLocations)
+
+            for locationData in MissionLocations:
                 if locationData.requirement_count is None:
                     continue
                 if locationData.requirement_count == 1:
@@ -493,9 +633,28 @@ class ShtHWorld(World):
                 if completion_location_name in self.options.exclude_locations:
                     continue
 
+                chance = self.options.force_objective_sanity_chance
+
+                hero_ratio_base = self.options.goal_hero_missions + 1
+                dark_ratio_base = self.options.goal_dark_missions + 1
+
+                if locationData.alignmentId == Levels.MISSION_ALIGNMENT_DARK:
+                    higher_value = (1 - pow((1 - (chance / 100)), math.sqrt(dark_ratio_base / hero_ratio_base))) * 100
+                    ratio_of_change = chance / higher_value
+                    if dark_ratio_base >= hero_ratio_base:
+                        chance = ceil(higher_value)
+                    else:
+                        chance = floor(chance / ratio_of_change)
+                elif locationData.alignmentId == Levels.MISSION_ALIGNMENT_HERO:
+                    higher_value = (1 - pow((1 - (chance / 100)), math.sqrt(hero_ratio_base / dark_ratio_base))) * 100
+                    ratio_of_change = chance / higher_value
+                    if hero_ratio_base >= dark_ratio_base:
+                        chance = ceil(higher_value)
+                    else:
+                        chance = floor(chance / ratio_of_change)
+
                 r = self.multiworld.random.randrange(0, 100)
-                if r > 100 - self.options.force_objective_sanity_chance:
-                    #print("Make priority location:", completion_location_name)
+                if r > 100 - chance:
                     self.options.priority_locations.value.add(completion_location_name)
                     mission_counter += 1
                     mission_total += locationData.requirement_count
@@ -509,7 +668,6 @@ class ShtHWorld(World):
         if self.options.level_progression != Options.LevelProgression.option_story:
             for first_region in self.first_regions:
                 stage_item = Items.GetStageUnlockItem(first_region)
-                self.options.start_inventory.value[stage_item] = 1
                 self.multiworld.push_precollected(self.create_item(stage_item))
 
 
@@ -612,7 +770,7 @@ class ShtHWorld(World):
             "single_diablon": self.options.single_diablon.value,
             "boss_logic_level": self.options.boss_logic_level.value,
             "craft_logic_level": self.options.craft_logic_level.value,
-            "guaranteed_level_clear": self.options.guaranteed_level_clear.value,
+            "starting_level_method": self.options.starting_level_method.value,
             "save_value": self.random_value,
 
             "object_unlocks": self.options.object_unlocks.value,
@@ -625,8 +783,9 @@ class ShtHWorld(World):
             "shadow_boxes": self.options.shadow_boxes.value,
             "energy_cores": self.options.energy_cores.value,
             "door_sanity": self.options.door_sanity.value,
-            "gold_beetle_sanity": self.options.gold_beetle_sanity.value
-
+            "gold_beetle_sanity": self.options.gold_beetle_sanity.value,
+            "plando_starting_stages": self.options.plando_starting_stages,
+            "story_and_select_start_together": self.options.story_and_select_start_together
 
         }
         return slot_data

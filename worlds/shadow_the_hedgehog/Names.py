@@ -262,11 +262,15 @@ class REGION_INDICIES:
     FINAL_HAUNT_VACUUM_HARD = 2
     FINAL_HAUNT_BLACK_VOLT = 3
     FINAL_HAUNT_HARD_VACUUM_OR_BLACK_VOLT = 4
-    FINAL_HAUNT_ROCKET_NORMAL = 5
-    FINAL_HAUNT_BLACK_VOLT_2 = 6
-    FINAL_HAUNT_KEY_DOOR = 7
-    FINAL_HAUNT_LIGHT_DASH = 8
-    FINAL_HAUNT_KEY_DOOR_2 = 9
+    FINAL_HAUNT_SHIELD_COUNT_2 = 5
+    FINAL_HAUNT_ROCKET_NORMAL = 6
+    FINAL_HAUNT_BLACK_VOLT_2 = 7
+    FINAL_HAUNT_KEY_DOOR = 8
+    FINAL_HAUNT_LIGHT_DASH = 9
+    #FINAL_HAUNT_SHIELD_3_BASE_ACCESS = 10
+    FINAL_HAUNT_SHIELD_COUNT_3 = 10
+    FINAL_HAUNT_KEY_DOOR_2 = 11
+    FINAL_HAUNT_SHIELD_4 = 12
 
     THE_LAST_WAY_BLACK_VOLT = 1
     THE_LAST_WAY_KEY_DOOR = 2
@@ -360,3 +364,33 @@ def GetObjectLocationName(object: SETObject):
 
 def GetNameForVehicle(baseName):
     return f"Vehicle:{baseName}"
+
+class REGION_RESTRICTION_TYPES:
+    KeyDoor = 1
+    BlackHawk = 2
+    BlackVolt = 3
+    Torch = 4
+    AirSaucer = 5
+    Car = 6
+    GunJumper = 7
+    LongRangeGun = 8
+    GunLift = 9
+    NoRestriction = 10
+    Vacuum = 11
+    Gun = 12
+    Heal = 13,
+    BlackArmsTurret = 14
+    GunTurret = 15
+    ShootOrTurret = 16
+    AnyStageWeapon = 17
+    ShadowRifle = 18
+
+    HealCannonOrLongRangeGun = 19
+    Pulley = 20
+    WarpHole = 21
+    Rocket = 22
+    Zipwire = 23
+    Explosion = 24 # Access to Bazooka, or Bombs
+    LightDash = 25
+    HardLogicOnly = 26
+    GoldBeetle = 27
