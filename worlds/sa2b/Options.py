@@ -6,7 +6,6 @@ from .Names import LocationName
 
 from Options import Choice, Range, Option, Toggle, DeathLink, DefaultOnToggle, OptionList, ItemDict, LocationSet, T, \
     FreeText, OptionSet, PerGameCommonOptions, OptionGroup, PlandoBosses
-from worlds.ladx.Options import DefaultOffToggle
 
 class Goal(Choice):
     """
@@ -1388,13 +1387,13 @@ class AdditionalTrapNames(OptionSet):
     display_name = "Additional Trap Names"
     default = []
 
-class OnlyAdditionalChaoNames(DefaultOffToggle):
+class OnlyAdditionalChaoNames(Toggle):
     """
     Determines whether to replace all Chao Names with the custom list
     """
     display_name = "Replace Chao Names"
 
-class OnlyAdditionalTrapNames(DefaultOffToggle):
+class OnlyAdditionalTrapNames(Toggle):
     """
     Determines whether tp replace all Trap Names with the custom list
     """
@@ -1406,7 +1405,7 @@ class MissionShuffleParameters(OptionSet):
     """
     display_name = "Shuffle Params"
 
-class DisallowOnlyM2(DefaultOffToggle):
+class DisallowOnlyM2(Toggle):
     """
     Option to disallow only M2 as a valid level choice
     """
