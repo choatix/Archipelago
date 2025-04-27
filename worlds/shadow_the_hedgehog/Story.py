@@ -80,6 +80,17 @@ def ChoosePathOption(world, story_options):
 
     return randomised_item
 
+def PrintStoryMode(world, spoiler_handle):
+    if spoiler_handle is not None:
+        spoiler_handle.write(f"{world.multiworld.get_player_name(world.player)}'s Shuffled Story Path\n")
+    for stage in world.shuffled_story_mode:
+        text = str(stage)
+        if spoiler_handle is not None:
+            spoiler_handle.writelines(text)
+        else:
+            print("SS", text)
+    if spoiler_handle is not None:
+        spoiler_handle.write("\n")
 
 def TraversePath(story, available_stages, available_missions):
     clear_locations = Locations.MissionClearLocations
@@ -387,8 +398,10 @@ def ChaosShuffle(world):
                 step.boss = None
 
             if step.start_stage_id is None:
-                print("Check story start")
-                if len(world.options.plando_starting_stages.value) > 0:
+
+                plando_start_stages = [ x for x in world.options.plando_starting_stages.value if x in world.available_levels ]
+
+                if len(plando_start_stages) > 0:
                     rev_level_map = {v: k for k, v in Levels.LEVEL_ID_TO_LEVEL.items()}
                     first_stage_name = world.random.choice(list(world.options.plando_starting_stages.value))
                     first_stage = rev_level_map[first_stage_name]
@@ -410,8 +423,6 @@ def ChaosShuffle(world):
                     first_stage = step.end_stage_id
                     if force_path is not None and force_path[0] == 0:
                         force_path[0] = first_stage
-
-                print("First is...", first_stage)
 
             elif len(stages_to_assign) > 0:
                 step.end_stage_id = stages_to_assign.pop()

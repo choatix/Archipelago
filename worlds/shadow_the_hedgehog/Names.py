@@ -106,9 +106,36 @@ override_strings = \
 
 ]
 
+BOSS_STAGES = [
+    BOSS_BLACK_BULL_LH,
+    BOSS_EGG_BREAKER_CC,
+    BOSS_HEAVY_DOG,
+    BOSS_EGG_BREAKER_MM,
+    BOSS_BLACK_BULL_DR,
+    BOSS_BLUE_FALCON,
+    BOSS_EGG_BREAKER_IJ,
+    BOSS_BLACK_DOOM_GF,
+    BOSS_DIABLON_GF ,
+    BOSS_EGG_DEALER_BC,
+    BOSS_DIABLON_BC,
+    BOSS_EGG_DEALER_LS,
+    BOSS_BLACK_DOOM_CF,
+    BOSS_EGG_DEALER_CF,
+    BOSS_BLACK_DOOM_FH,
+    BOSS_DIABLON_FH,
+    BOSS_DEVIL_DOOM
+]
+
+LAST_STORY_STAGES = [STAGE_THE_LAST_WAY, BOSS_DEVIL_DOOM]
 
 def getLevelNames():
     return [ v for v in LEVEL_ID_TO_LEVEL.values() if v != "Devil Doom" ]
+
+def getBossNames():
+    return [ v[1] for v in LEVEL_ID_TO_LEVEL.items() if v[0] in BOSS_STAGES ]
+
+def getLastStoryNames():
+    return [ v[1] for v in LEVEL_ID_TO_LEVEL.items() if v[0] in LAST_STORY_STAGES ]
 
 def getValidPercentOverrides():
     options = []

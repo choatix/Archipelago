@@ -66,8 +66,11 @@ def early_region_checks(world):
                                       ((s.start_stage_id is None) or
                                       ( GetLevelCompletionNames(s.start_stage_id,
                                       s.alignment_id)[1] not in
-                                      world.options.exclude_locations) and
+                                      world.options.exclude_locations
+                                        and s.start_stage_id in available_story_stages
+                                        ) and
                                        Levels.LEVEL_ID_TO_LEVEL[s.start_stage_id] not in world.options.excluded_stages)
+
                                       ]
             if len(story_routes_to_stage) > 0:
                 available_story_stages.append(level)
@@ -76,11 +79,14 @@ def early_region_checks(world):
                     if story_route.boss is not None and story_route.boss not in available_story_stages\
                             and story_route.start_stage_id in world.available_levels:
                         world.available_levels.append(story_route.boss)
+                        available_story_stages.append(story_route.boss)
                         break
 
-            stage_as_boss = [ s for s in world.shuffled_story_mode if s.boss == level and
-                              s.start_stage_id in world.available_levels and level not in available_story_stages]
+            stage_as_boss = [ s.boss for s in world.shuffled_story_mode if s.boss == level and
+                              s.start_stage_id in world.available_levels and level not in available_story_stages
+                              and s.start_stage_id in available_story_stages]
             if len(stage_as_boss) > 0:
+                available_story_stages.extend(list(set(stage_as_boss)))
                 world.available_levels.append(level)
 
         if (world.options.level_progression != Options.LevelProgression.option_story \
@@ -227,10 +233,7 @@ def create_regions(world) -> Dict[str, Region]:
         if starting_stage_count > len(possible_first_regions):
             starting_stage_count = len(possible_first_regions)
 
-        #print("Possible regions=", possible_first_regions)
         first_stages = world.random.sample(possible_first_regions, starting_stage_count)
-        #print("First select regions are:", first_stages)
-
         world.first_regions = first_stages
 
     if world.options.level_progression != Options.LevelProgression.option_select:
@@ -372,38 +375,42 @@ def connect_by_story_mode(multiworld: MultiWorld, world, player: int, order: typ
         boss_rule = None
         boss_base_region = None
 
-        if (path.start_stage_id not in world.available_levels or
-                (path.end_stage_id is not None and path.end_stage_id not in world.available_levels)):
+        if path.start_stage_id not in world.available_story_levels:
+            continue
+
+        if path.end_stage_id is not None and path.end_stage_id not in world.available_story_levels \
+                and (path.boss is None or path.boss not in world.available_story_levels):
             continue
 
         start_base_region_name = stage_id_to_story_region(path.start_stage_id)
         start_region = world.get_region(start_base_region_name)
 
         if path.boss is not None:
-            if path.boss in world.available_levels: # and path.end_stage_id is not None:
+            if path.boss in world.available_story_levels: # and path.end_stage_id is not None:
                 boss_base_region_name = stage_id_to_region(path.boss)
                 boss_base_region = world.get_region(boss_base_region_name)
 
                 boss_region_name = stage_id_to_story_region(path.boss)
                 boss_region = world.get_region(boss_region_name)
 
-                boss_item = [ b for b in Locations.BossClearLocations if b.stageId == path.boss][0]
-                boss_id, boss_name = Locations.GetBossLocationName(boss_item.name, boss_item.stageId)
+                if path.end_stage_id is None or path.end_stage_id in world.available_story_levels:
 
-                view_name = Names.GetBossClearEventName(path.boss, path.start_stage_id, path.alignment_id)
+                    boss_item = [ b for b in Locations.BossClearLocations if b.stageId == path.boss][0]
+                    boss_id, boss_name = Locations.GetBossLocationName(boss_item.name, boss_item.stageId)
 
-                event_location = multiworld.get_location(view_name, player)
-                event_location.access_rule = (lambda state, n=boss_name, br=start_base_region_name: (
-                    (True if n == 'Boss:Devil Doom' else state.can_reach_location(n, player)) and
-                    state.can_reach_region(br, player)))
+                    view_name = Names.GetBossClearEventName(path.boss, path.start_stage_id, path.alignment_id)
 
-                item_name = f"Story Access Through {Names.LEVEL_ID_TO_LEVEL[path.boss]}"
+                    event_location = multiworld.get_location(view_name, player)
+                    event_location.access_rule = (lambda state, n=boss_name, br=start_base_region_name: (
+                        (True if n == 'Boss:Devil Doom' else state.can_reach_location(n, player)) and
+                        state.can_reach_region(br, player)))
 
-                event_location.place_locked_item(Item(item_name,
-                                                      ItemClassification.progression, None, player))
+                    item_name = f"Story Access Through {Names.LEVEL_ID_TO_LEVEL[path.boss]}"
 
-                boss_rule = lambda state, bn=item_name: state.has(bn, player)
-                #boss_rule = lambda state,nn=boss_name: state.can_reach_location(nn, player)
+                    event_location.place_locked_item(Item(item_name,
+                                                          ItemClassification.progression, None, player))
+
+                    boss_rule = lambda state, bn=item_name: state.has(bn, player)
 
         if path.end_stage_id is None:
             if boss_region is not None and boss_rule is not None:
@@ -466,14 +473,6 @@ def connect_by_story_mode(multiworld: MultiWorld, world, player: int, order: typ
             print("Unable to take story path due to excluded location:", path.start_stage_id, path.alignment_id)
             continue
 
-        #end_region_base_name = stage_id_to_region(path.end_stage_id)
-        #end_base_region = world.get_region(end_region_base_name)
-        end_region_name = stage_id_to_story_region(path.end_stage_id)
-        end_region = world.get_region(end_region_name)
-
-        # get all regions associated to the stage and register as indirect
-        # Because the condition can lead to complications due to breadth-first search
-
         extra_level_regions = [ l for l in Levels.INDIVIDUAL_LEVEL_REGIONS if l.stageId == path.start_stage_id ]
 
         view_name = Names.GetMissionClearEventName(path.start_stage_id, path.alignment_id)
@@ -492,9 +491,6 @@ def connect_by_story_mode(multiworld: MultiWorld, world, player: int, order: typ
                                               ItemClassification.progression, None, player))
 
         base_rule = lambda state,n=item_name: state.has(n, player)
-
-        #base_rule = lambda state,n=completion_location_name: state.can_reach_location(n, player)
-
         boss_base_rule = base_rule
         if world.options.secret_story_progression and hasattr(multiworld, "re_gen_passthrough"):
             warp_item = Items.GetStageWarpItem(path.end_stage_id)
@@ -515,6 +511,12 @@ def connect_by_story_mode(multiworld: MultiWorld, world, player: int, order: typ
             base_region_name = stage_id_to_region(path.start_stage_id)
             base_region = world.get_region(base_region_name)
             multiworld.register_indirect_condition(base_region, boss_entrance)
+
+        if path.end_stage_id is not None and path.end_stage_id not in world.available_story_levels:
+            continue
+
+        end_region_name = stage_id_to_story_region(path.end_stage_id)
+        end_region = world.get_region(end_region_name)
 
         if boss_rule is not None:
             modified_rule = lambda state, r_rule=base_rule, b_rule=boss_rule: (r_rule(state) and b_rule(state))
@@ -554,7 +556,7 @@ def IsMatch(l1, l2):
     return False
 
 # Find starting items to provide automatically
-def FindStartingItems(world):
+def FindStartingItems(world, required=False):
 
     starting_stages = []
 
@@ -582,41 +584,46 @@ def FindStartingItems(world):
                            and str(r.stageId ) + "/" + str(r.regionIndex) not in base_from_regions])
 
     item_options = []
+    failed_item_options = []
     for option in escape_options:
         if option == Names.REGION_RESTRICTION_TYPES.Pulley:
             item_options.append("Pulley")
-        if option == Names.REGION_RESTRICTION_TYPES.Heal:
+        elif option == Names.REGION_RESTRICTION_TYPES.Heal:
             item_options.append("Weapon:Heal Cannon")
-        if option == Names.REGION_RESTRICTION_TYPES.AirSaucer:
+        elif option == Names.REGION_RESTRICTION_TYPES.AirSaucer:
             item_options.append("Vehicle:Air Saucer")
-        if option == Names.REGION_RESTRICTION_TYPES.BlackArmsTurret:
+        elif option == Names.REGION_RESTRICTION_TYPES.BlackArmsTurret:
             item_options.append("Vehicle:Black Turret")
-        if option == Names.REGION_RESTRICTION_TYPES.BlackHawk:
+        elif option == Names.REGION_RESTRICTION_TYPES.BlackHawk:
             item_options.append("Vehicle:Black Hawk")
-        if option == Names.REGION_RESTRICTION_TYPES.BlackVolt:
+        elif option == Names.REGION_RESTRICTION_TYPES.BlackVolt:
             item_options.append("Vehicle:Black Volt")
-        if option == Names.REGION_RESTRICTION_TYPES.Explosion:
+        elif option == Names.REGION_RESTRICTION_TYPES.Explosion:
             item_options.append("Bombs")
-        if option == Names.REGION_RESTRICTION_TYPES.GunTurret:
-            item_options.append("Gun Turret")
-        if option == Names.REGION_RESTRICTION_TYPES.LightDash:
+        elif option == Names.REGION_RESTRICTION_TYPES.GunTurret:
+            item_options.append("Vehicle:Gun Turret")
+        elif option == Names.REGION_RESTRICTION_TYPES.LightDash:
             item_options.append("Air Shoes")
-        if option == Names.REGION_RESTRICTION_TYPES.Rocket:
+        elif option == Names.REGION_RESTRICTION_TYPES.Rocket:
             item_options.append("Rocket")
-        if option == Names.REGION_RESTRICTION_TYPES.Torch:
+        elif option == Names.REGION_RESTRICTION_TYPES.Torch:
             item_options.append("Weapon:Cryptic Torch")
-        if option == Names.REGION_RESTRICTION_TYPES.GunJumper:
+        elif option == Names.REGION_RESTRICTION_TYPES.GunJumper:
             item_options.append("Vehicle:Gun Jumper")
-        if option == Names.REGION_RESTRICTION_TYPES.WarpHole:
+        elif option == Names.REGION_RESTRICTION_TYPES.WarpHole:
             item_options.append("Warp Holes")
-        if option == Names.REGION_RESTRICTION_TYPES.Zipwire:
+        elif option == Names.REGION_RESTRICTION_TYPES.Zipwire:
             item_options.append("Zipwire")
-        if option == Names.REGION_RESTRICTION_TYPES.Vacuum:
+        elif option == Names.REGION_RESTRICTION_TYPES.Vacuum:
             item_options.append("Weapon:Vacuum Pod")
+        else:
+            failed_item_options.append(option)
 
     if len(item_options) == 0:
-        print("Unknown error with obtaining anti-lock mechanism")
-        raise OptionError("Invalid item options")
+        if required:
+            print("Unknown error with obtaining anti-lock mechanism", failed_item_options)
+            raise OptionError("Invalid item options")
+        return []
 
     print("Safety unlock options:", item_options)
 

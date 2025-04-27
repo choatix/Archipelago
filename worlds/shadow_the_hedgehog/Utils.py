@@ -145,7 +145,7 @@ def getObjectiveTypeAndPercentage(base_objective_type, item_name, options):
         if isEnemyObjectiveLocation(item_name):
             base_objective_type = TYPE_ID_OBJECTIVE_ENEMY_AVAILABLE
             percentage = options.objective_completion_enemy_percentage *\
-                          ((100 + options.objective_item_percentage_available)/100)
+                          ((100 + options.objective_item_enemy_percentage_available)/100)
             round_method = ceil
         else:
             percentage = options.objective_completion_percentage *\

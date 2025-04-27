@@ -228,7 +228,7 @@ def lock_warp_items(multiworld, world, player):
         if warp.stageId in Levels.BOSS_STAGES and world.options.level_progression == Options.LevelProgression.option_select:
             continue
 
-        if warp.stageId not in world.available_levels:
+        if warp.stageId not in world.available_story_levels:
             continue
 
         warp_story_region = Regions.stage_id_to_story_region(warp.stageId)
@@ -279,7 +279,7 @@ def CountRegionAccessibility(state, keys, data, ix, player, perc=100):
                 total += floor(i * (perc / 100))
 
         if all:
-            total = floor(total * (perc / 100))
+            total = ceil(total * (perc / 100))
 
         return total >= ix
     else:
@@ -571,7 +571,6 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
                 location = multiworld.get_location(boss_name, player)
                 add_rule(location, boss_rule)
 
-
         associated_tokens = [t for t in world.token_locations if
                              t.stageId == boss.stageId and
                              (t.other == ITEM_TOKEN_TYPE_BOSS or t.other == ITEM_TOKEN_TYPE_FINAL_BOSS)]
@@ -712,7 +711,7 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
     if world.options.include_last_way_shuffle:
         pass
 
-    e.access_rule = lambda state, g_has=goal_has: len([ x for x in g_has if state.has(x[0], player, count=x[1]) ]) == len(g_has)
+    e.access_rule = lambda state, g_has=goal_has: check_final_rule(state, player, goal_has)
 
     if (world.options.level_progression != Options.LevelProgression.option_select and
             world.options.include_last_way_shuffle and world.options.story_shuffle == Options.StoryShuffle.option_chaos):
@@ -769,6 +768,9 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
 
     multiworld.completion_condition[player] = lambda state: state.has(Items.Progression.GoodbyeForever, player)
 
+def check_final_rule(state, player, goal_has):
+    have = ([x for x in goal_has if state.has(x[0], player, count=x[1])])
+    return len(have) == len(goal_has)
 
 def get_token_count(world, type, token_assignments, goal_value):
     if type not in token_assignments:

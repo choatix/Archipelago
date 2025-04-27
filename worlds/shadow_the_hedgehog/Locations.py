@@ -17,6 +17,7 @@ class ShadowTheHedgehogLocation(Location):
     game: str = "Shadow The Hedgehog"
 
     def __init__(self, player, location_name, location_id, region=None):
+        print("Create loc", location_name)
         super().__init__(player, location_name, location_id, region)
 
 LOCATION_TYPE_MISSION_CLEAR = 1
@@ -795,7 +796,8 @@ CheckpointLocations = \
         .setDistribution(
         {
             0: [1],
-            REGION_INDICIES.MAD_MATRIX_GUN: [2,3,4,6],
+            REGION_INDICIES.MAD_MATRIX_GUN: [2,4,6],
+            REGION_INDICIES.MAD_MATRIX_YELLOW_ENTRY: [3],
             REGION_INDICIES.MAD_MATRIX_GREEN_ENTRY: [5]
         }
     ),
@@ -1331,6 +1333,11 @@ def is_token_required_by_goal(options, token : LocationInfo, available_levels):
     if token.stageId not in available_levels:
         return False
 
+    if token.stageId == Levels.STAGE_THE_LAST_WAY and goal_dictates_neutral_missions and token.other == ITEM_TOKEN_TYPE_STANDARD and \
+            (options.level_progression == Options.LevelProgression.option_select or \
+            not options.include_last_way_shuffle):
+        return False
+
     if goal_dictates_missions and token.other == ITEM_TOKEN_TYPE_STANDARD:
         return True
 
@@ -1357,6 +1364,7 @@ def is_token_required_by_goal(options, token : LocationInfo, available_levels):
 
     if goal_dictates_final_boss_tokens and token.other == ITEM_TOKEN_TYPE_FINAL_BOSS:
         return True
+
 
     return False
 
@@ -1508,7 +1516,7 @@ def create_locations(world, regions: Dict[str, Region]):
         if warp.stageId in Levels.BOSS_STAGES and world.options.level_progression == Options.LevelProgression.option_select:
             continue
 
-        if warp.stageId not in world.available_levels:
+        if warp.stageId not in world.available_story_levels:
             continue
 
         within_region = regions[Regions.stage_id_to_region(warp.stageId)]
@@ -1572,8 +1580,8 @@ def create_locations(world, regions: Dict[str, Region]):
     devil_doom_location = ShadowTheHedgehogLocation(world.player, end_location[0].name, end_location[0].locationId, end_region)
     end_region.locations.append(devil_doom_location)
 
-def increment_location_count(count, plus):
-    #print(f"Count={count} + {plus} = {count+plus}")
+def increment_location_count(count, plus, t):
+    #print(f"Count={count} + {t} - {plus} = {count+plus}")
     return count + plus
 
 def count_locations(world):
@@ -1607,7 +1615,7 @@ def count_locations(world):
 
     override_settings = world.options.percent_overrides
 
-    count = increment_location_count(count, len(mission_clear_locations))
+    count = increment_location_count(count, len(mission_clear_locations), "mc")
 
     if world.options.objective_sanity:
         for location in mission_locations:
@@ -1626,7 +1634,7 @@ def count_locations(world):
 
             if location.count <= max_required:
                 if location.count % frequency_required == 0 or max_required == location.count:
-                    count = increment_location_count(count, 1)
+                    count = increment_location_count(count, 1, "o")
 
     if world.options.enemy_sanity:
         for enemy in enemysanity_locations:
@@ -1645,40 +1653,40 @@ def count_locations(world):
 
             if enemy.count <= max_required:
                 if enemy.count % frequency_required == 0 or max_required == enemy.count:
-                    count = increment_location_count(count, 1)
+                    count = increment_location_count(count, 1, "e")
 
     if world.options.checkpoint_sanity:
-        count = increment_location_count(count, len(checkpointsanity_locations))
+        count = increment_location_count(count, len(checkpointsanity_locations), "c")
 
     if world.options.character_sanity:
-        count = increment_location_count(count, len(charactersanity_locations))
+        count = increment_location_count(count, len(charactersanity_locations), "ch")
 
     if world.options.key_sanity:
-        count = increment_location_count(count, len(keysanity_locations))
+        count = increment_location_count(count, len(keysanity_locations), "k")
 
-    count = increment_location_count(count, len(boss_locations))
+    count = increment_location_count(count, len(boss_locations), "b")
     #if world.options.include_last_way_shuffle and world.options.story_shuffle == Options.StoryShuffle.option_test3:
     #    count -= 1 # Devil Doom Boss
 
     if world.options.weapon_sanity_hold > 0:
-        count = increment_location_count(count, len(weaponsanity_locations))
+        count = increment_location_count(count, len(weaponsanity_locations), "w")
 
     if world.options.shadow_boxes:
         count = increment_location_count(count, len([x for x in object_locations if x.other == ObjectType.SHADOW_BOX
-                                                     if x.stageId in world.available_levels]))
+                                                     if x.stageId in world.available_levels]), "b")
 
     if world.options.gold_beetle_sanity:
         count = increment_location_count(count, len([x for x in object_locations if x.other == ObjectType.GOLD_BEETLE
-                                                     if x.stageId in world.available_levels]))
+                                                     if x.stageId in world.available_levels]), "g")
 
     if world.options.energy_cores:
         count = increment_location_count(count, len([x for x in object_locations if x.other == ObjectType.ENERGY_CORE
                                                      or x.other == ObjectType.ENERGY_CORE_IN_WOOD_BOX
-                                                     if x.stageId in world.available_levels]))
+                                                     if x.stageId in world.available_levels]), "c")
 
     if world.options.door_sanity:
         count = increment_location_count(count, len([x for x in object_locations if x.other == ObjectType.KEY_DOOR
-                                                     if x.stageId in world.available_levels]))
+                                                     if x.stageId in world.available_levels]), "kd")
 
     # Progression locations are hardcoded and not pool-related
     #count += len(end_location)
@@ -1810,28 +1818,36 @@ def getLocationGroups():
 
 def SetStoryClearEvents(world, player, menu_region):
     story_clear_events = []
-    for clear in MissionClearLocations:
-        if clear.stageId not in world.available_levels:
+    for story in world.shuffled_story_mode:
+        if story.start_stage_id not in world.available_story_levels:
             continue
 
-        if clear.stageId == Levels.STAGE_THE_LAST_WAY and not world.options.include_last_way_shuffle:
+        if story.start_stage_id == Levels.STAGE_THE_LAST_WAY and not world.options.include_last_way_shuffle:
             continue
 
-        if clear.stageId in Levels.BOSS_STAGES:
+        if story.end_stage_id is not None and story.end_stage_id not in world.available_story_levels\
+                and (story.boss is None or story.boss not in world.available_story_levels):
             continue
 
-        view_name = Names.GetMissionClearEventName(clear.stageId, clear.alignmentId)
+        if story.boss is not None and story.boss not in world.available_levels:
+            continue
+
+        view_name = Names.GetMissionClearEventName(story.start_stage_id, story.alignment_id)
         story_clear_event = ShadowTheHedgehogLocation(player, view_name, None, menu_region)
         story_clear_event.show_in_spoiler = True
         story_clear_events.append(story_clear_event)
 
-    for w in [l for l in world.shuffled_story_mode if l.boss is not None]:
+    for w in [l for l in world.shuffled_story_mode if l.boss is not None
+                                                      and l.boss in world.available_story_levels
+              and l.start_stage_id in world.available_levels
+              and (l.end_stage_id is None or l.end_stage_id in world.available_levels)]:
         view_name = Names.GetBossClearEventName(w.boss, w.start_stage_id, w.alignment_id)
         story_clear_event = ShadowTheHedgehogLocation(player, view_name, None, menu_region)
         story_clear_event.show_in_spoiler = True
         story_clear_events.append(story_clear_event)
 
 
+    #print("SSS", story_clear_events)
     menu_region.locations.extend(story_clear_events)
     return story_clear_events
 
@@ -1847,6 +1863,7 @@ def SetRegionEvents(world, player, menu_region):
         view_name = Names.GetDistributionRegionEventName(level, 0)
         region_event = ShadowTheHedgehogLocation(player, view_name, None, menu_region)
         region_event.show_in_spoiler = False
+        region_event.progress_type = LocationProgressType.PRIORITY
         region_events.append(region_event)
 
     for region in Levels.INDIVIDUAL_LEVEL_REGIONS:

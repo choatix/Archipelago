@@ -247,12 +247,23 @@ class ExcludedStages(OptionSet):
     valid_keys = [i for i in Names.getLevelNames() ]
 
 class ExceedingItemsFiller(Choice):
-    """Determines whether game marks non-required items as progression or not."""
+    """
+        Determines whether game marks non-required items as progression or not.
+        Off is only recommended for testing a yaml.
+    """
     display_name = "Exceeding Items Filler"
-    option_off = 0  # Never convert exceeding items into filler
-    option_minimise = 1  # Minimise exceeding items into filler
-    option_always = 2  # Always mark exceeding items as filler
+    option_off = 0  # Never remove or convert exceeding items into filler. Only use to test yaml.
+    option_minimise = 1  # Remove excess items to prevent failures.
+    option_always = 2  # Always mark exceeding items as filler.
+    option_chance = 3 # Sometimes mark exceeding items as filler.
     default = option_minimise
+
+class ExceedingItemsFillerRandom(Range):
+    """Determines chance of marking exceeding filler items as useful rather than progression"""
+    display_name = "Exceeding Items Filler Random Chance"
+    range_start = 0
+    range_end = 100
+    default = 25
 
 class RingLink(Choice):
     """
@@ -355,7 +366,7 @@ class CraftLogicLevel(Choice):
         Determines the craft logic level for playthrough - distinguishing a difference
         in logic for crafts in Iron Jungle, Lethal Highway and Air Fleet
     """
-    display_name = "Logic Level"
+    display_name = "Craft Logic Level"
     option_easy = 0  # Logic adds in easier elements for completion
     option_normal = 1  # Standard logic
     option_hard = 2  # Requires skips to traverse regions.
@@ -499,6 +510,7 @@ class StoryProgressionBalancing(Range):
         Lower numbers choose smaller story progression, but will stay lower progression for longer.
         Refer to the documentation for more information.
     """
+    display_name = "Story Progression Balancing"
     range_start = 1
     range_end = 100
     default = 25 # Decide this value
@@ -510,6 +522,7 @@ class StoryProgressionBalancingPasses(Range):
         Each pass selects a route, reducing the counts required to progress through story missions.
         The lowest value from all passes will be used.
     """
+    display_name = "Story Progression Balancing Passes"
     option_off = 0
     range_start = 0
     range_end = 5
@@ -599,7 +612,8 @@ class PlandoStartingStages(OptionSet):
         Force this selection of stages to be chosen first.
     """
     display_name = "Plando Starting Stages"
-    valid_keys = [i for i in Names.getLevelNames() ]
+    valid_keys = [i for i in Names.getLevelNames()
+                  if i not in Names.getBossNames() and i not in Names.getLastStoryNames()]
 
 
 class StoryAndSelectStartTogether(DefaultOnToggle):
@@ -612,6 +626,7 @@ class StoryAndSelectStartTogether(DefaultOnToggle):
 class StartInventoryExcessItems(DefaultOnToggle):
     """
         Add items to start inventory if not enough locations found.
+        Not recommended to disable as can lead to generate failures.
     """
     display_name = "Start Inventory Excess Items"
 
@@ -621,6 +636,7 @@ class SelectPercentage(Range):
         on 'Both' story and select mode.
     """
 
+    display_name = "Select Percentage"
     range_start = 0
     range_end = 100
     default_value = range_end
@@ -658,7 +674,6 @@ class ShadowTheHedgehogOptions(PerGameCommonOptions):
     weapon_sanity_unlock: WeaponsanityUnlock
     weapon_sanity_hold: WeaponsanityHold
     vehicle_logic: VehicleLogic
-    exceeding_items_filler: ExceedingItemsFiller
     enable_gauge_items: GaugeFiller
     enable_ring_items: RingFiller
     ring_link: RingLink
@@ -700,8 +715,11 @@ class ShadowTheHedgehogOptions(PerGameCommonOptions):
     gold_beetle_sanity: GoldBeetleSanity
     plando_starting_stages: PlandoStartingStages
     story_and_select_start_together: StoryAndSelectStartTogether
-    start_inventory_excess_items: StartInventoryExcessItems
     select_percentage: SelectPercentage
+
+    exceeding_items_filler: ExceedingItemsFiller
+    exceeding_items_filler_random: ExceedingItemsFillerRandom
+    start_inventory_excess_items: StartInventoryExcessItems
 
 
 shadow_option_groups = [

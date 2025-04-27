@@ -494,7 +494,10 @@ def ChooseJunkItems(random, junk, options, junk_count):
 
 
 def AddItemsToStartInventory(world, count):
-    startings = world.random.choices(world.multiworld.itempool, k=count)
+    base_plando_items = [i["item"] for i in world.multiworld.plando_items[world.player] if i["from_pool"] and i["force"]]
+    valid_removals = [ i for i in world.multiworld.itempool if i.name not in base_plando_items ]
+
+    startings = world.random.sample(valid_removals, k=count)
     for s in startings:
         world.multiworld.itempool.remove(s)
         world.push_precollected(s)
@@ -538,6 +541,7 @@ def CountItems(world: World):
     if len(use_level_unlock_items) > 0:
         unlock_items = [l for l in use_level_unlock_items if l.stageId not in world.first_regions]
         select_stage_count = ceil(len(unlock_items) * world.options.select_percentage / 100)
+        select_stage_count = min(select_stage_count, world.options.starting_stages)
 
     item_count = increment_item_count(0, select_stage_count)
     item_count = increment_item_count(item_count, using_stage_objective_items)
@@ -597,18 +601,39 @@ def CountItems(world: World):
     return item_count
 
 
+def GetStageItems(world):
+    override_settings = world.options.percent_overrides
+    mw_temp_stage_objective_items = []
+
+    (emerald_items, key_items, level_unlock_items, stage_objective_items,
+     junk_items, token_items, weapon_items, vehicle_items, warp_items, rifle_components,
+     weapon_group_items, object_items) = GetAllItemInfo()
+
+    for item in stage_objective_items:
+        if item.stageId not in world.available_levels:
+            continue
+
+        lookup = [x for x in MissionClearLocations
+                  if x.stageId == item.stageId and x.alignmentId == item.alignmentId][0]
+
+        max_required = ShadowUtils.getMaxRequired(
+            ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_OBJECTIVE_AVAILABLE,
+                                                      lookup.mission_object_name, world.options),
+            lookup.requirement_count, item.stageId, item.alignmentId,
+            override_settings)
+
+        mw_temp_stage_objective_items.extend([item] * max_required)
+
+    mw_stage_items = [ShadowTheHedgehogItem(s, world.player) for s in mw_temp_stage_objective_items]
+    return mw_stage_items
+
+
 def GetPotentialDowngradeItems(world, mw_stage_items=None):
     potential_downgrade = []
     to_remove = []
+
     if mw_stage_items is None:
-        (emerald_items, key_items, level_unlock_items, stage_objective_items,
-         junk_items, token_items, weapon_items, vehicle_items, warp_items, rifle_components,
-         weapon_group_items, object_items) = GetAllItemInfo()
-
-        # Handle available
-
-        mw_stage_items = [ShadowTheHedgehogItem(s, world.player) for s in stage_objective_items if
-                          s.stageId in world.available_levels]
+        mw_stage_items = GetStageItems(world)
 
     override_settings = world.options.percent_overrides
     itemdict = GetItemLookupDict()
@@ -640,6 +665,7 @@ def GetPotentialDowngradeItems(world, mw_stage_items=None):
             to_remove.append(item)
         elif indexer[item_lookup.name] > max_required_complete:
             potential_downgrade.append(item)
+
 
     return potential_downgrade, to_remove
 
@@ -709,7 +735,7 @@ def GetObjectItems():
     return object_items
 
 
-def PopulateItemPool(world: World, first_regions):
+def PopulateItemPool(world: World):
     print("Populate item pool")
     (emerald_items, key_items, level_unlock_items, stage_objective_items,
      junk_items, token_items, weapon_items, vehicle_items, warp_items, rifle_components,
@@ -719,7 +745,7 @@ def PopulateItemPool(world: World, first_regions):
         stage_objective_items = []
 
     # Don't use level unlocks for stages you start with!
-    use_level_unlock_items = [l for l in level_unlock_items if l.stageId not in first_regions and
+    use_level_unlock_items = [l for l in level_unlock_items if l.stageId not in world.first_regions and
                               l.stageId in world.available_levels
                               #and (l.stageId not in Levels.FINAL_BOSSES
                               and l.stageId not in Levels.LAST_STORY_STAGES
@@ -729,48 +755,44 @@ def PopulateItemPool(world: World, first_regions):
     # Convert to multiworld items
     mw_em_items = [ShadowTheHedgehogItem(e, world.player) for e in emerald_items]
 
-
+    required_select_unlocks = [ e for e in use_level_unlock_items if e.stageId not in world.available_story_levels ]
     select_stage_count = ceil(len(use_level_unlock_items) * world.options.select_percentage / 100)
-    level_unlock_item_selections = world.random.choices(use_level_unlock_items, k=select_stage_count)
+    if len(required_select_unlocks) >= select_stage_count:
+        level_unlock_item_selections = required_select_unlocks
+    else:
+        level_unlock_item_selections = world.random.sample(use_level_unlock_items, k=select_stage_count)
+
     mw_level_unlock_items = [ShadowTheHedgehogItem(l, world.player) for l in level_unlock_item_selections]
 
-    override_settings = world.options.percent_overrides
-    mw_temp_stage_objective_items = []
+    mw_stage_items = GetStageItems(world)
 
-    for item in stage_objective_items:
-        if item.stageId not in world.available_levels:
-            continue
+    #if world.options.exceeding_items_filler == Options.ExceedingItemsFiller.option_always:
+    #    downgrade_count = 1000
+    #if world.excess_item_count > 0:
+    #    downgrade_count = world.excess_item_count
 
-        lookup = [x for x in MissionClearLocations
-                  if x.stageId == item.stageId and x.alignmentId == item.alignmentId][0]
+    # TODO
+    # Excess item selection must be added to to_remove
 
-        max_required = ShadowUtils.getMaxRequired(
-            ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_OBJECTIVE_AVAILABLE,
-                                                      lookup.mission_object_name, world.options),
-            lookup.requirement_count, item.stageId, item.alignmentId,
-            override_settings)
-
-        mw_temp_stage_objective_items.extend([item] * max_required)
-
-    mw_stage_items = [ShadowTheHedgehogItem(s, world.player) for s in mw_temp_stage_objective_items]
-
-    potential_downgrade = []
-    to_remove = []
-    downgrade_count = 0
-    if world.options.exceeding_items_filler == Options.ExceedingItemsFiller.option_always:
-        downgrade_count = 1000
-    elif world.excess_item_count > 0:
-        downgrade_count = world.excess_item_count
 
     potential_downgrade, to_remove = GetPotentialDowngradeItems(world, mw_stage_items)
-    if downgrade_count > len(potential_downgrade):
-        downgrade_count = len(potential_downgrade)
+    if world.excess_item_count > 0 and len(potential_downgrade) > 0:
+        t_size = len(to_remove)
+        size = world.excess_item_count - t_size
+        print("EIC", len(potential_downgrade), size)
+        size = min(size, len(potential_downgrade))
+        new_remove = world.random.sample(potential_downgrade, k=size)
+        potential_downgrade = [ p for p in potential_downgrade if p not in new_remove]
+        to_remove.extend(new_remove)
 
-    if downgrade_count > 0:
+    if world.options.exceeding_items_filler == Options.ExceedingItemsFiller.option_always:
         for downgrade in potential_downgrade:
-            if potential_downgrade.index(downgrade) > downgrade_count:
-                break
+            downgrade.classification = ItemClassification.useful
 
+    elif world.options.exceeding_items_filler == Options.ExceedingItemsFiller.option_chance:
+        chance = world.options.exceeding_items_filler_random
+        sample = [item for item in potential_downgrade if world.random.randrange(0, 100) < chance]
+        for downgrade in sample:
             downgrade.classification = ItemClassification.useful
 
     for remove in to_remove:
@@ -895,14 +917,13 @@ def PopulateItemPool(world: World, first_regions):
         world.multiworld.itempool += mw_object_items
 
     junk_count = (location_count - item_count - len(mw_useful_items))
-    print("Junk count is:", junk_count)
+    print("Junk count is:", junk_count, location_count, item_count, len(mw_useful_items))
     if junk_count > 0:
         mw_junk_items = [ShadowTheHedgehogItem(i, world.player) for i in
                          ChooseJunkItems(world.random, junk_items, world.options, junk_count)]
         world.multiworld.itempool += mw_junk_items
     elif junk_count < 0:
         AddItemsToStartInventory(world, -junk_count)
-
 
 def get_item_groups():
     (emerald_items, key_items, level_unlock_items, stage_objective_items,

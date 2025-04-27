@@ -752,7 +752,7 @@ class ShTHCommandProcessor(ClientCommandProcessor):
             logger.info("Nothing to hint on")
 
         print(item_weights)
-        randomised_item = random.choices(list(item_weights.keys()), k=1, weights=list(item_weights.values()))[0]
+        randomised_item = random.sample(list(item_weights.keys()), k=1, weights=list(item_weights.values()))[0]
         logger.info("Recommended item to hint for is:%s", randomised_item)
 
         pass
