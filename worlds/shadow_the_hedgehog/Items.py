@@ -1,18 +1,20 @@
 #from __future__ import annotations
 import copy
+import logging
 import typing
 from dataclasses import dataclass
 from math import floor, ceil
 from typing import List, Optional
 
 from BaseClasses import Item, ItemClassification
+from Options import OptionError
 from worlds.AutoWorld import World
 from . import Weapons, Vehicle, Utils as ShadowUtils, Options, Levels
 from .Levels import LEVEL_ID_TO_LEVEL, ALL_STAGES, MISSION_ALIGNMENT_DARK, \
     MISSION_ALIGNMENT_HERO, MISSION_ALIGNMENT_NEUTRAL, ITEM_TOKEN_TYPE_STANDARD, ITEM_TOKEN_TYPE_FINAL, \
     ITEM_TOKEN_TYPE_OBJECTIVE, ITEM_TOKEN_TYPE_ALIGNMENT, ITEM_TOKEN_TYPE_BOSS, \
     ITEM_TOKEN_TYPE_FINAL_BOSS
-from .Locations import MissionClearLocations, GetAlignmentsForStage, count_locations
+from .Locations import MissionClearLocations, GetAlignmentsForStage, count_locations, count_last_way_locations
 
 BASE_ID = 1743800000
 ITEM_ID_START_AT_WEAPONS = 2000
@@ -151,7 +153,7 @@ def PopulateLevelUnlockItems():
         #if stageId in BOSS_STAGES or stageId in LAST_STORY_STAGES:
         #    continue
 
-        if stageId == Levels.BOSS_DEVIL_DOOM:
+        if stageId in Levels.LAST_STORY_STAGES:
             continue
 
         item = ItemInfo(count, GetStageUnlockItem(stageId), ItemClassification.progression, stageId=stageId,
@@ -180,7 +182,6 @@ def PopulateLevelObjectItems():
     level_object_items = []
     count = ITEM_ID_START_AT_MISSION
     for stageId in ALL_STAGES:
-        # TODO: handling for stages without a particular mission type
         alignment_ids = GetAlignmentsForStage(stageId)
         for alignment in alignment_ids:
             alignment_object = GetStageAlignmentObject(stageId, alignment)
@@ -426,15 +427,7 @@ def GetAllItemInfo():
     for warp in level_warp_item_table:
         level_warp_items.append(warp)
 
-    stage_objective_items = []
-    for item in stage_progression_item_table:
-        stage_objective_items.append(item)
-
-        #lookup = [x for x in MissionClearLocations
-        #         if x.stageId == reference_stage and x.alignmentId == reference_alignment][0]
-
-        #for i in range(0, lookup.requirement_count):
-
+    stage_objective_items = stage_progression_item_table
     junk_items = GetJunkItemInfo()
     token_items = GetLevelTokenItems()
     weapon_items = GetWeapons()
@@ -447,6 +440,8 @@ def GetAllItemInfo():
     return (emerald_items, key_items, level_unlock_items, stage_objective_items, junk_items,
             token_items, weapon_items, vehicle_items, level_warp_items, rifle_components,
             weapon_group_items, object_items)
+
+
 
 
 useful_to_count = {
@@ -495,16 +490,22 @@ def ChooseJunkItems(random, junk, options, junk_count):
 
 def AddItemsToStartInventory(world, count):
     base_plando_items = [i["item"] for i in world.multiworld.plando_items[world.player] if i["from_pool"] and i["force"]]
-    valid_removals = [ i for i in world.multiworld.itempool if i.name not in base_plando_items ]
+    valid_removals = [ i for i in world.multiworld.itempool if i.name not in base_plando_items
+                       and i.classification == ItemClassification.progression]
+
+    if len(valid_removals) < count:
+        raise OptionError(f"Unable to remove {count} items from valid list of {len(valid_removals)}")
 
     startings = world.random.sample(valid_removals, k=count)
+    #world.random.seed(0)
+    #startings = valid_removals[0:count]
     for s in startings:
         world.multiworld.itempool.remove(s)
+        logging.info(f"Add {s} to starting inventory")
         world.push_precollected(s)
 
 
 def CountItems(world: World):
-    print("Count items")
     (emerald_items, key_items, level_unlock_items, stage_objective_items_x,
      junk_items, token_items, weapon_items, vehicle_items, warp_items, rifle_components,
      weapon_group_items, object_items) = GetAllItemInfo()
@@ -552,6 +553,7 @@ def CountItems(world: World):
     special_weapon_extras = [w for w in weapon_items if
                              Weapons.WeaponAttributes.SPECIAL in weapon_dict[w.name].attributes and
                              w.name != 'Shadow Rifle' and w.name != 'Weapon:Shadow Rifle']
+
 
     weapon_items = [w for w in weapon_items if
                     w.name != "Weapon:Shadow Rifle" and
@@ -601,13 +603,14 @@ def CountItems(world: World):
     return item_count
 
 
-def GetStageItems(world):
+def GetStageItems(world, stage_objective_items=None):
     override_settings = world.options.percent_overrides
     mw_temp_stage_objective_items = []
 
-    (emerald_items, key_items, level_unlock_items, stage_objective_items,
-     junk_items, token_items, weapon_items, vehicle_items, warp_items, rifle_components,
-     weapon_group_items, object_items) = GetAllItemInfo()
+    if stage_objective_items is None:
+        (emerald_items, key_items, level_unlock_items, stage_objective_items,
+         junk_items, token_items, weapon_items, vehicle_items, warp_items, rifle_components,
+         weapon_group_items, object_items) = GetAllItemInfo()
 
     for item in stage_objective_items:
         if item.stageId not in world.available_levels:
@@ -616,9 +619,15 @@ def GetStageItems(world):
         lookup = [x for x in MissionClearLocations
                   if x.stageId == item.stageId and x.alignmentId == item.alignmentId][0]
 
+        relevant_objective = ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_OBJECTIVE_AVAILABLE,
+                                                  lookup.mission_object_name, world.options)
+
+        # None if returned if relevant objective is disabled (e.g. objective/enemy sanity off)
+        if relevant_objective is None:
+            continue
+
         max_required = ShadowUtils.getMaxRequired(
-            ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_OBJECTIVE_AVAILABLE,
-                                                      lookup.mission_object_name, world.options),
+            relevant_objective,
             lookup.requirement_count, item.stageId, item.alignmentId,
             override_settings)
 
@@ -736,13 +745,9 @@ def GetObjectItems():
 
 
 def PopulateItemPool(world: World):
-    print("Populate item pool")
     (emerald_items, key_items, level_unlock_items, stage_objective_items,
      junk_items, token_items, weapon_items, vehicle_items, warp_items, rifle_components,
      weapon_group_items, object_items) = GetAllItemInfo()
-
-    if not world.options.objective_sanity:
-        stage_objective_items = []
 
     # Don't use level unlocks for stages you start with!
     use_level_unlock_items = [l for l in level_unlock_items if l.stageId not in world.first_regions and
@@ -757,14 +762,17 @@ def PopulateItemPool(world: World):
 
     required_select_unlocks = [ e for e in use_level_unlock_items if e.stageId not in world.available_story_levels ]
     select_stage_count = ceil(len(use_level_unlock_items) * world.options.select_percentage / 100)
-    if len(required_select_unlocks) >= select_stage_count:
-        level_unlock_item_selections = required_select_unlocks
-    else:
-        level_unlock_item_selections = world.random.sample(use_level_unlock_items, k=select_stage_count)
+    level_unlock_item_selections = required_select_unlocks
+
+    if len(required_select_unlocks) < select_stage_count:
+
+        more_level_unlocks = world.random.sample([ u for u in use_level_unlock_items if u not in level_unlock_item_selections],
+                                                 k=select_stage_count-len(level_unlock_item_selections))
+        level_unlock_item_selections.extend(more_level_unlocks)
 
     mw_level_unlock_items = [ShadowTheHedgehogItem(l, world.player) for l in level_unlock_item_selections]
 
-    mw_stage_items = GetStageItems(world)
+    mw_stage_items = GetStageItems(world, stage_objective_items)
 
     #if world.options.exceeding_items_filler == Options.ExceedingItemsFiller.option_always:
     #    downgrade_count = 1000
@@ -779,7 +787,6 @@ def PopulateItemPool(world: World):
     if world.excess_item_count > 0 and len(potential_downgrade) > 0:
         t_size = len(to_remove)
         size = world.excess_item_count - t_size
-        print("EIC", len(potential_downgrade), size)
         size = min(size, len(potential_downgrade))
         new_remove = world.random.sample(potential_downgrade, k=size)
         potential_downgrade = [ p for p in potential_downgrade if p not in new_remove]
@@ -796,10 +803,11 @@ def PopulateItemPool(world: World):
             downgrade.classification = ItemClassification.useful
 
     for remove in to_remove:
+        logging.debug("Remove excess item: %s", remove)
         mw_stage_items.remove(remove)
 
     weapon_dict = Weapons.GetWeaponDict()
-    special_weapon_extras = [w for w in weapon_items if
+    special_weapons_weaponsanity_extras = [copy.copy(w) for w in weapon_items if
                              Weapons.WeaponAttributes.SPECIAL in weapon_dict[w.name].attributes and
                              w.name != 'Shadow Rifle' and w.name != 'Weapon:Shadow Rifle']
 
@@ -807,15 +815,28 @@ def PopulateItemPool(world: World):
                     w.name != "Weapon:Shadow Rifle" and
                     w.name != "Shadow Rifle"]
 
-    weapon_items.extend(special_weapon_extras)
+    weapon_items.extend(special_weapons_weaponsanity_extras)
 
     available_weapons = [w for w in weapon_items if w.name in world.available_weapons]
+    for w in available_weapons:
+        # If changed already, then ignore
+        if w.classification == ItemClassification.progression:
+            weapon_classification = Weapons.GetWeaponClassification(world, weapon_dict[w.name])
+            if weapon_classification is not None:
+                w.classification = weapon_classification
+
     HandleAllWeaponsGroups(world.options, available_weapons, weapon_group_items)
 
     mw_weapon_items = [ShadowTheHedgehogItem(w, world.player) for w in available_weapons]
 
-    mw_weapon_special_only = [ShadowTheHedgehogItem(w, world.player) for w in special_weapon_extras]
-    mw_weapon_special_only_dupes = [ShadowTheHedgehogItem(w, world.player) for w in special_weapon_extras]
+    mw_weapon_special_only = [ShadowTheHedgehogItem(w, world.player) for w in special_weapons_weaponsanity_extras]
+
+    # Not sure how much this helps
+    #for weapon in special_weapons_weaponsanity_extras:
+    #    print("Change weapon to Useful", weapon.name)
+    #    weapon.classification = ItemClassification.useful
+
+    mw_weapon_special_only_dupes = [ShadowTheHedgehogItem(w, world.player) for w in special_weapons_weaponsanity_extras]
     mw_weapon_special_only.extend(mw_weapon_special_only_dupes)
 
     shadow_rifle = GetShadowRifle()
@@ -827,18 +848,6 @@ def PopulateItemPool(world: World):
         mw_weapon_items.extend([ShadowTheHedgehogItem(w, world.player) for w in rifle_components])
 
     mw_vehicle_items = [ShadowTheHedgehogItem(w, world.player) for w in vehicle_items]
-
-    if world.options.weapon_sanity_unlock and \
-            world.options.weapon_sanity_hold != Options.WeaponsanityHold.option_unlocked:
-        for weapon in mw_weapon_items:
-
-            matching_w = [w for w in Weapons.WEAPON_INFO if w.name == weapon.name]
-            if len(matching_w) == 0:
-                continue
-
-            if len(matching_w[0].attributes) == 0:
-                weapon.classification = ItemClassification.filler
-                #print(weapon.name, "is now filler")
 
     item_count = increment_item_count(0, mw_level_unlock_items)
     item_count = increment_item_count(item_count, mw_stage_items)
@@ -916,14 +925,31 @@ def PopulateItemPool(world: World):
     if world.options.object_unlocks:
         world.multiworld.itempool += mw_object_items
 
+
+    # Add checks here for checks locked by The Last Way when this is the final part
+    # If required, replace all TLW checks with junk items in the pool, start inventory will get amended
+
     junk_count = (location_count - item_count - len(mw_useful_items))
-    print("Junk count is:", junk_count, location_count, item_count, len(mw_useful_items))
+    reverse_count = 0
+
+    if junk_count < 0:
+        reverse_count = -junk_count
+        junk_count = 0
+
+    if not world.options.include_last_way_shuffle:
+        tlw_locations = count_last_way_locations(world)
+        if junk_count < tlw_locations:
+            reverse_count += tlw_locations
+            junk_count += tlw_locations
+
+    logging.info("Junk counts are: junk:%d, reverse:%d", junk_count, reverse_count)
     if junk_count > 0:
         mw_junk_items = [ShadowTheHedgehogItem(i, world.player) for i in
                          ChooseJunkItems(world.random, junk_items, world.options, junk_count)]
         world.multiworld.itempool += mw_junk_items
-    elif junk_count < 0:
-        AddItemsToStartInventory(world, -junk_count)
+
+    if reverse_count > 0:
+        AddItemsToStartInventory(world, reverse_count)
 
 def get_item_groups():
     (emerald_items, key_items, level_unlock_items, stage_objective_items,

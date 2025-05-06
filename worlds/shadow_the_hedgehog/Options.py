@@ -537,9 +537,9 @@ class ShadowMod(Choice):
         Minor mods will not affect memory and are likely to be fine.
     """
     display_name = "Shadow Mod"
-    option_vanilla = "Vanilla"
-    option_reloaded = "Reloaded"
-    option_sx = "SX"
+    option_vanilla = 0
+    option_reloaded = 1
+    option_sx = 2
     default = option_vanilla
 
 

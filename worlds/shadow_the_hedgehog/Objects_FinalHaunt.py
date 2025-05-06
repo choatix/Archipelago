@@ -15,7 +15,7 @@ DESIRABLE_OBJECTS_FINAL_HAUNT = [
     SETObject(ObjectType.ROCKET, Levels.STAGE_FINAL_HAUNT, 20, "Rocket"),
 
     SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_FINAL_HAUNT, 166, "Special Weapons Box 2",
-              region=REGION_INDICIES.FINAL_HAUNT_VACUUM),
+              region=REGION_INDICIES.FINAL_HAUNT_ROCKET_NORMAL),
     SETObject(ObjectType.BLACK_VOLT, Levels.STAGE_FINAL_HAUNT, 455, "Black Volt Enemy 2",
               vehicle=ObjectType.ObjectTypeVehicle.BLACK_VOLT,
               region=REGION_INDICIES.FINAL_HAUNT_HARD_VACUUM_OR_BLACK_VOLT),
@@ -26,9 +26,9 @@ DESIRABLE_OBJECTS_FINAL_HAUNT = [
     SETObject(ObjectType.VEHICLE, Levels.STAGE_FINAL_HAUNT, 219, "Black Turret 3 (Dark)",
               vehicle=ObjectType.ObjectTypeVehicle.BLACK_TURRET),
 
-    SETObject(ObjectType.KEY_DOOR, Levels.STAGE_FINAL_HAUNT, 168, "Secret Door 1",
+    SETObject(ObjectType.KEY_DOOR, Levels.STAGE_FINAL_HAUNT, 5, "Secret Door 1",
               region=REGION_INDICIES.FINAL_HAUNT_KEY_DOOR),
-    SETObject(ObjectType.KEY_DOOR, Levels.STAGE_FINAL_HAUNT, 5, "Secret Door 2",
+    SETObject(ObjectType.KEY_DOOR, Levels.STAGE_FINAL_HAUNT, 168, "Secret Door 2",
               region=REGION_INDICIES.FINAL_HAUNT_KEY_DOOR),
     SETObject(ObjectType.VEHICLE, Levels.STAGE_FINAL_HAUNT, 173, "Black Turret 4 (Secret)",
               vehicle=ObjectType.ObjectTypeVehicle.BLACK_TURRET,

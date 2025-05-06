@@ -1,5 +1,5 @@
 #from __future__ import annotations
-
+import copy
 from dataclasses import dataclass
 from math import floor
 from typing import Dict, Optional
@@ -11,13 +11,13 @@ from . import Utils as ShadowUtils
 from .ObjectTypes import ObjectType
 
 from .Objects import GetEnemyDistributionInStageByBaseType
+from .Weapons import WeaponAttributes
 
 
 class ShadowTheHedgehogLocation(Location):
     game: str = "Shadow The Hedgehog"
 
     def __init__(self, player, location_name, location_id, region=None):
-        print("Create loc", location_name)
         super().__init__(player, location_name, location_id, region)
 
 LOCATION_TYPE_MISSION_CLEAR = 1
@@ -232,12 +232,19 @@ MissionClearLocations = [
     MissionClearLocation(STAGE_WESTOPOLIS, MISSION_ALIGNMENT_NEUTRAL, None, None),
     MissionClearLocation(STAGE_WESTOPOLIS, MISSION_ALIGNMENT_HERO, 45, "Alien"),
 
+    MissionClearLocation(STAGE_DIGITAL_CIRCUIT, MISSION_ALIGNMENT_DARK, None, None)
+    .setDistribution(
+        {
+            REGION_INDICIES.DIGITAL_CIRCUIT_DARK_WARP_HOLE: 1
+        }
+    ),
     MissionClearLocation(STAGE_DIGITAL_CIRCUIT, MISSION_ALIGNMENT_HERO, None, None),
     #MissionClearLocation(STAGE_DIGITAL_CIRCUIT, MISSION_ALIGNMENT_DARK, 1, "Core"),
-    MissionClearLocation(STAGE_DIGITAL_CIRCUIT, MISSION_ALIGNMENT_DARK, None, None)
-        .setDistribution(
+
+    MissionClearLocation(STAGE_GLYPHIC_CANYON, MISSION_ALIGNMENT_DARK, 5, "Temple").setDistribution(
         {
-           REGION_INDICIES.DIGITAL_CIRCUIT_DARK_WARP_HOLE : 1
+            0: 1,
+            REGION_INDICIES.GLYPHIC_CANYON_PULLEY: 4
         }
     ),
     MissionClearLocation(STAGE_GLYPHIC_CANYON, MISSION_ALIGNMENT_NEUTRAL, None, None).setDistribution(
@@ -246,12 +253,7 @@ MissionClearLocations = [
         }
         ),
     MissionClearLocation(STAGE_GLYPHIC_CANYON, MISSION_ALIGNMENT_HERO, 60, "Alien"),
-    MissionClearLocation(STAGE_GLYPHIC_CANYON, MISSION_ALIGNMENT_DARK, 5, "Temple").setDistribution(
-        {
-            0: 1,
-            REGION_INDICIES.GLYPHIC_CANYON_PULLEY: 4
-        }
-        ),
+
 
     MissionClearLocation(STAGE_LETHAL_HIGHWAY, MISSION_ALIGNMENT_DARK, None, None).setDistribution(
         {
@@ -316,7 +318,7 @@ MissionClearLocations = [
     MissionClearLocation(STAGE_CIRCUS_PARK, MISSION_ALIGNMENT_HERO, None, None)
         .setDistribution(
         {
-            REGION_INDICIES.CIRCUS_PARK_PULLEY: 1
+            REGION_INDICIES.CIRCUS_PARK_HERO_GOAL: 1
         }
     ),
 
@@ -1072,7 +1074,8 @@ KeyLocations = \
     KeyLocation(STAGE_FINAL_HAUNT)
         .setDistribution(
         {
-            0: [1,2],
+            0: [1],
+            REGION_INDICIES.FINAL_HAUNT_VACUUM: [2],
             REGION_INDICIES.FINAL_HAUNT_ROCKET_NORMAL: [3],
             REGION_INDICIES.FINAL_HAUNT_BLACK_VOLT_2: [4],
             REGION_INDICIES.FINAL_HAUNT_LIGHT_DASH: [5]
@@ -1101,6 +1104,11 @@ def GetStageEnemysanityInformation(stageId):
 
 def GetAlignmentsForStage(stageId):
     missions = [ m.alignmentId for m in MissionClearLocations if m.stageId == stageId]
+
+    missions_copy = copy.deepcopy(missions)
+    missions.sort()
+    assert missions == missions_copy
+
     return missions
 
 def GetLocationDict():
@@ -1246,7 +1254,6 @@ def GetAllLocationInfo():
                                stageId=enemy.stageId, alignmentId=enemy.enemyClass,
                                 count=j, total=enemy.total_count, other=None)
             enemysanity_locations.append(info)
-
 
     progression_locations = [LocationInfo(LOCATION_TYPE_OTHER, LOCATION_ID_PLUS+1000, Levels.DevilDoom_Name,
                                           stageId=None, alignmentId=None,total=None, count=None, other=None)]
@@ -1576,13 +1583,42 @@ def create_locations(world, regions: Dict[str, Region]):
 
     SetRegionEvents(world, world.player, menu_region)
 
-    end_region = regions["DevilDoom"]
+    end_region = regions[Regions.stage_id_to_region(Levels.BOSS_DEVIL_DOOM)]
     devil_doom_location = ShadowTheHedgehogLocation(world.player, end_location[0].name, end_location[0].locationId, end_region)
     end_region.locations.append(devil_doom_location)
 
 def increment_location_count(count, plus, t):
-    #print(f"Count={count} + {t} - {plus} = {count+plus}")
     return count + plus
+
+def count_last_way_locations(world):
+    backup_levels = world.available_levels
+    backup_weapons = world.available_weapons
+    restore_characters = world.options.character_sanity
+
+    world.available_levels = [Levels.STAGE_THE_LAST_WAY]
+
+    lw_weapons = []
+
+    for weapon in Weapons.WEAPON_INFO:
+        if WeaponAttributes.SPECIAL in weapon.attributes:
+            continue
+        levels_in = weapon.available_stages
+        levels_in = [ (l[0] if type(l) is tuple else l) for l in levels_in  ]
+        levels_left = [ l for l in levels_in if l in world.available_levels and l not in
+                        [ b for b in backup_levels if b not in world.available_levels] ]
+        if len(levels_left) == 0:
+            continue
+        lw_weapons.append(weapon.name)
+
+    world.available_weapons = lw_weapons
+    world.options.character_sanity = False
+
+    result = count_locations(world)
+    world.available_levels = backup_levels
+    world.available_weapons = backup_weapons
+    world.options.character_sanity = restore_characters
+
+    return result
 
 def count_locations(world):
     count = 0
@@ -1770,11 +1806,11 @@ def getLocationGroups():
         "Dark Mission Clears": [c.name for c in clear_locations if c.alignmentId == Levels.MISSION_ALIGNMENT_DARK],
         "Neutral Mission Clears": [c.name for c in clear_locations if
                                    c.alignmentId == Levels.MISSION_ALIGNMENT_NEUTRAL],
-        "Objective Mission Clears": [c.name for c in clear_locations if c.count is not None],
-        "Objective Hero Mission Clears": [c.name for c in clear_locations if
-                                          c.count is not None and c.alignmentId == Levels.MISSION_ALIGNMENT_HERO],
-        "Objective Dark Mission Clears": [c.name for c in clear_locations if
-                                          c.count is not None and c.alignmentId == Levels.MISSION_ALIGNMENT_DARK],
+        #"Objective Mission Clears": [c.name for c in clear_locations if c.count is not None],
+        #"Objective Hero Mission Clears": [c.name for c in clear_locations if
+        #                                  c.count is not None and c.alignmentId == Levels.MISSION_ALIGNMENT_HERO],
+        #"Objective Dark Mission Clears": [c.name for c in clear_locations if
+        #                                  c.count is not None and c.alignmentId == Levels.MISSION_ALIGNMENT_DARK],
         "Mission Objectives": [c.name for c in mission_locations],
         "Enemies": [c.name for c in enemysanity_locations],
         "GUN Enemies": [c.name for c in enemysanity_locations if c.alignmentId == ENEMY_CLASS_GUN],
@@ -1816,6 +1852,7 @@ def getLocationGroups():
     return groups
 
 
+
 def SetStoryClearEvents(world, player, menu_region):
     story_clear_events = []
     for story in world.shuffled_story_mode:
@@ -1840,14 +1877,12 @@ def SetStoryClearEvents(world, player, menu_region):
     for w in [l for l in world.shuffled_story_mode if l.boss is not None
                                                       and l.boss in world.available_story_levels
               and l.start_stage_id in world.available_levels
-              and (l.end_stage_id is None or l.end_stage_id in world.available_levels)]:
+              and (l.end_stage_id is not None and l.end_stage_id in world.available_levels)]:
         view_name = Names.GetBossClearEventName(w.boss, w.start_stage_id, w.alignment_id)
         story_clear_event = ShadowTheHedgehogLocation(player, view_name, None, menu_region)
         story_clear_event.show_in_spoiler = True
         story_clear_events.append(story_clear_event)
 
-
-    #print("SSS", story_clear_events)
     menu_region.locations.extend(story_clear_events)
     return story_clear_events
 

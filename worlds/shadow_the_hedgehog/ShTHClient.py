@@ -1476,7 +1476,7 @@ class ShTHContext(CommonContext):
                 for item in args["items"]:
                     self.items_to_handle.append((item, self.last_rcvd_index))
                     self.last_rcvd_index += 1
-                    print("lrcvdi", self.last_rcvd_index, item)
+                    #print("lrcvdi", self.last_rcvd_index, item)
             self.items_to_handle.sort(key=lambda v: v[1])
         elif cmd == "Retrieved":
             pass
@@ -2399,109 +2399,110 @@ async def check_level_status(ctx):
             check = [l for l in HandleLocationAutoclears() if l in extra_messages]
             ctx.level_state["temp"] = True
 
+    current_level_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.ADDRESS_CURRENT_LEVEL, 2)
+    current_level = int.from_bytes(current_level_bytes, byteorder='big')
 
-    if True:
-        current_level_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.ADDRESS_CURRENT_LEVEL, 2)
-        current_level = int.from_bytes(current_level_bytes, byteorder='big')
+    if current_level == 0:
 
-        if current_level == 0:
+        # Reset the level state when not in a level
+        if (len(ctx.level_state) != 0 or force_retry or
+                ("temp" in ctx.level_state and ctx.level_state["temp"])):
+            ctx.level_state = {}
+            ctx.level_keys = []
+            ctx.key_restore_complete = False
+            if ctx.auto_clear_missions:
+                new_messages = complete_completable_levels(ctx)
+            else:
+                new_messages = []
 
-            # Reset the level state when not in a level
-            if (len(ctx.level_state) != 0 or force_retry or
-                    ("temp" in ctx.level_state and ctx.level_state["temp"])):
-                ctx.level_state = {}
-                ctx.level_keys = []
-                ctx.key_restore_complete = False
-                if ctx.auto_clear_missions:
-                    new_messages = complete_completable_levels(ctx)
-                else:
-                    new_messages = []
+            #logger.debug("Detected screen %d", current_screen)
 
-                #logger.debug("Detected screen %d", current_screen)
+            if len(new_messages) > 0:
+                message = [{"cmd": 'LocationChecks', "locations": new_messages}]
+                await ctx.send_msgs(message)
+                check = [ l for l in HandleLocationAutoclears() if l in new_messages ]
+                ctx.level_state["temp"] = True
 
-                if len(new_messages) > 0:
-                    message = [{"cmd": 'LocationChecks', "locations": new_messages}]
-                    await ctx.send_msgs(message)
-                    check = [ l for l in HandleLocationAutoclears() if l in new_messages ]
-                    ctx.level_state["temp"] = True
+        return None
+    else:
 
+        level_status_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.ADDRESS_LEVEL_STATUS, 4)
+        level_status_value = int.from_bytes(level_status_bytes, byteorder='big')
+
+        if level_status_value in [LevelStatusOptions.NotInLevel,
+                                  LevelStatusOptions.Loading,
+                                  LevelStatusOptions.Saving,
+                                  LevelStatusOptions.Other, LevelStatusOptions.Restarting]:
+
+            ctx.level_status = None
+            ctx.junk_delay = 0
+            return current_level
+
+        ctx.level_status = level_status_value
+
+        selected_level_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.ADDRESS_SELECT_LEVEL, 2)
+        selected_level = int.from_bytes(selected_level_bytes, byteorder='big')
+
+        in_story_mode = False
+        if selected_level != current_level and ctx.last_level != current_level:
+            in_story_mode = True
+
+        # If select mode only, show error when on assumed story mode
+        if not ctx.story_mode_available and in_story_mode and current_level not in Levels.LAST_STORY_STAGES:
+            ctx.last_level = current_level
+            logger.error("Currently in story mode, your options require playing in Select Mode.")
             return None
-        else:
 
-            level_status_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.ADDRESS_LEVEL_STATUS, 4)
-            level_status_value = int.from_bytes(level_status_bytes, byteorder='big')
+        if (ctx.last_level is None or current_level != ctx.last_level) and current_level in Levels.LEVEL_ID_TO_LEVEL:
+            if ctx.info_logging and ctx.boss_delay == 0:
+                logger.info("Now in level: %s", Levels.LEVEL_ID_TO_LEVEL[current_level])
+            ctx.last_level = current_level
 
-            if level_status_value in [LevelStatusOptions.NotInLevel,
-                                      LevelStatusOptions.Loading, LevelStatusOptions.Saving,
-                                      LevelStatusOptions.Other, LevelStatusOptions.Restarting]:
-                ctx.junk_delay = 0
-                return None
+            if in_story_mode:
+                warp_location = [ w for w in warp_locations if w.stageId == current_level]
+                if len(warp_location) == 1 and warp_location[0].locationId not in ctx.checked_locations:
+                    messages = [warp_location[0].locationId]
+                    message = [{"cmd": 'LocationChecks', "locations": messages}]
+                    await ctx.send_msgs(message)
 
-            ctx.level_status = level_status_value
+                if current_level == BOSS_DEVIL_DOOM and not IsEndGameEnabled(ctx):
 
-            selected_level_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.ADDRESS_SELECT_LEVEL, 2)
-            selected_level = int.from_bytes(selected_level_bytes, byteorder='big')
-
-            in_story_mode = False
-            if selected_level != current_level and ctx.last_level != current_level:
-                in_story_mode = True
-
-            # If select mode only, show error when on assumed story mode
-            if not ctx.story_mode_available and in_story_mode:
-                ctx.last_level = current_level
-                logger.error("Currently in story mode, your options require playing in Select Mode.")
-                return None
-
-            if (ctx.last_level is None or current_level != ctx.last_level) and current_level in Levels.LEVEL_ID_TO_LEVEL:
-                if ctx.info_logging and ctx.boss_delay == 0:
-                    logger.info("Now in level: %s", Levels.LEVEL_ID_TO_LEVEL[current_level])
-                ctx.last_level = current_level
-
-                if in_story_mode:
-                    warp_location = [ w for w in warp_locations if w.stageId == current_level]
-                    if len(warp_location) == 1 and warp_location[0].locationId not in ctx.checked_locations:
-                        messages = [warp_location[0].locationId]
-                        message = [{"cmd": 'LocationChecks', "locations": messages}]
-                        await ctx.send_msgs(message)
-
-                    if current_level == BOSS_DEVIL_DOOM and not IsEndGameEnabled(ctx):
-
-                        if level_status_value != LevelStatusOptions.Active:
-                            ctx.boss_delay = 1
-                            ctx.last_level = None
-                            return None
-
-                        current_rings_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.RINGS_ADDRESS, 4)
-                        current_rings = int.from_bytes(current_rings_bytes, byteorder="big")
-
-                        if ctx.boss_delay == 0:
-                            ctx.last_level = None
-                            if 0 < current_rings < 50:
-                                logger.info("You do not have the required items to fight the final boss")
-                                logger.info("Set rings to 0")
-                                new_rings = 0
-                                new_bytes = new_rings.to_bytes(4, byteorder='big')
-                                writeBytes(GAME_ADDRESSES.RINGS_ADDRESS, new_bytes)
-                                ctx.boss_delay = 3
-                        else:
-                            ctx.boss_delay -= 1
-                            ctx.last_level = None
-
+                    if level_status_value != LevelStatusOptions.Active:
+                        ctx.boss_delay = 1
+                        ctx.last_level = None
                         return None
 
-                this_stage_unlock = [unlock for unlock in ctx.handled if unlock[0].item in info and \
-                 info[unlock[0].item].stageId == current_level and info[unlock[0].item].type == "level_unlock"]
+                    current_rings_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.RINGS_ADDRESS, 4)
+                    current_rings = int.from_bytes(current_rings_bytes, byteorder="big")
 
-                if len(this_stage_unlock) == 0:
-                    #message = [{"cmd": 'LocationChecks', "locations": messages}]
-                    #await ctx.send_msgs(message)
-                    # Give the player the stage unlock (for story convinence)
-                    pass
+                    if ctx.boss_delay == 0:
+                        ctx.last_level = None
+                        if 0 < current_rings < 50:
+                            logger.info("You do not have the required items to fight the final boss")
+                            logger.info("Set rings to 0")
+                            new_rings = 0
+                            new_bytes = new_rings.to_bytes(4, byteorder='big')
+                            writeBytes(GAME_ADDRESSES.RINGS_ADDRESS, new_bytes)
+                            ctx.boss_delay = 3
+                    else:
+                        ctx.boss_delay -= 1
+                        ctx.last_level = None
+
+                    return None
+
+            this_stage_unlock = [unlock for unlock in ctx.handled if unlock[0].item in info and \
+             info[unlock[0].item].stageId == current_level and info[unlock[0].item].type == "level_unlock"]
+
+            if len(this_stage_unlock) == 0:
+                #message = [{"cmd": 'LocationChecks', "locations": messages}]
+                #await ctx.send_msgs(message)
+                # Give the player the stage unlock (for story convinence)
+                pass
 
 
-            # Check if level has loaded
+        # Check if level has loaded
 
-            return current_level
+        return current_level
 
 
 COMPLETE_FLAG_OFF = 0
@@ -2727,6 +2728,7 @@ async def check_weapons(ctx, current_level):
             elif current_level in weapons_by_stage and current_weapon_id not in weapons_by_stage[current_level]\
                     and ctx.last_weapon != current_weapon_id and \
                     not Weapons.WeaponAttributes.SPECIAL in weapon_dict_by_id[current_weapon_id].attributes:
+                # TODO: Add handle here to inform that weapon is achievable if shadow box
                 logger.error("Unknown weapon (%s) for this stage. Please report this.", weapon_dict_by_id[current_weapon_id].name)
                 await disable_weapon(ctx)
                 current_weapon_id = None
@@ -3721,12 +3723,12 @@ async def update_level_behaviour(ctx, current_level, death):
         ctx.level_state["dark_completable"] = COMPLETE_FLAG_OFF
         ctx.level_state["hero_progress"] = 0
         ctx.level_state["dark_progress"] = 0
-        ctx.level_state["characters_set"] = False
 
         ctx.level_state["alien_progress"] = 0
         ctx.level_state["egg_progress"] = 0
         ctx.level_state["gun_progress"] = 0
         ctx.level_state["key_index"] = 0
+        ctx.level_state["characters_set"] = False
 
         ctx.checkpoint_snapshots = []
 
@@ -4211,34 +4213,6 @@ async def update_level_behaviour(ctx, current_level, death):
             elif ctx.debug_logging:
                 logger.error("Egg Progress: no new checks %d", ctx.level_state["egg_progress"])
 
-    if ctx.character_sanity:
-        for character in GAME_ADDRESSES.CharacterAddresses:
-            if character.name in ctx.characters_met:
-                continue
-            characterSet_bytes = dolphin_memory_engine.read_bytes(character.met_address, 1)
-            characterSet = int.from_bytes(characterSet_bytes, byteorder='big') == 1
-            if characterSet:
-                charLocation = [ char.locationId for char in charactersanity_locations if char.other == character.name ]
-                if len(charLocation) > 0:
-                    if charLocation[0] not in ctx.checked_locations:
-                        messages.append(charLocation[0])
-                        ctx.characters_met.append(character.name)
-    else:
-        if len(ctx.characters_met) == 0:
-            ctx.characters_met.extend(
-                [c.name for c in GAME_ADDRESSES.CharacterAddresses]
-            )
-
-    if "characters_set" in ctx.level_state and not ctx.level_state["characters_set"]:
-        for character in ctx.characters_met:
-            relevantCharData = [c for c in GAME_ADDRESSES.CharacterAddresses if c.name == character]
-            if len(relevantCharData) != 0:
-                relevantChar = relevantCharData[0]
-                new_value = 1
-                new_bytes = new_value.to_bytes(1, byteorder='big')
-                writeBytes(relevantChar.met_address, new_bytes)
-
-        ctx.level_state["characters_set"] = True
 
     # Check checkpoint flags and save the state when a new one is activated
     checkpoint_data_for_stage = [c for c in Locations.CheckpointLocations if c.stageId == current_level]
@@ -4388,6 +4362,83 @@ def resetGameState(ctx):
         ctx.initialised = False
         ctx.select_initialised = False
 
+
+async def check_charactersanity(ctx, level):
+    if level is None:
+        #print("Nothing to do")
+        return
+
+    messages = []
+
+    (mission_clear_locations, mission_locations, end_location,
+     enemysanity_locations, checkpointsanity_locations,
+     charactersanity_locations, token_locations, keysanity_locations,
+     weaponsanity_locations, boss_locations, warp_locations,
+     object_locations) = Locations.GetAllLocationInfo()
+
+    new_met_characters = []
+
+    if "characters_set" not in ctx.level_state:
+        #print("Loading -- unset")
+        check = True
+        set_state = False
+    elif ctx.level_state["characters_set"]:
+        # Check if both characters in level found, if no, keep check true
+        set_state = True
+        check = True
+    else:
+        #print("Set and is false, unloaded")
+        check = True
+        set_state = True
+
+    if ctx.character_sanity:
+        for character in GAME_ADDRESSES.CharacterAddresses:
+            if character.name in ctx.characters_met:
+                continue
+            characterSet_bytes = dolphin_memory_engine.read_bytes(character.met_address, 1)
+            characterSet = int.from_bytes(characterSet_bytes, byteorder='big') == 1
+            if characterSet:
+                charLocation = [char.locationId for char in charactersanity_locations if char.other == character.name]
+                if len(charLocation) > 0:
+                    if charLocation[0] not in ctx.checked_locations:
+                        messages.append(charLocation[0])
+                        new_met_characters.append(character.name)
+    else:
+        if len(ctx.characters_met) == 0:
+            new_met_characters.extend(
+                [c.name for c in GAME_ADDRESSES.CharacterAddresses]
+            )
+
+    if check:
+        for character in ctx.characters_met:
+            relevantCharData = [c for c in GAME_ADDRESSES.CharacterAddresses if c.name == character]
+            if len(relevantCharData) != 0:
+                relevantChar = relevantCharData[0]
+                char_seen = dolphin_memory_engine.read_bytes(relevantChar.met_address, 1)
+                char_seen_value = int.from_bytes(char_seen, byteorder='big')
+                if char_seen_value == 0:
+                    print("Force character seen", character)
+                    new_value = 1
+                    new_bytes = new_value.to_bytes(1, byteorder='big')
+                    writeBytes(relevantChar.met_address, new_bytes)
+
+        if set_state:
+            #print("Set to true")
+            ctx.level_state["characters_set"] = True
+
+    if set_state and len(new_met_characters) > 0:
+        #print("Set met charatcers")
+        ctx.characters_met.extend(new_met_characters)
+
+    if len(messages) > 0 and set_state:
+        #print("Send messages")
+        unsent_messages = [message for message in messages if message not in ctx.checked_locations]
+        # ctx.locations_checked = messages
+        message = [{"cmd": 'LocationChecks', "locations": unsent_messages}]
+        await ctx.send_msgs(message)
+        # ctx.locations_checked.extend(messages)
+
+
 async def dolphin_sync_task(ctx: ShTHContext):
     logger.info("Starting Dolphin connector. Use /dolphin for status information.")
     while not ctx.exit_event.is_set():
@@ -4396,8 +4447,6 @@ async def dolphin_sync_task(ctx: ShTHContext):
             if ctx.slot is not None:
                 pass
             else:
-                #if not ctx.auth:
-                #    # ctx.auth = read_string(SLOT_NAME_ADDR, 0x40)
                 if ctx.awaiting_rom:
                     await ctx.server_auth()
 
@@ -4405,7 +4454,6 @@ async def dolphin_sync_task(ctx: ShTHContext):
                 if ctx.invalid_rom:
                     await ctx.disconnect()
                     await asyncio.sleep(5)
-
 
                 elif ctx.awaiting_server:
                     await asyncio.sleep(1)
@@ -4422,20 +4470,18 @@ async def dolphin_sync_task(ctx: ShTHContext):
 
                     continue
 
-                if True:
-                    if not ctx.initialised:
-                        ctx.initialised = True
-                    check_story(ctx)
-                    death = await check_death(ctx)
-                    if death is None:
-                        continue
-                    level = await check_level_status(ctx)
-                    check_cheats()
-                    if level is not None:
-                        await update_level_behaviour(ctx,level, death)
-                    else:
-                        ShowSETChanges(None)
+                if not ctx.initialised:
+                    ctx.initialised = True
+                check_story(ctx)
 
+                death = await check_death(ctx)
+                if death is None:
+                    continue
+                level = await check_level_status(ctx)
+                check_cheats()
+                await check_charactersanity(ctx, level)
+                if level is not None and ctx.level_status is not None:
+                    await update_level_behaviour(ctx,level, death)
                     await handle_ring_link(ctx, level, death)
 
                 await asyncio.sleep(0.1)

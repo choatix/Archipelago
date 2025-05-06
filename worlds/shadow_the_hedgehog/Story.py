@@ -301,14 +301,16 @@ def ChaosShuffle(world):
 
     last_way_active = Levels.LEVEL_ID_TO_LEVEL[Levels.STAGE_THE_LAST_WAY] not in world.options.excluded_stages
 
+    if len(stages_to_assign) == 0:
+        raise OptionError("No stages to assign!")
+
     if include_last_way:
         if last_way_active:
             stages_to_assign.append(Levels.STAGE_THE_LAST_WAY)
 
         final_bosses.append(Levels.BOSS_DEVIL_DOOM)
 
-    if len(stages_to_assign) == 0:
-        raise OptionError("No stages to assign!")
+
 
     world.random.shuffle(stages_to_assign)
 
@@ -341,6 +343,8 @@ def ChaosShuffle(world):
     steps_to_randomise.insert(0, PathInfo(None, None, None, []))
 
     SafeStartingStages = Locations.GetStagesWithNoRequirements(world)
+    LegalFirstStages = list(set([ s.start_stage_id for s in steps_to_randomise if s.start_stage_id is not None and
+                                  s.start_stage_id not in Levels.LAST_STORY_STAGES]))
 
     new_steps = []
     stage_nodes = []
@@ -399,7 +403,8 @@ def ChaosShuffle(world):
 
             if step.start_stage_id is None:
 
-                plando_start_stages = [ x for x in world.options.plando_starting_stages.value if x in world.available_levels ]
+                plando_start_stages = [ x for x in world.options.plando_starting_stages.value
+                                        if x not in world.options.excluded_stages ]
 
                 if len(plando_start_stages) > 0:
                     rev_level_map = {v: k for k, v in Levels.LEVEL_ID_TO_LEVEL.items()}
@@ -419,8 +424,9 @@ def ChaosShuffle(world):
                         force_path[0] = first_stage
 
                 else:
-                    step.end_stage_id = stages_to_assign.pop()
-                    first_stage = step.end_stage_id
+                    first_stage = world.random.choice(LegalFirstStages)
+                    stages_to_assign.remove(first_stage)
+                    step.end_stage_id = first_stage
                     if force_path is not None and force_path[0] == 0:
                         force_path[0] = first_stage
 

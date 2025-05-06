@@ -72,7 +72,11 @@ def handle_path_rules(options, player, additional_level_region, path_type):
             logic_level == Options.LogicLevel.option_hard:
         return rule
 
-    if region_restriction == REGION_RESTRICTION_TYPES.ShootOrTurret:
+    if additional_level_region.restrictionType == REGION_RESTRICTION_TYPES.KeyDoor:
+        rule = GetKeyRule(additional_level_region.stageId, player)
+        return rule
+
+    elif region_restriction == REGION_RESTRICTION_TYPES.ShootOrTurret:
         if options.weapon_sanity_unlock and options.vehicle_logic:
             rule_weapon = Weapons.GetRuleByWeaponRequirement(player, Weapons.WeaponAttributes.LONG_RANGE,
                                                       additional_level_region.stageId,
@@ -110,9 +114,9 @@ def handle_path_rules(options, player, additional_level_region, path_type):
             (not bombs_available):
             rule = weapon_rule
         elif bombs_available and weapon_available and options.weapon_sanity_unlock and \
-            options.object_units:
+            options.object_unlocks and options.object_units:
             rule = lambda state, wr=weapon_rule, br=bomb_rule: wr(state) or br(state)
-        elif not weapon_available and options.object_units:
+        elif not weapon_available and options.object_unlocks and options.object_units:
             rule = bomb_rule
 
     elif region_restriction == REGION_RESTRICTION_TYPES.Heal:
@@ -134,9 +138,9 @@ def handle_path_rules(options, player, additional_level_region, path_type):
                 (not units_available):
             rule = weapon_rule
         elif units_available and weapon_available and \
-                options.object_units:
+                options.object_unlocks and options.object_units:
             rule = lambda state, wr=weapon_rule, ur=unit_rule: wr(state) or ur(state)
-        elif not weapon_available and options.object_units:
+        elif not weapon_available and options.object_unlocks and options.object_units:
             rule = unit_rule
 
     elif region_restriction == REGION_RESTRICTION_TYPES.GoldBeetle:
@@ -151,6 +155,26 @@ def handle_path_rules(options, player, additional_level_region, path_type):
         if region_restriction == REGION_RESTRICTION_TYPES.Torch:
             rule = Weapons.GetRuleByWeaponRequirement(player, Weapons.WeaponAttributes.TORCH,
                                                       additional_level_region.stageId, additional_level_region.fromRegions)
+
+        elif region_restriction == REGION_RESTRICTION_TYPES.VacuumOrShot:
+            ruleA = Weapons.GetRuleByWeaponRequirement(player, Weapons.WeaponAttributes.LONG_RANGE,
+                                                      additional_level_region.stageId,
+                                                      additional_level_region.fromRegions)
+
+            ruleB = Weapons.GetRuleByWeaponRequirement(player, Weapons.WeaponAttributes.VACUUM,
+                                                      additional_level_region.stageId,
+                                                      additional_level_region.fromRegions)
+
+            if ruleA is None and ruleB is None:
+                raise Exception("Unhandled issue with VacuumOrShot region")
+
+            elif ruleA is None:
+                rule = ruleB
+
+            elif ruleB is None:
+                rule = ruleA
+            else:
+                rule = lambda state: ruleA(state) or ruleB(state)
 
         elif region_restriction == REGION_RESTRICTION_TYPES.LongRangeGun:
             rule = Weapons.GetRuleByWeaponRequirement(player, Weapons.WeaponAttributes.LONG_RANGE,
@@ -170,11 +194,17 @@ def handle_path_rules(options, player, additional_level_region, path_type):
         else:
             print("Unhandled restriction",region_restriction, additional_level_region )
 
+    elif options.vehicle_logic and additional_level_region.restrictionType == REGION_RESTRICTION_TYPES.Car:
+        # If used anywhere else, need to change to check accessibility
+        ruleCar = Vehicle.GetRuleByVehicleRequirement(player, "Standard Car")
+        ruleConv = Vehicle.GetRuleByVehicleRequirement(player, "Convertible")
+        rule = lambda state, r_car=ruleCar, r_conv=ruleConv: r_car(state) or r_conv(state)
+
     elif options.vehicle_logic and Levels.IsVeichleSanityRestriction(additional_level_region.restrictionType):
         if region_restriction == REGION_RESTRICTION_TYPES.BlackArmsTurret:
             rule = Vehicle.GetRuleByVehicleRequirement(player, "Black Turret")
-        elif region_restriction == REGION_RESTRICTION_TYPES.Car:
-            rule = Vehicle.GetRuleByVehicleRequirement(player, "Standard Car")
+        #elif region_restriction == REGION_RESTRICTION_TYPES.Car:
+        #    rule = Vehicle.GetRuleByVehicleRequirement(player, "Standard Car")
         elif region_restriction == REGION_RESTRICTION_TYPES.BlackVolt:
             rule = Vehicle.GetRuleByVehicleRequirement(player, "Black Volt")
         elif region_restriction == REGION_RESTRICTION_TYPES.BlackHawk:
@@ -205,6 +235,11 @@ def handle_path_rules(options, player, additional_level_region, path_type):
             rule = lambda state: state.has("Rocket", player)
         if region_restriction == REGION_RESTRICTION_TYPES.Pulley and options.object_pulleys:
             rule = lambda state: state.has("Pulley", player)
+
+    elif region_restriction > 100:
+        required_stage_region = region_restriction - 100
+        rule = lambda state: state.can_reach_region(
+            stage_id_to_region(additional_level_region.stageId, required_stage_region), player)
 
     return rule
 
@@ -260,6 +295,7 @@ def CountRegionAccessibility(state, keys, data, ix, player, perc=100):
         total = 0
         all = True
         values = []
+        have = []
         for key in keys:
 
             count_in_region = data[key]
@@ -268,6 +304,7 @@ def CountRegionAccessibility(state, keys, data, ix, player, perc=100):
                 if state.has(key, player):
                     # print("player have", key, count_in_region)
                     values.append(count_in_region)
+                    have.append(key)
                 else:
                     # print("Doesn't player have", key, count_in_region)
                     all = False
@@ -279,7 +316,9 @@ def CountRegionAccessibility(state, keys, data, ix, player, perc=100):
                 total += floor(i * (perc / 100))
 
         if all:
-            total = ceil(total * (perc / 100))
+            new_total = floor(total * (perc / 100))
+            if new_total == 0 and total > 0:
+                total = 1
 
         return total >= ix
     else:
@@ -314,40 +353,38 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
         event_location.place_locked_item(Item(view_name,
                                               ItemClassification.progression_skip_balancing, None, player))
 
+    skip_regions = []
+    if world.options.logic_level != Options.LogicLevel.option_hard:
+        hard_only = [ r for r in Levels.INDIVIDUAL_LEVEL_REGIONS if r.restrictionType == REGION_RESTRICTION_TYPES.HardLogicOnly]
+        skip_regions.extend([ (h.stageId, h.regionIndex) for h in hard_only])
+
     for additional_level_region in Levels.INDIVIDUAL_LEVEL_REGIONS:
         if additional_level_region.stageId not in world.available_levels:
             continue
 
-        if world.options.logic_level != Options.LogicLevel.option_hard \
-            and additional_level_region.restrictionType == REGION_RESTRICTION_TYPES.HardLogicOnly:
-            #print("Skip--", additional_level_region)
+        if (additional_level_region.stageId, additional_level_region.regionIndex) in skip_regions:
             continue
 
         from_regions = additional_level_region.fromRegions
         new_region_name = stage_id_to_region(additional_level_region.stageId, additional_level_region.regionIndex)
 
         for region_from in from_regions:
-            base_region_name = stage_id_to_region(additional_level_region.stageId, region_from)
 
+            if (additional_level_region.stageId, region_from) in skip_regions:
+                continue
+
+            base_region_name = stage_id_to_region(additional_level_region.stageId, region_from)
 
             base_region = world.get_region(base_region_name)
             new_region = world.get_region(new_region_name)
 
-            rule = lambda state: True
-
-            if additional_level_region.restrictionType == REGION_RESTRICTION_TYPES.KeyDoor:
-                key_rule = GetKeyRule(additional_level_region.stageId, player)
-                connect(world.player, base_region_name + ">" + new_region_name,
-                        base_region, new_region, key_rule)
-                continue
-
             path_rule = handle_path_rules(world.options, player, additional_level_region,
                                           REGION_RESTRICTION_REFERENCE_TYPES.BaseLogic)
             if path_rule is not None:
-                rule = path_rule
-
-            connect(world.player, base_region_name+ ">" + "(" + str(additional_level_region.restrictionType) + ")" + new_region_name,
-                    base_region, new_region, rule)
+                connect(world.player, base_region_name+ ">" + "(" + str(additional_level_region.restrictionType) + ")" + new_region_name,
+                    base_region, new_region, path_rule)
+            else:
+                print("Path rule is None", base_region_name, new_region_name)
 
         view_name = Names.GetDistributionRegionEventName(additional_level_region.stageId, additional_level_region.regionIndex)
 
@@ -654,7 +691,6 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
 
 
             enemy_distribution = enemy.getDistribution().items()
-            #print("ED=", enemy.stageId, enemy_distribution)
             enemy_dist_by_name = {}
 
             total = 0
@@ -669,8 +705,7 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
                 if l % frequency_required != 0 and max_required != l:
                     continue
 
-                new_rule = lambda state, ix=l, data=enemy_dist_by_name, keys=enemy_dist_by_name.keys(),\
-                    p=perc_required\
+                new_rule = lambda state, ix=l, data=enemy_dist_by_name, keys=enemy_dist_by_name.keys(),p=perc_required\
                     : CountRegionAccessibility(state, keys, data, ix, player, p)
                 location_id, objective_location_name = (
                     GetEnemyLocationName(enemy.stageId, enemy.enemyClass, enemy.mission_object_name,
@@ -681,9 +716,7 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
                 if l > max_required:
                     break
 
-    e = multiworld.get_entrance("final-story-unlock", player)
     goal_has = []
-    item_dict = Items.GetItemDict()
     if world.options.goal_chaos_emeralds:
         emeralds = Items.GetEmeraldItems()
         goal_has.extend([ (ce.name,1) for ce in emeralds ])
@@ -711,40 +744,32 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
     if world.options.include_last_way_shuffle:
         pass
 
-    e.access_rule = lambda state, g_has=goal_has: check_final_rule(state, player, goal_has)
+    e_rule = lambda state, g_has=goal_has: check_final_rule(state, player, goal_has)
 
     if (world.options.level_progression != Options.LevelProgression.option_select and
             world.options.include_last_way_shuffle and world.options.story_shuffle == Options.StoryShuffle.option_chaos):
 
         # handle requirement that DD must be found in the level shuffle!
         devil_doom_story_region = Regions.stage_id_to_story_region(Levels.BOSS_DEVIL_DOOM)
-        e.access_rule = lambda state, er=e.access_rule : er(state) and state.can_reach_region(devil_doom_story_region, player)
-        multiworld.register_indirect_condition(multiworld.get_region(devil_doom_story_region, player),
-                                               multiworld.get_entrance('devil-doom-fight', player))
+        devil_doom_region = multiworld.get_region(devil_doom_story_region, player)
+
+        for entrance in devil_doom_region.entrances:
+            entrance.access_rule = lambda state, er=e_rule, b_rule=entrance.access_rule: er(state) and b_rule(state)
+            #entrance.access_rule = lambda state, er=e_rule : er(state) and state.can_reach_region(devil_doom_story_region, player)
+        #multiworld.register_indirect_condition(multiworld.get_region(devil_doom_story_region, player),
+        #                                       multiworld.get_entrance('devil-doom-fight', player))
 
     else:
+        last_way_region = multiworld.get_region(stage_id_to_region(Levels.STAGE_THE_LAST_WAY), player)
+        connect(world.player, 'LastStoryToLastWay', multiworld.get_region("Menu", player),
+                last_way_region, rule=e_rule)
         # Ensure TLW is beatable
         tlw_location_id, tlw_location_name = Levels.GetLevelCompletionNames(Levels.STAGE_THE_LAST_WAY, Levels.MISSION_ALIGNMENT_NEUTRAL)
-        last_way_region = multiworld.get_region(Regions.get_max_stage_region_id(Levels.STAGE_THE_LAST_WAY), player)
-        e.access_rule = lambda state, er=e.access_rule: er(state)
+        last_way_rule = lambda state: state.can_reach_loation(tlw_location_name)
+        entrance = connect(world.player, "LastWayToDevilDoom", last_way_region,
+                multiworld.get_region(Regions.stage_id_to_region(Levels.BOSS_DEVIL_DOOM), player), last_way_rule)
 
-        devil_doom = multiworld.get_entrance("devil-doom-fight", player)
-        devil_doom_region = multiworld.get_region('DevilDoom', player)
-        devil_doom.access_rule = lambda state, er=e.access_rule: er(state) and state.can_reach_location(tlw_location_name, player)
-        multiworld.register_indirect_condition(devil_doom_region,devil_doom)
-        multiworld.register_indirect_condition(last_way_region, devil_doom)
-
-    #else:
-    #    e = multiworld.get_entrance("final-story-unlock-tlw", player)
-        pass
-
-        #e.access_rule = lambda state, : state.has(, player) and state.has(emeralds[1].name, player) \
-        #        and state.has(emeralds[2].name, player) and state.has(emeralds[3].name, player) \
-        #        and state.has(emeralds[4].name, player) and state.has(emeralds[5].name, player) \
-        #        and state.has(emeralds[6].name, player)
-    #if world.options.goal_missions:
-    #    e.access_rule = lambda state: state.has(emeralds[0].name, player)
-
+        entrance.access_rule = lambda state, er=e_rule: er(state)
 
     final_item = Items.GetFinalItem()
     mw_final_item = ShadowTheHedgehogItem(final_item, world.player)
@@ -780,10 +805,10 @@ def get_token_count(world, type, token_assignments, goal_value):
     world.required_tokens[type] = goal_req
     return (type, goal_req)
 
+
 def connect(player: int, name: str,
             source_region: Region, target_region: Region,
             rule: typing.Optional[typing.Callable] = None):
-
     connection = Entrance(player, name, source_region)
 
     if rule is not None:
@@ -791,3 +816,4 @@ def connect(player: int, name: str,
 
     source_region.exits.append(connection)
     connection.connect(target_region)
+    return connection

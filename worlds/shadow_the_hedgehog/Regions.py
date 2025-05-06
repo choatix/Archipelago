@@ -51,6 +51,7 @@ def early_region_checks(world):
 
     if last_way_required:
         story_sorted_stages.append(Levels.STAGE_THE_LAST_WAY)
+        story_sorted_stages.append(Levels.BOSS_DEVIL_DOOM)
 
     # TODO: Add handling for story NOT having all stages, in future
 
@@ -92,18 +93,27 @@ def early_region_checks(world):
         if (world.options.level_progression != Options.LevelProgression.option_story \
                 and ( level not in Levels.BOSS_STAGES or world.options.select_bosses )
                 #and level not in Levels.FINAL_BOSSES
-                and level != Levels.BOSS_DEVIL_DOOM
+                #and level != Levels.BOSS_DEVIL_DOOM
                 #and level not in Levels.LAST_STORY_STAGES # Until resolved
                 and (Story.GetVanillaBossStage(level) is None or level in Levels.FINAL_BOSSES
                      or Levels.LEVEL_ID_TO_LEVEL[Story.GetVanillaBossStage(level)] not in world.options.excluded_stages)
-                and not (level in Levels.LAST_STORY_STAGES and not world.options.include_last_way_shuffle)
+                #and not last_way_required
                 and level not in world.available_levels):
             world.available_levels.append(level)
 
         if level == Levels.STAGE_THE_LAST_WAY and last_way_required:
             world.available_levels.append(level)
 
+        if level == Levels.BOSS_DEVIL_DOOM and last_way_required:
+            world.available_levels.append(level)
+
     world.available_story_levels = available_story_stages
+
+    if world.options.level_progression == Options.LevelProgression.option_story and not world.options.story_shuffle:
+        not_excluded_stages = [ x for x in Levels.ALL_STAGES if x not in Levels.BOSS_STAGES and x not in Levels.LAST_STORY_STAGES and
+                                Names.LEVEL_ID_TO_LEVEL[x] not in world.options.excluded_stages]
+        if len(not_excluded_stages) != len(world.available_story_levels):
+            raise OptionError("Invalid stage accessibility for Story w/o Shuffle")
 
     for char_name in Levels.CharacterToLevel.keys():
         levels_in = Levels.CharacterToLevel[char_name]
@@ -156,6 +166,8 @@ def create_regions(world) -> Dict[str, Region]:
         world.options.story_and_select_start_together:
         #print("Check together")
         first_choice = [ s.end_stage_id for s in world.shuffled_story_mode if s.start_stage_id is None][0]
+        if first_choice not in remaining_first_stages:
+            raise OptionError("Invalid first stage based on other settings")
         first_stages_selections.append([first_choice])
         within_selections.append(first_choice)
         remaining_first_stages = [l for l in remaining_first_stages if l not in within_selections]
@@ -197,11 +209,19 @@ def create_regions(world) -> Dict[str, Region]:
         region_to_stage_id[new_region] = level_id
 
         for additional_region in [ r for r in Levels.INDIVIDUAL_LEVEL_REGIONS if r.stageId == level_id]:
+
+            if additional_region.restrictionType == Levels.REGION_RESTRICTION_TYPES.HardLogicOnly and \
+                world.options.logic_level != Options.LogicLevel.option_hard:
+                continue
+
             new_region_name = stage_id_to_region(level_id, additional_region.regionIndex)
             new_additional_region = Region(new_region_name, world.player, world.multiworld)
             regions[new_region_name] = new_additional_region
 
         if world.options.level_progression != LevelProgression.option_select:
+            if level_id == Levels.STAGE_THE_LAST_WAY and last_way_standard:
+                continue
+
             story_region_name = stage_id_to_story_region(level_id)
             new_story_region = Region(story_region_name, world.player, world.multiworld)
             regions[story_region_name] = new_story_region
@@ -333,20 +353,20 @@ def create_regions(world) -> Dict[str, Region]:
         regions[region_name] = new_region
         world.available_weapons.append(weapon.name)
 
-    regions["FinalStory"] = Region("FinalStory", world.player, world.multiworld)
-    connect(world.player, "final-story-unlock", regions["Menu"],
-            regions["FinalStory"])
+    #regions["FinalStory"] = Region("FinalStory", world.player, world.multiworld)
+    #connect(world.player, "final-story-unlock", regions["Menu"],
+    #        regions["FinalStory"])
 
-    regions["DevilDoom"] = Region("DevilDoom", world.player, world.multiworld)
-    connect(world.player, "devil-doom-fight", regions["FinalStory"],
-            regions["DevilDoom"])
+    #regions["DevilDoom"] = Region("DevilDoom", world.player, world.multiworld)
 
-    if last_way_standard:
-        last_way_region = regions[stage_id_to_region(Levels.STAGE_THE_LAST_WAY)]
-        connect(world.player, "final-story-unlock-tlw", regions["FinalStory"],
-                last_way_region)
+    ##if last_way_standard:
+   #     last_way_region = regions[stage_id_to_region(Levels.STAGE_THE_LAST_WAY)]
+   #     connect(world.player, 'LastStoryToLastWay', regions["Menu"], last_way_region)
 
-        pass
+
+
+        #connect(world.player, "final-story-unlock-tlw", regions["FinalStory"],
+        #        last_way_region)
 
 
 
@@ -385,6 +405,7 @@ def connect_by_story_mode(multiworld: MultiWorld, world, player: int, order: typ
         start_base_region_name = stage_id_to_story_region(path.start_stage_id)
         start_region = world.get_region(start_base_region_name)
 
+        invalid_boss = False
         if path.boss is not None:
             if path.boss in world.available_story_levels: # and path.end_stage_id is not None:
                 boss_base_region_name = stage_id_to_region(path.boss)
@@ -393,7 +414,7 @@ def connect_by_story_mode(multiworld: MultiWorld, world, player: int, order: typ
                 boss_region_name = stage_id_to_story_region(path.boss)
                 boss_region = world.get_region(boss_region_name)
 
-                if path.end_stage_id is None or path.end_stage_id in world.available_story_levels:
+                if path.end_stage_id is not None and path.end_stage_id in world.available_story_levels:
 
                     boss_item = [ b for b in Locations.BossClearLocations if b.stageId == path.boss][0]
                     boss_id, boss_name = Locations.GetBossLocationName(boss_item.name, boss_item.stageId)
@@ -402,18 +423,20 @@ def connect_by_story_mode(multiworld: MultiWorld, world, player: int, order: typ
 
                     event_location = multiworld.get_location(view_name, player)
                     event_location.access_rule = (lambda state, n=boss_name, br=start_base_region_name: (
-                        (True if n == 'Boss:Devil Doom' else state.can_reach_location(n, player)) and
+                        state.can_reach_location(n, player) and
                         state.can_reach_region(br, player)))
 
                     item_name = f"Story Access Through {Names.LEVEL_ID_TO_LEVEL[path.boss]}"
 
                     event_location.place_locked_item(Item(item_name,
-                                                          ItemClassification.progression, None, player))
+                                                          ItemClassification.progression_skip_balancing, None, player))
 
                     boss_rule = lambda state, bn=item_name: state.has(bn, player)
+            else:
+                invalid_boss = True
 
         if path.end_stage_id is None:
-            if boss_region is not None and boss_rule is not None:
+            if boss_region is not None:
                 boss_completion_location_id, boss_completion_location_name = GetLevelCompletionNames(path.start_stage_id,
                                                                                            path.alignment_id)
 
@@ -429,7 +452,7 @@ def connect_by_story_mode(multiworld: MultiWorld, world, player: int, order: typ
                             f"{Names.LEVEL_ID_TO_LEVEL[path.boss]}")
 
                 event_location.place_locked_item(Item(item_name,
-                                                      ItemClassification.progression, None, player))
+                                                      ItemClassification.progression_skip_balancing, None, player))
 
                 bf_rule = lambda state, bn=item_name: state.has(bn, player)
 
@@ -440,8 +463,8 @@ def connect_by_story_mode(multiworld: MultiWorld, world, player: int, order: typ
                     secret_rule = lambda state, wi=warp_item: state.has(wi, world.player)
                     bf_rule = lambda state, br=bf_rule, sr=secret_rule: br(state) and sr(state)
 
-                boss_end_entrance = connect(world.player, "Boss Entrance_" + str(path.start_stage_id) + "/" +
-                    str(path.end_stage_id) + "/" + str(path.alignment_id), start_region, boss_region,
+                boss_end_entrance = connect(world.player, "Boss Entrance_A_" + str(path.start_stage_id) + "/" +
+                   str(path.alignment_id), start_region, boss_region,
                                         rule=bf_rule)
 
                 multiworld.register_indirect_condition(start_region, boss_end_entrance)
@@ -455,13 +478,13 @@ def connect_by_story_mode(multiworld: MultiWorld, world, player: int, order: typ
                 extra_level_regions = [l for l in Levels.INDIVIDUAL_LEVEL_REGIONS if l.stageId == path.start_stage_id]
 
                 for region in extra_level_regions:
+                    if region.restrictionType == Levels.REGION_RESTRICTION_TYPES.HardLogicOnly and \
+                            world.options.logic_level != Options.LogicLevel.option_hard:
+                        continue
                     level_region_name = stage_id_to_region(region.stageId, region.regionIndex)
                     region_to_add = world.get_region(level_region_name)
                     if boss_end_entrance is not None:
                         multiworld.register_indirect_condition(region_to_add, boss_end_entrance)
-
-
-
 
             continue
 
@@ -471,6 +494,9 @@ def connect_by_story_mode(multiworld: MultiWorld, world, player: int, order: typ
 
         if completion_location_name in world.options.exclude_locations:
             print("Unable to take story path due to excluded location:", path.start_stage_id, path.alignment_id)
+            continue
+
+        if invalid_boss:
             continue
 
         extra_level_regions = [ l for l in Levels.INDIVIDUAL_LEVEL_REGIONS if l.stageId == path.start_stage_id ]
@@ -488,7 +514,7 @@ def connect_by_story_mode(multiworld: MultiWorld, world, player: int, order: typ
                                               f"{ "" if path.boss is None else " via " + Names.LEVEL_ID_TO_LEVEL[path.boss]}")
 
         event_location.place_locked_item(Item(item_name,
-                                              ItemClassification.progression, None, player))
+                                              ItemClassification.progression_skip_balancing, None, player))
 
         base_rule = lambda state,n=item_name: state.has(n, player)
         boss_base_rule = base_rule
@@ -505,8 +531,8 @@ def connect_by_story_mode(multiworld: MultiWorld, world, player: int, order: typ
                 secret_rule = lambda state, wi=warp_item: state.has(wi, world.player)
                 boss_base_rule = lambda state, br=boss_base_rule, sr=secret_rule: br(state) and sr(state)
 
-            boss_entrance = connect(world.player, "Boss Entrance_"+str(order.index(path)) + str(path.start_stage_id) + "/" +
-                    str(path.end_stage_id), start_region, boss_region, rule=boss_base_rule)
+            boss_entrance = connect(world.player, "Boss Entrance_B_"+str(order.index(path)) + str(path.start_stage_id) + "/",
+                    start_region, boss_region, rule=boss_base_rule)
             multiworld.register_indirect_condition(start_region, boss_entrance)
             base_region_name = stage_id_to_region(path.start_stage_id)
             base_region = world.get_region(base_region_name)
@@ -527,6 +553,9 @@ def connect_by_story_mode(multiworld: MultiWorld, world, player: int, order: typ
                     str(path.end_stage_id)+"/"+str(path.alignment_id), start_region, end_region, rule=modified_rule)
 
         for region in extra_level_regions:
+            if region.restrictionType == Levels.REGION_RESTRICTION_TYPES.HardLogicOnly and \
+                    world.options.logic_level != Options.LogicLevel.option_hard:
+                continue
             level_region_name = stage_id_to_region(region.stageId, region.regionIndex)
             region_to_add = world.get_region(level_region_name)
             multiworld.register_indirect_condition(region_to_add, new_entrance)

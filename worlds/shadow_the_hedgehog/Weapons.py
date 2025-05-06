@@ -1,7 +1,8 @@
 import copy
 from dataclasses import dataclass
 
-from . import Levels
+from BaseClasses import ItemClassification
+from . import Levels, Options
 from .Names import REGION_INDICIES
 
 
@@ -50,11 +51,27 @@ def GetAnyShadowBoxRegions():
 def GetRuleByWeaponRequirement(player, req, stage, regions):
     regions_use = []
 
+    # Technicality not handled for weapons not carriable between regions
+    # e.g. Melee weapons through some vehicles
+    # Currently this never comes up
+
     if regions is not None:
         regions_use = copy.copy(regions)
-        for i in range(0, len(regions_use)):
-            if max(regions_use) > i:
-                regions_use.append(i)
+        for region in regions_use:
+            if region == 0:
+                if 0 not in regions_use:
+                    regions_use.append(0)
+                continue
+            p_regions = [l.fromRegions for l in Levels.INDIVIDUAL_LEVEL_REGIONS if l.stageId == stage
+                         and l.regionIndex == region]
+
+            if len(p_regions) != 1:
+                print("Unknown find", stage, region)
+                continue
+
+            if len(p_regions[0]) == 1:
+                regions_use.extend([ p for p in p_regions[0] if p not in regions_use])
+
     elif stage is not None:
         p_regions = [ l.regionIndex for l in Levels.INDIVIDUAL_LEVEL_REGIONS if l.stageId == stage]
         if len(p_regions) == 0:
@@ -83,6 +100,7 @@ def GetRuleByWeaponRequirement(player, req, stage, regions):
     #print(stage, regions_use, matches)
 
     if len(matches) == 0:
+        print("No match", regions_use, stage)
         return None
 
     return lambda state, reqs=matches: state.has_any([m for m in reqs],player)
@@ -225,7 +243,7 @@ WEAPON_INFO = [
             Levels.STAGE_THE_LAST_WAY],
 [WeaponAttributes.SHOT]),
     WeaponInfo(0xB, "Heavy Shot",
-               [(Levels.STAGE_FINAL_HAUNT,REGION_INDICIES.FINAL_HAUNT_HARD_VACUUM_OR_BLACK_VOLT),
+               [(Levels.STAGE_FINAL_HAUNT,REGION_INDICIES.FINAL_HAUNT_ROCKET_NORMAL),
                 (Levels.STAGE_THE_LAST_WAY,REGION_INDICIES.THE_LAST_WAY_BLACK_VOLT)],
                [WeaponAttributes.SHOT]),
     WeaponInfo(0xC, "Grenade Launcher",
@@ -248,7 +266,7 @@ WEAPON_INFO = [
     WeaponInfo(0xF, "Black Barrel",
                [(Levels.STAGE_SKY_TROOPS, REGION_INDICIES.SKY_TROOPS_ROCKET_NORMAL),
                 (Levels.STAGE_SPACE_GADGET, REGION_INDICIES.SPACE_GADGET_AIR_SAUCER),
-    (Levels.STAGE_BLACK_COMET,REGION_INDICIES.BLACK_COMET_AIR_SAUCER),
+    (Levels.STAGE_BLACK_COMET,REGION_INDICIES.BLACK_COMET_BLACK_TURRET),
                 Levels.STAGE_FINAL_HAUNT,Levels.STAGE_THE_LAST_WAY],
 [WeaponAttributes.NOT_AIMABLE, WeaponAttributes.EXPLOSION]),
     WeaponInfo(0x10, "Big Barrel",
@@ -288,11 +306,11 @@ WEAPON_INFO = [
 [WeaponAttributes.NOT_AIMABLE]),
     WeaponInfo(0x16, "Wide Worm Shooter",
                [(Levels.STAGE_MAD_MATRIX, REGION_INDICIES.MAD_MATRIX_YELLOW_ENTRY),
-                (Levels.STAGE_BLACK_COMET,REGION_INDICIES.BLACK_COMET_AIR_SAUCER),
+                (Levels.STAGE_BLACK_COMET,REGION_INDICIES.BLACK_COMET_FLOATERS),
                 Levels.STAGE_THE_LAST_WAY],
 [WeaponAttributes.NOT_AIMABLE]),
     WeaponInfo(0x17, "Big Worm Shooter",
-               [(Levels.STAGE_BLACK_COMET,REGION_INDICIES.BLACK_COMET_WARP_HOLE),
+               [(Levels.STAGE_BLACK_COMET,REGION_INDICIES.BLACK_COMET_FLOATERS),
                 (Levels.STAGE_THE_LAST_WAY,REGION_INDICIES.THE_LAST_WAY_VOLT_OR_WARP)],
 [WeaponAttributes.NOT_AIMABLE]),
     WeaponInfo(0x18, "Vacuum Pod",
@@ -544,7 +562,21 @@ WeaponGroups = {
                     WEAPONS.LAVA_SHOVEL, WEAPONS.COSMIC_POLE, WEAPONS.HAUNT_POLE, WEAPONS.LAST_POLE, WEAPONS.CRYPTIC_TORCH,
                           WEAPONS.SURVIVAL_KNIFE, WEAPONS.BLACK_SWORD, WEAPONS.DARK_HAMMER]
 
-
-
-
 }
+
+
+def GetWeaponClassification(world, weapon : WeaponInfo):
+    if world.options.weapon_sanity_hold == Options.WeaponsanityHold.option_unlocked:
+        return ItemClassification.progression
+
+    if WeaponAttributes.SPECIAL in weapon.attributes and world.options.weapon_sanity_hold:
+        return ItemClassification.progression
+
+    if len(weapon.attributes) == 0:
+        return ItemClassification.filler
+
+    # Could be more in-depth
+    if world.options.weapon_sanity_unlock:
+        return ItemClassification.progression
+
+    return ItemClassification.useful

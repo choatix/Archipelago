@@ -45,6 +45,9 @@ DESIRABLE_OBJECTS_LOST_IMPACT = [
     SETObject(ObjectType.BOMB, Levels.STAGE_LOST_IMPACT,
               277, "Bomb In Final Room"),
 
+    SETObject(ObjectType.VEHICLE, Levels.STAGE_LOST_IMPACT, 55, '60', region=REGION_INDICIES.LOST_IMPACT_GUN_LIFT,
+              vehicle=ObjectType.ObjectTypeVehicle.GUN_LIFT_FAST),
+
     SETObject(ObjectType.ARTIFICIAL_CHAOS, Levels.STAGE_LOST_IMPACT, 168, '1', region=0),
     SETObject(ObjectType.ARTIFICIAL_CHAOS, Levels.STAGE_LOST_IMPACT, 196, '1', region=0),
     SETObject(ObjectType.GUN_SOLIDER, Levels.STAGE_LOST_IMPACT, 162, '2', region=0),
@@ -151,7 +154,6 @@ DESIRABLE_OBJECTS_LOST_IMPACT = [
               region=REGION_INDICIES.LOST_IMPACT_GUN_LIFT),
     SETObject(ObjectType.GUN_SOLIDER, Levels.STAGE_LOST_IMPACT, 290, '59',
               region=REGION_INDICIES.LOST_IMPACT_GUN_LIFT),
-    SETObject(ObjectType.VEHICLE, Levels.STAGE_LOST_IMPACT, 55, '60', region=REGION_INDICIES.LOST_IMPACT_GUN_LIFT),
     SETObject(ObjectType.ARTIFICIAL_CHAOS, Levels.STAGE_LOST_IMPACT, 312, '61',
               region=REGION_INDICIES.LOST_IMPACT_GUN_LIFT),
     SETObject(ObjectType.ARTIFICIAL_CHAOS, Levels.STAGE_LOST_IMPACT, 293, '62',

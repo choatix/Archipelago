@@ -3,7 +3,7 @@ from typing import ClassVar, Tuple, Any
 
 import worlds.ffmq
 from BaseClasses import Tutorial, CollectionState
-from Options import OptionError
+from Options import OptionError, Choice
 from worlds.AutoWorld import WebWorld
 from worlds.LauncherComponents import Component, SuffixIdentifier, Type, components, launch_subprocess
 
@@ -99,6 +99,7 @@ class ShtHWorld(World):
 
     def set_rules(self):
         Rules.set_rules(self.multiworld, self, self.player)
+
         sphere_one_useful = []
         while len(sphere_one_useful) == 0:
             sphere_one_locs = self.multiworld.get_reachable_locations(CollectionState(self.multiworld), self.player)
@@ -126,6 +127,17 @@ class ShtHWorld(World):
 
 
     def check_invalid_configurations(self):
+
+        not_excluded_stages = [x for x in Levels.ALL_STAGES if
+                                   x not in Levels.BOSS_STAGES and x not in Levels.LAST_STORY_STAGES and
+                                   Names.LEVEL_ID_TO_LEVEL[x] not in self.options.excluded_stages]
+        if len(not_excluded_stages) == 0:
+            raise OptionError("You cannot exclude all stages")
+
+
+        #if self.options.story_shuffle == Options.StoryShuffle.option_chaos:
+        #    self.options.story_shuffle = Options.StoryShuffle(Options.StoryShuffle.option_off)
+
         if self.options.auto_clear_missions and not self.options.objective_sanity or \
             (self.options.objective_sanity and not self.options.enemy_objective_sanity):
             self.options.auto_clear_missions = AutoClearMissions(False)
@@ -178,12 +190,14 @@ class ShtHWorld(World):
 
         if self.options.level_progression != Options.LevelProgression.option_select and not self.options.story_shuffle\
             and "Westopolis" in self.options.excluded_stages:
-            self.options.excluded_stages.value.remove("Westopolis")
+            raise OptionError("Westopolis stage cannot be excluded on story without shuffle enabled.")
 
         if self.options.level_progression == Options.LevelProgression.option_select or \
             not self.options.include_last_way_shuffle:
             if "The Last Way" in self.options.excluded_stages.value:
                 self.options.excluded_stages.value.remove("The Last Way")
+
+        # TODO: Add handle for having excluded all stages
 
 
 
@@ -309,7 +323,7 @@ class ShtHWorld(World):
         else:
             self.shuffled_story_mode = Story.DefaultStoryMode
 
-        Story.PrintStoryMode(self, None)
+        #Story.PrintStoryMode(self, None)
 
         if hasattr(self.multiworld, "re_gen_passthrough"):
             if "Shadow The Hedgehog" in self.multiworld.re_gen_passthrough:
@@ -547,14 +561,14 @@ class ShtHWorld(World):
                         continue
                     balancing_overrides[override[0]] = override[1]
 
-            print("Balancing options==", balancing_overrides)
             for override in balancing_overrides.items():
                 self.options.percent_overrides.value[override[0]] = override[1]
 
+        if not self.options.objective_sanity:
+            self.calculate_non_objective_sanity_maximums()
+
         item_count = Items.CountItems(self)
         location_count = Locations.count_locations(self)
-
-        # TODO: Check all options don't contradict one another from percent_overrides
 
         if self.options.exceeding_items_filler != Options.ExceedingItemsFiller.option_off:
             if item_count > location_count:
@@ -601,13 +615,10 @@ class ShtHWorld(World):
         if not self.options.objective_sanity and self.options.enemy_sanity:
             self.calculate_object_discrepancies()
 
-        if not self.options.objective_sanity:
-            self.calculate_non_objective_sanity_maximums()
-
         if self.options.objective_sanity and self.options.force_objective_sanity_chance > 0\
                 and self.options.force_objective_sanity_max > 0:
 
-            MissionLocations = Locations.MissionClearLocations
+            MissionLocations = copy.deepcopy(Locations.MissionClearLocations)
             self.random.shuffle(MissionLocations)
 
             for locationData in MissionLocations:
@@ -660,7 +671,6 @@ class ShtHWorld(World):
         if self.options.level_progression != Options.LevelProgression.option_story:
             for first_region in self.first_regions:
                 stage_item = Items.GetStageUnlockItem(first_region)
-                print("First region, give access", stage_item)
                 self.multiworld.push_precollected(self.create_item(stage_item))
 
 
@@ -777,8 +787,8 @@ class ShtHWorld(World):
             "energy_cores": self.options.energy_cores.value,
             "door_sanity": self.options.door_sanity.value,
             "gold_beetle_sanity": self.options.gold_beetle_sanity.value,
-            "plando_starting_stages": self.options.plando_starting_stages,
-            "story_and_select_start_together": self.options.story_and_select_start_together
+            "plando_starting_stages": self.options.plando_starting_stages.value,
+            "story_and_select_start_together": self.options.story_and_select_start_together.value
         }
 
         return slot_data
