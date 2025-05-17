@@ -112,7 +112,8 @@ def early_region_checks(world):
     if world.options.level_progression == Options.LevelProgression.option_story and not world.options.story_shuffle:
         not_excluded_stages = [ x for x in Levels.ALL_STAGES if x not in Levels.BOSS_STAGES and x not in Levels.LAST_STORY_STAGES and
                                 Names.LEVEL_ID_TO_LEVEL[x] not in world.options.excluded_stages]
-        if len(not_excluded_stages) != len(world.available_story_levels):
+        available_story_stages_no_bosses = [ x for x in world.available_story_levels if x not in Levels.BOSS_STAGES]
+        if len(not_excluded_stages) != len(available_story_stages_no_bosses):
             raise OptionError("Invalid stage accessibility for Story w/o Shuffle")
 
     for char_name in Levels.CharacterToLevel.keys():

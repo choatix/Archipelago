@@ -1406,13 +1406,15 @@ def create_locations(world, regions: Dict[str, Region]):
 
             max_required = ShadowUtils.getMaxRequired(
                 ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_OBJECTIVE,
-                                                          location.name, world.options),
+                                                          location.name, world.options,
+                                                          location.stageId, location.alignmentId),
                 location.total, location.stageId, location.alignmentId,
                 override_settings)
 
             frequency_required = ShadowUtils.getMaxRequired(
                 ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_OBJECTIVE_FREQUENCY,
-                                                          location.name, world.options),
+                                                          location.name, world.options,
+                                                          location.stageId, location.alignmentId),
                 100, location.stageId, location.alignmentId,
                 override_settings)
 
@@ -1430,13 +1432,15 @@ def create_locations(world, regions: Dict[str, Region]):
 
             max_required = ShadowUtils.getMaxRequired(
                 ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_ENEMY,
-                                                          enemy.name, world.options),
+                                                          enemy.name, world.options,
+                                                          enemy.stageId, enemy.alignmentId),
                 enemy.total, enemy.stageId, enemy.alignmentId,
                 override_settings)
 
             frequency_required = ShadowUtils.getMaxRequired(
                 ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_ENEMY_FREQUENCY,
-                                                          enemy.name, world.options),
+                                                          enemy.name, world.options,
+                                                          enemy.stageId, enemy.alignmentId),
                 100, enemy.stageId, enemy.alignmentId,
                 override_settings)
 
@@ -1658,13 +1662,15 @@ def count_locations(world):
 
             max_required = ShadowUtils.getMaxRequired(
                 ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_OBJECTIVE,
-                                                          location.name, world.options),
+                                                          location.name, world.options,
+                                                          location.stageId, location.alignmentId),
                 location.total, location.stageId, location.alignmentId,
                 override_settings)
 
             frequency_required = ShadowUtils.getMaxRequired(
                 ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_OBJECTIVE_FREQUENCY,
-                                                          location.name, world.options),
+                                                          location.name, world.options,
+                                                          location.stageId, location.alignmentId),
                 100, location.stageId, location.alignmentId,
                 override_settings)
 
@@ -1677,13 +1683,15 @@ def count_locations(world):
 
             frequency_required = ShadowUtils.getMaxRequired(
                 ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_ENEMY_FREQUENCY,
-                                                          enemy.name, world.options),
+                                                          enemy.name, world.options,
+                                                          enemy.stageId, enemy.alignmentId),
                 100, enemy.stageId, enemy.alignmentId,
                 override_settings)
 
             max_required = ShadowUtils.getMaxRequired(
                 ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_ENEMY,
-                                                          enemy.name, world.options),
+                                                          enemy.name, world.options,
+                                                          enemy.stageId, enemy.alignmentId),
                 enemy.total, enemy.stageId, enemy.alignmentId,
                 override_settings)
 

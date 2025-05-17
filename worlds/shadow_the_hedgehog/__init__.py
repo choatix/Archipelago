@@ -1,9 +1,7 @@
 import math
 from typing import ClassVar, Tuple, Any
 
-import worlds.ffmq
 from BaseClasses import Tutorial, CollectionState
-from Options import OptionError, Choice
 from worlds.AutoWorld import WebWorld
 from worlds.LauncherComponents import Component, SuffixIdentifier, Type, components, launch_subprocess
 
@@ -211,7 +209,8 @@ class ShtHWorld(World):
                                      n[1] == clear.alignmentId][0]
 
             base_objective_data = ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_COMPLETION,
-                                                          clear.mission_object_name, self.options)
+                                                          clear.mission_object_name, self.options,
+                                                                            clear.stageId, clear.alignmentId)
 
             type_value = base_objective_data[0]
 
@@ -289,7 +288,8 @@ class ShtHWorld(World):
                     aliens = aliens[0]
 
                     max_required_complete = ShadowUtils.getMaxRequired(
-                        ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_COMPLETION, clear.mission_object_name, self.options),
+                        ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_COMPLETION, clear.mission_object_name, self.options,
+                                                                  clear.stageId, clear.alignmentId),
                                    clear.requirement_count, clear.stageId, clear.alignmentId,
                                        override_settings)
 
@@ -305,7 +305,8 @@ class ShtHWorld(World):
 
                         max_required = ShadowUtils.getMaxRequired(
                             ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_ENEMY,
-                                                                      clear.mission_object_name, self.options),
+                                                                      clear.mission_object_name, self.options,
+                                                                      stage, alignment_id),
                             aliens.total_count, stage, alignment_id,
                             override_settings)
 
@@ -554,7 +555,7 @@ class ShtHWorld(World):
             balancing_overrides = {}
             for i in range(0, self.options.story_progression_balancing_passes):
                 story_spheres = Story.DecideStoryPath(self, self.shuffled_story_mode)
-                new_overrides = Story.AlterOverridesForStoryPath(story_spheres, self.options.percent_overrides.value)
+                new_overrides = Story.AlterOverridesForStoryPath(story_spheres,self.options)
 
                 for override in new_overrides.items():
                     if override[0] in balancing_overrides and balancing_overrides[override[0]] <= override[1]:
@@ -596,7 +597,8 @@ class ShtHWorld(World):
 
             max_required_objective = ShadowUtils.getMaxRequired(
                 ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_OBJECTIVE,
-                                                          missionClear.mission_object_name, self.options),
+                                                          missionClear.mission_object_name, self.options,
+                                                          missionClear.stageId, missionClear.alignmentId),
                 missionClear.requirement_count, missionClear.stageId, missionClear.alignmentId,
                 self.options.percent_overrides)
 
@@ -606,7 +608,8 @@ class ShtHWorld(World):
         for enemy in Locations.GetEnemySanityLocations():
             max_required_enemy = ShadowUtils.getMaxRequired(
                 ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_ENEMY,
-                                                          enemy.mission_object_name, self.options),
+                                                          enemy.mission_object_name, self.options,
+                                                          enemy.stageId, enemy.enemyClass),
                 enemy.total_count, enemy.stageId, enemy.enemyClass, self.options.percent_overrides)
 
             if max_required_enemy > enemy.total_count and not self.options.allow_dangerous_settings:

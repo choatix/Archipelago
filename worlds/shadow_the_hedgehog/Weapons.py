@@ -100,7 +100,6 @@ def GetRuleByWeaponRequirement(player, req, stage, regions):
     #print(stage, regions_use, matches)
 
     if len(matches) == 0:
-        print("No match", regions_use, stage)
         return None
 
     return lambda state, reqs=matches: state.has_any([m for m in reqs],player)

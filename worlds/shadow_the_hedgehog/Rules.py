@@ -460,13 +460,15 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
 
                     max_required = ShadowUtils.getMaxRequired(
                         ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_OBJECTIVE,
-                                                                  clear.mission_object_name, world.options),
+                                                                  clear.mission_object_name, world.options,
+                                                                  clear.stageId, clear.alignmentId),
                         clear.requirement_count, clear.stageId, clear.alignmentId,
                         override_settings)
 
                     frequency_required = ShadowUtils.getMaxRequired(
                         ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_OBJECTIVE_FREQUENCY,
-                                                                  clear.mission_object_name, world.options),
+                                                                  clear.mission_object_name, world.options,
+                                                                  clear.stageId, clear.alignmentId),
                         100, clear.stageId, clear.alignmentId,
                         override_settings)
 
@@ -509,7 +511,8 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
 
                     max_required = ShadowUtils.getMaxRequired(
                         ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_COMPLETION,
-                                                                  clear.mission_object_name, world.options),
+                                                                  clear.mission_object_name, world.options,
+                                                                  clear.stageId, clear.alignmentId),
                         clear.requirement_count, clear.stageId, clear.alignmentId,
                         override_settings)
 
@@ -672,20 +675,23 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
 
             max_required = ShadowUtils.getMaxRequired(
                 ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_ENEMY,
-                                                          enemy.mission_object_name, world.options),
+                                                          enemy.mission_object_name, world.options,
+                                                          enemy.stageId, enemy.enemyClass),
                 enemy.total_count, enemy.stageId, enemy.enemyClass,
                 override_settings)
 
             perc_required = ShadowUtils.getPercRequired(
                 ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_ENEMY,
-                                                          enemy.mission_object_name, world.options),
+                                                          enemy.mission_object_name, world.options,
+                                                          enemy.stageId, enemy.enemyClass),
                 enemy.stageId, enemy.enemyClass,
                 override_settings)
 
 
             frequency_required = ShadowUtils.getMaxRequired(
                 ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_ENEMY_FREQUENCY,
-                                                          enemy.mission_object_name, world.options),
+                                                          enemy.mission_object_name, world.options,
+                                                          enemy.stageId, enemy.enemyClass),
                 100, enemy.stageId, enemy.enemyClass,
                 override_settings)
 

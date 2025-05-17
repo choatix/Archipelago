@@ -1,6 +1,8 @@
 import copy
 import logging
 import math
+from . import Utils as ShadowUtils
+
 from dataclasses import dataclass
 
 from Options import OptionError
@@ -178,8 +180,8 @@ def DecideStoryPath(world, story):
     return sphere_results
 
 
-def AlterOverridesForStoryPath(spheres, current_overrides):
-
+def AlterOverridesForStoryPath(spheres, options):
+    current_overrides =  options.percent_overrides.value
     first_sphere_size = len(spheres[0][1])
     new_sphere_size = first_sphere_size
 
@@ -190,20 +192,31 @@ def AlterOverridesForStoryPath(spheres, current_overrides):
 
     new_overrides = {}
 
+
     for sphere in spheres:
         if sphere == spheres[0]:
             continue
 
         sphere_mission = sphere[0]
-        sphere_key = ("C"+
-                      ("D" if sphere_mission.alignmentId == Levels.MISSION_ALIGNMENT_DARK else
-                       "H")+"."+
-                      Levels.LEVEL_ID_TO_LEVEL[sphere_mission.stageId])
 
-        sphere_key_a = ("A" +
-                      ("D" if sphere_mission.alignmentId == Levels.MISSION_ALIGNMENT_DARK else
-                       "H") + "." +
-                      Levels.LEVEL_ID_TO_LEVEL[sphere_mission.stageId])
+        objective_info_completion = ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_COMPLETION,
+                                                                   sphere_mission.mission_object_name, options,
+                                                                   sphere_mission.stageId, sphere_mission.alignmentId)
+
+        objective_info_available = ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_COMPLETION,
+                                                                              sphere_mission.mission_object_name,
+                                                                              options,
+                                                                              sphere_mission.stageId,
+                                                                              sphere_mission.alignmentId)
+
+        completion_key_base = ShadowUtils.GetOverrideKey(objective_info_completion[0],
+                                                    sphere_mission.alignmentId)
+
+        available_key_base = ShadowUtils.GetOverrideKey(objective_info_available[0],
+                                                    sphere_mission.alignmentId)
+
+        sphere_key = completion_key_base + "."+ Levels.LEVEL_ID_TO_LEVEL[sphere_mission.stageId]
+        sphere_key_a = available_key_base + "." + Levels.LEVEL_ID_TO_LEVEL[sphere_mission.stageId]
 
         total_stages = 23
         base_percent_value = new_sphere_size / total_stages
@@ -212,8 +225,12 @@ def AlterOverridesForStoryPath(spheres, current_overrides):
             current_override_value = current_overrides[sphere_key_a] / 100
 
         use_percent_value = math.floor(base_percent_value * current_override_value * 100)
-
         new_sphere_size = len(sphere[1])
+
+        # Need a check in here to either
+        # Prevent higher values than total
+        # Also increase pool amount
+
         new_overrides[sphere_key] = use_percent_value
 
     return new_overrides
@@ -408,7 +425,7 @@ def ChaosShuffle(world):
 
                 if len(plando_start_stages) > 0:
                     rev_level_map = {v: k for k, v in Levels.LEVEL_ID_TO_LEVEL.items()}
-                    first_stage_name = world.random.choice(list(world.options.plando_starting_stages.value))
+                    first_stage_name = world.random.choice(plando_start_stages)
                     first_stage = rev_level_map[first_stage_name]
                     step.end_stage_id = first_stage
                     stages_to_assign.remove(step.end_stage_id)
