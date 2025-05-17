@@ -210,7 +210,8 @@ class ShtHWorld(World):
 
             base_objective_data = ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_COMPLETION,
                                                           clear.mission_object_name, self.options,
-                                                                            clear.stageId, clear.alignmentId)
+                                                                            clear.stageId, clear.alignmentId,
+                                                                            self.options.percent_overrides)
 
             type_value = base_objective_data[0]
 
@@ -289,7 +290,7 @@ class ShtHWorld(World):
 
                     max_required_complete = ShadowUtils.getMaxRequired(
                         ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_COMPLETION, clear.mission_object_name, self.options,
-                                                                  clear.stageId, clear.alignmentId),
+                                                                  clear.stageId, clear.alignmentId, self.options.percent_overrides),
                                    clear.requirement_count, clear.stageId, clear.alignmentId,
                                        override_settings)
 
@@ -306,7 +307,7 @@ class ShtHWorld(World):
                         max_required = ShadowUtils.getMaxRequired(
                             ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_ENEMY,
                                                                       clear.mission_object_name, self.options,
-                                                                      stage, alignment_id),
+                                                                      stage, alignment_id, self.options.percent_overrides),
                             aliens.total_count, stage, alignment_id,
                             override_settings)
 
@@ -598,7 +599,7 @@ class ShtHWorld(World):
             max_required_objective = ShadowUtils.getMaxRequired(
                 ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_OBJECTIVE,
                                                           missionClear.mission_object_name, self.options,
-                                                          missionClear.stageId, missionClear.alignmentId),
+                                                          missionClear.stageId, missionClear.alignmentId, self.options.percent_overrides),
                 missionClear.requirement_count, missionClear.stageId, missionClear.alignmentId,
                 self.options.percent_overrides)
 
@@ -609,7 +610,7 @@ class ShtHWorld(World):
             max_required_enemy = ShadowUtils.getMaxRequired(
                 ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_ENEMY,
                                                           enemy.mission_object_name, self.options,
-                                                          enemy.stageId, enemy.enemyClass),
+                                                          enemy.stageId, enemy.enemyClass, self.options.percent_overrides),
                 enemy.total_count, enemy.stageId, enemy.enemyClass, self.options.percent_overrides)
 
             if max_required_enemy > enemy.total_count and not self.options.allow_dangerous_settings:

@@ -397,13 +397,15 @@ class ShTHCommandProcessor(ClientCommandProcessor):
                     required_count = ShadowUtils.getMaxRequired(
                         ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_OBJECTIVE,
                                                                   dark.mission_object_name, ctx,
-                                                                  dark.stageId, dark.alignmentId),
+                                                                  dark.stageId, dark.alignmentId,
+                                                                  ctx.override_settings),
                         dark.requirement_count,dark.stageId, dark.alignmentId, ctx.override_settings)
 
                     freq_or_avail_count = ShadowUtils.getMaxRequired(
                         ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_OBJECTIVE_FREQUENCY,
                                                                   dark.mission_object_name, ctx,
-                                                                  dark.stageId, dark.alignmentId),
+                                                                  dark.stageId, dark.alignmentId,
+                                                                  ctx.override_settings),
                         100, dark.stageId, dark.alignmentId, ctx.override_settings)
 
                     associated_locations = [ (x.locationId, x) for x in mission_locations if x.alignmentId == dark.alignmentId and
@@ -432,13 +434,15 @@ class ShTHCommandProcessor(ClientCommandProcessor):
                     required_count = ShadowUtils.getMaxRequired(
                         ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_OBJECTIVE,
                                                                   dark.mission_object_name, ctx,
-                                                                  dark.stageId, dark.alignmentId),
+                                                                  dark.stageId, dark.alignmentId,
+                                                                  ctx.override_settings),
                         dark.requirement_count, dark.stageId, dark.alignmentId, ctx.override_settings)
 
                     freq_or_avail_count = ShadowUtils.getMaxRequired(
                         ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_OBJECTIVE_FREQUENCY,
                                                                   dark.mission_object_name, ctx,
-                                                                  dark.stageId, dark.alignmentId),
+                                                                  dark.stageId, dark.alignmentId,
+                                                                  ctx.override_settings),
                         100, dark.stageId, dark.alignmentId, ctx.override_settings)
 
                     associated_locations = [(x.locationId, x) for x in mission_locations if
@@ -470,13 +474,15 @@ class ShTHCommandProcessor(ClientCommandProcessor):
                     required_count = ShadowUtils.getMaxRequired(
                         ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_COMPLETION,
                                                                   dark.mission_object_name, ctx,
-                                                                  dark.stageId, dark.alignmentId),
+                                                                  dark.stageId, dark.alignmentId,
+                                                                  ctx.override_settings),
                         dark.requirement_count, dark.stageId, dark.alignmentId, ctx.override_settings)
 
                     freq_or_avail_count = ShadowUtils.getMaxRequired(
                         ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_OBJECTIVE_AVAILABLE,
                                                                   dark.mission_object_name, ctx,
-                                                                  dark.stageId, dark.alignmentId),
+                                                                  dark.stageId, dark.alignmentId,
+                                                                  ctx.override_settings),
                         dark.requirement_count, dark.stageId, dark.alignmentId, ctx.override_settings)
 
                     current_count = len([unlock for unlock in ctx.handled if unlock[0].item in info and \
@@ -509,13 +515,15 @@ class ShTHCommandProcessor(ClientCommandProcessor):
                         required_count = ShadowUtils.getMaxRequired(
                             ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_COMPLETION,
                                                                       dark.mission_object_name, ctx,
-                                                                  dark.stageId, dark.alignmentId),
+                                                                  dark.stageId, dark.alignmentId,
+                                                                  ctx.override_settings),
                             dark.requirement_count, dark.stageId, dark.alignmentId, ctx.override_settings)
 
                         freq_or_avail_count = ShadowUtils.getMaxRequired(
                             ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_OBJECTIVE_AVAILABLE,
                                                                       dark.mission_object_name, ctx,
-                                                                  dark.stageId, dark.alignmentId),
+                                                                  dark.stageId, dark.alignmentId,
+                                                                  ctx.override_settings),
                             dark.requirement_count, dark.stageId, dark.alignmentId, ctx.override_settings)
 
                         current_count = len([unlock for unlock in ctx.handled if unlock[0].item in info and \
@@ -543,13 +551,15 @@ class ShTHCommandProcessor(ClientCommandProcessor):
                 required_count = ShadowUtils.getMaxRequired(
                     ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_ENEMY,
                                                               dark.mission_object_name, ctx,
-                                                                  dark.stageId, dark.enemyClass),
+                                                                  dark.stageId, dark.enemyClass,
+                                                                  ctx.override_settings),
                     dark.total_count, dark.stageId, dark.enemyClass, ctx.override_settings)
 
                 freq_or_avail_count = ShadowUtils.getMaxRequired(
                     ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_ENEMY_FREQUENCY,
                                                               dark.mission_object_name, ctx,
-                                                                  dark.stageId, dark.enemyClass),
+                                                                  dark.stageId, dark.enemyClass,
+                                                                  ctx.override_settings),
                     100, dark.stageId, dark.enemyClass, ctx.override_settings)
 
                 associated_locations = [(x.locationId, x) for x in enemysanity_locations if
@@ -577,13 +587,15 @@ class ShTHCommandProcessor(ClientCommandProcessor):
                 required_count = ShadowUtils.getMaxRequired(
                     ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_ENEMY,
                                                               dark.mission_object_name, ctx,
-                                                                  dark.stageId, dark.enemyClass),
+                                                                  dark.stageId, dark.enemyClass,
+                                                                  ctx.override_settings),
                     dark.total_count, dark.stageId, dark.enemyClass, ctx.override_settings)
 
                 freq_or_avail_count = ShadowUtils.getMaxRequired(
                     ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_ENEMY_FREQUENCY,
                                                               dark.mission_object_name, ctx,
-                                                                  dark.stageId, dark.enemyClass),
+                                                                  dark.stageId, dark.enemyClass,
+                                                                  ctx.override_settings),
                     100, dark.stageId, dark.enemyClass, ctx.override_settings)
 
                 associated_locations = [(x.locationId, x) for x in enemysanity_locations if
@@ -612,13 +624,15 @@ class ShTHCommandProcessor(ClientCommandProcessor):
                 required_count = ShadowUtils.getMaxRequired(
                     ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_ENEMY,
                                                               dark.mission_object_name, ctx,
-                                                                  dark.stageId, dark.enemyClass),
+                                                                  dark.stageId, dark.enemyClass,
+                                                                  ctx.override_settings),
                     dark.total_count,dark.stageId, dark.enemyClass, ctx.override_settings)
 
                 freq_or_avail_count = ShadowUtils.getMaxRequired(
                     ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_ENEMY_FREQUENCY,
                                                               dark.mission_object_name, ctx,
-                                                                  dark.stageId, dark.enemyClass),
+                                                                  dark.stageId, dark.enemyClass,
+                                                                  ctx.override_settings),
                     100, dark.stageId, dark.enemyClass, ctx.override_settings)
 
                 associated_locations = [(x.locationId, x) for x in enemysanity_locations if
@@ -2013,7 +2027,8 @@ def is_mission_completable(ctx, stage, alignment):
     max_required = ShadowUtils.getMaxRequired(
         ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_COMPLETION,
                                                   clear.mission_object_name, ctx,
-                                                                  clear.stageId, clear.alignmentId), clear.requirement_count,
+                                                                  clear.stageId, clear.alignmentId,
+                                                                  ctx.override_settings), clear.requirement_count,
         stage, alignment, ctx.override_settings)
 
     i = [item for item in ctx.items_received if item.item in info and \
@@ -3898,13 +3913,15 @@ async def update_level_behaviour(ctx, current_level, death):
         heroMaxAdjusted = ShadowUtils.getMaxRequired(
             ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_COMPLETION,
                                                       heroInfo.mission_object_name, ctx,
-                                                                  heroInfo.stageId, heroInfo.alignmentId), heroInfo.requirement_count,
+                                                                  heroInfo.stageId, heroInfo.alignmentId,
+                                                                  ctx.override_settings), heroInfo.requirement_count,
             current_level, MISSION_ALIGNMENT_HERO, ctx.override_settings)
 
         heroMaxAvailable = ShadowUtils.getMaxRequired(
             ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_OBJECTIVE_AVAILABLE,
                                                       heroInfo.mission_object_name, ctx,
-                                                                  heroInfo.stageId, heroInfo.alignmentId), heroInfo.requirement_count,
+                                                                  heroInfo.stageId, heroInfo.alignmentId,
+                                                                  ctx.override_settings), heroInfo.requirement_count,
             current_level, MISSION_ALIGNMENT_HERO, ctx.override_settings)
 
         difference_over = heroMaxAdjusted - heroInfo.requirement_count
@@ -3953,13 +3970,15 @@ async def update_level_behaviour(ctx, current_level, death):
         darkMaxAdjusted = ShadowUtils.getMaxRequired(
             ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_COMPLETION,
                                                       darkInfo.mission_object_name, ctx,
-                                                                  darkInfo.stageId, darkInfo.alignmentId), darkInfo.requirement_count,
+                                                                  darkInfo.stageId, darkInfo.alignmentId,
+                                                                  ctx.override_settings), darkInfo.requirement_count,
             current_level, MISSION_ALIGNMENT_DARK, ctx.override_settings)
 
         darkMaxAvailable = ShadowUtils.getMaxRequired(
             ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_OBJECTIVE_AVAILABLE,
                                                       darkInfo.mission_object_name, ctx,
-                                                                  darkInfo.stageId, darkInfo.alignmentId), darkInfo.requirement_count,
+                                                                  darkInfo.stageId, darkInfo.alignmentId,
+                                                                  ctx.override_settings), darkInfo.requirement_count,
             current_level, MISSION_ALIGNMENT_DARK, ctx.override_settings)
 
         difference_over = darkMaxAdjusted - darkInfo.requirement_count
@@ -4043,7 +4062,8 @@ async def update_level_behaviour(ctx, current_level, death):
             required_count = ShadowUtils.getMaxRequired(
                 ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_OBJECTIVE_AVAILABLE,
                                                           heroInfo.mission_object_name, ctx,
-                                                                  heroInfo.stageId, heroInfo.alignmentId),
+                                                                  heroInfo.stageId, heroInfo.alignmentId,
+                                                                  ctx.override_settings),
                 heroInfo.requirement_count, heroInfo.stageId, heroInfo.alignmentId, ctx.override_settings)
 
             diff_over = required_count - heroInfo.requirement_count
@@ -4091,7 +4111,8 @@ async def update_level_behaviour(ctx, current_level, death):
             required_count = ShadowUtils.getMaxRequired(
                 ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_OBJECTIVE_AVAILABLE,
                                                           darkInfo.mission_object_name, ctx,
-                                                                  darkInfo.stageId, darkInfo.alignmentId),
+                                                                  darkInfo.stageId, darkInfo.alignmentId,
+                                                                  ctx.override_settings),
                 darkInfo.requirement_count, darkInfo.stageId, darkInfo.alignmentId, ctx.override_settings)
 
             diff_over = required_count - darkInfo.requirement_count

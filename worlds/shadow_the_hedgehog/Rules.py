@@ -461,14 +461,16 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
                     max_required = ShadowUtils.getMaxRequired(
                         ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_OBJECTIVE,
                                                                   clear.mission_object_name, world.options,
-                                                                  clear.stageId, clear.alignmentId),
+                                                                  clear.stageId, clear.alignmentId,
+                                                                  world.options.percent_overrides),
                         clear.requirement_count, clear.stageId, clear.alignmentId,
                         override_settings)
 
                     frequency_required = ShadowUtils.getMaxRequired(
                         ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_OBJECTIVE_FREQUENCY,
                                                                   clear.mission_object_name, world.options,
-                                                                  clear.stageId, clear.alignmentId),
+                                                                  clear.stageId, clear.alignmentId,
+                                                                  world.options.percent_overrides),
                         100, clear.stageId, clear.alignmentId,
                         override_settings)
 
@@ -512,7 +514,8 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
                     max_required = ShadowUtils.getMaxRequired(
                         ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_COMPLETION,
                                                                   clear.mission_object_name, world.options,
-                                                                  clear.stageId, clear.alignmentId),
+                                                                  clear.stageId, clear.alignmentId,
+                                                                  world.options.percent_overrides),
                         clear.requirement_count, clear.stageId, clear.alignmentId,
                         override_settings)
 
@@ -676,14 +679,16 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
             max_required = ShadowUtils.getMaxRequired(
                 ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_ENEMY,
                                                           enemy.mission_object_name, world.options,
-                                                          enemy.stageId, enemy.enemyClass),
+                                                          enemy.stageId, enemy.enemyClass,
+                                                          world.options.percent_overrides),
                 enemy.total_count, enemy.stageId, enemy.enemyClass,
                 override_settings)
 
             perc_required = ShadowUtils.getPercRequired(
                 ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_ENEMY,
                                                           enemy.mission_object_name, world.options,
-                                                          enemy.stageId, enemy.enemyClass),
+                                                          enemy.stageId, enemy.enemyClass,
+                                                          world.options.percent_overrides),
                 enemy.stageId, enemy.enemyClass,
                 override_settings)
 
@@ -691,7 +696,8 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
             frequency_required = ShadowUtils.getMaxRequired(
                 ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_ENEMY_FREQUENCY,
                                                           enemy.mission_object_name, world.options,
-                                                          enemy.stageId, enemy.enemyClass),
+                                                          enemy.stageId, enemy.enemyClass,
+                                                          world.options.percent_overrides),
                 100, enemy.stageId, enemy.enemyClass,
                 override_settings)
 

@@ -526,7 +526,8 @@ def CountItems(world: World):
         max_available = ShadowUtils.getMaxRequired(
             ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_OBJECTIVE_AVAILABLE,
                                                       lookup.mission_object_name,
-                                                      world.options, lookup.stageId, lookup.alignmentId),
+                                                      world.options, lookup.stageId, lookup.alignmentId,
+                                                      world.options.percent_overrides),
             lookup.requirement_count, lookup.stageId, lookup.alignmentId, world.options.percent_overrides)
 
         items = [item] * max_available
@@ -621,7 +622,8 @@ def GetStageItems(world, stage_objective_items=None):
 
         relevant_objective = ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_OBJECTIVE_AVAILABLE,
                                                   lookup.mission_object_name, world.options,
-                                                                       item.stageId, item.alignmentId)
+                                                                       item.stageId, item.alignmentId,
+                                                                       world.options.percent_overrides)
 
         # None if returned if relevant objective is disabled (e.g. objective/enemy sanity off)
         if relevant_objective is None:
@@ -660,14 +662,15 @@ def GetPotentialDowngradeItems(world, mw_stage_items=None):
 
         max_required_complete = ShadowUtils.getMaxRequired(
             ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_COMPLETION, lookup.mission_object_name,
-                                                      world.options, lookup.stageId, lookup.alignmentId),
+                                                      world.options, lookup.stageId, lookup.alignmentId,world.options.percent_overrides),
             lookup.requirement_count, lookup.stageId, lookup.alignmentId,
             override_settings)
 
         max_available = ShadowUtils.getMaxRequired(
             ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_OBJECTIVE_AVAILABLE,
                                                       lookup.mission_object_name,
-                                                      world.options, lookup.stageId, lookup.alignmentId),
+                                                      world.options, lookup.stageId, lookup.alignmentId,
+                                                      world.options.percent_overrides),
             lookup.requirement_count, lookup.stageId, lookup.alignmentId,
             override_settings)
 

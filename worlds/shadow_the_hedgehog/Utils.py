@@ -171,7 +171,7 @@ def isEnemyObjectiveLocation(name):
 
 # TODO: Needs to work with percentage as well...
 def getObjectiveTypeAndPercentage(base_objective_type, item_name, options,
-                                  stage, alignment):
+                                  stage, alignment, overrides):
 
     if not options.objective_sanity:
         if base_objective_type in (TYPE_ID_OBJECTIVE_AVAILABLE, TYPE_ID_OBJECTIVE,
@@ -206,16 +206,16 @@ def getObjectiveTypeAndPercentage(base_objective_type, item_name, options,
             # Available needs to do a lookup on completion inc. overrides
 
             required_for_completion = getPercRequired(
-                getObjectiveTypeAndPercentage(TYPE_ID_COMPLETION,item_name, options, stage, alignment),
-                stage,alignment,options.percent_overrides)
+                getObjectiveTypeAndPercentage(TYPE_ID_COMPLETION,item_name, options, stage, alignment, overrides),
+                stage,alignment,overrides)
 
             percentage = required_for_completion *\
                           ((100 + options.objective_item_enemy_percentage_available)/100)
             round_method = ceil
         else:
             required_for_completion = getPercRequired(
-                getObjectiveTypeAndPercentage(TYPE_ID_COMPLETION, item_name, options, stage, alignment),
-                stage, alignment, options.percent_overrides)
+                getObjectiveTypeAndPercentage(TYPE_ID_COMPLETION, item_name, options, stage, alignment, overrides),
+                stage, alignment, overrides)
 
             percentage = required_for_completion *\
                           ((100 + options.objective_item_percentage_available)/100)

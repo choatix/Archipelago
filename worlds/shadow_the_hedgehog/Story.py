@@ -201,13 +201,15 @@ def AlterOverridesForStoryPath(spheres, options):
 
         objective_info_completion = ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_COMPLETION,
                                                                    sphere_mission.mission_object_name, options,
-                                                                   sphere_mission.stageId, sphere_mission.alignmentId)
+                                                                   sphere_mission.stageId, sphere_mission.alignmentId,
+                                                                              options.percent_overrides)
 
         objective_info_available = ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_COMPLETION,
                                                                               sphere_mission.mission_object_name,
                                                                               options,
                                                                               sphere_mission.stageId,
-                                                                              sphere_mission.alignmentId)
+                                                                              sphere_mission.alignmentId,
+                                                                             options.percent_overrides)
 
         completion_key_base = ShadowUtils.GetOverrideKey(objective_info_completion[0],
                                                     sphere_mission.alignmentId)
