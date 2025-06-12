@@ -29,6 +29,7 @@ class WeaponAttributes:
     SPECIAL = 64
     SHADOW_RIFLE = 128
     EXPLOSION = 256
+    LOCKON = 512
 
 
 def GetAnyShadowBoxRegions():
@@ -66,7 +67,7 @@ def GetRuleByWeaponRequirement(player, req, stage, regions):
                          and l.regionIndex == region]
 
             if len(p_regions) != 1:
-                print("Unknown find", stage, region)
+                #print("Unknown find", stage, region)
                 continue
 
             if len(p_regions[0]) == 1:
@@ -189,8 +190,10 @@ WEAPON_INFO = [
                 Levels.STAGE_CENTRAL_CITY,
                     Levels.STAGE_THE_DOOM,
                 (Levels.STAGE_DEATH_RUINS, REGION_INDICIES.DEATH_RUINS_PULLEY),
-                    Levels.STAGE_THE_ARK, Levels.STAGE_AIR_FLEET, Levels.STAGE_IRON_JUNGLE, Levels.STAGE_SPACE_GADGET, Levels.STAGE_LOST_IMPACT,
-                    Levels.STAGE_GUN_FORTRESS, (Levels.STAGE_COSMIC_FALL, REGION_INDICIES.COSMIC_FALL_ZIPWIRE),
+                    Levels.STAGE_THE_ARK, Levels.STAGE_AIR_FLEET,
+                (Levels.STAGE_IRON_JUNGLE, REGION_INDICIES.IRON_JUNGLE_GOLD_BEETLE),
+                Levels.STAGE_SPACE_GADGET, Levels.STAGE_LOST_IMPACT,
+                Levels.STAGE_GUN_FORTRESS, (Levels.STAGE_COSMIC_FALL, REGION_INDICIES.COSMIC_FALL_ZIPWIRE),
                 Levels.BOSS_BLACK_DOOM_CF],
                [WeaponAttributes.SHOT, WeaponAttributes.LONG_RANGE]),
     WeaponInfo(0x4, "Heavy Machine Gun",
@@ -210,7 +213,7 @@ WEAPON_INFO = [
                [(Levels.STAGE_LETHAL_HIGHWAY, REGION_INDICIES.LETHAL_HIGHWAY_KEY_DOOR),
                    (Levels.STAGE_THE_ARK,REGION_INDICIES.THE_ARK_BLACK_VOLT),
                 (Levels.STAGE_IRON_JUNGLE, REGION_INDICIES.IRON_JUNGLE_ROCKET), Levels.STAGE_GUN_FORTRESS,
-                (Levels.STAGE_BLACK_COMET,REGION_INDICIES.AIR_FLEET_AIR_SAUCER)],
+                (Levels.STAGE_BLACK_COMET,REGION_INDICIES.BLACK_COMET_AIR_SAUCER)],
                [WeaponAttributes.SHOT, WeaponAttributes.LONG_RANGE]),
     WeaponInfo(0x7, "Egg Gun",
                [(Levels.STAGE_CRYPTIC_CASTLE,1), Levels.STAGE_CIRCUS_PARK, Levels.STAGE_SKY_TROOPS,
@@ -224,7 +227,7 @@ WEAPON_INFO = [
                 Levels.STAGE_DIGITAL_CIRCUIT,Levels.STAGE_LETHAL_HIGHWAY,
                  (Levels.STAGE_CRYPTIC_CASTLE,REGION_INDICIES.CRYPTIC_CASTLE_HAWK), Levels.STAGE_PRISON_ISLAND,
                 Levels.STAGE_CENTRAL_CITY, Levels.STAGE_DEATH_RUINS,
-                 Levels.STAGE_SPACE_GADGET, REGION_INDICIES.SPACE_GADGET_ZIPWIRE,
+                 (Levels.STAGE_SPACE_GADGET, REGION_INDICIES.SPACE_GADGET_ZIPWIRE),
                  Levels.BOSS_BLACK_BULL_LH, Levels.BOSS_BLACK_BULL_DR, Levels.BOSS_DIABLON_BC],
             [WeaponAttributes.SHOT]),
     WeaponInfo(0x9, "Flash Shot",
@@ -260,7 +263,7 @@ WEAPON_INFO = [
     WeaponInfo(0xE, "Tank Cannon",
                [(Levels.STAGE_PRISON_ISLAND, REGION_INDICIES.PRISON_ISLAND_KEY_DOOR),
                 (Levels.STAGE_IRON_JUNGLE,REGION_INDICIES.IRON_JUNGLE_KEY_DOOR),
-                (Levels.STAGE_BLACK_COMET, REGION_INDICIES.BLACK_COMET_KEY_DOOR)],
+                (Levels.STAGE_BLACK_COMET, REGION_INDICIES.BLACK_COMET_BEHIND_KEY_DOOR)],
 [WeaponAttributes.NOT_AIMABLE, WeaponAttributes.EXPLOSION]),
     WeaponInfo(0xF, "Black Barrel",
                [(Levels.STAGE_SKY_TROOPS, REGION_INDICIES.SKY_TROOPS_ROCKET_NORMAL),
@@ -335,7 +338,7 @@ WEAPON_INFO = [
                [Levels.STAGE_DIGITAL_CIRCUIT,Levels.STAGE_GLYPHIC_CANYON,
                 (Levels.STAGE_CRYPTIC_CASTLE,REGION_INDICIES.CRYPTIC_CASTLE_TORCH),
                 (Levels.STAGE_PRISON_ISLAND,REGION_INDICIES.PRISON_ISLAND_AIR_SAUCER), Levels.STAGE_CENTRAL_CITY,
-                Levels.STAGE_SKY_TROOPS, (Levels.STAGE_AIR_FLEET, REGION_INDICIES.AIR_FLEET_PULLEY),
+                Levels.STAGE_SKY_TROOPS, Levels.STAGE_AIR_FLEET,
                 Levels.STAGE_FINAL_HAUNT, Levels.STAGE_THE_LAST_WAY],
 []),
     WeaponInfo(0x20, "Dark Hammer",
@@ -427,7 +430,7 @@ WEAPON_INFO = [
 [WeaponAttributes.SPECIAL]),
     WeaponInfo(0x3C, "Satellite Gun",
                GetAnyShadowBoxRegions(),
-[WeaponAttributes.SPECIAL, WeaponAttributes.NOT_AIMABLE]),
+[WeaponAttributes.SPECIAL, WeaponAttributes.NOT_AIMABLE,WeaponAttributes.LOCKON]),
     WeaponInfo(0x3E, "Egg Vacuum",
                GetAnyShadowBoxRegions(),
 [WeaponAttributes.SPECIAL, WeaponAttributes.VACUUM]),

@@ -137,6 +137,7 @@ class GAME_ADDRESSES:
     FIRST_STORY_MODE_STAGE_ADDRESS_RELOADED = 0x800046FD
 
 class LevelStatusOptions:
+    LoadingFirstTime = 0x00
     NotInLevel = 0x01
     Loading = 0x02
     Active = 0x03
@@ -147,6 +148,7 @@ class LevelStatusOptions:
     Reloading = 0x08
     Death = 0x09
     Saving = 0x0A
+    Blackout = 0x0B
     Other = 0x10
 
 class MenuOptions:
@@ -1080,6 +1082,7 @@ class ShTHContext(CommonContext):
 
     def __init__(self, server_address, password):
         super().__init__(server_address, password)
+
         self.override_settings = []
         self.dolphin_sync_task: Optional[asyncio.Task] = None
         self.dolphin_status = CONNECTION_INITIAL_STATUS
@@ -1192,6 +1195,8 @@ class ShTHContext(CommonContext):
         self.energy_cores = False
         self.door_sanity = False
         self.gold_beetle_sanity = False
+        self.objective_sanity_behaviour = None
+        self.objective_sanity_system = None
 
         self.last_subtitle_text_pointer = None
         self.last_subtitle_default_text = None
@@ -1486,6 +1491,12 @@ class ShTHContext(CommonContext):
 
             if "gold_beetle_sanity" in slot_data:
                 self.gold_beetle_sanity = slot_data["gold_beetle_sanity"]
+
+            if "objective_sanity_system" in slot_data:
+                self.objective_sanity_system = slot_data["objective_sanity_system"]
+
+            if "objective_sanity_behaviour" in slot_data:
+                self.objective_sanity_behaviour = slot_data["objective_sanity_behaviour"]
 
             self.restoreState()
             self.awaiting_server = False
@@ -2021,7 +2032,8 @@ def is_mission_completable(ctx, stage, alignment):
 
     clear = relevant_level_clears[0]
 
-    if clear.requirement_count is None or not ctx.objective_sanity:
+    if clear.requirement_count is None or not ctx.objective_sanity or\
+        ctx.objective_sanity_system == Options.ObjectiveSanityBehaviour.option_base_clear:
         return True
 
     max_required = ShadowUtils.getMaxRequired(
@@ -2459,7 +2471,7 @@ async def check_level_status(ctx):
         level_status_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.ADDRESS_LEVEL_STATUS, 4)
         level_status_value = int.from_bytes(level_status_bytes, byteorder='big')
 
-        if level_status_value in [LevelStatusOptions.NotInLevel,
+        if level_status_value in [LevelStatusOptions.LoadingFirstTime, LevelStatusOptions.NotInLevel,
                                   LevelStatusOptions.Loading,
                                   LevelStatusOptions.Saving,
                                   LevelStatusOptions.Other, LevelStatusOptions.Restarting]:
@@ -2467,6 +2479,12 @@ async def check_level_status(ctx):
             ctx.level_status = None
             ctx.junk_delay = 0
             return current_level
+
+        LSValues = [v for k, v in LevelStatusOptions.__dict__.items() if not k.startswith('__') and not callable(v)]
+
+        if level_status_value not in LSValues:
+            logger.error("Unknown level status value: %d", level_status_value)
+            pass
 
         ctx.level_status = level_status_value
 
@@ -2539,6 +2557,9 @@ COMPLETE_FLAG_OFF = 0
 COMPLETE_FLAG_OFF_SET = 1
 COMPLETE_FLAG_READY = 2
 COMPLETE_FLAG_ON_SET = 3
+
+COMPLETE_FLAG_ON_MANUAL = 4
+
 
 async def disable_weapon(ctx):
 
@@ -3218,7 +3239,7 @@ async def handle_objects(ctx, current_level):
             if loaded_object_type == 0x00:
                 break
             print("Failed to read type correctly", Objects.GetTypeId(object.object_type), loaded_object_type,
-                  expected_type, object.index)
+                  expected_type, object.index, object.name)
 
         loaded_extra_pointer_bytes = dolphin_memory_engine.read_bytes(extra_data_pointer, 4)
         loaded_extra_pointer = int.from_bytes(loaded_extra_pointer_bytes, byteorder='big')
@@ -3469,10 +3490,53 @@ async def handle_objects(ctx, current_level):
         if not despawn and spawn and loaded_spawn_data in (0x00, 0x04):
             writeBytes(spawn_base_byte, spawn_bytes)
 
+        object_values_complete = []
+        # Objects which weirdly change state
+        if object.object_type in [Objects.ObjectType.GLYPHIC_CANYON_TEMPLE, Objects.ObjectType.CRYPTIC_CASTLE_LANTERN,
+                                  Objects.ObjectType.CREAM, Objects.ObjectType.CHEESE, Objects.ObjectType.SKY_TROOPS_EGG_SHIP,
+                                  Objects.ObjectType.SKY_TROOPS_TEMPLE, Objects.ObjectType.MAD_MATRIX_BOMB,
+                                  Objects.ObjectType.MAD_MATRIX_TERMINAL, Objects.ObjectType.LAVA_SHELTER_DEFENSE,
+
+                                  Objects.ObjectType.GUN_SOLIDER
+                                  ]:
+            object_values_complete.append(0xB)
+            object_values_complete.append(0x8)
+
+        # This detects death OR despawn, but best we have for now!
+        if object.object_type in [
+                                  Objects.ObjectType.GUN_SOLIDER
+                                  ]:
+            object_values_complete.append(0x9)
+
+
+        # Objects which despawn
+        if object.object_type in [Objects.ObjectType.GUN_BEETLE, Objects.ObjectType.BIG_FOOT,
+                                  Objects.ObjectType.GUN_ROBOT, Objects.ObjectType.EGG_CLOWN,
+                                  Objects.ObjectType.EGG_PAWN, Objects.ObjectType.SHADOW_ANDROID,
+                                  Objects.ObjectType.BLACK_ASSASSIN, Objects.ObjectType.BLACK_VOLT,
+                                  Objects.ObjectType.BLACK_HAWK, Objects.ObjectType.BLACK_WARRIOR,
+                                  Objects.ObjectType.BLACK_OAK, Objects.ObjectType.BLACK_WING,
+                                  Objects.ObjectType.BLACK_WORM, Objects.ObjectType.BLACK_LARVAE,
+                                  Objects.ObjectType.ARTIFICIAL_CHAOS,
+
+                                  Objects.ObjectType.PRISON_ISLAND_DISC, Objects.ObjectType.CENTRAL_CITY_BIG_BOMB,
+                                  Objects.ObjectType.THE_ARK_DEFENSE_UNIT, Objects.ObjectType.SPACE_GADGET_DEFENSE_UNIT,
+                                  Objects.ObjectType.GUN_FORTRESS_COMPUTER, Objects.ObjectType.DOOM_RESEARCHER
+
+                                  ]:
+
+            # Enemeis which respawn write 8 then B in quick succession
+            object_values_complete.append(0xB)
+            object_values_complete.append(0x8)
+
+        # Base style objects 0
         if (shadow_box_sanity and object.object_type == Objects.ObjectType.SHADOW_BOX) or \
             (core_sanity and object.object_type == Objects.ObjectType.ENERGY_CORE or \
             object.object_type == Objects.ObjectType.ENERGY_CORE_IN_WOOD_BOX):
 
+            object_values_complete = [0x0]
+
+        if len(object_values_complete) != 0:
             expected_object_id, expected_object_name = Names.GetObjectLocationName(object)
 
             related_locations = [l.locationId for l in object_locations if
@@ -3482,18 +3546,24 @@ async def handle_objects(ctx, current_level):
                                           l not in ctx.handled
                                           and l not in ctx.checked_locations]) == 0
 
-            #if object.object_type == Objects.ObjectType.GOLD_BEETLE and not arch_location_complete:
-            #    print("check beetle", object.index, expected_object_id, expected_object_name,
-            #          related_locations, arch_location_complete, loaded_spawn_data)
+            is_world_location = len([l for l in related_locations if
+                                          l in ctx.server_locations]) != 0
+
+            if len(related_locations) == 0:
+                print("Related  locations not recognised:", expected_object_name)
+                continue
+            elif not is_world_location:
+                #print("Unrecognised as world item:", expected_object_name)
+                continue
 
             if object.index in ctx.level_state["object_status"]:
                 object_status = ctx.level_state["object_status"][object.index]
-                if object_status == 0x00:
+                if object_status in object_values_complete:
                     arch_location_complete = True
 
             if not arch_location_complete:
-                if loaded_spawn_data == 0x00:
-                    ctx.level_state["object_status"][object.index] = 0x00
+                if loaded_spawn_data in object_values_complete:
+                    ctx.level_state["object_status"][object.index] = 0x0B
                     messages.extend(related_locations)
 
         if beetle_sanity and object.object_type == Objects.ObjectType.GOLD_BEETLE:
@@ -3678,7 +3748,6 @@ def DisplayMessageInGame(ctx, message, display_time):
     ttl_bytes = display_time.to_bytes(4, byteorder='big')
 
     if subtitle_ttl_bytes != ttl_bytes:
-        print("Show message for:", ttl_bytes)
         writeBytes(ttl_address, ttl_bytes)
         ctx.last_subtitle_ttl = subtitle_ttl_bytes
         ctx.last_subtitle_ttl_pointer = ttl_address
@@ -3692,7 +3761,6 @@ def DisplayMessageInGame(ctx, message, display_time):
 
     current_subtitle_bytes = dolphin_memory_engine.read_bytes(text_pointer, len(shadow_message_bytes))
     if current_subtitle_bytes != shadow_message_bytes:
-        print("Display as message", message)
         writeBytes(text_pointer, shadow_message_bytes)
         ctx.last_subtitle_text_pointer = text_pointer
         ctx.last_subtitle_default_text = current_subtitle_bytes
@@ -3727,6 +3795,7 @@ async def update_level_behaviour(ctx, current_level, death):
     handle_count = 0
 
     if death or ctx.restart:
+        ctx.level_keys = []
         if ctx.debug_logging:
             logger.error("Handle death/restart")
         if len(ctx.checkpoint_snapshots) > 0 and not ctx.restart:
@@ -3734,7 +3803,6 @@ async def update_level_behaviour(ctx, current_level, death):
             ctx.level_state = deepcopy(last_snapshot)
         else:
             ctx.level_state = {}
-            pass
 
         ctx.restart = False
 
@@ -3929,27 +3997,36 @@ async def update_level_behaviour(ctx, current_level, death):
             difference_over = 0
 
         hero_write = hero_count
-        if ctx.objective_sanity:
+        if ctx.objective_sanity and ctx.objective_sanity_behaviour != Options.ObjectiveSanityBehaviour.option_base_clear:
             restore_hero = True
 
+        set_max_up = False
         hero_completable = ctx.level_state["hero_completable"]
         if hero_completable == COMPLETE_FLAG_OFF:
             set_max_up = True
-            if ctx.objective_sanity:
+            if ctx.objective_sanity and ctx.objective_sanity_behaviour != Options.ObjectiveSanityBehaviour.option_base_clear:
                 hero_count_max = heroMaxAvailable + extra_increase
+            elif ctx.objective_sanity:
+                hero_count_max = extra_increase
             else:
                 hero_count_max = heroMaxAdjusted
             ctx.level_state["hero_completable"] = COMPLETE_FLAG_OFF_SET
         elif hero_completable == COMPLETE_FLAG_READY:
             set_max_up = True
             hero_count_max = heroMaxAdjusted
-            ctx.level_state["hero_completable"] = COMPLETE_FLAG_ON_SET
+
+            if ctx.objective_sanity_behaviour == Options.ObjectiveSanityBehaviour.option_manual_clear:
+                ctx.level_state["hero_completable"] = COMPLETE_FLAG_ON_MANUAL
+                hero_write = ctx.level_state["hero_progress"]
+                handle_count = True
+            else:
+                ctx.level_state["hero_completable"] = COMPLETE_FLAG_ON_SET
             handle_count = True
         else:
             set_max_up = False
             hero_count_max = 255
 
-        if hero_count >= heroMaxAdjusted:
+        if hero_count >= heroMaxAdjusted or ctx.objective_sanity_behaviour == Options.ObjectiveSanityBehaviour.option_base_clear:
             hero_max_hit = True
 
         if set_max_up and hero_address_total is not None:
@@ -3957,7 +4034,8 @@ async def update_level_behaviour(ctx, current_level, death):
             new_bytes = new_count.to_bytes(hero_address_size, byteorder='big')
             writeBytes(hero_address_total, new_bytes)
 
-        if handle_count > 0 and hero_write is not None and ctx.objective_sanity:
+        if handle_count > 0 and hero_write is not None and ctx.objective_sanity\
+                and ctx.objective_sanity_behaviour != Options.ObjectiveSanityBehaviour.option_base_clear:
             new_count = hero_write
             new_bytes = new_count.to_bytes(hero_address_size, byteorder='big')
             writeBytes(hero_address, new_bytes)
@@ -3985,26 +4063,35 @@ async def update_level_behaviour(ctx, current_level, death):
         if difference_over < 0:
             difference_over = 0
 
-        if ctx.objective_sanity:
+        set_max_up = False
+        if ctx.objective_sanity and ctx.objective_sanity_behaviour != Options.ObjectiveSanityBehaviour.option_base_clear:
             restore_dark = True
         dark_completable = ctx.level_state["dark_completable"]
         if dark_completable == COMPLETE_FLAG_OFF:
             set_max_up = True
-            if ctx.objective_sanity:
+            if ctx.objective_sanity and ctx.objective_sanity_behaviour != Options.ObjectiveSanityBehaviour.option_base_clear:
                 dark_count_max = darkMaxAvailable + extra_increase
+            elif ctx.objective_sanity:
+                dark_count_max = extra_increase
             else:
                 dark_count_max = darkMaxAdjusted
             ctx.level_state["dark_completable"] = COMPLETE_FLAG_OFF_SET
         elif dark_completable == COMPLETE_FLAG_READY:
             set_max_up = True
             dark_count_max = darkMaxAdjusted
-            ctx.level_state["dark_completable"] = COMPLETE_FLAG_ON_SET
-            handle_count = True
+
+            if ctx.objective_sanity_behaviour == Options.ObjectiveSanityBehaviour.option_manual_clear:
+                ctx.level_state["dark_completable"] = COMPLETE_FLAG_ON_MANUAL
+                dark_write = ctx.level_state["dark_progress"]
+                handle_count = True
+            else:
+                ctx.level_state["dark_completable"] = COMPLETE_FLAG_ON_SET
+
         else:
             set_max_up = False
             dark_count_max = 255
 
-        if dark_count >= darkMaxAdjusted:
+        if dark_count >= darkMaxAdjusted or ctx.objective_sanity_behaviour == Options.ObjectiveSanityBehaviour.option_base_clear:
             dark_max_hit = True
 
         if set_max_up and dark_address_total is not None:
@@ -4022,7 +4109,8 @@ async def update_level_behaviour(ctx, current_level, death):
             new_bytes = new_count.to_bytes(dark_address_size, byteorder='big')
             writeBytes(dark_address_total, new_bytes)
 
-        if handle_count > 0 and dark_write is not None and ctx.objective_sanity:
+        if handle_count > 0 and dark_write is not None and ctx.objective_sanity \
+                and ctx.objective_sanity_behaviour != Options.ObjectiveSanityBehaviour.option_base_clear:
             new_count = dark_write
             new_bytes = new_count.to_bytes(dark_address_size, byteorder='big')
             writeBytes(dark_address, new_bytes)
@@ -4083,10 +4171,9 @@ async def update_level_behaviour(ctx, current_level, death):
             if enemysanity and hero_address == GAME_ADDRESSES.ADDRESS_ALIEN_COUNT:
                 ctx.level_state["alien_progress"] += new_count
                 alien_progress = True
-        #elif expected_hero_value > current_count >= 0:
-        #    ctx.level_state["hero_progress"] = current_count
 
-        if hero_address is not None and hero_write is not None and restore_hero and current_count != expected_hero_value:
+        if hero_address is not None and hero_write is not None and restore_hero and current_count != expected_hero_value\
+                and ctx.level_state["hero_completable"] != COMPLETE_FLAG_ON_MANUAL:
             new_count = expected_hero_value
             new_bytes = new_count.to_bytes(4, byteorder='big')
             writeBytes(hero_address, new_bytes)
@@ -4136,7 +4223,8 @@ async def update_level_behaviour(ctx, current_level, death):
         #elif expected_dark_value > current_count >= 0:
         #    ctx.level_state["dark_progress"] = current_count
 
-        if dark_address is not None and dark_write is not None and restore_dark and current_count != expected_dark_value:
+        if dark_address is not None and dark_write is not None and restore_dark and current_count != expected_dark_value\
+                and ctx.level_state["dark_completable"] != COMPLETE_FLAG_ON_MANUAL:
             new_count = expected_dark_value
             new_bytes = new_count.to_bytes(4, byteorder='big')
             writeBytes(dark_address, new_bytes)
@@ -4295,17 +4383,22 @@ async def update_level_behaviour(ctx, current_level, death):
                         messages.extend(locations)
 
     if ctx.key_sanity and current_level in KEY_IDENTIFIER_BY_STAGE:
-
         key_addresses = GetKeysanityAddresses()
         if "key_index" in ctx.level_state:
             state_key_index = ctx.level_state["key_index"]
+            #logger.error("State Key Index: %d", state_key_index)
             if state_key_index < len(key_addresses):
                 current_key_bytes = dolphin_memory_engine.read_bytes(key_addresses[state_key_index], 4)
                 current_key_data = int.from_bytes(current_key_bytes, byteorder='big')
                 if current_key_data != 0xFFFFFFFF and current_key_data != 0x0:
-                    ctx.level_state["key_index"] = state_key_index + 1
+                    logger.error("Recognised key:%s", str(current_key_data))
                     key_options = KEY_IDENTIFIER_BY_STAGE[current_level]
-                    if current_key_data in key_options:
+                    if current_key_data in ctx.level_keys:
+                        logger.error("Duplicate key:%s", str(current_key_data))
+                        empty_bytes = 0xFFFFFFFF.to_bytes(4, byteorder='big')
+                        writeBytes(key_addresses[state_key_index], empty_bytes)
+                    elif current_key_data in key_options:
+                        ctx.level_state["key_index"] = state_key_index + 1
                         ctx.level_keys.append(current_key_data)
                         key_index = key_options.index(current_key_data)
                         key_locations = [k for k in keysanity_locations if k.stageId == current_level and k.count == key_index]
@@ -4313,6 +4406,7 @@ async def update_level_behaviour(ctx, current_level, death):
                             if ctx.error_logging:
                                 logger.error("Unable to find location associated %d %d", key_index, current_level)
                         else:
+                            logger.error("Extend key message:%s", [k.name for k in key_locations])
                             messages.extend([k.locationId for k in key_locations])
                     else:
                         if ctx.error_logging:
@@ -4330,9 +4424,15 @@ async def update_level_behaviour(ctx, current_level, death):
                         key_data = [k for k in keysanity_locations if k.locationId == first_key_location_id][0]
                         key_value_to_write = key_options_unknown[key_data.count]
                         restored_key_bytes = key_value_to_write.to_bytes(4, byteorder='big')
+
+                        logger.error("Restore bytes:%s", str(restored_key_bytes))
                         writeBytes(key_addresses[state_key_index], restored_key_bytes)
                     else:
+                        logger.error("Key restore complete")
                         ctx.key_restore_complete = True
+
+        else:
+            logger.error("Key index not present")
 
     # If an objective is currently completable then check for pause state, etc
 
@@ -4508,7 +4608,7 @@ async def dolphin_sync_task(ctx: ShTHContext):
                     await asyncio.sleep(0.1)
 
                     if ctx.ring_link == Options.RingLink.option_unsafe:
-                        await handle_ring_link(ctx, level, death)
+                        await handle_ring_link(ctx, None, death)
 
                     continue
 

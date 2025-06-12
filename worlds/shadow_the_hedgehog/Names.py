@@ -1,7 +1,7 @@
 
 LOCATION_ID_PLUS_O = 110068
 
-from .ObjectTypes import SETObject
+from .ObjectTypes import SETObject,ObjectType
 
 STAGE_WESTOPOLIS = 100
 STAGE_DIGITAL_CIRCUIT = 200
@@ -92,20 +92,6 @@ LEVEL_ID_TO_LEVEL = {
     BOSS_DEVIL_DOOM: "Devil Doom"
 }
 
-override_strings = \
-[
-    "EA", "EG", "EE",
-    "OD", "OH",
-    "CD", "CH",
-    "AD", "AH",
-    "OED", "OEH",
-    "OECD", "OECH",
-    "OFD", "OFH",
-    "OEFD", "OEFH",
-    "EFE", "EFG", "EFH"
-
-]
-
 BOSS_STAGES = [
     BOSS_BLACK_BULL_LH,
     BOSS_EGG_BREAKER_CC,
@@ -136,15 +122,6 @@ def getBossNames():
 
 def getLastStoryNames():
     return [ v[1] for v in LEVEL_ID_TO_LEVEL.items() if v[0] in LAST_STORY_STAGES ]
-
-def getValidPercentOverrides():
-    options = []
-    for s in override_strings:
-        for l in getLevelNames():
-            options.append(s+"."+l)
-
-    return options
-
 
 class REGION_INDICIES:
     WESTOPOLIS_PULLEY = 1
@@ -202,7 +179,10 @@ class REGION_INDICIES:
     THE_DOOM_PULLEY = 1
     THE_DOOM_KEY_DOOR = 2
     THE_DOOM_BOMBS = 3
-    THE_DOOM_PULLEY_2 = 4
+    THE_DOOM_THROUGH_DOOR = 4
+    THE_DOOM_DOOR_1_SWITCH = 5
+    THE_DOOM_PULLEY_2 = 6
+    THE_DOOM_GOLD_BEETLE = 7
 
     SKY_TROOPS_PULLEY = 1
     SKY_TROOPS_LIGHT_DASH = 2
@@ -212,8 +192,12 @@ class REGION_INDICIES:
     SKY_TROOPS_KEY_DOOR = 6
     SKY_TROOPS_BLACK_VOLT = 7
     SKY_TROOPS_BLACK_HAWK = 8
-    SKY_TROOPS_HAWK_OR_VOLT = 9
-    SKY_TROOPS_HAWK_ENEMIES = 10
+    SKY_TROOPS_HAWK_ENEMIES = 9
+    SKY_TROOPS_BLACK_HAWK_CC_EASY_1 = 10
+    SKY_TROOPS_BLACK_HAWK_CC_EASY_2 = 11
+    SKY_TROOPS_BLACK_HAWK_CC_HARD = 12
+
+    SKY_TROOPS_HAWK_OR_VOLT = 13
 
     MAD_MATRIX_GUN = 1
     MAD_MATRIX_YELLOW_ENTRY = 2
@@ -241,15 +225,19 @@ class REGION_INDICIES:
     IRON_JUNGLE_KEY_DOOR = 1
     IRON_JUNGLE_PULLEY_NORMAL = 2
     IRON_JUNGLE_ROCKET = 3
-    IRON_JUNGLE_GUN_JUMPER = 4
-    IRON_JUNGLE_LIGHT_DASH = 5
-    IRON_JUNGLE_GUN_TURRET = 6
+    IRON_JUNGLE_GOLD_BEETLE = 4
+    IRON_JUNGLE_GUN_JUMPER = 5
+    IRON_JUNGLE_LIGHT_DASH = 6
+    IRON_JUNGLE_GUN_TURRET = 7
+    IRON_JUNGLE_LIGHT_DASH_DARK = 8
 
-    SPACE_GADGET_ZIPWIRE = 1
-    SPACE_GADGET_AIR_SAUCER = 2
-    SPACE_GADGET_KEY_DOOR = 3
-    SPACE_GADGET_WARP_HOLE = 4
-    SPACE_GADGET_WARP_HOLE_DARK = 5
+    SPACE_GADGET_UNITS = 1
+    SPACE_GADGET_ZIPWIRE = 2
+    SPACE_GADGET_AIR_SAUCER = 3
+    SPACE_GADGET_UNITS_AIR_SAUCER = 4
+    SPACE_GADGET_KEY_DOOR = 5
+    SPACE_GADGET_WARP_HOLE = 6
+    SPACE_GADGET_WARP_HOLE_DARK = 7
 
     LOST_IMPACT_GUN_LIFT = 1
     LOST_IMPACT_PULLEY = 2
@@ -262,11 +250,24 @@ class REGION_INDICIES:
     GUN_FORTRESS_TURRET_OR_FIRE = 2
     GUN_FORTRESS_ZIPWIRE_NORMAL = 3
     GUN_FORTRESS_PULLEY = 4
-    GUN_FORTRESS_ZIPWIRE = 5
-    GUN_FORTRESS_ROCKET_NORMAL = 6
-    GUN_FORTRESS_KEY_DOOR = 7
-    GUN_FORTRESS_ZIPLINE_HARD = 8
-    GUN_FORTRESS_KEY_OR_ZIPLINE = 9
+    GUN_FORTRESS_ZIP_1A = 5
+    GUN_FORTRESS_ZIP_1B = 6
+    GUN_FORTRESS_ZIP_2A = 7
+    GUN_FORTRESS_ZIP_2B = 8
+    GUN_FORTRESS_ZIPWIRE_BASE = 9
+    GUN_FORTRESS_ZIPWIRE = 10
+    GUN_FORTRESS_ROCKET_NORMAL = 11
+    GUN_FORTRESS_WEAPON_SHOT = 12
+    GUN_FORTRESS_TUNNEL_2 = 13
+    GUN_FORTRESS_TOP_TUNNEL_2 = 14
+    GUN_FORTRESS_COMPUTER_2_BACK = 15
+    GUN_FORTRESS_COMPUTER_ROOM_TWO = 16
+    GUN_FORTRESS_AFTER_TUNNEL_2 = 17
+    GUN_FORTRESS_KEY_PULLEY = 18
+    GUN_FORTRESS_KEY_DOOR = 19
+    GUN_FORTRESS_ZIPLINE_HARD = 20
+    GUN_FORTRESS_ZIPLINE_ENEMIES = 21
+    GUN_FORTRESS_KEY_OR_ZIPLINE = 22
 
     BLACK_COMET_AIR_SAUCER = 1
     BLACK_COMET_WORMS = 2
@@ -277,6 +278,7 @@ class REGION_INDICIES:
     BLACK_COMET_WORMS_2 = 7
     BLACK_COMET_FLOATING_ENEMY_WALL = 8
     BLACK_COMET_KEY_DOOR = 9
+    BLACK_COMET_BEHIND_KEY_DOOR = 10
 
     LAVA_SHELTER_KEY_DOOR = 1
     LAVA_SHELTER_AIR_SAUCER = 2
@@ -291,29 +293,37 @@ class REGION_INDICIES:
     COSMIC_FALL_KEY_DOOR = 4
     COSMIC_FALL_LIGHT_DASH = 5
     COSMIC_FALL_GUN_JUMPER = 6
-    COSMIC_FALL_LD_OR_JUMPER = 7
-    COSMIC_FALL_ROCKET = 8
+    COSMIC_FALL_GUN_JUMPER_PULLEY_HARD = 7
+    COSMIC_FALL_LD_OR_JUMPER = 8
+    COSMIC_FALL_COMPUTER_ROOM_1 = 9
+    COSMIC_FALL_COMPUTER_ROOM_2 = 10
+    COSMIC_FALL_COMPUTER_ROOM = 11
 
     FINAL_HAUNT_VACUUM = 1
     FINAL_HAUNT_VACUUM_HARD = 2
     FINAL_HAUNT_BLACK_VOLT = 3
-    FINAL_HAUNT_HARD_VACUUM_OR_BLACK_VOLT = 4
-    FINAL_HAUNT_SHIELD_COUNT_2 = 5
-    FINAL_HAUNT_ROCKET_NORMAL = 6
-    FINAL_HAUNT_SHIELD_2A = 7
-    FINAL_HAUNT_SHIELD_2 = 8
-    FINAL_HAUNT_BLACK_VOLT_2 = 9
-    FINAL_HAUNT_KEY_DOOR = 10
-    FINAL_HAUNT_LIGHT_DASH = 11
-    FINAL_HAUNT_SHIELD_COUNT_3 = 12
-    FINAL_HAUNT_KEY_DOOR_2 = 13
-    FINAL_HAUNT_SHIELD_4 = 14
+    FINAL_HAUNT_BLACK_VOLT_BASE = 4
+    FINAL_HAUNT_BLACK_VOLT_ACCESS = 5
+    FINAL_HAUNT_BLACK_VOLT_BACK = 6
+    FINAL_HAUNT_HARD_VACUUM_OR_BLACK_VOLT = 7
+    FINAL_HAUNT_SHIELD_COUNT_2 = 8
+    FINAL_HAUNT_ROCKET_NORMAL = 9
+    FINAL_HAUNT_SHIELD_2A = 10
+    FINAL_HAUNT_SHIELD_2 = 11
+    FINAL_HAUNT_BLACK_VOLT_2 = 12
+    FINAL_HAUNT_KEY_DOOR = 13
+    FINAL_HAUNT_LIGHT_DASH = 14
+    FINAL_HAUNT_SHIELD_COUNT_3 = 15
+    FINAL_HAUNT_KEY_DOOR_2 = 16
+    FINAL_HAUNT_SHIELD_4 = 17
 
     THE_LAST_WAY_BLACK_VOLT = 1
-    THE_LAST_WAY_KEY_DOOR = 2
-    THE_LAST_WAY_WARP_HOLE = 3
-    THE_LAST_WAY_VOLT_OR_WARP = 4
-    THE_LAST_WAY_LIGHT_DASH_EASY = 5
+    THE_LAST_WAY_VOLT_ENEMIES = 2
+    THE_LAST_WAY_KEY_DOOR = 3
+    THE_LAST_WAY_BEHIND_KEY_DOOR = 4
+    THE_LAST_WAY_WARP_HOLE = 5
+    THE_LAST_WAY_VOLT_OR_WARP = 6
+    THE_LAST_WAY_LIGHT_DASH_EASY = 7
 
 
 LEVEL_ID_TO_LEVEL = {
@@ -393,9 +403,14 @@ def GetBossClearEventName(stageId, from_id, alignment_id):
     .replace(" ", "_").upper()
     return view_name
 
+def ObjectTypeToName(type):
+    value_to_name = {v: k for k, v in ObjectType.__dict__.items() if not k.startswith('__') and not callable(v)}
+    return value_to_name.get(type).replace("_", " ").title()
+
+
 def GetObjectLocationName(object: SETObject):
-    id_name = int(str(LOCATION_ID_PLUS_O) + str(2) + str(object.stage) + "0" + str(object.index))
-    view_name = LEVEL_ID_TO_LEVEL[object.stage] + "-" + object.name
+    id_name = int(str(LOCATION_ID_PLUS_O) + str(5) + str(object.stage) + "0" + str(object.index))
+    view_name = f"{LEVEL_ID_TO_LEVEL[object.stage]} {ObjectTypeToName(object.object_type)}-{object.name}"
 
     return id_name, view_name
 
@@ -415,7 +430,7 @@ class REGION_RESTRICTION_TYPES:
     NoRestriction = 10
     Vacuum = 11
     Gun = 12
-    Heal = 13,
+    Heal = 13
     BlackArmsTurret = 14
     GunTurret = 15
     ShootOrTurret = 16
@@ -429,10 +444,67 @@ class REGION_RESTRICTION_TYPES:
     Zipwire = 23
     Explosion = 24 # Access to Bazooka, or Bombs
     LightDash = 25
-    HardLogicOnly = 26
-    GoldBeetle = 27
-    VacuumOrShot = 28
+    GoldBeetle = 26
+    VacuumOrShot = 27
+    SatelliteGun = 28
+    Impassable = 29
 
     @classmethod
     def RegionAccess(cls, stageRegionId):
         return 100 + stageRegionId
+
+
+def getValidPercentOverrides():
+    return [
+        'OED.Westopolis', 'OECD.Westopolis', 'AED.Westopolis', 'OEFD.Westopolis',
+        'OEH.Westopolis', 'OECH.Westopolis', 'AEH.Westopolis', 'OEFH.Westopolis',
+        'OD.Glyphic Canyon', 'CD.Glyphic Canyon', 'AD.Glyphic Canyon', 'OFD.Glyphic Canyon',
+        'OEH.Glyphic Canyon', 'OECH.Glyphic Canyon', 'AEH.Glyphic Canyon', 'OEFH.Glyphic Canyon',
+        'OH.Lethal Highway', 'CH.Lethal Highway', 'AH.Lethal Highway', 'OFH.Lethal Highway',
+        'OD.Cryptic Castle', 'CD.Cryptic Castle', 'AD.Cryptic Castle', 'OFD.Cryptic Castle',
+        'OH.Cryptic Castle', 'CH.Cryptic Castle', 'AH.Cryptic Castle', 'OFH.Cryptic Castle',
+        'OED.Prison Island', 'OECD.Prison Island', 'AED.Prison Island', 'OEFD.Prison Island',
+        'OH.Prison Island', 'CH.Prison Island', 'AH.Prison Island', 'OFH.Prison Island',
+        'OED.Circus Park', 'OECD.Circus Park', 'AED.Circus Park', 'OEFD.Circus Park',
+        'OD.Central City', 'CD.Central City', 'AD.Central City', 'OFD.Central City',
+        'OH.Central City', 'CH.Central City', 'AH.Central City', 'OFH.Central City',
+        'OED.The Doom', 'OECD.The Doom', 'AED.The Doom', 'OEFD.The Doom',
+        'OH.The Doom', 'CH.The Doom', 'AH.The Doom', 'OFH.The Doom',
+        'OD.Sky Troops', 'CD.Sky Troops', 'AD.Sky Troops', 'OFD.Sky Troops',
+        'OH.Sky Troops', 'CH.Sky Troops', 'AH.Sky Troops', 'OFH.Sky Troops',
+        'OD.Mad Matrix', 'CD.Mad Matrix', 'AD.Mad Matrix', 'OFD.Mad Matrix',
+        'OH.Mad Matrix', 'CH.Mad Matrix', 'AH.Mad Matrix', 'OFH.Mad Matrix',
+        'OEH.Death Ruins', 'OECH.Death Ruins', 'AEH.Death Ruins', 'OEFH.Death Ruins',
+        'OD.The Ark', 'CD.The Ark', 'AD.The Ark', 'OFD.The Ark',
+        'OD.Air Fleet', 'CD.Air Fleet', 'AD.Air Fleet', 'OFD.Air Fleet',
+        'OEH.Air Fleet', 'OECH.Air Fleet', 'AEH.Air Fleet', 'OEFH.Air Fleet',
+        'OED.Iron Jungle', 'OECD.Iron Jungle', 'AED.Iron Jungle', 'OEFD.Iron Jungle',
+        'OH.Iron Jungle', 'CH.Iron Jungle', 'AH.Iron Jungle', 'OFH.Iron Jungle',
+        'OD.Space Gadget', 'CD.Space Gadget', 'AD.Space Gadget', 'OFD.Space Gadget',
+        'OEH.Lost Impact', 'OECH.Lost Impact', 'AEH.Lost Impact', 'OEFH.Lost Impact',
+        'OD.Gun Fortress', 'CD.Gun Fortress', 'AD.Gun Fortress', 'OFD.Gun Fortress',
+        'OED.Black Comet', 'OECD.Black Comet', 'AED.Black Comet', 'OEFD.Black Comet',
+        'OD.Lava Shelter', 'CD.Lava Shelter', 'AD.Lava Shelter', 'OFD.Lava Shelter',
+        'OD.Final Haunt', 'CD.Final Haunt', 'AD.Final Haunt', 'OFD.Final Haunt',
+        'EG.Westopolis', 'EFG.Westopolis', 'EA.Westopolis', 'EFH.Westopolis',
+        'EG.Digital Circuit', 'EFG.Digital Circuit', 'EA.Digital Circuit', 'EFH.Digital Circuit',
+        'EG.Glyphic Canyon', 'EFG.Glyphic Canyon', 'EA.Glyphic Canyon', 'EFH.Glyphic Canyon',
+        'EG.Lethal Highway', 'EFG.Lethal Highway', 'EA.Lethal Highway', 'EFH.Lethal Highway',
+        'EA.Cryptic Castle', 'EFH.Cryptic Castle', 'EE.Cryptic Castle', 'EFE.Cryptic Castle',
+        'EG.Prison Island', 'EFG.Prison Island', 'EA.Prison Island', 'EFH.Prison Island',
+        'EG.Circus Park', 'EFG.Circus Park', 'EE.Circus Park', 'EFE.Circus Park',
+        'EG.Central City', 'EFG.Central City', 'EA.Central City', 'EFH.Central City',
+        'EG.The Doom', 'EFG.The Doom', 'EA.Sky Troops', 'EFH.Sky Troops',
+        'EE.Sky Troops', 'EFE.Sky Troops', 'EA.Mad Matrix', 'EFH.Mad Matrix',
+        'EE.Mad Matrix', 'EFE.Mad Matrix', 'EG.Death Ruins', 'EFG.Death Ruins',
+        'EA.Death Ruins', 'EFH.Death Ruins', 'EG.The Ark', 'EFG.The Ark',
+        'EA.The Ark', 'EFH.The Ark', 'EG.Air Fleet', 'EFG.Air Fleet',
+        'EA.Air Fleet', 'EFH.Air Fleet', 'EG.Iron Jungle', 'EFG.Iron Jungle',
+        'EE.Iron Jungle', 'EFE.Iron Jungle', 'EG.Space Gadget', 'EFG.Space Gadget',
+        'EA.Space Gadget', 'EFH.Space Gadget', 'EG.Lost Impact', 'EFG.Lost Impact',
+        'EA.Lost Impact', 'EFH.Lost Impact', 'EG.Gun Fortress', 'EFG.Gun Fortress',
+        'EA.Gun Fortress', 'EFH.Gun Fortress', 'EG.Black Comet', 'EFG.Black Comet',
+        'EA.Black Comet', 'EFH.Black Comet', 'EE.Lava Shelter', 'EFE.Lava Shelter',
+        'EG.Cosmic Fall', 'EFG.Cosmic Fall', 'EA.Cosmic Fall', 'EFH.Cosmic Fall',
+        'EA.Final Haunt', 'EFH.Final Haunt', 'EA.The Last Way', 'EFH.The Last Way'
+    ]

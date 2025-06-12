@@ -1,6 +1,6 @@
 from . import Levels
 from .ObjectTypes import ObjectType, SETObject
-from .Names import REGION_INDICIES
+from .Names import REGION_INDICIES, REGION_RESTRICTION_TYPES
 
 DESIRABLE_OBJECTS_CRYPTIC_CASTLE  = [
 
@@ -42,7 +42,23 @@ DESIRABLE_OBJECTS_CRYPTIC_CASTLE  = [
     SETObject(ObjectType.BLACK_HAWK, Levels.STAGE_CRYPTIC_CASTLE, 3, "Black Hawk Enemy End",
               vehicle=ObjectType.ObjectTypeVehicle.BLACK_HAWK, region=REGION_INDICIES.CRYPTIC_CASTLE_BOMB_EASY_2),
 
-SETObject(ObjectType.EGG_PAWN, Levels.STAGE_CRYPTIC_CASTLE, 9, '0', region=0),
+    SETObject(ObjectType.CRYPTIC_CASTLE_LANTERN, Levels.STAGE_CRYPTIC_CASTLE, 29, "Lantern 1",
+              region=REGION_INDICIES.CRYPTIC_CASTLE_TORCH, restrictionType=REGION_RESTRICTION_TYPES.Torch),
+    SETObject(ObjectType.CRYPTIC_CASTLE_LANTERN, Levels.STAGE_CRYPTIC_CASTLE, 40, "Lantern 2",
+              region=REGION_INDICIES.CRYPTIC_CASTLE_TORCH, restrictionType=REGION_RESTRICTION_TYPES.Torch),
+    SETObject(ObjectType.CRYPTIC_CASTLE_LANTERN, Levels.STAGE_CRYPTIC_CASTLE, 2, "Lantern 3",
+              region=REGION_INDICIES.CRYPTIC_CASTLE_HAWK, restrictionType=REGION_RESTRICTION_TYPES.Torch),
+    SETObject(ObjectType.CRYPTIC_CASTLE_LANTERN, Levels.STAGE_CRYPTIC_CASTLE, 138, "Lantern 4",
+              region=REGION_INDICIES.CRYPTIC_CASTLE_BOMB_EASY_2, restrictionType=REGION_RESTRICTION_TYPES.Torch),
+    SETObject(ObjectType.CRYPTIC_CASTLE_LANTERN, Levels.STAGE_CRYPTIC_CASTLE, 180, "Lantern 5",
+              region=REGION_INDICIES.CRYPTIC_CASTLE_BOMB_EASY_2, restrictionType=REGION_RESTRICTION_TYPES.Torch),
+
+    SETObject(ObjectType.CREAM, Levels.STAGE_CRYPTIC_CASTLE, 470, "Cream",
+              region=REGION_INDICIES.CRYPTIC_CASTLE_BOMB_EASY_1),
+    SETObject(ObjectType.CHEESE, Levels.STAGE_CRYPTIC_CASTLE, 473, "Cheese",
+              region=REGION_INDICIES.CRYPTIC_CASTLE_BOMB_EASY_2),
+
+    SETObject(ObjectType.EGG_PAWN, Levels.STAGE_CRYPTIC_CASTLE, 9, '0', region=0),
 SETObject(ObjectType.EGG_CLOWN, Levels.STAGE_CRYPTIC_CASTLE, 17, '1', region=REGION_INDICIES.CRYPTIC_CASTLE_BALLOON),
 SETObject(ObjectType.BLACK_WARRIOR, Levels.STAGE_CRYPTIC_CASTLE, 20, '2', region=REGION_INDICIES.CRYPTIC_CASTLE_TORCH),
 SETObject(ObjectType.EGG_PAWN, Levels.STAGE_CRYPTIC_CASTLE, 25, '3', region=REGION_INDICIES.CRYPTIC_CASTLE_TORCH),

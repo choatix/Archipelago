@@ -1,6 +1,6 @@
 from . import Levels
 from .ObjectTypes import ObjectType, SETObject
-from .Names import REGION_INDICIES
+from .Names import REGION_INDICIES, REGION_RESTRICTION_TYPES
 
 DESIRABLE_OBJECTS_SPACE_GADGET = [
 
@@ -36,6 +36,19 @@ DESIRABLE_OBJECTS_SPACE_GADGET = [
     SETObject(ObjectType.WARP_HOLE, Levels.STAGE_SPACE_GADGET, 414, "Dark Warp Hole Entrance"),
     SETObject(ObjectType.WARP_HOLE, Levels.STAGE_SPACE_GADGET, 454, "Dark Warp Hole Exit"),
 
+    SETObject(ObjectType.SPACE_GADGET_DEFENSE_UNIT, Levels.STAGE_SPACE_GADGET, 592, 'Defense Unit 1',
+              region=REGION_INDICIES.SPACE_GADGET_UNITS, restrictionType=REGION_RESTRICTION_TYPES.Gun),
+    SETObject(ObjectType.SPACE_GADGET_DEFENSE_UNIT, Levels.STAGE_SPACE_GADGET, 593, 'Defense Unit 2',
+              region=REGION_INDICIES.SPACE_GADGET_UNITS, restrictionType=REGION_RESTRICTION_TYPES.Gun),
+    SETObject(ObjectType.SPACE_GADGET_DEFENSE_UNIT, Levels.STAGE_SPACE_GADGET, 141, 'Defense Unit 3',
+              region=REGION_INDICIES.SPACE_GADGET_UNITS_AIR_SAUCER, restrictionType=REGION_RESTRICTION_TYPES.Gun),
+    SETObject(ObjectType.SPACE_GADGET_DEFENSE_UNIT, Levels.STAGE_SPACE_GADGET, 86, 'Defense Unit 4',
+              region=REGION_INDICIES.SPACE_GADGET_UNITS_AIR_SAUCER, restrictionType=REGION_RESTRICTION_TYPES.Gun),
+    SETObject(ObjectType.SPACE_GADGET_DEFENSE_UNIT, Levels.STAGE_SPACE_GADGET, 334, 'Defense Unit 5',
+              region=REGION_INDICIES.SPACE_GADGET_UNITS_AIR_SAUCER, restrictionType=REGION_RESTRICTION_TYPES.Gun),
+    SETObject(ObjectType.SPACE_GADGET_DEFENSE_UNIT, Levels.STAGE_SPACE_GADGET, 444, 'Defense Unit 6',
+              region=REGION_INDICIES.SPACE_GADGET_UNITS_AIR_SAUCER, restrictionType=REGION_RESTRICTION_TYPES.Gun),
+
     SETObject(ObjectType.BLACK_HAWK, Levels.STAGE_SPACE_GADGET, 163, '0', region=0),
     SETObject(ObjectType.GUN_ROBOT, Levels.STAGE_SPACE_GADGET, 2, '1', region=0),
     SETObject(ObjectType.GUN_ROBOT, Levels.STAGE_SPACE_GADGET, 162, '2', region=0),
@@ -44,7 +57,7 @@ DESIRABLE_OBJECTS_SPACE_GADGET = [
     SETObject(ObjectType.BLACK_WARRIOR, Levels.STAGE_SPACE_GADGET, 252, '5', region=0),
     SETObject(ObjectType.BLACK_WARRIOR, Levels.STAGE_SPACE_GADGET, 253, '6', region=0),
 
-    SETObject(ObjectType.BLACK_WARRIOR, Levels.STAGE_SPACE_GADGET, 254, '6.5', region=0),
+    SETObject(ObjectType.GUN_ROBOT, Levels.STAGE_SPACE_GADGET, 254, '6.5', region=0),
 
     SETObject(ObjectType.GUN_ROBOT, Levels.STAGE_SPACE_GADGET, 255, '7', region=0),
     SETObject(ObjectType.BLACK_HAWK, Levels.STAGE_SPACE_GADGET, 199, '8', region=0),
@@ -100,7 +113,7 @@ DESIRABLE_OBJECTS_SPACE_GADGET = [
               region=REGION_INDICIES.SPACE_GADGET_AIR_SAUCER),
     SETObject(ObjectType.GUN_ROBOT, Levels.STAGE_SPACE_GADGET, 450, '37',
               region=REGION_INDICIES.SPACE_GADGET_AIR_SAUCER),
-    SETObject(ObjectType.GUN_ROBOT, Levels.STAGE_SPACE_GADGET, 330, '37',
+    SETObject(ObjectType.GUN_ROBOT, Levels.STAGE_SPACE_GADGET, 330, '37.5',
               region=REGION_INDICIES.SPACE_GADGET_AIR_SAUCER),
     SETObject(ObjectType.BLACK_WORM, Levels.STAGE_SPACE_GADGET, 433, '38',
               region=REGION_INDICIES.SPACE_GADGET_AIR_SAUCER),

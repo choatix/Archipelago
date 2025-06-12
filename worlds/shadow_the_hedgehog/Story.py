@@ -1,7 +1,7 @@
 import copy
 import logging
 import math
-from . import Utils as ShadowUtils
+from . import Utils as ShadowUtils, GetLevelCompletionNames
 
 from dataclasses import dataclass
 
@@ -191,7 +191,7 @@ def AlterOverridesForStoryPath(spheres, options):
     # e.g. 1 region out of 23 => a = 4, change value to 4
 
     new_overrides = {}
-
+    new_available_overrides = {}
 
     for sphere in spheres:
         if sphere == spheres[0]:
@@ -204,12 +204,23 @@ def AlterOverridesForStoryPath(spheres, options):
                                                                    sphere_mission.stageId, sphere_mission.alignmentId,
                                                                               options.percent_overrides)
 
-        objective_info_available = ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_COMPLETION,
+        objective_info_available = ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_OBJECTIVE_AVAILABLE,
                                                                               sphere_mission.mission_object_name,
                                                                               options,
                                                                               sphere_mission.stageId,
                                                                               sphere_mission.alignmentId,
                                                                              options.percent_overrides)
+
+        max_required_base_complete = ShadowUtils.getMaxRequired(
+            objective_info_completion,
+            sphere_mission.requirement_count, sphere_mission.stageId, sphere_mission.alignmentId,
+            options.percent_overrides)
+
+        max_required_base_available = ShadowUtils.getMaxRequired(
+            objective_info_available,
+            sphere_mission.requirement_count, sphere_mission.stageId, sphere_mission.alignmentId,
+            options.percent_overrides)
+
 
         completion_key_base = ShadowUtils.GetOverrideKey(objective_info_completion[0],
                                                     sphere_mission.alignmentId)
@@ -220,13 +231,23 @@ def AlterOverridesForStoryPath(spheres, options):
         sphere_key = completion_key_base + "."+ Levels.LEVEL_ID_TO_LEVEL[sphere_mission.stageId]
         sphere_key_a = available_key_base + "." + Levels.LEVEL_ID_TO_LEVEL[sphere_mission.stageId]
 
+        # This should look actual value for this stage in time
+        current_override_value = (objective_info_completion[1] / 100)
+
         total_stages = 23
         base_percent_value = new_sphere_size / total_stages
-        current_override_value = 1
-        if sphere_key_a in current_overrides:
-            current_override_value = current_overrides[sphere_key_a] / 100
+
+        #available_factor = objective_info_available[1]
 
         use_percent_value = math.floor(base_percent_value * current_override_value * 100)
+
+        if use_percent_value > max_required_base_complete:
+            #print("Alter-", use_percent_value, max_required_base_complete)
+            use_percent_value = max_required_base_complete
+
+        if use_percent_value == 0:
+            use_percent_value = 1
+
         new_sphere_size = len(sphere[1])
 
         # Need a check in here to either
@@ -235,8 +256,36 @@ def AlterOverridesForStoryPath(spheres, options):
 
         new_overrides[sphere_key] = use_percent_value
 
-    return new_overrides
+        # What should this number even be?
+        # Want to calculate the value to be equivalent to new
 
+        copied = current_overrides.copy()
+        copied[sphere_key] = use_percent_value
+
+        objective_info_available_pass = ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_OBJECTIVE_AVAILABLE,
+                                                                             sphere_mission.mission_object_name,
+                                                                             options,
+                                                                             sphere_mission.stageId,
+                                                                             sphere_mission.alignmentId,
+                                                                             copied)
+
+        new_max_required = ShadowUtils.getMaxRequired(
+            objective_info_available_pass,
+            sphere_mission.requirement_count, sphere_mission.stageId, sphere_mission.alignmentId,
+            copied)
+
+        if new_max_required < 1:
+            new_max_required = 1
+
+        rate = (max_required_base_available / max_required_base_complete)  * 100
+
+        potential_override_available = ((max_required_base_complete / new_max_required) * rate) - 100
+        #* available_factor) - 100
+        if potential_override_available > 0:
+            #pass
+            new_available_overrides[sphere_key_a] = potential_override_available
+
+    return new_overrides, new_available_overrides
 
 
 
@@ -281,32 +330,32 @@ def ChaosShuffle(world):
                          Levels.LEVEL_ID_TO_LEVEL[boss.boss] not in world.options.excluded_stages]
     final_bosses = final_bosses_full.copy()
 
-    boss_groups = Levels.BOSS_GROUPING
-    if world.options.single_egg_dealer:
-        options = [ b for b in final_bosses if b in boss_groups["Egg Dealer"]]
-        if len(options) > 0:
-            for o in options:
-                final_bosses.remove(o)
-            chosen = world.random.choice(options)
-            final_bosses.append(chosen)
+    #boss_groups = Levels.BOSS_GROUPING
+    #if world.options.single_egg_dealer:
+    #    options = [ b for b in final_bosses if b in boss_groups["Egg Dealer"]]
+    #    if len(options) > 0:
+    #        for o in options:
+    #            final_bosses.remove(o)
+    #        chosen = world.random.choice(options)
+    #        final_bosses.append(chosen)
 
-    if world.options.single_black_doom:
-        options = [b for b in final_bosses if b in boss_groups["Black Doom"]]
-        if len(options) > 0:
-            for o in options:
-                final_bosses.remove(o)
+    #if world.options.single_black_doom:
+    #    options = [b for b in final_bosses if b in boss_groups["Black Doom"]]
+    #    if len(options) > 0:
+    #        for o in options:
+    #            final_bosses.remove(o)
 
-            chosen = world.random.choice(options)
-            final_bosses.append(chosen)
+#            chosen = world.random.choice(options)
+ #           final_bosses.append(chosen)
 
-    if world.options.single_diablon:
-        options = [b for b in final_bosses if b in boss_groups["Diablon"]]
-        if len(options) > 0:
-            for o in options:
-                final_bosses.remove(o)
-
-            chosen = world.random.choice(options)
-            final_bosses.append(chosen)
+  #  if world.options.single_diablon:
+   #     options = [b for b in final_bosses if b in boss_groups["Diablon"]]
+    #    if len(options) > 0:
+     #       for o in options:
+      #          final_bosses.remove(o)
+#
+  #          chosen = world.random.choice(options)
+ #           final_bosses.append(chosen)
 
 
     # Removes the duplicate Lava Shelter Egg Dealer
@@ -347,14 +396,23 @@ def ChaosShuffle(world):
     steps_to_randomise = [s for s in ModifiedStoryMode if s.start_stage_id is not None
                           and Levels.LEVEL_ID_TO_LEVEL[s.start_stage_id] not in world.options.excluded_stages]
 
+
+    plando_steps = []
+    #GetLevelCompletionNames(s.start_stage_id, s.alignment_id)[1] not in world.options.exclude_locations
+
+    for s in steps_to_randomise:
+        level_location_name = GetLevelCompletionNames(s.start_stage_id, s.alignment_id)[1]
+        if level_location_name in world.options.exclude_locations:
+            plando_steps.append((s, PathInfo(s.start_stage_id, s.alignment_id,
+                                             s.start_stage_id, [])))
+
+    for s in plando_steps:
+        steps_to_randomise.remove(s[0])
+
     if include_last_way and last_way_active:
         steps_to_randomise.append(PathInfo(Levels.STAGE_THE_LAST_WAY, Levels.MISSION_ALIGNMENT_NEUTRAL, None, []))
 
-    #untouched_steps = [ s for s in ModifiedStoryMode if s not in steps_to_randomise ]
-
     new_story = []
-    #new_story.extend(untouched_steps)
-
     bosses_by_alignment = {}
 
     world.random.shuffle(steps_to_randomise)
@@ -462,6 +520,7 @@ def ChaosShuffle(world):
             stage_nodes.append(step.end_stage_id)
 
     new_story.extend(new_steps)
+    new_story.extend([p[1] for p in plando_steps])
 
     logging.debug("Shadow Story is: %s", new_story)
     return new_story

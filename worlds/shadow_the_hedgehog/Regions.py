@@ -18,15 +18,6 @@ def stage_id_to_story_region(level_id: int, region_id = 0) -> str:
     region_name = "STORY_REGION_" + level_name + "_" + str(region_id)
     return region_name
 
-def get_max_stage_region_id(level_id: int, key: bool = True) -> str:
-    level_name = Levels.LEVEL_ID_TO_LEVEL[level_id]
-    region_ids = [ r.regionIndex for r in Levels.INDIVIDUAL_LEVEL_REGIONS if r.stageId == level_id and
-                   (True if key else r.restrictionType != Levels.REGION_RESTRICTION_TYPES.KeyDoor) ]
-    region_id = 0 if len(region_ids) == 0 else max(region_ids)
-    region_name = "REGION_" + level_name + "_" + str(region_id)
-    return region_name
-
-
 def character_name_to_region(name):
     return "REGION_" + name
 
@@ -38,6 +29,29 @@ def region_name_for_character(stage_name, name):
 
 def region_name_for_weapon(stage_name, name):
     return name + "_in_" + stage_name
+
+
+def handle_single_boss(world, boss_name):
+    final_bosses_full = [boss.boss for boss in Story.DefaultStoryMode if boss.end_stage_id is None and
+                         Levels.LEVEL_ID_TO_LEVEL[boss.boss] not in world.options.excluded_stages]
+    final_bosses = final_bosses_full.copy()
+
+
+    egg_dealers = []
+    options = list(set([ b for b in final_bosses if b in Levels.BOSS_GROUPING[boss_name]]))
+    for option in options:
+        if option in world.available_story_levels:
+            egg_dealers.append(option)
+
+    if len(egg_dealers) > 1:
+        raise OptionError(f"Story handling for {boss_name} has not worked")
+    elif len(egg_dealers) == 1:
+        for dealer in [ e for e in egg_dealers if e not in world.available_story_levels]:
+            world.options.excluded_stages = Options.ExcludedStages(list(world.options.excluded_stages) + [Levels.LEVEL_ID_TO_LEVEL(dealer)])
+    else:
+        choice = world.random.choice(options)
+        for option in [ o for o in options if o != choice ]:
+            world.options.excluded_stages = Options.ExcludedStages(list(world.options.excluded_stages) + [Levels.LEVEL_ID_TO_LEVEL[option]])
 
 
 def early_region_checks(world):
@@ -211,7 +225,7 @@ def create_regions(world) -> Dict[str, Region]:
 
         for additional_region in [ r for r in Levels.INDIVIDUAL_LEVEL_REGIONS if r.stageId == level_id]:
 
-            if additional_region.restrictionType == Levels.REGION_RESTRICTION_TYPES.HardLogicOnly and \
+            if additional_region.hardLogicOnly and \
                 world.options.logic_level != Options.LogicLevel.option_hard:
                 continue
 
@@ -479,7 +493,7 @@ def connect_by_story_mode(multiworld: MultiWorld, world, player: int, order: typ
                 extra_level_regions = [l for l in Levels.INDIVIDUAL_LEVEL_REGIONS if l.stageId == path.start_stage_id]
 
                 for region in extra_level_regions:
-                    if region.restrictionType == Levels.REGION_RESTRICTION_TYPES.HardLogicOnly and \
+                    if region.hardLogicOnly and \
                             world.options.logic_level != Options.LogicLevel.option_hard:
                         continue
                     level_region_name = stage_id_to_region(region.stageId, region.regionIndex)
@@ -493,7 +507,8 @@ def connect_by_story_mode(multiworld: MultiWorld, world, player: int, order: typ
         completion_location_id, completion_location_name = GetLevelCompletionNames(path.start_stage_id,
                                                                                    path.alignment_id)
 
-        if completion_location_name in world.options.exclude_locations:
+        if completion_location_name in world.options.exclude_locations and \
+            path.start_stage_id != path.end_stage_id:
             print("Unable to take story path due to excluded location:", path.start_stage_id, path.alignment_id)
             continue
 
@@ -554,7 +569,7 @@ def connect_by_story_mode(multiworld: MultiWorld, world, player: int, order: typ
                     str(path.end_stage_id)+"/"+str(path.alignment_id), start_region, end_region, rule=modified_rule)
 
         for region in extra_level_regions:
-            if region.restrictionType == Levels.REGION_RESTRICTION_TYPES.HardLogicOnly and \
+            if region.hardLogicOnly and \
                     world.options.logic_level != Options.LogicLevel.option_hard:
                 continue
             level_region_name = stage_id_to_region(region.stageId, region.regionIndex)
@@ -609,13 +624,23 @@ def FindStartingItems(world, required=False):
 
     base_from_regions = [ str(s[0]) + "/" + str(s[1]) for s in base_regions_by_logic ]
 
-    escape_options = set([ r.restrictionType for r in Levels.INDIVIDUAL_LEVEL_REGIONS if r.stageId in starting_stages and \
+    escape_options = [ r.restrictionTypes for r in Levels.INDIVIDUAL_LEVEL_REGIONS if r.stageId in starting_stages and \
                      IsMatch(base_from_regions, [ str(r.stageId)+"/"+str(fr) for fr in r.fromRegions])
-                           and str(r.stageId ) + "/" + str(r.regionIndex) not in base_from_regions])
+                           and str(r.stageId ) + "/" + str(r.regionIndex) not in base_from_regions]
+
+    escape_list = []
+    for option in escape_options:
+        for option_group in option:
+            if option_group not in escape_list:
+                escape_list.append(option_group)
 
     item_options = []
     failed_item_options = []
-    for option in escape_options:
+    for base_option in escape_options:
+        if len(base_option) == 1:
+            option = base_option[0]
+        else:
+            continue
         if option == Names.REGION_RESTRICTION_TYPES.Pulley:
             item_options.append("Pulley")
         elif option == Names.REGION_RESTRICTION_TYPES.Heal:

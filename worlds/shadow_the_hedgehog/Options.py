@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from Options import PerGameCommonOptions, Choice, DefaultOnToggle, Toggle, Range, OptionSet, OptionDict, OptionGroup
-from worlds.shadow_the_hedgehog import Names
+from . import Names
 
 
 class GoalChaosEmeralds(DefaultOnToggle):
@@ -82,9 +82,43 @@ class ObjectiveSanity(DefaultOnToggle):
     """
     display_name = "Objective Sanity"
 
+class ObjectiveSanitySystem(Choice):
+    """
+
+    Option to determine what triggers objective sanity checks.
+    Count Up, the original system, requires getting/maintaining a particular count.
+    Individual, the new system, where each individual activation is a separate check, not requiring the count
+        Due to technical limitations:
+         - Currently disabled for Final Haunt Shields
+         - GUN Soldiers work on despawn rather than defeat
+    Both, checks for both in the system, if available
+
+    """
+
+    option_count_up = 0
+    option_individual = 1
+    option_both = 2
+    default = option_individual
+
+class ObjectiveSanityBehaviour(Choice):
+    """
+        When objective-sanity is enabled, how to operate clearing of stages
+        Default: You require desired item count to finish stage, press Z to finish, then complete a goal
+        Manual Clear: You require desired item count to finish stage, pressing Z when completable, sets count to 0, must be beaten normally
+            (Must handle early accessible / update to current value detected in the stage)
+        Base Clear: You do not need to collect items to progress stages, but as objectivesanity is on,
+            required to still press Z to avoid inability to get checks.
+
+    """
+
+    option_default = 0
+    option_manual_clear = 1
+    option_base_clear = 2
+    default = option_default
+
 class ObjectivePercentage(Range):
     """Sets the objective percentage for each objective.
-    When playing objectsanity, this removes the locations for anything after the percentage objective.
+    When playing objective sanity count up, this removes the locations for anything after the percentage objective.
     Only affects locations, use available/completion for goal-related effects."""
     display_name = "Objective Percentage"
     range_start = 1
@@ -178,6 +212,18 @@ class WeaponsanityUnlock(Toggle):
         Can be used alongside Weapon Groups for more flexibility.
     """
     display_name = "Weapon Sanity Unlock"
+
+class WeaponSanityMinAvailable(Range):
+    display_name = "Weapon Sanity Min Available"
+    range_start = 1
+    range_end = 5
+    default = 1
+
+class WeaponSanityMaxAvailable(Range):
+    display_name = "Weapon Sanity Max Available"
+    range_start = 1
+    range_end = 5
+    default = 1
 
 class WeaponsanityHold(Choice):
     """Determines whether game contains checks for legally holding each weapon.
@@ -350,6 +396,20 @@ class LogicLevel(Choice):
     option_hard = 2  # Requires skips to traverse regions.
     default = option_normal
 
+class ChaosControlLogicLevel(Choice):
+    """
+        Determines the chaos control logic level for play-through.
+        Off: Chaos Control is never required to make progress.
+        Easy: Stages where the player will naturally have chaos control are included.
+        Hard: Requires the player to work out building up and handling gauge.
+    """
+    display_name = "Chaos Control Logic Level"
+    option_off = 0  # Disables requirements for chaos control logic
+    option_easy = 1  # Enables chaos control as logic passes apart from those requiring intensive gauge management
+    option_intermediate = 2 # Enabled some management of chaos control gauge
+    option_hard = 3  # Requires intensive management of chaos control gauge to mark these areas
+    default = option_off
+
 class BossLogicLevel(Choice):
     """
         Determines the boss logic level for playthrough.
@@ -357,9 +417,9 @@ class BossLogicLevel(Choice):
     """
     display_name = "Boss Logic Level"
     option_easy = 0  # Logic adds in easier elements for completion
-    option_normal = 1  # Standard logic
+    #option_normal = 1  # Standard logic
     option_hard = 2  # Requires skips to traverse regions.
-    default = option_normal
+    default = option_easy
 
 class CraftLogicLevel(Choice):
     """
@@ -368,9 +428,9 @@ class CraftLogicLevel(Choice):
     """
     display_name = "Craft Logic Level"
     option_easy = 0  # Logic adds in easier elements for completion
-    option_normal = 1  # Standard logic
+    #option_normal = 1  # Standard logic
     option_hard = 2  # Requires skips to traverse regions.
-    default = option_normal
+    default = option_easy
 
 class AllowDangerousPercentage(Toggle):
     """
@@ -443,19 +503,19 @@ class StartingLevelMethod(Choice):
 
 class SingleEggDealer(Toggle):
     """
-        When shuffling story mode, only include a single Egg Dealer of the available 3.
+        Only include a single Egg Dealer of the available 3.
     """
     display_name = "Single Egg Dealer"
 
 class SingleBlackDoom(Toggle):
     """
-        When shuffling story mode, only include a single Black Doom of the available 3.
+        Only include a single Black Doom of the available 3.
     """
     display_name = "Single Black Doom"
 
 class SingleDiablon(Toggle):
     """
-        When shuffling story mode, only include a single Sonic & Diablon of the available 3.
+        Only include a single Sonic & Diablon of the available 3.
     """
     display_name = "Single Diablon"
 
@@ -654,6 +714,8 @@ class ShadowTheHedgehogOptions(PerGameCommonOptions):
     goal_bosses: GoalBosses
     goal_final_bosses: GoalFinalBosses
     objective_sanity: ObjectiveSanity
+    objective_sanity_system: ObjectiveSanitySystem
+    objective_sanity_behaviour: ObjectiveSanityBehaviour
     objective_percentage: ObjectivePercentage
     objective_enemy_percentage: EnemyObjectivePercentage
     objective_completion_percentage: ObjectiveCompletionPercentage
@@ -672,6 +734,8 @@ class ShadowTheHedgehogOptions(PerGameCommonOptions):
     force_objective_sanity_max_counter: ForceObjectiveSanityMaxCounter
     excluded_stages: ExcludedStages
     weapon_sanity_unlock: WeaponsanityUnlock
+    weapon_sanity_min_available: WeaponSanityMinAvailable
+    weapon_sanity_max_available: WeaponSanityMaxAvailable
     weapon_sanity_hold: WeaponsanityHold
     vehicle_logic: VehicleLogic
     enable_gauge_items: GaugeFiller
@@ -683,6 +747,7 @@ class ShadowTheHedgehogOptions(PerGameCommonOptions):
     logic_level: LogicLevel
     boss_logic_level: BossLogicLevel
     craft_logic_level: CraftLogicLevel
+    chaos_control_logic_level: ChaosControlLogicLevel
     allow_dangerous_settings: AllowDangerousPercentage
     story_shuffle: StoryShuffle
     include_last_way_shuffle: IncludeLastStoryShuffle

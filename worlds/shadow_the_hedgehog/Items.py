@@ -510,7 +510,8 @@ def CountItems(world: World):
      junk_items, token_items, weapon_items, vehicle_items, warp_items, rifle_components,
      weapon_group_items, object_items) = GetAllItemInfo()
 
-    if not world.options.objective_sanity:
+    if (not world.options.objective_sanity or
+            world.options.objective_sanity_behaviour == Options.ObjectiveSanityBehaviour.option_base_clear):
         stage_objective_items_x = []
 
     if not world.options.rifle_components:
@@ -613,12 +614,23 @@ def GetStageItems(world, stage_objective_items=None):
          junk_items, token_items, weapon_items, vehicle_items, warp_items, rifle_components,
          weapon_group_items, object_items) = GetAllItemInfo()
 
+    if (not world.options.objective_sanity or
+            world.options.objective_sanity_behaviour == Options.ObjectiveSanityBehaviour.option_base_clear):
+        return []
+
     for item in stage_objective_items:
         if item.stageId not in world.available_levels:
             continue
 
         lookup = [x for x in MissionClearLocations
                   if x.stageId == item.stageId and x.alignmentId == item.alignmentId][0]
+
+        relevant_objective_complete = ShadowUtils.getMaxRequired(ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_COMPLETION,
+                                                  lookup.mission_object_name, world.options,
+                                                                       item.stageId, item.alignmentId,
+                                                                       world.options.percent_overrides), lookup.requirement_count, item.stageId, item.alignmentId,
+            override_settings)
+
 
         relevant_objective = ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_OBJECTIVE_AVAILABLE,
                                                   lookup.mission_object_name, world.options,
@@ -629,12 +641,14 @@ def GetStageItems(world, stage_objective_items=None):
         if relevant_objective is None:
             continue
 
-        max_required = ShadowUtils.getMaxRequired(
+        required_available = ShadowUtils.getMaxRequired(
             relevant_objective,
             lookup.requirement_count, item.stageId, item.alignmentId,
             override_settings)
 
-        mw_temp_stage_objective_items.extend([item] * max_required)
+        assert relevant_objective_complete <=  required_available
+
+        mw_temp_stage_objective_items.extend([item] * required_available)
 
     mw_stage_items = [ShadowTheHedgehogItem(s, world.player) for s in mw_temp_stage_objective_items]
     return mw_stage_items
@@ -689,6 +703,21 @@ def GetShadowRifle():
      weapon_group_items, object_items) = GetAllItemInfo()
 
     return [w for w in weapon_items if w.name == 'Shadow Rifle' or w.name == 'Weapon:Shadow Rifle'][0]
+
+def HandleWeaponDuplicates(world, available_weapons):
+    new_weapons = []
+
+    weapon_min = world.options.weapon_sanity_min_available
+    weapon_max = world.options.weapon_sanity_max_available
+
+    for w in available_weapons:
+        if weapon_min == weapon_max:
+            new_weapons.extend([w]*weapon_min)
+        else:
+            r = world.random.randrange(weapon_min, weapon_max)
+            new_weapons.extend([w]*r)
+
+    return new_weapons
 
 
 def HandleAllWeaponsGroups(options, items, group_items):
@@ -830,6 +859,7 @@ def PopulateItemPool(world: World):
                 w.classification = weapon_classification
 
     HandleAllWeaponsGroups(world.options, available_weapons, weapon_group_items)
+    available_weapons = HandleWeaponDuplicates(world, available_weapons)
 
     mw_weapon_items = [ShadowTheHedgehogItem(w, world.player) for w in available_weapons]
 

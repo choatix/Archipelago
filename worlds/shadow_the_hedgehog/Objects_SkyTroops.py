@@ -1,6 +1,6 @@
 from . import Levels
 from .ObjectTypes import ObjectType, SETObject
-from .Names import REGION_INDICIES
+from .Names import REGION_INDICIES, REGION_RESTRICTION_TYPES
 
 DESIRABLE_OBJECTS_SKY_TROOPS  = [
 
@@ -60,6 +60,28 @@ DESIRABLE_OBJECTS_SKY_TROOPS  = [
               vehicle=ObjectType.ObjectTypeVehicle.BLACK_TURRET,
               region=REGION_INDICIES.SKY_TROOPS_HAWK_OR_VOLT),
 
+    SETObject(ObjectType.SKY_TROOPS_TEMPLE, Levels.STAGE_SKY_TROOPS, 336, "Temple 1",
+              region=0),
+    SETObject(ObjectType.SKY_TROOPS_TEMPLE, Levels.STAGE_SKY_TROOPS, 337, "Temple 2",
+              region=REGION_INDICIES.SKY_TROOPS_ROCKET_NORMAL),
+    SETObject(ObjectType.SKY_TROOPS_TEMPLE, Levels.STAGE_SKY_TROOPS, 339, "Temple 3",
+              region=REGION_INDICIES.SKY_TROOPS_ROCKET),
+    SETObject(ObjectType.SKY_TROOPS_TEMPLE, Levels.STAGE_SKY_TROOPS, 338, "Temple 4",
+              region=REGION_INDICIES.SKY_TROOPS_ROCKET),
+    SETObject(ObjectType.SKY_TROOPS_TEMPLE, Levels.STAGE_SKY_TROOPS, 341, "Temple 5",
+              region=REGION_INDICIES.SKY_TROOPS_HAWK_OR_VOLT),
+
+    SETObject(ObjectType.SKY_TROOPS_EGG_SHIP, Levels.STAGE_SKY_TROOPS, 118, "Egg Ship 1",
+              region=0, restrictionType=REGION_RESTRICTION_TYPES.BlackArmsTurret),
+    SETObject(ObjectType.SKY_TROOPS_EGG_SHIP, Levels.STAGE_SKY_TROOPS, 116, "Egg Ship 2",
+              region=REGION_INDICIES.SKY_TROOPS_ROCKET_NORMAL, restrictionType=REGION_RESTRICTION_TYPES.BlackArmsTurret),
+    SETObject(ObjectType.SKY_TROOPS_EGG_SHIP, Levels.STAGE_SKY_TROOPS, 70, "Egg Ship 3",
+              region=REGION_INDICIES.SKY_TROOPS_ROCKET, restrictionType=REGION_RESTRICTION_TYPES.BlackArmsTurret),
+    SETObject(ObjectType.SKY_TROOPS_EGG_SHIP, Levels.STAGE_SKY_TROOPS, 95, "Egg Ship 4",
+              region=REGION_INDICIES.SKY_TROOPS_ROCKET, restrictionType=REGION_RESTRICTION_TYPES.BlackArmsTurret),
+    SETObject(ObjectType.SKY_TROOPS_EGG_SHIP, Levels.STAGE_SKY_TROOPS, 20, "Egg Ship 5",
+              region=REGION_INDICIES.SKY_TROOPS_HAWK_OR_VOLT, restrictionType=REGION_RESTRICTION_TYPES.BlackArmsTurret),
+
     SETObject(ObjectType.EGG_PAWN, Levels.STAGE_SKY_TROOPS, 117, '0', region=0),
     SETObject(ObjectType.EGG_PAWN, Levels.STAGE_SKY_TROOPS, 168, '0.5', region=0),
     SETObject(ObjectType.EGG_PAWN, Levels.STAGE_SKY_TROOPS, 124, '1', region=0),
@@ -94,7 +116,7 @@ DESIRABLE_OBJECTS_SKY_TROOPS  = [
               region=REGION_INDICIES.SKY_TROOPS_ROCKET_NORMAL),
     SETObject(ObjectType.BLACK_WARRIOR, Levels.STAGE_SKY_TROOPS, 293, '19',
               region=REGION_INDICIES.SKY_TROOPS_ROCKET_NORMAL),
-    SETObject(ObjectType.BLACK_OAK, Levels.STAGE_SKY_TROOPS, 91, '20',
+    SETObject(ObjectType.BLACK_OAK, Levels.STAGE_SKY_TROOPS, 91, '20.5',
               region=REGION_INDICIES.SKY_TROOPS_ROCKET_NORMAL),
     SETObject(ObjectType.BLACK_WARRIOR, Levels.STAGE_SKY_TROOPS, 174, '21',
               region=REGION_INDICIES.SKY_TROOPS_ROCKET_NORMAL),

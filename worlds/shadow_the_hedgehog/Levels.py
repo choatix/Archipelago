@@ -68,14 +68,12 @@ BOSS_GROUPING = {
 }
 
 
-def IsObjectRestriction(restriction_type):
+def IsObjectRestriction(restriction_types):
     object_restrictions = [REGION_RESTRICTION_TYPES.Pulley, REGION_RESTRICTION_TYPES.LightDash,
                REGION_RESTRICTION_TYPES.WarpHole, REGION_RESTRICTION_TYPES.Rocket,
                REGION_RESTRICTION_TYPES.Zipwire]
-    return restriction_type in object_restrictions
 
-
-
+    return len(set(restriction_types).intersection(object_restrictions)) > 0
 
 
 class REGION_RESTRICTION_REFERENCE_TYPES:
@@ -83,37 +81,65 @@ class REGION_RESTRICTION_REFERENCE_TYPES:
     BossLogic = 2
     CraftLogic = 3
 
-def IsWeaponsanityRestriction(restriction_type):
+def IsWeaponsanityRestriction(restriction_types):
     weapons = [REGION_RESTRICTION_TYPES.Torch, REGION_RESTRICTION_TYPES.LongRangeGun,
                REGION_RESTRICTION_TYPES.Vacuum, REGION_RESTRICTION_TYPES.Gun,
                REGION_RESTRICTION_TYPES.Heal, REGION_RESTRICTION_TYPES.AnyStageWeapon,
-               REGION_RESTRICTION_TYPES.VacuumOrShot]
-    return restriction_type in weapons
+               REGION_RESTRICTION_TYPES.VacuumOrShot,
+               REGION_RESTRICTION_TYPES.SatelliteGun]
 
-def IsVeichleSanityRestriction(restriction_type):
-    veichles = [REGION_RESTRICTION_TYPES.BlackHawk, REGION_RESTRICTION_TYPES.BlackVolt,
+    for w in weapons:
+        if w in restriction_types:
+            return True
+
+    return False
+
+def IsVeichleSanityRestriction(restriction_types):
+    vehicles = [REGION_RESTRICTION_TYPES.BlackHawk, REGION_RESTRICTION_TYPES.BlackVolt,
                 REGION_RESTRICTION_TYPES.AirSaucer, REGION_RESTRICTION_TYPES.Car,
                 REGION_RESTRICTION_TYPES.GunJumper, REGION_RESTRICTION_TYPES.GunLift,
                 REGION_RESTRICTION_TYPES.BlackArmsTurret, REGION_RESTRICTION_TYPES.GunTurret]
-    return restriction_type in veichles
+
+    for v in vehicles:
+        if v in restriction_types:
+            return True
+
+    return False
 
 @dataclass
 class LevelRegion:
     stageId: int
     regionIndex: int
-    restrictionType: int
+    restrictionTypes: list[int]
     logicType: int
+    chaosControlLogicType: int
     fromRegions: list
+    hardLogicOnly: bool = False
 
-    def __init__(self, stageId, regionIndex, restrictionType):
+    def __init__(self, stageId, regionIndex, restrictionTypes):
         self.stageId = stageId
         self.regionIndex = regionIndex
-        self.restrictionType = restrictionType
+        if type(restrictionTypes) == int:
+            self.restrictionTypes = [restrictionTypes]
+        else:
+            self.restrictionTypes = restrictionTypes
         self.fromRegions = None if regionIndex is None else [regionIndex - 1]
         self.logicType = Options.LogicLevel.option_normal
+        self.chaosControlLogicType = Options.ChaosControlLogicLevel.option_off
+        self.chaosControlLogicRequiresHeal = False
 
-    def setLogicType(self, logic):
-        self.logicType = logic
+    def setHardLogicOnly(self):
+        self.hardLogicOnly = True
+        return self
+
+    def setLogicType(self, logicLevel,
+                     chaosControlLogicLevel=Options.ChaosControlLogicLevel.option_off,
+                     chaosControlRequiresHeal=False):
+
+
+        self.logicType = logicLevel
+        self.chaosControlLogicType = chaosControlLogicLevel
+        self.chaosControlLogicRequiresHeal = chaosControlRequiresHeal
         return self
 
     def setFromRegion(self, fromRegion):
@@ -125,21 +151,7 @@ class LevelRegion:
         return self
 
 
-def IsLogicLevelApplicable(region, options, starting_items):
-    region_restriction = region.restrictionType
-
-    if region_restriction == REGION_RESTRICTION_TYPES.HardLogicOnly:
-        if options.logic_level != Options.LogicLevel.option_hard:
-            return False
-
-    if region.logicType == Options.LogicLevel.option_easy and \
-            options.logic_level  != Options.LogicLevel.option_easy:
-        return False
-
-    if region.logicType == Options.LogicLevel.option_hard and \
-            options.logic_level  == Options.LogicLevel.option_hard:
-        return False
-
+def IsRegionRestrictionApplication(region_restriction, options, starting_items):
     if region_restriction == REGION_RESTRICTION_TYPES.ShootOrTurret and \
             not (options.weapon_sanity_unlock and options.vehicle_logic):
         return False
@@ -148,19 +160,19 @@ def IsLogicLevelApplicable(region, options, starting_items):
         return False
 
     if region_restriction == REGION_RESTRICTION_TYPES.Explosion and not \
-        ( options.weapon_sanity_unlock and options.object_units):
+            (options.weapon_sanity_unlock and options.object_units):
         return False
 
     if region_restriction == REGION_RESTRICTION_TYPES.Explosion and "Bombs" in starting_items:
         return False
 
-    if IsWeaponsanityRestriction(region_restriction) and not options.weapon_sanity_unlock:
+    if IsWeaponsanityRestriction([region_restriction]) and not options.weapon_sanity_unlock:
         return False
 
-    if IsVeichleSanityRestriction(region_restriction) and not options.vehicle_logic:
+    if IsVeichleSanityRestriction([region_restriction]) and not options.vehicle_logic:
         return False
 
-    if IsObjectRestriction(region_restriction):
+    if IsObjectRestriction([region_restriction]):
         if not options.object_unlocks:
             return False
         if (region_restriction == REGION_RESTRICTION_TYPES.Zipwire and
@@ -179,8 +191,66 @@ def IsLogicLevelApplicable(region, options, starting_items):
                 (not options.object_pulleys or "Pulley" in starting_items)):
             return False
 
-
     return True
+
+def IsLogicLevelApplicable(region, options, path_type, starting_items):
+
+    logic_level = options.logic_level
+
+    if path_type == REGION_RESTRICTION_REFERENCE_TYPES.BossLogic:
+        if options.boss_logic_level == Options.BossLogicLevel.option_hard:
+            return False
+
+        logic_level = options.boss_logic_level
+
+
+    if path_type == REGION_RESTRICTION_REFERENCE_TYPES.CraftLogic:
+        if options.craft_logic_level == Options.CraftLogicLevel.option_hard:
+            return False
+
+        logic_level = options.craft_logic_level
+
+    region_restrictions = region.restrictionTypes
+
+    if region.hardLogicOnly:
+        if logic_level != Options.LogicLevel.option_hard:
+            return False
+
+    if region.logicType == Options.LogicLevel.option_easy and \
+            logic_level != Options.LogicLevel.option_easy:
+        return False
+
+    if region.logicType == Options.LogicLevel.option_hard and \
+            logic_level  == Options.LogicLevel.option_hard:
+        return False
+
+    if region.chaosControlLogicType == Options.ChaosControlLogicLevel.option_easy and \
+            options.chaos_control_logic_level != Options.ChaosControlLogicLevel.option_off:
+        return False
+
+    if region.chaosControlLogicType == Options.ChaosControlLogicLevel.option_intermediate and \
+            options.chaos_control_logic_level not in \
+        [Options.ChaosControlLogicLevel.option_off, Options.ChaosControlLogicLevel.option_easy]:
+
+        if region.chaosControlLogicRequiresHeal:
+            return True
+
+        return False
+
+    if region.chaosControlLogicType == Options.ChaosControlLogicLevel.option_hard and \
+            options.chaos_control_logic_level == Options.ChaosControlLogicLevel.option_hard:
+
+        if region.chaosControlLogicRequiresHeal:
+            return True
+
+        return False
+
+    required = False
+    for region_restriction in region_restrictions:
+        r = IsRegionRestrictionApplication(region_restriction, options, starting_items)
+        required = required or r
+
+    return required
 
 def GetBaseAccessibleRegions(stages, options, starting_items):
     accessible = {}
@@ -189,7 +259,7 @@ def GetBaseAccessibleRegions(stages, options, starting_items):
     for i in INDIVIDUAL_LEVEL_REGIONS:
         if i.stageId not in accessible:
             continue
-        if not IsLogicLevelApplicable(i, options, starting_items):
+        if not IsLogicLevelApplicable(i, options, None, starting_items):
             for f in i.fromRegions:
                 if f in accessible[i.stageId]:
                     accessible[i.stageId].append(i.regionIndex)
@@ -207,7 +277,8 @@ def GetBaseAccessibleRegions(stages, options, starting_items):
 INDIVIDUAL_LEVEL_REGIONS = \
 [
     LevelRegion(STAGE_WESTOPOLIS, REGION_INDICIES.WESTOPOLIS_PULLEY,
-                REGION_RESTRICTION_TYPES.Pulley),
+                REGION_RESTRICTION_TYPES.Pulley)
+    .setLogicType(Options.LogicLevel.option_hard),
     LevelRegion(STAGE_WESTOPOLIS, REGION_INDICIES.WESTOPOLIS_KEY_DOOR,
             REGION_RESTRICTION_TYPES.KeyDoor)
     .setFromRegion(0),
@@ -230,7 +301,8 @@ LevelRegion(STAGE_DIGITAL_CIRCUIT, REGION_INDICIES.DIGITAL_CIRCUIT_GOLD_BEETLE,
 
 
     LevelRegion(STAGE_GLYPHIC_CANYON, REGION_INDICIES.GLYPHIC_CANYON_PULLEY,
-                REGION_RESTRICTION_TYPES.Pulley),
+                REGION_RESTRICTION_TYPES.Pulley)
+    .setLogicType(Options.LogicLevel.option_normal, Options.ChaosControlLogicLevel.option_easy),
     LevelRegion(STAGE_GLYPHIC_CANYON, REGION_INDICIES.GLYPHIC_CANYON_KEY_DOOR,
                 REGION_RESTRICTION_TYPES.KeyDoor),
     LevelRegion(STAGE_GLYPHIC_CANYON, REGION_INDICIES.GLYPHIC_CANYON_BLACK_VOLT,
@@ -240,7 +312,8 @@ LevelRegion(STAGE_DIGITAL_CIRCUIT, REGION_INDICIES.DIGITAL_CIRCUIT_GOLD_BEETLE,
                 REGION_RESTRICTION_TYPES.KeyDoor),
     LevelRegion(STAGE_LETHAL_HIGHWAY, REGION_INDICIES.LETHAL_HIGHWAY_ROCKET,
                 REGION_RESTRICTION_TYPES.Rocket)
-        .setFromRegion(0),
+        .setFromRegion(0)
+        .setLogicType(Options.LogicLevel.option_normal, Options.ChaosControlLogicLevel.option_intermediate),
     LevelRegion(STAGE_LETHAL_HIGHWAY, REGION_INDICIES.LETHAL_HIGHWAY_PULLEY,
                 REGION_RESTRICTION_TYPES.Pulley)
         .setLogicType(Options.LogicLevel.option_easy),
@@ -262,7 +335,8 @@ LevelRegion(STAGE_DIGITAL_CIRCUIT, REGION_INDICIES.DIGITAL_CIRCUIT_GOLD_BEETLE,
         .setFromRegion(REGION_INDICIES.CRYPTIC_CASTLE_HAWK),
     LevelRegion(STAGE_CRYPTIC_CASTLE, REGION_INDICIES.CRYPTIC_CASTLE_BOMB_EASY_2,
                 REGION_RESTRICTION_TYPES.Explosion)
-        .setFromRegion(REGION_INDICIES.CRYPTIC_CASTLE_HAWK),
+        .setFromRegion(REGION_INDICIES.CRYPTIC_CASTLE_HAWK)
+        .setLogicType(Options.LogicLevel.option_easy),
     LevelRegion(STAGE_CRYPTIC_CASTLE, REGION_INDICIES.CRYPTIC_CASTLE_ENEMY_HAWKS_2,
                 REGION_RESTRICTION_TYPES.VacuumOrShot),
 
@@ -285,8 +359,8 @@ LevelRegion(STAGE_DIGITAL_CIRCUIT, REGION_INDICIES.DIGITAL_CIRCUIT_GOLD_BEETLE,
                     REGION_RESTRICTION_TYPES.Rocket)
         .setLogicType(Options.LogicLevel.option_easy),
         LevelRegion(STAGE_CIRCUS_PARK, REGION_INDICIES.CIRCUS_PARK_SECOND_CHECKPOINT_HERO_GOAL,
-                REGION_RESTRICTION_TYPES.HardLogicOnly)
-        .setLogicType(Options.LogicLevel.option_hard),
+                REGION_RESTRICTION_TYPES.NoRestriction)
+        .setHardLogicOnly(),
 
     LevelRegion(STAGE_CIRCUS_PARK, REGION_INDICIES.CIRCUS_PARK_GUN_TURRET,
                     REGION_RESTRICTION_TYPES.GunTurret)
@@ -296,9 +370,11 @@ LevelRegion(STAGE_DIGITAL_CIRCUIT, REGION_INDICIES.DIGITAL_CIRCUIT_GOLD_BEETLE,
         .setFromRegion(REGION_INDICIES.CIRCUS_PARK_ROCKET_EASY),
     LevelRegion(STAGE_CIRCUS_PARK, REGION_INDICIES.CIRCUS_PARK_ROCKET,
                     REGION_RESTRICTION_TYPES.Rocket)
-        .setFromRegion(REGION_INDICIES.CIRCUS_PARK_ROCKET_EASY),
+        .setFromRegion(REGION_INDICIES.CIRCUS_PARK_ROCKET_EASY)
+        .setLogicType(Options.LogicLevel.option_normal, Options.ChaosControlLogicLevel.option_easy),
     LevelRegion(STAGE_CIRCUS_PARK, REGION_INDICIES.CIRCUS_PARK_PULLEY,
-                    REGION_RESTRICTION_TYPES.Pulley),
+                    REGION_RESTRICTION_TYPES.Pulley)
+    .setLogicType(Options.LogicLevel.option_normal, Options.ChaosControlLogicLevel.option_easy),
 
     LevelRegion(STAGE_CIRCUS_PARK, REGION_INDICIES.CIRCUS_PARK_HERO_GOAL_STANDARD,
                 REGION_RESTRICTION_TYPES.NoRestriction),
@@ -308,9 +384,11 @@ LevelRegion(STAGE_DIGITAL_CIRCUIT, REGION_INDICIES.DIGITAL_CIRCUIT_GOLD_BEETLE,
                     REGION_INDICIES.CIRCUS_PARK_HERO_GOAL_STANDARD]),
 
     LevelRegion(STAGE_CENTRAL_CITY, REGION_INDICIES.CENTRAL_CITY_ROCKET_1,
-                    REGION_RESTRICTION_TYPES.Rocket),
+                    REGION_RESTRICTION_TYPES.Rocket)
+        .setLogicType(Options.LogicLevel.option_hard),
 LevelRegion(STAGE_CENTRAL_CITY, REGION_INDICIES.CENTRAL_CITY_TRAVERSE_HARD,
-                    REGION_RESTRICTION_TYPES.HardLogicOnly)
+                    REGION_RESTRICTION_TYPES.NoRestriction)
+    .setHardLogicOnly()
     .setFromRegion(0),
 LevelRegion(STAGE_CENTRAL_CITY, REGION_INDICIES.CENTRAL_CITY_ROCKET_1_OR_TRAVERSE_HARD,
                     REGION_RESTRICTION_TYPES.NoRestriction)
@@ -318,7 +396,8 @@ LevelRegion(STAGE_CENTRAL_CITY, REGION_INDICIES.CENTRAL_CITY_ROCKET_1_OR_TRAVERS
                     REGION_INDICIES.CENTRAL_CITY_ROCKET_1]),
     LevelRegion(STAGE_CENTRAL_CITY, REGION_INDICIES.CENTRAL_CITY_BOMB_OR_BAZOOKA,
                     REGION_RESTRICTION_TYPES.Explosion)
-        .setFromRegion(0),
+        .setFromRegion(0)
+        .setLogicType(Options.LogicLevel.option_hard),
     LevelRegion(STAGE_CENTRAL_CITY, REGION_INDICIES.CENTRAL_CITY_TRAVERSE_EASY,
                     REGION_RESTRICTION_TYPES.Car)
         .setFromRegion(0)
@@ -330,12 +409,14 @@ LevelRegion(STAGE_CENTRAL_CITY, REGION_INDICIES.CENTRAL_CITY_ROCKET_1_OR_TRAVERS
         .setFromRegion(REGION_INDICIES.CENTRAL_CITY_TRAVERSE_EASY),
     LevelRegion(STAGE_CENTRAL_CITY, REGION_INDICIES.CENTRAL_CITY_BOMB_OR_BAZOOKA_2,
                 REGION_RESTRICTION_TYPES.Explosion)
-        .setFromRegion(REGION_INDICIES.CENTRAL_CITY_TRAVERSE_EASY),
+        .setFromRegion(REGION_INDICIES.CENTRAL_CITY_TRAVERSE_EASY)
+        .setLogicType(Options.LogicLevel.option_normal, Options.ChaosControlLogicLevel.option_hard),
     LevelRegion(STAGE_CENTRAL_CITY, REGION_INDICIES.CENTRAL_CITY_ROCKET_2,
-                    REGION_RESTRICTION_TYPES.Rocket),
+                    REGION_RESTRICTION_TYPES.Rocket)
+        .setLogicType(Options.LogicLevel.option_hard),
     LevelRegion(STAGE_CENTRAL_CITY, REGION_INDICIES.CENTRAL_CITY_BOMB_OR_BAZOOKA_3,
-                REGION_RESTRICTION_TYPES.Explosion),
-
+                REGION_RESTRICTION_TYPES.Explosion)
+        .setLogicType(Options.LogicLevel.option_hard),
 
     LevelRegion(STAGE_THE_DOOM, REGION_INDICIES.THE_DOOM_PULLEY,
                 REGION_RESTRICTION_TYPES.Pulley),
@@ -343,9 +424,22 @@ LevelRegion(STAGE_CENTRAL_CITY, REGION_INDICIES.CENTRAL_CITY_ROCKET_1_OR_TRAVERS
                     REGION_RESTRICTION_TYPES.KeyDoor),
     LevelRegion(STAGE_THE_DOOM, REGION_INDICIES.THE_DOOM_BOMBS,
                     REGION_RESTRICTION_TYPES.Explosion)
-        .setFromRegion(0),
+        .setFromRegion(0)
+        .setLogicType(Options.LogicLevel.option_normal, Options.ChaosControlLogicLevel.option_easy),
     LevelRegion(STAGE_THE_DOOM, REGION_INDICIES.THE_DOOM_PULLEY_2,
                     REGION_RESTRICTION_TYPES.Pulley),
+
+    LevelRegion(STAGE_THE_DOOM, REGION_INDICIES.THE_DOOM_THROUGH_DOOR,
+                REGION_RESTRICTION_TYPES.SatelliteGun)
+        .setHardLogicOnly()
+        .setLogicType(Options.LogicLevel.option_normal, Options.ChaosControlLogicLevel.option_easy)
+        .setFromRegion(0),
+    LevelRegion(STAGE_THE_DOOM, REGION_INDICIES.THE_DOOM_DOOR_1_SWITCH,
+                REGION_RESTRICTION_TYPES.NoRestriction)
+        .setFromRegion([REGION_INDICIES.THE_DOOM_BOMBS, REGION_INDICIES.THE_DOOM_THROUGH_DOOR]),
+    LevelRegion(STAGE_THE_DOOM, REGION_INDICIES.THE_DOOM_GOLD_BEETLE,
+                REGION_RESTRICTION_TYPES.GoldBeetle)
+    .setFromRegion(REGION_INDICIES.THE_DOOM_BOMBS),
 
 
 LevelRegion(STAGE_SKY_TROOPS, REGION_INDICIES.SKY_TROOPS_PULLEY,
@@ -359,7 +453,8 @@ LevelRegion(STAGE_SKY_TROOPS, REGION_INDICIES.SKY_TROOPS_ROCKET_NORMAL,
                     REGION_RESTRICTION_TYPES.Rocket)
     .setLogicType(Options.LogicLevel.option_hard),
 LevelRegion(STAGE_SKY_TROOPS, REGION_INDICIES.SKY_TROOPS_ROCKET,
-                    REGION_RESTRICTION_TYPES.Rocket),
+                    REGION_RESTRICTION_TYPES.Rocket)
+    .setLogicType(Options.LogicLevel.option_normal, Options.ChaosControlLogicLevel.option_easy),
 LevelRegion(STAGE_SKY_TROOPS, REGION_INDICIES.SKY_TROOPS_KEY_DOOR,
                     REGION_RESTRICTION_TYPES.KeyDoor),
 LevelRegion(STAGE_SKY_TROOPS, REGION_INDICIES.SKY_TROOPS_BLACK_VOLT,
@@ -369,22 +464,44 @@ LevelRegion(STAGE_SKY_TROOPS, REGION_INDICIES.SKY_TROOPS_BLACK_HAWK,
     .setFromRegion(REGION_INDICIES.SKY_TROOPS_ROCKET),
 LevelRegion(STAGE_SKY_TROOPS, REGION_INDICIES.SKY_TROOPS_HAWK_ENEMIES,
                     REGION_RESTRICTION_TYPES.VacuumOrShot)
+    .setFromRegion(REGION_INDICIES.SKY_TROOPS_BLACK_HAWK),
+LevelRegion(STAGE_SKY_TROOPS, REGION_INDICIES.SKY_TROOPS_BLACK_HAWK_CC_EASY_1,
+                    REGION_RESTRICTION_TYPES.Rocket)
     .setFromRegion(REGION_INDICIES.SKY_TROOPS_ROCKET),
+
+LevelRegion(STAGE_SKY_TROOPS, REGION_INDICIES.SKY_TROOPS_BLACK_HAWK_CC_EASY_2,
+                    REGION_RESTRICTION_TYPES.BlackHawk)
+    .setFromRegion(REGION_INDICIES.SKY_TROOPS_BLACK_HAWK_CC_EASY_1)
+    .setLogicType(Options.LogicLevel.option_normal, Options.ChaosControlLogicLevel.option_easy),
+
+LevelRegion(STAGE_SKY_TROOPS, REGION_INDICIES.SKY_TROOPS_BLACK_HAWK_CC_HARD,
+                    REGION_RESTRICTION_TYPES.BlackHawk)
+    .setFromRegion(REGION_INDICIES.SKY_TROOPS_ROCKET)
+    .setLogicType(Options.LogicLevel.option_normal, Options.ChaosControlLogicLevel.option_hard),
+
 LevelRegion(STAGE_SKY_TROOPS, REGION_INDICIES.SKY_TROOPS_HAWK_OR_VOLT,
                     REGION_RESTRICTION_TYPES.NoRestriction)
     .setFromRegion([REGION_INDICIES.SKY_TROOPS_BLACK_VOLT,
-                    REGION_INDICIES.SKY_TROOPS_BLACK_HAWK]),
+                    REGION_INDICIES.SKY_TROOPS_BLACK_HAWK,
+                    REGION_INDICIES.SKY_TROOPS_BLACK_HAWK_CC_HARD,
+                    REGION_INDICIES.SKY_TROOPS_BLACK_HAWK_CC_EASY_2
+                    ]),
 
 
 LevelRegion(STAGE_MAD_MATRIX, REGION_INDICIES.MAD_MATRIX_GUN,
-                    REGION_RESTRICTION_TYPES.LongRangeGun),
+                    REGION_RESTRICTION_TYPES.LongRangeGun)
+    .setLogicType(Options.LogicLevel.option_easy),
 LevelRegion(STAGE_MAD_MATRIX, REGION_INDICIES.MAD_MATRIX_YELLOW_ENTRY,
                     REGION_RESTRICTION_TYPES.WarpHole),
 LevelRegion(STAGE_MAD_MATRIX, REGION_INDICIES.MAD_MATRIX_GREEN_ENTRY,
                     REGION_RESTRICTION_TYPES.WarpHole)
     .setFromRegion(REGION_INDICIES.MAD_MATRIX_GUN),
+
 LevelRegion(STAGE_MAD_MATRIX, REGION_INDICIES.MAD_MATRIX_GREEN_PROGRESSION,
-                    REGION_RESTRICTION_TYPES.HealCannonOrLongRangeGun),
+                    REGION_RESTRICTION_TYPES.LongRangeGun)
+    .setLogicType(Options.LogicLevel.option_normal, Options.ChaosControlLogicLevel.option_intermediate,
+                  chaosControlRequiresHeal=True),
+
 LevelRegion(STAGE_MAD_MATRIX, REGION_INDICIES.MAD_MATRIX_RED_ENTRY,
                     REGION_RESTRICTION_TYPES.LightDash)
     .setFromRegion(REGION_INDICIES.MAD_MATRIX_GUN),
@@ -419,7 +536,8 @@ LevelRegion(STAGE_AIR_FLEET, REGION_INDICIES.AIR_FLEET_KEY_DOOR,
 LevelRegion(STAGE_AIR_FLEET, REGION_INDICIES.AIR_FLEET_AIR_SAUCER,
                     REGION_RESTRICTION_TYPES.AirSaucer),
 LevelRegion(STAGE_AIR_FLEET, REGION_INDICIES.AIR_FLEET_RAIL_HARD,
-                    REGION_RESTRICTION_TYPES.HardLogicOnly)
+                    REGION_RESTRICTION_TYPES.NoRestriction)
+    .setHardLogicOnly()
     .setFromRegion(REGION_INDICIES.AIR_FLEET_PULLEY),
 LevelRegion(STAGE_AIR_FLEET, REGION_INDICIES.AIR_FLEET_RAILS,
                     REGION_RESTRICTION_TYPES.NoRestriction)
@@ -436,22 +554,36 @@ LevelRegion(STAGE_IRON_JUNGLE, REGION_INDICIES.IRON_JUNGLE_PULLEY_NORMAL,
                     REGION_RESTRICTION_TYPES.Pulley)
     .setFromRegion(0),
 LevelRegion(STAGE_IRON_JUNGLE, REGION_INDICIES.IRON_JUNGLE_ROCKET,
-                    REGION_RESTRICTION_TYPES.Rocket),
+                    REGION_RESTRICTION_TYPES.Rocket)
+    .setLogicType(Options.LogicLevel.option_normal, Options.ChaosControlLogicLevel.option_easy),
+LevelRegion(STAGE_IRON_JUNGLE, REGION_INDICIES.IRON_JUNGLE_GOLD_BEETLE,
+                    REGION_RESTRICTION_TYPES.GoldBeetle),
 LevelRegion(STAGE_IRON_JUNGLE, REGION_INDICIES.IRON_JUNGLE_GUN_JUMPER,
-                    REGION_RESTRICTION_TYPES.GunJumper),
+                    REGION_RESTRICTION_TYPES.GunJumper)
+    .setFromRegion(REGION_INDICIES.IRON_JUNGLE_ROCKET),
 LevelRegion(STAGE_IRON_JUNGLE, REGION_INDICIES.IRON_JUNGLE_LIGHT_DASH,
                     REGION_RESTRICTION_TYPES.LightDash)
-    .setFromRegion(REGION_INDICIES.IRON_JUNGLE_ROCKET),
+    .setFromRegion(REGION_INDICIES.IRON_JUNGLE_ROCKET)
+    .setLogicType(Options.LogicLevel.option_hard),
 LevelRegion(STAGE_IRON_JUNGLE, REGION_INDICIES.IRON_JUNGLE_GUN_TURRET,
                     REGION_RESTRICTION_TYPES.GunTurret),
+LevelRegion(STAGE_IRON_JUNGLE, REGION_INDICIES.IRON_JUNGLE_LIGHT_DASH_DARK,
+                    REGION_RESTRICTION_TYPES.LightDash)
+    .setFromRegion(REGION_INDICIES.IRON_JUNGLE_LIGHT_DASH),
 
+LevelRegion(STAGE_SPACE_GADGET, REGION_INDICIES.SPACE_GADGET_UNITS,
+                    REGION_RESTRICTION_TYPES.Gun),
 LevelRegion(STAGE_SPACE_GADGET, REGION_INDICIES.SPACE_GADGET_ZIPWIRE,
-                    REGION_RESTRICTION_TYPES.Zipwire),
+                    REGION_RESTRICTION_TYPES.Zipwire)
+    .setFromRegion(0),
 LevelRegion(STAGE_SPACE_GADGET, REGION_INDICIES.SPACE_GADGET_AIR_SAUCER,
                     REGION_RESTRICTION_TYPES.AirSaucer)
     .setLogicType(Options.LogicLevel.option_hard),
+LevelRegion(STAGE_SPACE_GADGET, REGION_INDICIES.SPACE_GADGET_UNITS_AIR_SAUCER,
+                    REGION_RESTRICTION_TYPES.Gun),
 LevelRegion(STAGE_SPACE_GADGET, REGION_INDICIES.SPACE_GADGET_KEY_DOOR,
-                    REGION_RESTRICTION_TYPES.KeyDoor),
+                    REGION_RESTRICTION_TYPES.KeyDoor)
+    .setFromRegion(REGION_INDICIES.SPACE_GADGET_AIR_SAUCER),
 LevelRegion(STAGE_SPACE_GADGET, REGION_INDICIES.SPACE_GADGET_WARP_HOLE,
                     REGION_RESTRICTION_TYPES.WarpHole),
 LevelRegion(STAGE_SPACE_GADGET, REGION_INDICIES.SPACE_GADGET_WARP_HOLE_DARK,
@@ -471,6 +603,7 @@ LevelRegion(STAGE_LOST_IMPACT, REGION_INDICIES.LOST_IMPACT_BOMB_WALL,
                     REGION_RESTRICTION_TYPES.Explosion)
     .setFromRegion(REGION_INDICIES.LOST_IMPACT_GUN_LIFT),
 
+# requires a rework
 LevelRegion(STAGE_GUN_FORTRESS, REGION_INDICIES.GUN_FORTRESS_GUN_TURRET,
                     REGION_RESTRICTION_TYPES.GunTurret),
 LevelRegion(STAGE_GUN_FORTRESS, REGION_INDICIES.GUN_FORTRESS_TURRET_OR_FIRE,
@@ -480,22 +613,89 @@ LevelRegion(STAGE_GUN_FORTRESS, REGION_INDICIES.GUN_FORTRESS_TURRET_OR_FIRE,
 LevelRegion(STAGE_GUN_FORTRESS, REGION_INDICIES.GUN_FORTRESS_ZIPWIRE_NORMAL,
                     REGION_RESTRICTION_TYPES.Zipwire)
     .setLogicType(Options.LogicLevel.option_hard),
+
 LevelRegion(STAGE_GUN_FORTRESS, REGION_INDICIES.GUN_FORTRESS_PULLEY,
-                    REGION_RESTRICTION_TYPES.Pulley),
+            REGION_RESTRICTION_TYPES.NoRestriction)
+    .setLogicType(Options.LogicLevel.option_normal, Options.ChaosControlLogicLevel.option_intermediate, True),
+
+LevelRegion(STAGE_GUN_FORTRESS, REGION_INDICIES.GUN_FORTRESS_ZIP_1A,
+            [REGION_RESTRICTION_TYPES.Heal,  REGION_RESTRICTION_TYPES.Pulley])
+            .setFromRegion([REGION_INDICIES.GUN_FORTRESS_PULLEY]),
+
+LevelRegion(STAGE_GUN_FORTRESS, REGION_INDICIES.GUN_FORTRESS_ZIP_1B,
+            REGION_RESTRICTION_TYPES.Zipwire)
+    .setLogicType(Options.LogicLevel.option_normal, Options.ChaosControlLogicLevel.option_intermediate, True),
+
+LevelRegion(STAGE_GUN_FORTRESS, REGION_INDICIES.GUN_FORTRESS_ZIP_2A,
+                REGION_RESTRICTION_TYPES.Heal)
+    .setFromRegion([REGION_INDICIES.GUN_FORTRESS_PULLEY]),
+
+LevelRegion(STAGE_GUN_FORTRESS, REGION_INDICIES.GUN_FORTRESS_ZIP_2B,
+                [REGION_RESTRICTION_TYPES.Zipwire])
+    .setLogicType(Options.LogicLevel.option_normal, Options.ChaosControlLogicLevel.option_hard, True),
+
+LevelRegion(STAGE_GUN_FORTRESS, REGION_INDICIES.GUN_FORTRESS_ZIPWIRE_BASE,
+                    REGION_RESTRICTION_TYPES.Zipwire)
+    .setFromRegion(REGION_INDICIES.GUN_FORTRESS_ZIPWIRE_NORMAL),
+
 LevelRegion(STAGE_GUN_FORTRESS, REGION_INDICIES.GUN_FORTRESS_ZIPWIRE,
-                    REGION_RESTRICTION_TYPES.Zipwire),
+                    REGION_RESTRICTION_TYPES.Zipwire).
+    setFromRegion([REGION_INDICIES.GUN_FORTRESS_ZIP_1B, REGION_INDICIES.GUN_FORTRESS_ZIP_2B,
+                  REGION_INDICIES.GUN_FORTRESS_ZIPWIRE_BASE]),
+
 LevelRegion(STAGE_GUN_FORTRESS, REGION_INDICIES.GUN_FORTRESS_ROCKET_NORMAL,
                     REGION_RESTRICTION_TYPES.Rocket)
     .setLogicType(Options.LogicLevel.option_hard),
+
+LevelRegion(STAGE_GUN_FORTRESS, REGION_INDICIES.GUN_FORTRESS_WEAPON_SHOT,
+                    REGION_RESTRICTION_TYPES.VacuumOrShot),
+
+LevelRegion(STAGE_GUN_FORTRESS, REGION_INDICIES.GUN_FORTRESS_TUNNEL_2,
+                    REGION_RESTRICTION_TYPES.Pulley)
+    .setFromRegion(REGION_INDICIES.GUN_FORTRESS_ROCKET_NORMAL),
+
+LevelRegion(STAGE_GUN_FORTRESS, REGION_INDICIES.GUN_FORTRESS_TOP_TUNNEL_2,
+                    REGION_RESTRICTION_TYPES.Pulley)
+    .setFromRegion( REGION_INDICIES.GUN_FORTRESS_ROCKET_NORMAL)
+    .setLogicType(Options.LogicLevel.option_normal, Options.ChaosControlLogicLevel.option_hard, True),
+
+LevelRegion(STAGE_GUN_FORTRESS, REGION_INDICIES.GUN_FORTRESS_COMPUTER_2_BACK,
+                    REGION_RESTRICTION_TYPES.NoRestriction)
+    .setFromRegion(REGION_INDICIES.GUN_FORTRESS_TOP_TUNNEL_2)
+    .setHardLogicOnly(),
+
+LevelRegion(STAGE_GUN_FORTRESS, REGION_INDICIES.GUN_FORTRESS_COMPUTER_ROOM_TWO,
+                    REGION_RESTRICTION_TYPES.Pulley)
+    .setFromRegion([REGION_INDICIES.GUN_FORTRESS_TUNNEL_2, REGION_INDICIES.GUN_FORTRESS_COMPUTER_2_BACK]),
+
+
+LevelRegion(STAGE_GUN_FORTRESS, REGION_INDICIES.GUN_FORTRESS_AFTER_TUNNEL_2,
+                    REGION_RESTRICTION_TYPES.NoRestriction)
+    .setFromRegion([REGION_INDICIES.GUN_FORTRESS_TUNNEL_2,
+                   REGION_INDICIES.GUN_FORTRESS_TOP_TUNNEL_2]),
+
 LevelRegion(STAGE_GUN_FORTRESS, REGION_INDICIES.GUN_FORTRESS_KEY_DOOR,
                     REGION_RESTRICTION_TYPES.KeyDoor),
+
+LevelRegion(STAGE_GUN_FORTRESS, REGION_INDICIES.GUN_FORTRESS_KEY_PULLEY,
+            REGION_RESTRICTION_TYPES.Pulley)
+    .setFromRegion(REGION_INDICIES.GUN_FORTRESS_AFTER_TUNNEL_2),
+
+    # Pulley also present here, without pulley it may not be possible at all
+
 LevelRegion(STAGE_GUN_FORTRESS, REGION_INDICIES.GUN_FORTRESS_ZIPLINE_HARD,
                     REGION_RESTRICTION_TYPES.Zipwire)
-    .setFromRegion(REGION_INDICIES.GUN_FORTRESS_ROCKET_NORMAL),
+    .setFromRegion(REGION_INDICIES.GUN_FORTRESS_KEY_PULLEY),
+
+LevelRegion(STAGE_GUN_FORTRESS, REGION_INDICIES.GUN_FORTRESS_ZIPLINE_ENEMIES,
+                    REGION_RESTRICTION_TYPES.Vacuum),
+
 LevelRegion(STAGE_GUN_FORTRESS, REGION_INDICIES.GUN_FORTRESS_KEY_OR_ZIPLINE,
                     REGION_RESTRICTION_TYPES.NoRestriction)
     .setFromRegion([REGION_INDICIES.GUN_FORTRESS_KEY_DOOR,
                     REGION_INDICIES.GUN_FORTRESS_ZIPLINE_HARD]),
+
+# Functionally, may be no need to split CR3 etc logic, since no more CCs
 
 
 LevelRegion(STAGE_BLACK_COMET, REGION_INDICIES.BLACK_COMET_AIR_SAUCER,
@@ -521,6 +721,11 @@ LevelRegion(STAGE_BLACK_COMET, REGION_INDICIES.BLACK_COMET_FLOATING_ENEMY_WALL,
     .setFromRegion(REGION_INDICIES.BLACK_COMET_WARP_HOLE),
 LevelRegion(STAGE_BLACK_COMET, REGION_INDICIES.BLACK_COMET_KEY_DOOR,
                     REGION_RESTRICTION_TYPES.KeyDoor),
+LevelRegion(STAGE_BLACK_COMET, REGION_INDICIES.BLACK_COMET_BEHIND_KEY_DOOR,
+                    REGION_RESTRICTION_TYPES.RegionAccess(REGION_INDICIES.BLACK_COMET_KEY_DOOR))
+    .setLogicType(Options.LogicLevel.option_hard)
+    .setFromRegion(REGION_INDICIES.BLACK_COMET_FLOATING_ENEMY_WALL),
+
 
 LevelRegion(STAGE_LAVA_SHELTER, REGION_INDICIES.LAVA_SHELTER_KEY_DOOR,
                     REGION_RESTRICTION_TYPES.KeyDoor),
@@ -528,6 +733,7 @@ LevelRegion(STAGE_LAVA_SHELTER, REGION_INDICIES.LAVA_SHELTER_AIR_SAUCER,
                     REGION_RESTRICTION_TYPES.AirSaucer),
 LevelRegion(STAGE_LAVA_SHELTER, REGION_INDICIES.LAVA_SHELTER_PULLEY,
                     REGION_RESTRICTION_TYPES.Pulley)
+    .setLogicType(Options.LogicLevel.option_normal, Options.ChaosControlLogicLevel.option_easy)
     .setFromRegion(0),
 LevelRegion(STAGE_LAVA_SHELTER, REGION_INDICIES.LAVA_SHELTER_PULLEY_OR_LAVA,
                     REGION_RESTRICTION_TYPES.NoRestriction)
@@ -535,10 +741,11 @@ LevelRegion(STAGE_LAVA_SHELTER, REGION_INDICIES.LAVA_SHELTER_PULLEY_OR_LAVA,
                     REGION_INDICIES.LAVA_SHELTER_AIR_SAUCER]),
     LevelRegion(STAGE_LAVA_SHELTER, REGION_INDICIES.LAVA_SHELTER_LIGHT_DASH_DARK,
                 REGION_RESTRICTION_TYPES.LightDash)
-    .setFromRegion(REGION_INDICIES.LAVA_SHELTER_PULLEY_OR_LAVA),
-        #.setFromRegion(0),
+    .setFromRegion(REGION_INDICIES.LAVA_SHELTER_PULLEY_OR_LAVA)
+    .setLogicType(Options.LogicLevel.option_normal, Options.ChaosControlLogicLevel.option_easy),
     LevelRegion(STAGE_LAVA_SHELTER, REGION_INDICIES.LAVA_SHELTER_PULLEY_DARK,
-                    REGION_RESTRICTION_TYPES.Pulley),
+                    REGION_RESTRICTION_TYPES.Pulley)
+    .setLogicType(Options.LogicLevel.option_normal, Options.ChaosControlLogicLevel.option_easy),
 
 
 LevelRegion(STAGE_COSMIC_FALL, REGION_INDICIES.COSMIC_FALL_ZIPWIRE,
@@ -548,35 +755,73 @@ LevelRegion(STAGE_COSMIC_FALL, REGION_INDICIES.COSMIC_FALL_PULLEY_NORMAL,
     .setLogicType(Options.LogicLevel.option_hard),
 LevelRegion(STAGE_COSMIC_FALL, REGION_INDICIES.COSMIC_FALL_PULLEY_CORE,
                     REGION_RESTRICTION_TYPES.Pulley),
+
+
 LevelRegion(STAGE_COSMIC_FALL, REGION_INDICIES.COSMIC_FALL_KEY_DOOR,
-                    REGION_RESTRICTION_TYPES.KeyDoor),
+                    REGION_RESTRICTION_TYPES.KeyDoor)
+    .setFromRegion(REGION_INDICIES.COSMIC_FALL_PULLEY_NORMAL),
 LevelRegion(STAGE_COSMIC_FALL, REGION_INDICIES.COSMIC_FALL_LIGHT_DASH,
                     REGION_RESTRICTION_TYPES.LightDash),
 LevelRegion(STAGE_COSMIC_FALL, REGION_INDICIES.COSMIC_FALL_GUN_JUMPER,
                     REGION_RESTRICTION_TYPES.GunJumper)
     .setFromRegion(REGION_INDICIES.COSMIC_FALL_PULLEY_NORMAL),
+
+LevelRegion(STAGE_COSMIC_FALL, REGION_INDICIES.COSMIC_FALL_GUN_JUMPER_PULLEY_HARD,
+                    REGION_RESTRICTION_TYPES.Pulley)
+    .setFromRegion(REGION_INDICIES.COSMIC_FALL_GUN_JUMPER),
+
 LevelRegion(STAGE_COSMIC_FALL, REGION_INDICIES.COSMIC_FALL_LD_OR_JUMPER,
                     REGION_RESTRICTION_TYPES.NoRestriction)
-    .setFromRegion([REGION_INDICIES.COSMIC_FALL_GUN_JUMPER,
+    .setFromRegion([REGION_INDICIES.COSMIC_FALL_GUN_JUMPER_PULLEY_HARD,
                     REGION_INDICIES.COSMIC_FALL_LIGHT_DASH]),
-LevelRegion(STAGE_COSMIC_FALL, REGION_INDICIES.COSMIC_FALL_ROCKET,
+
+
+LevelRegion(STAGE_COSMIC_FALL, REGION_INDICIES.COSMIC_FALL_COMPUTER_ROOM_1,
                     REGION_RESTRICTION_TYPES.Rocket)
-    .setLogicType(Options.LogicLevel.option_hard),
+    .setLogicType(Options.LogicLevel.option_normal, Options.ChaosControlLogicLevel.option_hard),
+
+LevelRegion(STAGE_COSMIC_FALL, REGION_INDICIES.COSMIC_FALL_COMPUTER_ROOM_2,
+                    REGION_RESTRICTION_TYPES.Impassable)
+    .setFromRegion(REGION_INDICIES.COSMIC_FALL_PULLEY_CORE)
+    .setLogicType(Options.LogicLevel.option_normal, Options.ChaosControlLogicLevel.option_intermediate),
+
+LevelRegion(STAGE_COSMIC_FALL, REGION_INDICIES.COSMIC_FALL_COMPUTER_ROOM,
+            REGION_RESTRICTION_TYPES.NoRestriction)
+            .setFromRegion([REGION_INDICIES.COSMIC_FALL_COMPUTER_ROOM_1,
+                    REGION_INDICIES.COSMIC_FALL_COMPUTER_ROOM_2]),
 
 
 LevelRegion(STAGE_FINAL_HAUNT, REGION_INDICIES.FINAL_HAUNT_VACUUM,
                     REGION_RESTRICTION_TYPES.Vacuum)
     .setLogicType(Options.LogicLevel.option_hard),
+
 LevelRegion(STAGE_FINAL_HAUNT, REGION_INDICIES.FINAL_HAUNT_VACUUM_HARD,
-                    REGION_RESTRICTION_TYPES.Vacuum),
+                    REGION_RESTRICTION_TYPES.Vacuum)
+    .setLogicType(Options.LogicLevel.option_normal, Options.ChaosControlLogicLevel.option_easy),
 LevelRegion(STAGE_FINAL_HAUNT, REGION_INDICIES.FINAL_HAUNT_BLACK_VOLT,
                     REGION_RESTRICTION_TYPES.BlackVolt)
     .setFromRegion(REGION_INDICIES.FINAL_HAUNT_VACUUM),
+
+
+LevelRegion(STAGE_FINAL_HAUNT, REGION_INDICIES.FINAL_HAUNT_BLACK_VOLT_BASE,
+                    REGION_RESTRICTION_TYPES.BlackVolt)
+    .setFromRegion(REGION_INDICIES.FINAL_HAUNT_VACUUM),
+
+
+LevelRegion(STAGE_FINAL_HAUNT, REGION_INDICIES.FINAL_HAUNT_BLACK_VOLT_ACCESS,
+                    REGION_RESTRICTION_TYPES.NoRestriction)
+    .setFromRegion([REGION_INDICIES.FINAL_HAUNT_BLACK_VOLT_BASE,
+                    REGION_INDICIES.FINAL_HAUNT_BLACK_VOLT_BACK]),
 
 LevelRegion(STAGE_FINAL_HAUNT, REGION_INDICIES.FINAL_HAUNT_HARD_VACUUM_OR_BLACK_VOLT,
                     REGION_RESTRICTION_TYPES.NoRestriction)
     .setFromRegion([REGION_INDICIES.FINAL_HAUNT_VACUUM_HARD,
                     REGION_INDICIES.FINAL_HAUNT_BLACK_VOLT]),
+
+LevelRegion(STAGE_FINAL_HAUNT, REGION_INDICIES.FINAL_HAUNT_BLACK_VOLT_BACK,
+                    REGION_RESTRICTION_TYPES.NoRestriction)
+    .setHardLogicOnly()
+    .setFromRegion(REGION_INDICIES.FINAL_HAUNT_HARD_VACUUM_OR_BLACK_VOLT),
 
 LevelRegion(STAGE_FINAL_HAUNT, REGION_INDICIES.FINAL_HAUNT_ROCKET_NORMAL,
                     REGION_RESTRICTION_TYPES.Rocket)
@@ -589,21 +834,25 @@ LevelRegion(STAGE_FINAL_HAUNT, REGION_INDICIES.FINAL_HAUNT_SHIELD_2,
 
 LevelRegion(STAGE_FINAL_HAUNT, REGION_INDICIES.FINAL_HAUNT_SHIELD_COUNT_2,
                     REGION_RESTRICTION_TYPES.RegionAccess(REGION_INDICIES.FINAL_HAUNT_SHIELD_2))
+    .setLogicType(Options.LogicLevel.option_normal, Options.ChaosControlLogicLevel.option_easy)
     .setFromRegion([REGION_INDICIES.FINAL_HAUNT_SHIELD_4,
                     REGION_INDICIES.FINAL_HAUNT_BLACK_VOLT]),
 
 LevelRegion(STAGE_FINAL_HAUNT, REGION_INDICIES.FINAL_HAUNT_BLACK_VOLT_2,
-                    REGION_RESTRICTION_TYPES.BlackVolt),
+                    REGION_RESTRICTION_TYPES.BlackVolt)
+    .setFromRegion(REGION_INDICIES.FINAL_HAUNT_ROCKET_NORMAL),
+
 LevelRegion(STAGE_FINAL_HAUNT, REGION_INDICIES.FINAL_HAUNT_KEY_DOOR,
                     REGION_RESTRICTION_TYPES.KeyDoor)
     .setFromRegion(REGION_INDICIES.FINAL_HAUNT_ROCKET_NORMAL),
 LevelRegion(STAGE_FINAL_HAUNT, REGION_INDICIES.FINAL_HAUNT_LIGHT_DASH,
                     REGION_RESTRICTION_TYPES.LightDash)
-    .setLogicType(Options.LogicLevel.option_hard)
+    .setLogicType(Options.LogicLevel.option_normal, Options.ChaosControlLogicLevel.option_easy)
     .setFromRegion(REGION_INDICIES.FINAL_HAUNT_ROCKET_NORMAL),
 
 LevelRegion(STAGE_FINAL_HAUNT, REGION_INDICIES.FINAL_HAUNT_SHIELD_COUNT_3,
                     REGION_RESTRICTION_TYPES.BlackVolt)
+    .setLogicType(Options.LogicLevel.option_normal, Options.ChaosControlLogicLevel.option_easy)
     .setLogicType(Options.LogicLevel.option_hard),
 
 LevelRegion(STAGE_FINAL_HAUNT, REGION_INDICIES.FINAL_HAUNT_KEY_DOOR_2,
@@ -617,11 +866,21 @@ LevelRegion(STAGE_FINAL_HAUNT, REGION_INDICIES.FINAL_HAUNT_SHIELD_4,
 
 
 LevelRegion(STAGE_THE_LAST_WAY, REGION_INDICIES.THE_LAST_WAY_BLACK_VOLT,
+                    REGION_RESTRICTION_TYPES.BlackVolt)
+    .setLogicType(Options.LogicLevel.option_normal, Options.ChaosControlLogicLevel.option_easy),
+
+LevelRegion(STAGE_THE_LAST_WAY, REGION_INDICIES.THE_LAST_WAY_VOLT_ENEMIES,
                     REGION_RESTRICTION_TYPES.BlackVolt),
+
 LevelRegion(STAGE_THE_LAST_WAY, REGION_INDICIES.THE_LAST_WAY_KEY_DOOR,
                     REGION_RESTRICTION_TYPES.KeyDoor)
+    .setFromRegion(0),
+
+LevelRegion(STAGE_THE_LAST_WAY, REGION_INDICIES.THE_LAST_WAY_BEHIND_KEY_DOOR,
+                    REGION_RESTRICTION_TYPES.RegionAccess(REGION_INDICIES.THE_LAST_WAY_KEY_DOOR))
     .setLogicType(Options.LogicLevel.option_hard)
     .setFromRegion(0),
+
 LevelRegion(STAGE_THE_LAST_WAY, REGION_INDICIES.THE_LAST_WAY_WARP_HOLE,
                     REGION_RESTRICTION_TYPES.WarpHole),
 LevelRegion(STAGE_THE_LAST_WAY, REGION_INDICIES.THE_LAST_WAY_VOLT_OR_WARP,
@@ -660,7 +919,7 @@ CharacterToLevel = {
                STAGE_IRON_JUNGLE, STAGE_LAVA_SHELTER],
     "Rouge": [STAGE_DIGITAL_CIRCUIT, STAGE_DEATH_RUINS, (STAGE_GUN_FORTRESS,
 	REGION_INDICIES.GUN_FORTRESS_ZIPWIRE_NORMAL
-	), BOSS_BLACK_BULL_DR],
+	), BOSS_BLACK_BULL_DR, BOSS_BLACK_DOOM_GF],
     "Omega": [STAGE_IRON_JUNGLE, STAGE_LAVA_SHELTER, BOSS_EGG_BREAKER_IJ, BOSS_EGG_DEALER_LS],
     "Doom": [STAGE_WESTOPOLIS, STAGE_DIGITAL_CIRCUIT, (STAGE_GLYPHIC_CANYON,
 	REGION_INDICIES.GLYPHIC_CANYON_PULLEY),
@@ -738,7 +997,7 @@ def GetLevelWarpName(stageId):
 def GetLevelObjectNames(stageId, alignmentId, objectName, i):
     id_name =  int(str(LOCATION_ID_PLUS) + str(1) + str(stageId) + str(alignmentId) + str(i) + "0")
     objective_location_name = (LEVEL_ID_TO_LEVEL[stageId] + "-" +
-                               objectName + " " + str(i))
+                               objectName + " Count " + str(i))
 
     return id_name, objective_location_name
 
@@ -765,4 +1024,10 @@ MINIMUM_STAGE_REQUIREMENTS = \
     (STAGE_FINAL_HAUNT, MISSION_ALIGNMENT_DARK, 1)
 
 
+]
+
+NON_OBJECTIVESANITY_REGIONS = \
+[
+    (STAGE_GLYPHIC_CANYON, REGION_INDICIES.GLYPHIC_CANYON_KEY_DOOR),
+    (STAGE_GLYPHIC_CANYON, REGION_INDICIES.GLYPHIC_CANYON_BLACK_VOLT)
 ]

@@ -49,7 +49,7 @@ DESIRABLE_OBJECTS_LOST_IMPACT = [
               vehicle=ObjectType.ObjectTypeVehicle.GUN_LIFT_FAST),
 
     SETObject(ObjectType.ARTIFICIAL_CHAOS, Levels.STAGE_LOST_IMPACT, 168, '1', region=0),
-    SETObject(ObjectType.ARTIFICIAL_CHAOS, Levels.STAGE_LOST_IMPACT, 196, '1', region=0),
+    SETObject(ObjectType.ARTIFICIAL_CHAOS, Levels.STAGE_LOST_IMPACT, 196, '1.1', region=0),
     SETObject(ObjectType.GUN_SOLIDER, Levels.STAGE_LOST_IMPACT, 162, '2', region=0),
     SETObject(ObjectType.GUN_SOLIDER, Levels.STAGE_LOST_IMPACT, 171, '3', region=0),
     SETObject(ObjectType.GUN_SOLIDER, Levels.STAGE_LOST_IMPACT, 297, '4', region=0),

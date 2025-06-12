@@ -1,3 +1,4 @@
+import logging
 import typing
 from math import ceil, floor
 
@@ -8,7 +9,7 @@ from . import Items, Levels, LEVEL_ID_TO_LEVEL, CharacterToLevel, ITEM_TOKEN_TYP
     MISSION_ALIGNMENT_DARK, MISSION_ALIGNMENT_HERO, ITEM_TOKEN_TYPE_OBJECTIVE, \
     ITEM_TOKEN_TYPE_STANDARD, ITEM_TOKEN_TYPE_ALIGNMENT, Utils, REGION_RESTRICTION_TYPES, Weapons, Regions, LevelRegion, \
     GetLevelObjectNames, Vehicle, Options, Locations, ITEM_TOKEN_TYPE_BOSS, ITEM_TOKEN_TYPE_FINAL_BOSS, \
-    REGION_RESTRICTION_REFERENCE_TYPES, GetEnemyLocationName, Names
+    REGION_RESTRICTION_REFERENCE_TYPES, GetEnemyLocationName, Names, Objects
 from .Items import ShadowTheHedgehogItem, GetLevelTokenItems
 from .Locations import MissionClearLocations, LocationInfo, BossClearLocations
 from .Options import LevelProgression
@@ -50,33 +51,32 @@ def GetRelevantTokenItem(token: LocationInfo):
 def handle_path_rules(options, player, additional_level_region, path_type):
     rule = lambda state: True
 
-    logic_level = None
-    if path_type == REGION_RESTRICTION_REFERENCE_TYPES.BaseLogic:
-        logic_level = options.logic_level
-    elif path_type == REGION_RESTRICTION_REFERENCE_TYPES.BossLogic:
-        logic_level = options.boss_logic_level
-    elif path_type == REGION_RESTRICTION_REFERENCE_TYPES.CraftLogic:
-        logic_level = options.craft_logic_level
 
-    region_restriction = additional_level_region.restrictionType
-
-    if region_restriction == REGION_RESTRICTION_TYPES.HardLogicOnly:
+    if additional_level_region.hardLogicOnly:
         if options.logic_level != Options.LogicLevel.option_hard:
             rule = lambda state: False
+            return rule
 
-    if additional_level_region.logicType == Options.LogicLevel.option_easy and \
-            logic_level != Options.LogicLevel.option_easy:
+    if not Levels.IsLogicLevelApplicable(additional_level_region, options, path_type, options.start_inventory):
         return rule
 
-    if additional_level_region.logicType == Options.LogicLevel.option_hard and \
-            logic_level == Options.LogicLevel.option_hard:
-        return rule
+    if REGION_RESTRICTION_TYPES.Impassable in additional_level_region.restrictionTypes:
+        # Temp solution
+        final_item = Items.GetFinalItem()
+        return lambda state: state.has(final_item.name, player)
 
-    if additional_level_region.restrictionType == REGION_RESTRICTION_TYPES.KeyDoor:
-        rule = GetKeyRule(additional_level_region.stageId, player)
-        return rule
+    if additional_level_region.chaosControlLogicRequiresHeal:
+        weapon_rule = Weapons.GetRuleByWeaponRequirement(player, Weapons.WeaponAttributes.HEAL,
+                                                         additional_level_region.stageId,
+                                                         additional_level_region.fromRegions)
 
-    elif region_restriction == REGION_RESTRICTION_TYPES.ShootOrTurret:
+        return weapon_rule
+
+    if REGION_RESTRICTION_TYPES.KeyDoor in additional_level_region.restrictionTypes:
+        key_rule = GetKeyRule(additional_level_region.stageId, player)
+        rule = lambda state,r=rule: key_rule(state) and r(state)
+
+    if REGION_RESTRICTION_TYPES.ShootOrTurret in additional_level_region.restrictionTypes:
         if options.weapon_sanity_unlock and options.vehicle_logic:
             rule_weapon = Weapons.GetRuleByWeaponRequirement(player, Weapons.WeaponAttributes.LONG_RANGE,
                                                       additional_level_region.stageId,
@@ -84,19 +84,10 @@ def handle_path_rules(options, player, additional_level_region, path_type):
 
             rule_vehicle = Vehicle.GetRuleByVehicleRequirement(player, "Gun Turret")
 
-            rule = (rule_weapon or rule_vehicle)
-            return rule
+            rule_w_or_v = lambda state: (rule_weapon(state) or rule_vehicle(state))
+            rule = lambda state, r=rule: rule_w_or_v(state) and r(state)
 
-        # If weapon or vehicle is not on, then it will always be available to use the other method
-
-        #elif options.weapon_sanity_unlock:
-        #    region_restriction = REGION_RESTRICTION_TYPES.LongRangeGun
-        #elif options.vehicle_logic:
-        #    region_restriction = REGION_RESTRICTION_TYPES.GunTurret
-
-
-    # TODO: Complete this restriction - with weapon type and Unit access
-    elif region_restriction == REGION_RESTRICTION_TYPES.Explosion:
+    if REGION_RESTRICTION_TYPES.Explosion in additional_level_region.restrictionTypes:
         weapon_rule = Weapons.GetRuleByWeaponRequirement(player, Weapons.WeaponAttributes.EXPLOSION,
                                                   additional_level_region.stageId, additional_level_region.fromRegions)
 
@@ -110,16 +101,19 @@ def handle_path_rules(options, player, additional_level_region, path_type):
         if additional_level_region.stageId == Levels.STAGE_DEATH_RUINS:
             bombs_available = False
 
+        explosion_rule = lambda state: True
         if weapon_available and options.weapon_sanity_unlock and \
             (not bombs_available):
-            rule = weapon_rule
+            explosion_rule = weapon_rule
         elif bombs_available and weapon_available and options.weapon_sanity_unlock and \
             options.object_unlocks and options.object_units:
-            rule = lambda state, wr=weapon_rule, br=bomb_rule: wr(state) or br(state)
+            explosion_rule = lambda state, wr=weapon_rule, br=bomb_rule: wr(state) or br(state)
         elif not weapon_available and options.object_unlocks and options.object_units:
-            rule = bomb_rule
+            explosion_rule = bomb_rule
 
-    elif region_restriction == REGION_RESTRICTION_TYPES.Heal:
+        rule = lambda state,r=rule: explosion_rule(state) and r(state)
+
+    elif REGION_RESTRICTION_TYPES.Heal in additional_level_region.restrictionTypes:
         weapon_rule = Weapons.GetRuleByWeaponRequirement(player, Weapons.WeaponAttributes.HEAL,
                                                          additional_level_region.stageId,
                                                          additional_level_region.fromRegions)
@@ -134,29 +128,38 @@ def handle_path_rules(options, player, additional_level_region, path_type):
         if additional_level_region.stageId == Levels.STAGE_THE_DOOM:
             units_available = True
 
+        heal_rule = lambda state: True
         if weapon_available and \
                 (not units_available):
-            rule = weapon_rule
+            heal_rule = weapon_rule
         elif units_available and weapon_available and \
                 options.object_unlocks and options.object_units:
-            rule = lambda state, wr=weapon_rule, ur=unit_rule: wr(state) or ur(state)
+            heal_rule = lambda state, wr=weapon_rule, ur=unit_rule: wr(state) or ur(state)
         elif not weapon_available and options.object_unlocks and options.object_units:
-            rule = unit_rule
+            heal_rule = unit_rule
 
-    elif region_restriction == REGION_RESTRICTION_TYPES.GoldBeetle:
+        rule = lambda state, r=rule: heal_rule(state) and r(state)
+
+    if REGION_RESTRICTION_TYPES.GoldBeetle in additional_level_region.restrictionTypes:
         if options.logic_level == Options.LogicLevel.option_easy:
-            rule = Weapons.GetRuleByWeaponRequirement(player, Weapons.WeaponAttributes.VACUUM,
+            gb_rule = Weapons.GetRuleByWeaponRequirement(player, Weapons.WeaponAttributes.VACUUM,
                                                       additional_level_region.stageId,
                                                       additional_level_region.fromRegions)
-        elif options.logic_level == Options.LogicLevel.option_normal:
-            rule = Weapons.GetRuleByWeaponRequirement(player, None, additional_level_region.stageId, additional_level_region.fromRegions)
 
-    elif options.weapon_sanity_unlock and Levels.IsWeaponsanityRestriction(region_restriction):
-        if region_restriction == REGION_RESTRICTION_TYPES.Torch:
+            rule = lambda state, r=rule: gb_rule(state) and r(state)
+
+        elif options.logic_level == Options.LogicLevel.option_normal:
+            gb_rule = Weapons.GetRuleByWeaponRequirement(player, None, additional_level_region.stageId, additional_level_region.fromRegions)
+            rule = lambda state, r=rule: gb_rule(state) and r(state)
+
+    if options.weapon_sanity_unlock and Levels.IsWeaponsanityRestriction(additional_level_region.restrictionTypes):
+        if REGION_RESTRICTION_TYPES.Torch in additional_level_region.restrictionTypes:
             rule = Weapons.GetRuleByWeaponRequirement(player, Weapons.WeaponAttributes.TORCH,
                                                       additional_level_region.stageId, additional_level_region.fromRegions)
 
-        elif region_restriction == REGION_RESTRICTION_TYPES.VacuumOrShot:
+        w_rule = lambda state: True
+        if REGION_RESTRICTION_TYPES.VacuumOrShot in additional_level_region.restrictionTypes:
+            v_or_s_rule = lambda state: True
             ruleA = Weapons.GetRuleByWeaponRequirement(player, Weapons.WeaponAttributes.LONG_RANGE,
                                                       additional_level_region.stageId,
                                                       additional_level_region.fromRegions)
@@ -169,80 +172,109 @@ def handle_path_rules(options, player, additional_level_region, path_type):
                 raise Exception("Unhandled issue with VacuumOrShot region")
 
             elif ruleA is None:
-                rule = ruleB
+                v_or_s_rule = ruleB
 
             elif ruleB is None:
-                rule = ruleA
+                v_or_s_rule = ruleA
             else:
-                rule = lambda state: ruleA(state) or ruleB(state)
+                v_or_s_rule = lambda state, a=ruleA, b=ruleB: a(state) or b(state)
 
-        elif region_restriction == REGION_RESTRICTION_TYPES.LongRangeGun:
-            rule = Weapons.GetRuleByWeaponRequirement(player, Weapons.WeaponAttributes.LONG_RANGE,
+            w_rule = lambda state, w=w_rule: v_or_s_rule(state) and w(state)
+
+        if REGION_RESTRICTION_TYPES.LongRangeGun in additional_level_region.restrictionTypes:
+
+            w_rule = Weapons.GetRuleByWeaponRequirement(player, Weapons.WeaponAttributes.LONG_RANGE,
                                                       additional_level_region.stageId, additional_level_region.fromRegions)
 
-        elif region_restriction == REGION_RESTRICTION_TYPES.Vacuum:
-            rule = Weapons.GetRuleByWeaponRequirement(player, Weapons.WeaponAttributes.VACUUM,
+        if REGION_RESTRICTION_TYPES.Vacuum in additional_level_region.restrictionTypes:
+            w_rule = Weapons.GetRuleByWeaponRequirement(player, Weapons.WeaponAttributes.VACUUM,
                                                       additional_level_region.stageId, additional_level_region.fromRegions)
 
-        elif region_restriction == REGION_RESTRICTION_TYPES.Gun:
-            rule = Weapons.GetRuleByWeaponRequirement(player, Weapons.WeaponAttributes.SHOT,
+        if REGION_RESTRICTION_TYPES.Gun in additional_level_region.restrictionTypes:
+            w_rule = Weapons.GetRuleByWeaponRequirement(player, Weapons.WeaponAttributes.SHOT,
                                                       additional_level_region.stageId, additional_level_region.fromRegions)
 
-        elif region_restriction == REGION_RESTRICTION_TYPES.AnyStageWeapon:
-            rule = Weapons.GetRuleByWeaponRequirement(player, None, additional_level_region.stageId, additional_level_region.fromRegions)
+        if REGION_RESTRICTION_TYPES.AnyStageWeapon in additional_level_region.restrictionTypes:
+            w_rule = Weapons.GetRuleByWeaponRequirement(player, None, additional_level_region.stageId, additional_level_region.fromRegions)
 
-        else:
-            print("Unhandled restriction",region_restriction, additional_level_region )
+        if REGION_RESTRICTION_TYPES.SatelliteGun in additional_level_region.restrictionTypes:
+            w_rule = Weapons.GetRuleByWeaponRequirement(player, Weapons.WeaponAttributes.LOCKON,
+                                                      additional_level_region.stageId,
+                                                      additional_level_region.fromRegions)
 
-    elif options.vehicle_logic and additional_level_region.restrictionType == REGION_RESTRICTION_TYPES.Car:
+        rule = lambda state, r=rule: w_rule(state) and r(state)
+
+    if options.vehicle_logic and REGION_RESTRICTION_TYPES.Car in additional_level_region.restrictionTypes:
+        c_rule = lambda state: True
         # If used anywhere else, need to change to check accessibility
         ruleCar = Vehicle.GetRuleByVehicleRequirement(player, "Standard Car")
         ruleConv = Vehicle.GetRuleByVehicleRequirement(player, "Convertible")
-        rule = lambda state, r_car=ruleCar, r_conv=ruleConv: r_car(state) or r_conv(state)
+        c_rule = lambda state, r_car=ruleCar, r_conv=ruleConv: r_car(state) or r_conv(state)
 
-    elif options.vehicle_logic and Levels.IsVeichleSanityRestriction(additional_level_region.restrictionType):
-        if region_restriction == REGION_RESTRICTION_TYPES.BlackArmsTurret:
-            rule = Vehicle.GetRuleByVehicleRequirement(player, "Black Turret")
-        #elif region_restriction == REGION_RESTRICTION_TYPES.Car:
-        #    rule = Vehicle.GetRuleByVehicleRequirement(player, "Standard Car")
-        elif region_restriction == REGION_RESTRICTION_TYPES.BlackVolt:
-            rule = Vehicle.GetRuleByVehicleRequirement(player, "Black Volt")
-        elif region_restriction == REGION_RESTRICTION_TYPES.BlackHawk:
-            rule = Vehicle.GetRuleByVehicleRequirement(player, "Black Hawk")
-        elif region_restriction == REGION_RESTRICTION_TYPES.GunJumper:
-            rule = Vehicle.GetRuleByVehicleRequirement(player, "Gun Jumper")
-        elif region_restriction == REGION_RESTRICTION_TYPES.AirSaucer:
-            rule = Vehicle.GetRuleByVehicleRequirement(player, "Air Saucer")
-        elif region_restriction == REGION_RESTRICTION_TYPES.GunLift:
-            rule = Vehicle.GetRuleByVehicleRequirement(player, "Gun Lift")
-        elif region_restriction == REGION_RESTRICTION_TYPES.GunTurret:
-            rule = Vehicle.GetRuleByVehicleRequirement(player, "Gun Turret")
+        rule = lambda state, r=rule: c_rule(state) and r(state)
 
-    elif region_restriction == REGION_RESTRICTION_TYPES.ShadowRifle:
-        rule = Weapons.GetRuleByWeaponRequirement(player, Weapons.WeaponAttributes.SHADOW_RIFLE,
+
+    if options.vehicle_logic and Levels.IsVeichleSanityRestriction(additional_level_region.restrictionTypes):
+        v_rule = lambda state: True
+        if REGION_RESTRICTION_TYPES.BlackArmsTurret in additional_level_region.restrictionTypes:
+            v_rule = Vehicle.GetRuleByVehicleRequirement(player, "Black Turret")
+        if REGION_RESTRICTION_TYPES.BlackVolt in additional_level_region.restrictionTypes:
+            v_rule = Vehicle.GetRuleByVehicleRequirement(player, "Black Volt")
+        if REGION_RESTRICTION_TYPES.BlackHawk in additional_level_region.restrictionTypes:
+            v_rule = Vehicle.GetRuleByVehicleRequirement(player, "Black Hawk")
+        if REGION_RESTRICTION_TYPES.GunJumper in additional_level_region.restrictionTypes:
+            v_rule = Vehicle.GetRuleByVehicleRequirement(player, "Gun Jumper")
+        if REGION_RESTRICTION_TYPES.AirSaucer in additional_level_region.restrictionTypes:
+            v_rule = Vehicle.GetRuleByVehicleRequirement(player, "Air Saucer")
+        if REGION_RESTRICTION_TYPES.GunLift in additional_level_region.restrictionTypes:
+            v_rule = Vehicle.GetRuleByVehicleRequirement(player, "Gun Lift")
+        if REGION_RESTRICTION_TYPES.GunTurret in additional_level_region.restrictionTypes:
+            v_rule = Vehicle.GetRuleByVehicleRequirement(player, "Gun Turret")
+
+        rule = lambda state, r=rule: v_rule(state) and r(state)
+
+    if REGION_RESTRICTION_TYPES.ShadowRifle in additional_level_region.restrictionTypes:
+        sr_rule = Weapons.GetRuleByWeaponRequirement(player, Weapons.WeaponAttributes.SHADOW_RIFLE,
                                                          additional_level_region.stageId,
                                                          additional_level_region.fromRegions)
 
+        rule = lambda state, r=rule, r2=sr_rule: r2(state) and r(state)
 
-    elif options.object_unlocks and Levels.IsObjectRestriction(region_restriction):
-        if region_restriction == REGION_RESTRICTION_TYPES.Zipwire and options.object_ziplines:
-            rule = lambda state: state.has("Zipwire", player)
-        if region_restriction == REGION_RESTRICTION_TYPES.LightDash and options.object_light_dashes:
-            rule = lambda state: state.has("Air Shoes", player)
-        if region_restriction == REGION_RESTRICTION_TYPES.WarpHole and options.object_warp_holes:
-            rule = lambda state: state.has("Warp Holes", player)
-        if region_restriction == REGION_RESTRICTION_TYPES.Rocket and options.object_rockets:
-            rule = lambda state: state.has("Rocket", player)
-        if region_restriction == REGION_RESTRICTION_TYPES.Pulley and options.object_pulleys:
-            rule = lambda state: state.has("Pulley", player)
 
-    elif region_restriction > 100:
-        required_stage_region = region_restriction - 100
-        rule = lambda state: state.can_reach_region(
+    if options.object_unlocks and Levels.IsObjectRestriction(additional_level_region.restrictionTypes):
+        o_rule = lambda state: True
+        if REGION_RESTRICTION_TYPES.Zipwire in additional_level_region.restrictionTypes and options.object_ziplines:
+            o_rule = lambda state: state.has("Zipwire", player)
+        if REGION_RESTRICTION_TYPES.LightDash in additional_level_region.restrictionTypes  and options.object_light_dashes:
+            o_rule = lambda state: state.has("Air Shoes", player)
+        if REGION_RESTRICTION_TYPES.WarpHole in additional_level_region.restrictionTypes  and options.object_warp_holes:
+            o_rule = lambda state: state.has("Warp Holes", player)
+        if REGION_RESTRICTION_TYPES.Rocket in additional_level_region.restrictionTypes  and options.object_rockets:
+            o_rule = lambda state: state.has("Rocket", player)
+        if REGION_RESTRICTION_TYPES.Pulley in additional_level_region.restrictionTypes  and options.object_pulleys:
+            o_rule = lambda state: state.has("Pulley", player)
+
+        rule = lambda state, r=rule: o_rule(state) and r(state)
+
+    for regionAccess in [ a for a in additional_level_region.restrictionTypes if a > 100]:
+        required_stage_region = regionAccess - 100
+        access_rule = lambda state: state.can_reach_region(
             stage_id_to_region(additional_level_region.stageId, required_stage_region), player)
+
+        rule = lambda state, r=rule: access_rule(state) and r(state)
 
     return rule
 
+def restrict_objects(multiworld, world, player):
+    world_locations = [ l.name for l in world.get_locations()]
+
+    for object in [ x for x in Objects.GetObjectChecks() if x.restrictionType != 10 ]:
+        location_id, entry_location_name = Names.GetObjectLocationName(object)
+        if entry_location_name in world_locations:
+            location_with_restriction = world.get_location(entry_location_name)
+            dummy_region = LevelRegion(object.stage, object.region, [object.restrictionType])
+            location_with_restriction.access_rule = handle_path_rules(world.options, player, dummy_region,
+                                                                      REGION_RESTRICTION_REFERENCE_TYPES.BaseLogic)
 
 def lock_warp_items(multiworld, world, player):
 
@@ -355,7 +387,7 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
 
     skip_regions = []
     if world.options.logic_level != Options.LogicLevel.option_hard:
-        hard_only = [ r for r in Levels.INDIVIDUAL_LEVEL_REGIONS if r.restrictionType == REGION_RESTRICTION_TYPES.HardLogicOnly]
+        hard_only = [ r for r in Levels.INDIVIDUAL_LEVEL_REGIONS if r.hardLogicOnly]
         skip_regions.extend([ (h.stageId, h.regionIndex) for h in hard_only])
 
     for additional_level_region in Levels.INDIVIDUAL_LEVEL_REGIONS:
@@ -381,7 +413,7 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
             path_rule = handle_path_rules(world.options, player, additional_level_region,
                                           REGION_RESTRICTION_REFERENCE_TYPES.BaseLogic)
             if path_rule is not None:
-                connect(world.player, base_region_name+ ">" + "(" + str(additional_level_region.restrictionType) + ")" + new_region_name,
+                connect(world.player, base_region_name+ ">" + "(" + str(additional_level_region.restrictionTypes) + ")" + new_region_name,
                     base_region, new_region, path_rule)
             else:
                 print("Path rule is None", base_region_name, new_region_name)
@@ -401,6 +433,7 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
     override_settings = world.options.percent_overrides
     lock_warp_items(multiworld, world, world.player)
 
+    restrict_objects(multiworld, world, world.player)
 
     for clear in MissionClearLocations:
 
@@ -408,7 +441,7 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
             continue
 
         id, name = Levels.GetLevelCompletionNames(clear.stageId, clear.alignmentId)
-        try:
+        if True:
             req_rule = lambda state: True
             level_rule = lambda state: True
             rule_change = False
@@ -478,9 +511,17 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
                     progress_dist_by_name = {}
 
                     total = 0
-                    for region, count in progress_distribution:
-                        progress_dist_by_name[Names.GetDistributionRegionEventName(clear.stageId, region)] = count
-                        total += count
+
+                    if world.options.objective_sanity_system != Options.ObjectiveSanitySystem.option_count_up:
+                        if (clear.stageId, clear.alignmentId) in Objects.STAGE_OBJECT_ITEMS:
+                            lookup_info = Objects.STAGE_OBJECT_ITEMS[(clear.stageId, clear.alignmentId)]
+                            is_objectable = lookup_info[1]
+                            if is_objectable == Objects.WORKS_WITH_INDIVIDUAL:
+                                total = -1
+                    if total != -1:
+                        for region, count in progress_distribution:
+                            progress_dist_by_name[Names.GetDistributionRegionEventName(clear.stageId, region)] = count
+                            total += count
 
                     for l in range(1, total + 1):
                         if l > max_required:
@@ -489,8 +530,12 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
                         if l % frequency_required != 0 and max_required != l:
                             continue
 
+
+
                         prog_rule = lambda state, ix=l, data=progress_dist_by_name, keys=progress_dist_by_name.keys() \
                             : CountRegionAccessibility(state, keys, data, ix, player)
+
+
 
                         location_id, objective_location_name = (
                             GetLevelObjectNames(clear.stageId, clear.alignmentId, clear.mission_object_name,
@@ -519,24 +564,35 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
                         clear.requirement_count, clear.stageId, clear.alignmentId,
                         override_settings)
 
-                    new_rule = lambda state, itemname=item_name, count=max_required: state.has(itemname, player, count=count)
+                    new_rule = lambda state: True
+                    if world.options.objective_sanity_behaviour != Options.ObjectiveSanityBehaviour.option_base_clear:
+                        new_rule = lambda state, itemname=item_name, count=max_required: state.has(itemname, player, count=count)
 
                     progress_distribution = clear.getDistribution().items()
                     progress_dist_by_name = {}
 
                     total = 0
-                    for region, count in progress_distribution:
-                        progress_dist_by_name[Names.GetDistributionRegionEventName(clear.stageId, region)] = count
-                        total += count
+                    #if world.options.objective_sanity_system != Options.ObjectiveSanitySystem.option_count_up:
+                    #    if (clear.stageId, clear.alignmentId) in Objects.STAGE_OBJECT_ITEMS:
+                    #        lookup_info = Objects.STAGE_OBJECT_ITEMS[(clear.stageId, clear.alignmentId)]
+                    #        is_objectable = lookup_info[1]
+                    ##        if is_objectable == Objects.WORKS_WITH_INDIVIDUAL:
+                    #            total = -1
+                    if total != -1:
+                        for region, count in progress_distribution:
+                            progress_dist_by_name[Names.GetDistributionRegionEventName(clear.stageId, region)] = count
+                            total += count
 
                     finish_count = 1
-                    if not world.options.objective_sanity:
+                    if (not world.options.objective_sanity
+                            or world.options.objective_sanity_behaviour != Options.ObjectiveSanityBehaviour.option_default):
                         finish_count = max_required
                         if finish_count == 0:
                             finish_count = 1
 
                     # Enemy stage clears don't require completing objectives
-                    if clear.mission_object_name in ("Soldier", "Artificial Chaos", "Alien"):
+                    if world.options.objective_sanity and world.options.objective_sanity_behaviour == Options.ObjectiveSanityBehaviour.option_default and \
+                        clear.mission_object_name in ("Soldier", "Artificial Chaos", "Alien"):
                         finish_count = 0
 
                     prog_rule = lambda state, keys=progress_dist_by_name.keys(), data=progress_dist_by_name,\
@@ -586,10 +642,10 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
                 location.place_locked_item(
                     mw_token_item)
 
-        except KeyError as e:
-            # Do nothing for mission locations that do not exist
-            print("Key error in handling!", e)
-            pass
+        #except KeyError as e:
+        #    # Do nothing for mission locations that do not exist
+        #    print("Key error in handling!", e)
+        #    pass
 
     for boss in BossClearLocations:
         if boss.stageId not in world.available_levels:
@@ -670,7 +726,7 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
                 region_stage.connect(region, region_name_for_weapon(LEVEL_ID_TO_LEVEL[stage], weapon.name),
                                      rule=rule)
 
-    if world.options.enemy_sanity:
+    if world.options.enemy_sanity and world.options.objective_sanity_system != Options.ObjectiveSanitySystem.option_individual:
         for enemy in Locations.GetEnemySanityLocations():
 
             if enemy.stageId not in world.available_levels:

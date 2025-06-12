@@ -1,6 +1,5 @@
 from dataclasses import dataclass
-
-from worlds.shadow_the_hedgehog import Items, Names
+from . import Items, Names
 
 
 @dataclass

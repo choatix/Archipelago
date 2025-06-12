@@ -3,7 +3,7 @@ from typing import Tuple
 
 from . import Levels, Locations
 
-VERSION: Tuple[int, int, int] = (0, 2, 2)
+VERSION: Tuple[int, int, int] = (0, 2, 3)
 
 TYPE_ID_ENEMY = 0
 TYPE_ID_OBJECTIVE = 1
@@ -64,6 +64,11 @@ def GetOverrideKey(typeId, alignmentId):
             type_name = "AD"
         elif alignmentId == Levels.MISSION_ALIGNMENT_HERO:
             type_name = "AH"
+    elif typeId == TYPE_ID_OBJECTIVE_ENEMY_AVAILABLE:
+        if alignmentId == Levels.MISSION_ALIGNMENT_DARK:
+            type_name = "AED"
+        elif alignmentId == Levels.MISSION_ALIGNMENT_HERO:
+            type_name = "AEH"
     elif typeId == TYPE_ID_OBJECTIVE_ENEMY:
         if alignmentId == Levels.MISSION_ALIGNMENT_DARK:
             type_name = "OED"
@@ -98,62 +103,82 @@ def GetOverrideKey(typeId, alignmentId):
     return type_name
 
 
+
+def GetValidOverrideKeys():
+    valid_keys = []
+    for missionClear in Locations.MissionClearLocations:
+        if missionClear.mission_object_name is None:
+            print("Skip", missionClear.stageId, missionClear.alignmentId)
+            continue
+        objective_key_type, objective_key_x, \
+        objective_key_y = getObjectiveTypeAndPercentage(TYPE_ID_OBJECTIVE,
+                                                      missionClear.mission_object_name, None,
+                                                      missionClear.stageId, missionClear.alignmentId,
+                                                      None)
+        key_part = GetOverrideKey(objective_key_type, missionClear.alignmentId)
+        key = key_part + "."+ Levels.LEVEL_ID_TO_LEVEL[missionClear.stageId]
+        valid_keys.append(key)
+
+        objective_key_type, objective_key_x, \
+            objective_key_y = getObjectiveTypeAndPercentage(TYPE_ID_COMPLETION,
+                                                            missionClear.mission_object_name, None,
+                                                            missionClear.stageId, missionClear.alignmentId,
+                                                            None)
+        key_part = GetOverrideKey(objective_key_type, missionClear.alignmentId)
+        key = key_part + "." + Levels.LEVEL_ID_TO_LEVEL[missionClear.stageId]
+        valid_keys.append(key)
+
+        objective_key_type, objective_key_x, \
+            objective_key_y = getObjectiveTypeAndPercentage(TYPE_ID_OBJECTIVE_AVAILABLE,
+                                                            missionClear.mission_object_name, None,
+                                                            missionClear.stageId, missionClear.alignmentId,
+                                                            None)
+        key_part = GetOverrideKey(objective_key_type, missionClear.alignmentId)
+        if key_part is not None:
+            key = key_part + "." + Levels.LEVEL_ID_TO_LEVEL[missionClear.stageId]
+            valid_keys.append(key)
+
+        objective_key_type, objective_key_x, \
+            objective_key_y = getObjectiveTypeAndPercentage(TYPE_ID_OBJECTIVE_FREQUENCY,
+                                                            missionClear.mission_object_name, None,
+                                                            missionClear.stageId, missionClear.alignmentId,
+                                                            None)
+        key_part = GetOverrideKey(objective_key_type, missionClear.alignmentId)
+        if key_part is not None:
+            key = key_part + "." + Levels.LEVEL_ID_TO_LEVEL[missionClear.stageId]
+            valid_keys.append(key)
+
+    for enemy in Locations.GetEnemySanityLocations():
+        objective_key_type, objective_key_x, objective_key_y = getObjectiveTypeAndPercentage(TYPE_ID_ENEMY,
+                                                        enemy.mission_object_name, None,
+                                                        enemy.stageId, enemy.enemyClass,
+                                                        None)
+        key_part = GetOverrideKey(objective_key_type, enemy.enemyClass)
+        if key_part is not None:
+            key = key_part + "." + Levels.LEVEL_ID_TO_LEVEL[enemy.stageId]
+            valid_keys.append(key)
+
+        objective_key_type, objective_key_x, objective_key_y = getObjectiveTypeAndPercentage(TYPE_ID_ENEMY_FREQUENCY,
+                                                                                             enemy.mission_object_name, None,
+                                                                                             enemy.stageId,
+                                                                                             enemy.enemyClass,
+                                                                                             None)
+        key_part = GetOverrideKey(objective_key_type, enemy.enemyClass)
+        if key_part is not None:
+            key = key_part + "." + Levels.LEVEL_ID_TO_LEVEL[enemy.stageId]
+            valid_keys.append(key)
+
+    i = 0
+    while i < len(valid_keys):
+        print(valid_keys[i:i+4])
+        i += 4
+    return valid_keys
+
+
 def getOverwriteRequiredCount(override_settings, stageId, alignmentId, typeId):
     key = "{type}.{stageName}"
-    type_name = "O"
 
-    if typeId == TYPE_ID_ENEMY:
-        if alignmentId == Locations.ENEMY_CLASS_ALIEN:
-            type_name = "EA"
-        elif alignmentId == Locations.ENEMY_CLASS_GUN:
-            type_name = "EG"
-        elif alignmentId == Locations.ENEMY_CLASS_EGG:
-            type_name = "EE"
-    elif typeId == TYPE_ID_OBJECTIVE:
-        if alignmentId == Levels.MISSION_ALIGNMENT_DARK:
-            type_name = "OD"
-        elif alignmentId == Levels.MISSION_ALIGNMENT_HERO:
-            type_name = "OH"
-    elif typeId == TYPE_ID_COMPLETION:
-        if alignmentId == Levels.MISSION_ALIGNMENT_DARK:
-            type_name = "CD"
-        elif alignmentId == Levels.MISSION_ALIGNMENT_HERO:
-            type_name = "CH"
-    elif typeId == TYPE_ID_OBJECTIVE_AVAILABLE:
-        if alignmentId == Levels.MISSION_ALIGNMENT_DARK:
-            type_name = "AD"
-        elif alignmentId == Levels.MISSION_ALIGNMENT_HERO:
-            type_name = "AH"
-    elif typeId == TYPE_ID_OBJECTIVE_ENEMY:
-        if alignmentId == Levels.MISSION_ALIGNMENT_DARK:
-            type_name = "OED"
-        elif alignmentId == Levels.MISSION_ALIGNMENT_HERO:
-            type_name = "OEH"
-    elif typeId == TYPE_ID_OBJECTIVE_ENEMY_COMPLETION:
-        if alignmentId == Levels.MISSION_ALIGNMENT_DARK:
-            type_name = "OECD"
-        elif alignmentId == Levels.MISSION_ALIGNMENT_HERO:
-            type_name = "OECH"
-
-    elif typeId == TYPE_ID_OBJECTIVE_FREQUENCY:
-        if alignmentId == Levels.MISSION_ALIGNMENT_DARK:
-            type_name = "OFD"
-        elif alignmentId == Levels.MISSION_ALIGNMENT_HERO:
-            type_name = "OFH"
-
-    elif typeId == TYPE_ID_OBJECTIVE_ENEMY_FREQUENCY:
-        if alignmentId == Levels.MISSION_ALIGNMENT_DARK:
-            type_name = "OEFD"
-        elif alignmentId == Levels.MISSION_ALIGNMENT_HERO:
-            type_name = "OEFH"
-
-    elif typeId == TYPE_ID_ENEMY_FREQUENCY:
-        if alignmentId == Locations.ENEMY_CLASS_EGG:
-            type_name = "EFE"
-        if alignmentId == Locations.ENEMY_CLASS_GUN:
-            type_name = "EFG"
-        if alignmentId == Locations.ENEMY_CLASS_ALIEN:
-            type_name = "EFH"
+    type_name = GetOverrideKey(typeId, alignmentId)
 
     level_name = Levels.LEVEL_ID_TO_LEVEL[stageId]
     key_lookup = key.format(type=type_name, stageName=level_name)
@@ -173,7 +198,7 @@ def isEnemyObjectiveLocation(name):
 def getObjectiveTypeAndPercentage(base_objective_type, item_name, options,
                                   stage, alignment, overrides):
 
-    if not options.objective_sanity:
+    if options is not None and not options.objective_sanity:
         if base_objective_type in (TYPE_ID_OBJECTIVE_AVAILABLE, TYPE_ID_OBJECTIVE,
                                    TYPE_ID_OBJECTIVE_ENEMY,
                                    TYPE_ID_OBJECTIVE_ENEMY_AVAILABLE, TYPE_ID_OBJECTIVE_ENEMY_FREQUENCY,
@@ -182,72 +207,76 @@ def getObjectiveTypeAndPercentage(base_objective_type, item_name, options,
 
     percentage = None
     round_method = None
+    required_for_completion = None
     if base_objective_type == TYPE_ID_OBJECTIVE:
         if isEnemyObjectiveLocation(item_name):
             base_objective_type = TYPE_ID_OBJECTIVE_ENEMY
-            percentage = options.objective_enemy_percentage
+            percentage = options.objective_enemy_percentage if options is not None else None
             round_method = floor
         else:
-            percentage = options.objective_percentage
+            percentage = options.objective_percentage if options is not None else None
             round_method = ceil
     if base_objective_type == TYPE_ID_COMPLETION:
         if isEnemyObjectiveLocation(item_name):
             base_objective_type = TYPE_ID_OBJECTIVE_ENEMY_COMPLETION
-            percentage = options.objective_completion_enemy_percentage
+            percentage = options.objective_completion_enemy_percentage if options is not None else None
             round_method = floor
         else:
-            percentage = options.objective_completion_percentage
+            percentage = options.objective_completion_percentage if options is not None else None
             round_method = floor
 
     if base_objective_type == TYPE_ID_OBJECTIVE_AVAILABLE:
         if isEnemyObjectiveLocation(item_name):
             base_objective_type = TYPE_ID_OBJECTIVE_ENEMY_AVAILABLE
+            if options is not None:
+                # Available needs to do a lookup on completion inc. overrides
 
-            # Available needs to do a lookup on completion inc. overrides
+                #percentage = options.objective_enemy_available_percentage if options is not None else None
+                required_for_completion = getPercRequired(
+                    getObjectiveTypeAndPercentage(TYPE_ID_COMPLETION,item_name, options, stage, alignment, overrides),
+                    stage,alignment,overrides)
 
-            required_for_completion = getPercRequired(
-                getObjectiveTypeAndPercentage(TYPE_ID_COMPLETION,item_name, options, stage, alignment, overrides),
-                stage,alignment,overrides)
-
-            percentage = required_for_completion *\
-                          ((100 + options.objective_item_enemy_percentage_available)/100)
-            round_method = ceil
+                percentage = options.objective_item_enemy_percentage_available if options is not None else None
+                round_method = ceil
         else:
-            required_for_completion = getPercRequired(
-                getObjectiveTypeAndPercentage(TYPE_ID_COMPLETION, item_name, options, stage, alignment, overrides),
-                stage, alignment, overrides)
+            if options is not None:
+                required_for_completion = getPercRequired(
+                    getObjectiveTypeAndPercentage(TYPE_ID_COMPLETION, item_name, options, stage, alignment, overrides),
+                    stage, alignment, overrides)
 
-            percentage = required_for_completion *\
-                          ((100 + options.objective_item_percentage_available)/100)
-            round_method = ceil
+                percentage = options.objective_item_percentage_available if options is not None else None
+
+                #percentage = (required_for_completion *\
+                #              ((100 + options.objective_item_percentage_available)/100)) if options is not None else None
+                round_method = ceil
 
     if base_objective_type in (TYPE_ID_OBJECTIVE_AVAILABLE, TYPE_ID_OBJECTIVE,
                                TYPE_ID_COMPLETION, TYPE_ID_OBJECTIVE_ENEMY,
                                TYPE_ID_OBJECTIVE_ENEMY_AVAILABLE, TYPE_ID_OBJECTIVE_ENEMY_COMPLETION,
                                TYPE_ID_OBJECTIVE_ENEMY_FREQUENCY, TYPE_ID_OBJECTIVE_FREQUENCY):
         if isEnemyObjectiveLocation(item_name):
-            if not options.enemy_objective_sanity:
+            if options is not None and not options.enemy_objective_sanity:
                 return base_objective_type, 0, floor
 
 
     if base_objective_type == TYPE_ID_ENEMY:
-        percentage = options.enemy_sanity_percentage
+        percentage = options.enemy_sanity_percentage if options is not None else None
         round_method = floor
 
     if base_objective_type == TYPE_ID_ENEMY_FREQUENCY:
-        percentage = 100 / options.enemy_frequency
+        percentage = (100 / options.enemy_frequency) if options is not None else None
         round_method = floor
 
     if base_objective_type == TYPE_ID_OBJECTIVE_FREQUENCY:
         if isEnemyObjectiveLocation(item_name):
             base_objective_type = TYPE_ID_OBJECTIVE_ENEMY_FREQUENCY
-            percentage = 100 / options.enemy_objective_frequency
+            percentage = (100 / options.enemy_objective_frequency) if options is not None else None
             round_method = floor
         else:
-            percentage = 100 / options.objective_frequency
+            percentage = (100 / options.objective_frequency)  if options is not None else None
             round_method = floor
 
-    return base_objective_type, percentage, round_method
+    return base_objective_type, percentage, round_method,required_for_completion
 
 
 def FrequencyPercentageToIncrementer(perc, round_method):
@@ -269,8 +298,18 @@ def getMaxRequired(type_default_percentage, total:int, stageId:int, alignmentId:
     type_value = type_default_percentage[0]
     default_percentage = type_default_percentage[1]
     round_method = type_default_percentage[2]
+    extra = type_default_percentage[3]
 
     override_total = getOverwriteRequiredCount(override_settings, stageId, alignmentId, type_value)
+    #if override_total is not None and type_value in (TYPE_ID_OBJECTIVE_AVAILABLE, TYPE_ID_OBJECTIVE_ENEMY_AVAILABLE):
+    #    override_total = (override_total * default_percentage) / 100
+
+    if type_value in [ TYPE_ID_OBJECTIVE_AVAILABLE, TYPE_ID_OBJECTIVE_ENEMY_AVAILABLE]:
+        if override_total is not None:
+            override_total = extra * ((100 + override_total)/100)
+        else:
+            override_total = extra * ((100 + default_percentage)/100)
+
     #print("ot=", override_settings, override_total)
     max_required = getRequiredCount(total, default_percentage, override=override_total, round_method=round_method)
 

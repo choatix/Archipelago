@@ -1,6 +1,6 @@
 from . import Levels
 from .ObjectTypes import ObjectType, SETObject
-from .Names import REGION_INDICIES
+from .Names import REGION_INDICIES, REGION_RESTRICTION_TYPES
 
 DESIRABLE_OBJECTS_GUN_FORTRESS = [
 
@@ -58,6 +58,13 @@ DESIRABLE_OBJECTS_GUN_FORTRESS = [
     SETObject(ObjectType.VEHICLE, Levels.STAGE_GUN_FORTRESS, 269, "GUN Computer 3 Turret 2",
               vehicle=ObjectType.ObjectTypeVehicle.GUN_TURRET,
               region=REGION_INDICIES.GUN_FORTRESS_KEY_OR_ZIPLINE),
+
+    SETObject(ObjectType.GUN_FORTRESS_COMPUTER, Levels.STAGE_GUN_FORTRESS, 430, "Mother Computer 1",
+              region=REGION_INDICIES.GUN_FORTRESS_PULLEY, restrictionType=REGION_RESTRICTION_TYPES.ShootOrTurret),
+    SETObject(ObjectType.GUN_FORTRESS_COMPUTER, Levels.STAGE_GUN_FORTRESS, 425, "Mother Computer 2",
+              region=REGION_INDICIES.GUN_FORTRESS_ROCKET_NORMAL, restrictionType=REGION_RESTRICTION_TYPES.ShootOrTurret),
+    SETObject(ObjectType.GUN_FORTRESS_COMPUTER, Levels.STAGE_GUN_FORTRESS, 429, "Mother Computer 3",
+              region=REGION_INDICIES.GUN_FORTRESS_KEY_OR_ZIPLINE, restrictionType=REGION_RESTRICTION_TYPES.ShootOrTurret),
 
     SETObject(ObjectType.BLACK_WARRIOR, Levels.STAGE_GUN_FORTRESS, 77, '0', region=0),
     SETObject(ObjectType.BLACK_WARRIOR, Levels.STAGE_GUN_FORTRESS, 83, '1', region=0),

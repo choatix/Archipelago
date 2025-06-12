@@ -68,6 +68,30 @@ class ObjectType:
     ENERGY_CORE_IN_WOOD_BOX = 49
     ENERGY_CORE_IN_METAL_BOX = 50
 
+    DIGITAL_CORE = 51
+    GLYPHIC_CANYON_TEMPLE = 52
+    LETHAL_HIGHWAY_TANK = 53
+    CRYPTIC_CASTLE_LANTERN = 54
+    CREAM = 55
+    CHEESE = 56
+    PRISON_ISLAND_DISC = 57
+    CENTRAL_CITY_BIG_BOMB = 58
+    DOOM_RESEARCHER = 59
+    SKY_TROOPS_EGG_SHIP = 60
+    SKY_TROOPS_TEMPLE = 61
+    MAD_MATRIX_BOMB = 62
+    MAD_MATRIX_TERMINAL = 63
+    THE_ARK_DEFENSE_UNIT = 64
+    AIR_FLEET_PRESIDENT_POD = 65
+    IRON_JUNGLE_EGG_BALLOON = 66
+    SPACE_GADGET_DEFENSE_UNIT = 67
+    GUN_FORTRESS_COMPUTER = 68
+    LAVA_SHELTER_DEFENSE = 69
+    COSMIC_FALL_COMPUTER_ROOM = 70
+    FINAL_HAUNT_SHIELD = 71
+
+    PARTNER = 72
+
 
 class SETObject:
     object_type: int
@@ -75,9 +99,10 @@ class SETObject:
     index: int
     name: str
     vehicle: int
+    restrictionType: int
 
     def __init__(self, object_type, stage, index, name,
-                 vehicle=None, region=None, count=1):
+                 vehicle=None, region=None, count=1, restrictionType=10):
         self.object_type = object_type
         self.stage = stage
         self.index = index
@@ -85,3 +110,4 @@ class SETObject:
         self.vehicle = vehicle
         self.region = region
         self.count = count
+        self.restrictionType = restrictionType

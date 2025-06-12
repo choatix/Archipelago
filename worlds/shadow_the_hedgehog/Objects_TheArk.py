@@ -1,6 +1,6 @@
 from . import Levels
 from .ObjectTypes import ObjectType, SETObject
-from .Names import REGION_INDICIES
+from .Names import REGION_INDICIES, REGION_RESTRICTION_TYPES
 
 DESIRABLE_OBJECTS_THE_ARK = [
 
@@ -34,6 +34,15 @@ DESIRABLE_OBJECTS_THE_ARK = [
               vehicle=ObjectType.ObjectTypeVehicle.BLACK_VOLT),
     SETObject(ObjectType.VEHICLE, Levels.STAGE_THE_ARK, 20, "Black Volt 8",
               vehicle=ObjectType.ObjectTypeVehicle.BLACK_VOLT),
+
+    SETObject(ObjectType.THE_ARK_DEFENSE_UNIT, Levels.STAGE_THE_ARK, 359, "Ark Defense Unit 1",
+              region=REGION_INDICIES.THE_ARK_BLACK_VOLT, restrictionType=REGION_RESTRICTION_TYPES.Gun),
+    SETObject(ObjectType.THE_ARK_DEFENSE_UNIT, Levels.STAGE_THE_ARK, 360, "Ark Defense Unit 2",
+              region=REGION_INDICIES.THE_ARK_BLACK_VOLT, restrictionType=REGION_RESTRICTION_TYPES.Gun),
+    SETObject(ObjectType.THE_ARK_DEFENSE_UNIT, Levels.STAGE_THE_ARK, 355, "Ark Defense Unit 3",
+              region=REGION_INDICIES.THE_ARK_BLACK_VOLT, restrictionType=REGION_RESTRICTION_TYPES.Gun),
+    SETObject(ObjectType.THE_ARK_DEFENSE_UNIT, Levels.STAGE_THE_ARK, 361, "Ark Defense Unit 4",
+              region=REGION_INDICIES.THE_ARK_BLACK_VOLT, restrictionType=REGION_RESTRICTION_TYPES.Gun),
 
     SETObject(ObjectType.BLACK_HAWK, Levels.STAGE_THE_ARK, 53, '0', region=REGION_INDICIES.THE_ARK_BLACK_VOLT),
     SETObject(ObjectType.BLACK_HAWK, Levels.STAGE_THE_ARK, 52, '1', region=REGION_INDICIES.THE_ARK_BLACK_VOLT),

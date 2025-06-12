@@ -9,7 +9,7 @@ from .Levels import GetLevelCompletionNames
 from .Items import *
 from .Locations import *
 
-from . import Options, Rules, Regions, Utils as ShadowUtils, Story
+from . import Options, Rules, Regions, Utils as ShadowUtils, Story, Names
 from .Options import shadow_option_groups, PercentOverrides, AutoClearMissions
 
 
@@ -315,10 +315,18 @@ class ShtHWorld(World):
                             key = key_prefix + "." + Levels.LEVEL_ID_TO_LEVEL[stage]
                             override_settings[key] = (max_required_complete * 100) / aliens.total_count
                             #print("Had to adjust key for {key}".format(key=key))
+
     def generate_early(self):
         random_bytes = self.generate_random_bytes()
         self.random_value = int.from_bytes(random_bytes, byteorder='big')
         self.check_invalid_configurations()
+
+        if self.options.single_egg_dealer:
+            Regions.handle_single_boss(self, "Egg Dealer")
+        if self.options.single_black_doom:
+            Regions.handle_single_boss(self, "Black Doom")
+        if self.options.single_diablon:
+            Regions.handle_single_boss(self, "Diablon")
 
         if self.options.level_progression != Options.LevelProgression.option_select:
             self.shuffled_story_mode = Story.GetStoryMode(self)
@@ -534,6 +542,15 @@ class ShtHWorld(World):
                 if "story_and_select_start_together" in passthrough:
                     self.options.story_and_select_start_together = passthrough["story_and_select_start_together"]
 
+                if "objective_sanity_system" in passthrough:
+                    self.options.objective_sanity_system = passthrough["objective_sanity_system"]
+
+                if "objective_sanity_behaviour" in passthrough:
+                    self.options.objective_sanity_behaviour = passthrough["objective_sanity_behaviour"]
+
+                if "chaos_control_logic_level" in passthrough:
+                    self.options.chaos_control_logic_level = passthrough["chaos_control_logic_level"]
+
         # Set maximum of levels required
         # Exclude missions listed in exclude_locations
         maximum_force_missions = self.options.force_objective_sanity_max.value
@@ -549,6 +566,7 @@ class ShtHWorld(World):
             for item in extra_items:
                 self.starting_items.append(item)
                 self.multiworld.push_precollected(self.create_item(item))
+                # TODO: Remove from the item pool!
 
         if self.options.level_progression != Options.LevelProgression.option_select and \
             self.options.story_progression_balancing_passes > 0 and not hasattr(self.multiworld, "re_gen_passthrough"):
@@ -556,11 +574,17 @@ class ShtHWorld(World):
             balancing_overrides = {}
             for i in range(0, self.options.story_progression_balancing_passes):
                 story_spheres = Story.DecideStoryPath(self, self.shuffled_story_mode)
-                new_overrides = Story.AlterOverridesForStoryPath(story_spheres,self.options)
+                new_overrides, new_available_overrides = Story.AlterOverridesForStoryPath(story_spheres,self.options)
 
                 for override in new_overrides.items():
                     if override[0] in balancing_overrides and balancing_overrides[override[0]] <= override[1]:
                         continue
+                    balancing_overrides[override[0]] = override[1]
+
+                for override in new_available_overrides.items():
+                    if override[0] in balancing_overrides and balancing_overrides[override[0]] >= override[1]:
+                        continue
+
                     balancing_overrides[override[0]] = override[1]
 
             for override in balancing_overrides.items():
@@ -711,6 +735,7 @@ class ShtHWorld(World):
     def generate_random_bytes(self):
         return self.multiworld.random.randbytes(8)
 
+
     def fill_slot_data(self):
         slot_data = {
             "check_level": None if len(self.first_regions) == 0 else self.first_regions[0],
@@ -792,7 +817,10 @@ class ShtHWorld(World):
             "door_sanity": self.options.door_sanity.value,
             "gold_beetle_sanity": self.options.gold_beetle_sanity.value,
             "plando_starting_stages": self.options.plando_starting_stages.value,
-            "story_and_select_start_together": self.options.story_and_select_start_together.value
+            "story_and_select_start_together": self.options.story_and_select_start_together.value,
+            "objective_sanity_system": self.options.objective_sanity_system.value,
+            "objective_sanity_behaviour": self.options.objective_sanity_behaviour.value,
+            "chaos_control_logic_level": self.options.chaos_control_logic_level.value
         }
 
         return slot_data

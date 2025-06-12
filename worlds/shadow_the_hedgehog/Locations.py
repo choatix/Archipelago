@@ -341,14 +341,15 @@ MissionClearLocations = [
     MissionClearLocation(STAGE_THE_DOOM, MISSION_ALIGNMENT_NEUTRAL, None, None)
         .setDistribution(
         {
-            REGION_INDICIES.THE_DOOM_BOMBS: 1
+            REGION_INDICIES.THE_DOOM_DOOR_1_SWITCH: 1
         }
         ),
     MissionClearLocation(STAGE_THE_DOOM, MISSION_ALIGNMENT_HERO, 10, "Researcher")
         .setDistribution(
         {
             0: 3,
-            REGION_INDICIES.THE_DOOM_BOMBS: 7
+            REGION_INDICIES.THE_DOOM_BOMBS: 5,
+            REGION_INDICIES.THE_DOOM_DOOR_1_SWITCH: 2,
         }
         )
         .setRequirement(REGION_RESTRICTION_TYPES.Heal),
@@ -528,7 +529,7 @@ MissionClearLocations = [
     MissionClearLocation(STAGE_COSMIC_FALL, MISSION_ALIGNMENT_HERO, None, None)
         .setDistribution(
         {
-            REGION_INDICIES.COSMIC_FALL_ROCKET: 1
+            REGION_INDICIES.COSMIC_FALL_COMPUTER_ROOM: 1
         }
     ),
     #MissionClearLocation(STAGE_COSMIC_FALL, MISSION_ALIGNMENT_HERO, 1, "Computer Room"),
@@ -780,7 +781,8 @@ CheckpointLocations = \
         .setDistribution(
         {
             0: [1],
-            REGION_INDICIES.THE_DOOM_BOMBS: [2,3,4,5,6]
+            REGION_INDICIES.THE_DOOM_BOMBS: [2,3],
+            REGION_INDICIES.THE_DOOM_DOOR_1_SWITCH: [4,5,6]
         }
     ),
 
@@ -829,7 +831,8 @@ CheckpointLocations = \
         {
             0: [1,2],
             REGION_INDICIES.IRON_JUNGLE_ROCKET: [3],
-            REGION_INDICIES.IRON_JUNGLE_LIGHT_DASH: [4,5,6,7,8]
+            REGION_INDICIES.IRON_JUNGLE_LIGHT_DASH: [4,5,6,8],
+            REGION_INDICIES.IRON_JUNGLE_LIGHT_DASH_DARK: [7]
         }
     ),
     CheckpointLocation(STAGE_SPACE_GADGET, 8).
@@ -878,7 +881,7 @@ CheckpointLocations = \
         {
             REGION_INDICIES.COSMIC_FALL_ZIPWIRE: [1],
             REGION_INDICIES.COSMIC_FALL_PULLEY_NORMAL: [2,3,4,5,6],
-            REGION_INDICIES.COSMIC_FALL_ROCKET: [7]
+            REGION_INDICIES.COSMIC_FALL_COMPUTER_ROOM: [7]
         }
     ),
 
@@ -1018,7 +1021,8 @@ KeyLocations = \
         .setDistribution(
         {
             REGION_INDICIES.IRON_JUNGLE_ROCKET: [1],
-            REGION_INDICIES.IRON_JUNGLE_LIGHT_DASH: [2,3,4,5]
+            REGION_INDICIES.IRON_JUNGLE_LIGHT_DASH: [2,3,5],
+            REGION_INDICIES.IRON_JUNGLE_LIGHT_DASH_DARK: [4]
         }
     ),
     KeyLocation(STAGE_SPACE_GADGET)
@@ -1067,7 +1071,7 @@ KeyLocations = \
         .setDistribution(
         {
             REGION_INDICIES.COSMIC_FALL_PULLEY_NORMAL: [1,2,3],
-            REGION_INDICIES.COSMIC_FALL_GUN_JUMPER: [4],
+            REGION_INDICIES.COSMIC_FALL_GUN_JUMPER_PULLEY_HARD: [4],
             REGION_INDICIES.COSMIC_FALL_LD_OR_JUMPER: [5]
         }
     ),
@@ -1404,6 +1408,15 @@ def create_locations(world, regions: Dict[str, Region]):
             if location.stageId not in world.available_levels:
                 continue
 
+            if world.options.objective_sanity_system == Options.ObjectiveSanitySystem.option_individual:
+                if (location.stageId, location.alignmentId) in Objects.STAGE_OBJECT_ITEMS:
+                    lookup_info = Objects.STAGE_OBJECT_ITEMS[(location.stageId, location.alignmentId)]
+                    is_objectable = lookup_info[1]
+                    if is_objectable == Objects.WORKS_WITH_INDIVIDUAL:
+                        continue
+
+                    # Allow overriding stages to use count system here
+
             max_required = ShadowUtils.getMaxRequired(
                 ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_OBJECTIVE,
                                                           location.name, world.options,
@@ -1426,7 +1439,7 @@ def create_locations(world, regions: Dict[str, Region]):
                     within_region.locations.append(completion_location)
                     #print("Add location", within_region.name, completion_location.name)
 
-    if world.options.enemy_sanity:
+    if world.options.enemy_sanity and world.options.objective_sanity_system != Options.ObjectiveSanitySystem.option_individual:
         for enemy in enemysanity_locations:
             if enemy.stageId not in world.available_levels:
                 continue
@@ -1583,6 +1596,62 @@ def create_locations(world, regions: Dict[str, Region]):
                                                        beetle_location.locationId, stage_region)
             stage_region.locations.append(beetle_location)
 
+    object_location_checks = []
+    if world.options.objective_sanity and world.options.objective_sanity_system != Options.ObjectiveSanitySystem.option_count_up:
+        for i in Objects.STAGE_OBJECT_ITEMS.items():
+            item_key = i[0]
+            item_stage = item_key[0]
+            item_alignment = item_key[1]
+
+            item_type = i[1]
+            item_type_data = item_type[0]
+
+            if item_stage not in world.available_levels:
+                continue
+
+            if item_type_data is None:
+                print("Check enemy sanity values instead if possible")
+            if type(item_type_data) is not list:
+                item_types = [item_type_data]
+            else:
+                item_types = item_type_data
+
+            item_allowed = item_type[1]
+
+            if item_allowed == Objects.DOES_NOT_WORK_WITH_INDIVIDUAL:
+                # Need to ensure these are included in the above system
+                continue
+
+            for search_type in item_types:
+                for objective_location in [x for x in object_locations if x.other == search_type and
+                                                                       x.stageId == item_stage]:
+
+                    if (objective_location.stageId, objective_location.regionId) in NON_OBJECTIVESANITY_REGIONS:
+                        continue
+
+                    stage_region_name = Regions.stage_id_to_region(objective_location.stageId, objective_location.regionId)
+                    stage_region = regions[stage_region_name]
+                    new_objective_location = ShadowTheHedgehogLocation(world.player, objective_location.name,
+                                                                objective_location.locationId, stage_region)
+                    stage_region.locations.append(new_objective_location)
+                    object_location_checks.append(objective_location)
+
+                    #print("Add:", objective_location.name, i)
+
+
+        if world.options.enemy_sanity and world.options.objective_sanity_system != Options.ObjectiveSanitySystem.option_count_up:
+            enemy_types = Objects.GetStandardEnemyTypes()
+            for objective_location in [x for x in object_locations if x.other in enemy_types and x not in object_location_checks and
+                                       x.stageId in world.available_levels and x.stageId not in Levels.BOSS_STAGES]:
+                stage_region_name = Regions.stage_id_to_region(objective_location.stageId, objective_location.regionId)
+                stage_region = regions[stage_region_name]
+                new_objective_location = ShadowTheHedgehogLocation(world.player, objective_location.name,
+                                                               objective_location.locationId, stage_region)
+                stage_region.locations.append(new_objective_location)
+
+        pass
+
+
     if world.options.level_progression != Options.LevelProgression.option_select:
         SetStoryClearEvents(world, world.player, menu_region)
 
@@ -1593,6 +1662,7 @@ def create_locations(world, regions: Dict[str, Region]):
     end_region.locations.append(devil_doom_location)
 
 def increment_location_count(count, plus, t):
+    #print("ILC", count, plus, t)
     return count + plus
 
 def count_last_way_locations(world):
@@ -1661,6 +1731,13 @@ def count_locations(world):
     if world.options.objective_sanity:
         for location in mission_locations:
 
+            if world.options.objective_sanity_system == Options.ObjectiveSanitySystem.option_individual:
+                if (location.stageId, location.alignmentId) in Objects.STAGE_OBJECT_ITEMS:
+                    lookup_info = Objects.STAGE_OBJECT_ITEMS[(location.stageId, location.alignmentId)]
+                    is_objectable = lookup_info[1]
+                    if is_objectable == Objects.WORKS_WITH_INDIVIDUAL:
+                        continue
+
             max_required = ShadowUtils.getMaxRequired(
                 ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_OBJECTIVE,
                                                           location.name, world.options,
@@ -1679,7 +1756,7 @@ def count_locations(world):
                 if location.count % frequency_required == 0 or max_required == location.count:
                     count = increment_location_count(count, 1, "o")
 
-    if world.options.enemy_sanity:
+    if world.options.enemy_sanity and world.options.objective_sanity_system != Options.ObjectiveSanitySystem.option_individual:
         for enemy in enemysanity_locations:
 
             frequency_required = ShadowUtils.getMaxRequired(
@@ -1733,8 +1810,47 @@ def count_locations(world):
         count = increment_location_count(count, len([x for x in object_locations if x.other == ObjectType.KEY_DOOR
                                                      if x.stageId in world.available_levels]), "kd")
 
-    # Progression locations are hardcoded and not pool-related
-    #count += len(end_location)
+    object_location_checks = []
+    if world.options.objective_sanity and world.options.objective_sanity_system != Options.ObjectiveSanitySystem.option_count_up:
+        for i in Objects.STAGE_OBJECT_ITEMS.items():
+            item_key = i[0]
+            item_stage = item_key[0]
+            item_alignment = item_key[1]
+
+            item_type = i[1]
+            item_type_data = item_type[0]
+
+            if item_stage not in world.available_levels:
+                continue
+
+            if item_type_data is None:
+                print("Check enemy sanity values instead if possible")
+            if type(item_type_data) is not list:
+                item_types = [item_type_data]
+            else:
+                item_types = item_type_data
+
+            item_allowed = item_type[1]
+
+            if item_allowed == Objects.DOES_NOT_WORK_WITH_INDIVIDUAL:
+                # Need to ensure these are included in the above system
+                continue
+
+            for search_type in item_types:
+                search_items = [x for x in object_locations if x.other == search_type and
+                                                                       x.stageId == item_stage and
+                                                             (x.stageId,x.regionId)  not in NON_OBJECTIVESANITY_REGIONS]
+                object_location_checks.extend(search_items)
+
+                count = increment_location_count(count, len(search_items), "oo")
+
+    if world.options.enemy_sanity and world.options.objective_sanity_system != Options.ObjectiveSanitySystem.option_count_up:
+        enemy_types = Objects.GetStandardEnemyTypes()
+        enemy_sanity_object_checks = [x for x in object_locations if
+         x.other in enemy_types and x not in object_location_checks and x.stageId in world.available_levels and
+                                      x.stageId not in Levels.BOSS_STAGES]
+
+        count = increment_location_count(count, len(enemy_sanity_object_checks), "oe")
 
     return count
 
@@ -1780,11 +1896,11 @@ def GetStagesWithNoRequirements(world):
             for fromRegion in i.fromRegions:
                 combined_regions[i.stageId][fromRegion] = i.regionIndex
 
-        if not world.options.weapon_sanity_unlock and IsWeaponsanityRestriction(i.restrictionType):
+        if not world.options.weapon_sanity_unlock and IsWeaponsanityRestriction(i.restrictionTypes):
             for fromRegion in i.fromRegions:
                 combined_regions[i.stageId][fromRegion] = i.regionIndex
 
-        if not world.options.vehicle_logic and IsVeichleSanityRestriction(i.restrictionType):
+        if not world.options.vehicle_logic and IsVeichleSanityRestriction(i.restrictionTypes):
             for fromRegion in i.fromRegions:
                 combined_regions[i.stageId][fromRegion] = i.regionIndex
 
@@ -1831,13 +1947,18 @@ def getLocationGroups():
         "Weapons": [c.name for c in weaponsanity_locations],
         "Bosses": [c.name for c in boss_locations],
         "Final Bosses": [c.name for c in boss_locations if c.stageId in Levels.FINAL_BOSSES],
-        "Objects": [c.name for c in object_locations],
-        "Shadow Boxes": [c.name for c in object_locations if c.other == ObjectType.SHADOW_BOX],
-        "Gold Beetles": [c.name for c in object_locations if c.other == ObjectType.GOLD_BEETLE],
-        "Cores": [c.name for c in object_locations if c.other == ObjectType.ENERGY_CORE or
-                  c.other == ObjectType.ENERGY_CORE_IN_WOOD_BOX],
-        "Key Doors": [c.name for c in object_locations if c.other == ObjectType.KEY_DOOR]
+        "Objects": [c.name for c in object_locations]
+        #"Shadow Boxes": [c.name for c in object_locations if c.other == ObjectType.SHADOW_BOX],
+        #"Gold Beetles": [c.name for c in object_locations if c.other == ObjectType.GOLD_BEETLE],
+        #"Cores": [c.name for c in object_locations if c.other == ObjectType.ENERGY_CORE or
+        #          c.other == ObjectType.ENERGY_CORE_IN_WOOD_BOX],
+        #"Key Doors": [c.name for c in object_locations if c.other == ObjectType.KEY_DOOR]
     }
+
+    for type in Objects.GetPlayableObjectTypes():
+        type_name = Names.ObjectTypeToName(type)
+        key = type_name + "s"
+        groups[key] = [c.name for c in object_locations if c.other == type]
 
     l_info = GetLocationInfoDict()
 
@@ -1856,7 +1977,7 @@ def getLocationGroups():
                 new_groups[new_key] = values
 
     for key,value in new_groups.items():
-        new_groups[key] = value
+        groups[key] = value
 
     return groups
 
@@ -1915,7 +2036,7 @@ def SetRegionEvents(world, player, menu_region):
             continue
 
         if world.options.logic_level != Options.LogicLevel.option_hard \
-            and region.restrictionType == REGION_RESTRICTION_TYPES.HardLogicOnly:
+            and region.hardLogicOnly:
             continue
 
         view_name = Names.GetDistributionRegionEventName(region.stageId, region.regionIndex)
