@@ -373,6 +373,20 @@ class ShTHCommandProcessor(ClientCommandProcessor):
 
             self.ctx.find_boss(stage)
 
+    def _cmd_spawnmessage(self, *args):
+        if isinstance(self.ctx, ShTHContext):
+            if len(self.ctx.level_state.keys()) > 0:
+                self.ctx.level_state["spawn_message"] = True
+                logger.info("Spawn messages enabled")
+                pass
+
+    def _cmd_despawn(self, *args):
+        if isinstance(self.ctx, ShTHContext):
+            if len(self.ctx.level_state.keys()) > 0:
+                self.ctx.level_state["despawn"] = True
+                self.ctx.despawn_enemies()
+                pass
+
     def get_required_and_active_count(self, ctx, stage, type):
         if stage is None:
             return 0
@@ -1306,7 +1320,37 @@ class ShTHContext(CommonContext):
             for char in already_checked_chars:
                 self.characters_met.append(char.other)
 
+    def despawn_enemies(self):
+        enemy_types = Objects.GetStandardEnemyTypes()
+        relevant_objects = Objects.GetDesirableObjectsForStage(self.last_level)
+        if relevant_objects is None or len(relevant_objects) == 0:
+            return
 
+        relevant_objects = [ r for r in relevant_objects if r.object_type in enemy_types and r.vehicle is None]
+
+        relevant_objects = [ r for r in relevant_objects if GetObjectLocationName(r)[0] in self.checked_locations]
+
+        start_address = GAME_ADDRESSES.LEVEL_SET_DATA
+        max_index = max([o.index for o in relevant_objects])
+
+        full_loaded_bytes = dolphin_memory_engine.read_bytes(start_address, (0x2C * (max_index + 1)))
+
+        for object in relevant_objects:
+            base_index = (0x2C * object.index) + 0x20
+            spawn_base_byte = base_index + 0x03
+            #object_type_index = base_index + 0x08
+            #extra_data_pointer = base_index + 0x10
+
+            despawn = 4
+            despawn_bytes = despawn.to_bytes(4, byteorder='big')
+
+            spawn_data = start_address + (0x2C * object.index) + 0x20
+
+            loaded_bytes = [full_loaded_bytes[spawn_base_byte]]
+            loaded_spawn_data = int.from_bytes(loaded_bytes, byteorder='big')
+
+            if loaded_spawn_data not in [0x0, 0x8]:
+                writeBytes(spawn_data, despawn_bytes)
 
 
     def on_package(self, cmd: str, args: dict):
@@ -1590,7 +1634,7 @@ class ShTHContext(CommonContext):
         location_dict = Locations.GetLocationInfoDict()
         remaining_locations = self.missing_locations
         uncleared_stages = [location_dict[l] for l in remaining_locations
-                            if location_dict[l].location_type == Locations.LOCATION_TYPE_MISSION_CLEAR]
+                            if l in location_dict and location_dict[l].location_type == Locations.LOCATION_TYPE_MISSION_CLEAR]
 
         known_route = False
         for route in routes_to_boss:
@@ -2058,10 +2102,10 @@ def complete_completable_levels(ctx):
 
     new_clears = []
     uncleared_stages = [ location_dict[l] for l in remaining_locations
-                         if location_dict[l].location_type == Locations.LOCATION_TYPE_MISSION_CLEAR ]
+                         if l in location_dict and location_dict[l].location_type == Locations.LOCATION_TYPE_MISSION_CLEAR ]
 
     uncleared_bosses = [location_dict[l].stageId for l in remaining_locations
-                        if location_dict[l].location_type == Locations.LOCATION_TYPE_BOSS]
+                        if l in location_dict and location_dict[l].location_type == Locations.LOCATION_TYPE_BOSS]
 
     story = ctx.shuffled_story_mode
     for mission in uncleared_stages:
@@ -2132,7 +2176,7 @@ def complete_completable_levels(ctx):
                                l.location_type == Locations.LOCATION_TYPE_MISSION_CLEAR
                                and l.locationId in ctx.checked_locations ]
 
-        other_locations = [ l for l in remaining_locations if location_dict[l].stageId == mission.stageId and
+        other_locations = [ l for l in remaining_locations if l in location_dict and location_dict[l].stageId == mission.stageId and
                             location_dict[l].location_type != Locations.LOCATION_TYPE_MISSION_CLEAR and
                             location_dict[l].location_type != Locations.LOCATION_TYPE_TOKEN and
                             location_dict[l].location_type != Locations.LOCATION_TYPE_WARP
@@ -2150,7 +2194,7 @@ def complete_completable_levels(ctx):
     token_clears = []
     for clear in new_clears:
         clear_data = location_dict[clear]
-        token_locations = [l for l in remaining_locations if location_dict[l].stageId == clear_data.stageId and \
+        token_locations = [l for l in remaining_locations if l in location_dict if location_dict[l].stageId == clear_data.stageId and \
                             clear_data.alignmentId == location_dict[l].alignmentId and
                            location_dict[l].location_type == Locations.LOCATION_TYPE_TOKEN ]
         token_clears.extend(token_locations)
@@ -3219,18 +3263,31 @@ async def handle_objects(ctx, current_level):
     states_to_add = {}
     states_to_remove = []
 
+    max_index = max([ o.index for o in relevant_objects])
+
+    full_loaded_bytes = dolphin_memory_engine.read_bytes(start_address, (0x2C * (max_index+1)))
+
+    # TODO: Load all object data here in one read rather than within the FOR loop
+
     for object in relevant_objects:
         object_index = object.index
 
         spawn_data = start_address + (0x2C * object_index) + 0x20
-        spawn_base_byte = spawn_data + 0x03
-        object_type = spawn_data + 0x08
+        base_index = (0x2C * object_index) + 0x20
+
+        spawn_address = spawn_data + 0x03
+        spawn_base_byte = base_index + 0x03
+
+        object_type_index = base_index + 0x08
+
         extra_data_pointer = spawn_data + 0x10
 
-        loaded_bytes = dolphin_memory_engine.read_bytes(spawn_base_byte, 1)
+        loaded_bytes = [full_loaded_bytes[spawn_base_byte]]
+        #loaded_bytes = dolphin_memory_engine.read_bytes(spawn_base_byte, 1)
         loaded_spawn_data = int.from_bytes(loaded_bytes, byteorder='big')
 
-        loaded_bytes = dolphin_memory_engine.read_bytes(object_type, 2)
+        loaded_bytes = full_loaded_bytes[object_type_index:object_type_index+2]
+        #loaded_bytes = dolphin_memory_engine.read_bytes(object_type, 2)
         loaded_object_type = int.from_bytes(loaded_bytes, byteorder='big')
 
         expected_type = Objects.GetTypeId(object.object_type)
@@ -3241,8 +3298,23 @@ async def handle_objects(ctx, current_level):
             print("Failed to read type correctly", Objects.GetTypeId(object.object_type), loaded_object_type,
                   expected_type, object.index, object.name)
 
+        # TODO: Only load the extra bytes when needed
         loaded_extra_pointer_bytes = dolphin_memory_engine.read_bytes(extra_data_pointer, 4)
         loaded_extra_pointer = int.from_bytes(loaded_extra_pointer_bytes, byteorder='big')
+
+        object_id, object_name = Names.GetObjectLocationName(object)
+        if "spawn_message" in ctx.level_state and ctx.level_state["spawn_message"] and loaded_spawn_data == 0x03:
+            if object.index not in ctx.level_state["spawn_messages"]:
+                are_locations = [o for o in object_locations if o.locationId in ctx.server_locations
+                                 and o.locationId == object_id]
+                print("LSD", loaded_spawn_data, object.index, ctx.level_state["spawn_messages"],
+                      ctx.level_state["spawn_message"], object.name, are_locations)
+                if len(are_locations) > 0:
+                    should_display = len([ o for o in are_locations if o.locationId in ctx.missing_locations]) > 0
+
+                    if should_display:
+                        logger.error("%s has spawned", object_name)
+                ctx.level_state["spawn_messages"].append(object.index)
 
         despawn = False
         spawn = False
@@ -3485,10 +3557,10 @@ async def handle_objects(ctx, current_level):
                     writeBytes(OnAirSaucerBytesAddress, on_air_saucer_bytes)
 
         if despawn and loaded_spawn_data not in (0x00, 0x04):
-            writeBytes(spawn_base_byte, despawn_bytes)
+            writeBytes(spawn_address, despawn_bytes)
 
         if not despawn and spawn and loaded_spawn_data in (0x00, 0x04):
-            writeBytes(spawn_base_byte, spawn_bytes)
+            writeBytes(spawn_address, spawn_bytes)
 
         object_values_complete = []
         # Objects which weirdly change state
@@ -3634,8 +3706,6 @@ async def handle_objects(ctx, current_level):
             print("Delete from state", entry)
             del ctx.level_state[entry]
             print("Delete from state", ctx.level_state)
-
-
 
 def TextToShadowBytes(message):
     shadow_bytes = []
@@ -3827,6 +3897,7 @@ async def update_level_behaviour(ctx, current_level, death):
         ctx.level_state["gun_progress"] = 0
         ctx.level_state["key_index"] = 0
         ctx.level_state["characters_set"] = False
+        ctx.level_state["spawn_messages"] = []
 
         ctx.checkpoint_snapshots = []
 

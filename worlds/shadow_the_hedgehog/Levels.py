@@ -212,6 +212,11 @@ def IsLogicLevelApplicable(region, options, path_type, starting_items):
 
     region_restrictions = region.restrictionTypes
 
+    if len(region_restrictions) == 1 and REGION_RESTRICTION_TYPES.NoRestriction in region_restrictions and \
+        len(region.fromRegions) == 1:
+        #print("Weirdly defined region:", region)
+        return False
+
     if region.hardLogicOnly:
         if logic_level != Options.LogicLevel.option_hard:
             return False
@@ -615,7 +620,7 @@ LevelRegion(STAGE_GUN_FORTRESS, REGION_INDICIES.GUN_FORTRESS_ZIPWIRE_NORMAL,
     .setLogicType(Options.LogicLevel.option_hard),
 
 LevelRegion(STAGE_GUN_FORTRESS, REGION_INDICIES.GUN_FORTRESS_PULLEY,
-            REGION_RESTRICTION_TYPES.NoRestriction)
+            REGION_RESTRICTION_TYPES.Pulley)
     .setLogicType(Options.LogicLevel.option_normal, Options.ChaosControlLogicLevel.option_intermediate, True),
 
 LevelRegion(STAGE_GUN_FORTRESS, REGION_INDICIES.GUN_FORTRESS_ZIP_1A,
@@ -636,7 +641,7 @@ LevelRegion(STAGE_GUN_FORTRESS, REGION_INDICIES.GUN_FORTRESS_ZIP_2B,
 
 LevelRegion(STAGE_GUN_FORTRESS, REGION_INDICIES.GUN_FORTRESS_ZIPWIRE_BASE,
                     REGION_RESTRICTION_TYPES.Zipwire)
-    .setFromRegion(REGION_INDICIES.GUN_FORTRESS_ZIPWIRE_NORMAL),
+    .setFromRegion(REGION_INDICIES.GUN_FORTRESS_PULLEY),
 
 LevelRegion(STAGE_GUN_FORTRESS, REGION_INDICIES.GUN_FORTRESS_ZIPWIRE,
                     REGION_RESTRICTION_TYPES.Zipwire).

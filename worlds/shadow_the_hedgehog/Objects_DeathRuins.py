@@ -78,10 +78,10 @@ DESIRABLE_OBJECTS_DEATH_RUINS  = [
     SETObject(ObjectType.BLACK_WARRIOR, Levels.STAGE_DEATH_RUINS, 307, '26',
               region=REGION_INDICIES.DEATH_RUINS_PULLEY),
 
-    SETObject(ObjectType.GUN_BEETLE, Levels.STAGE_DEATH_RUINS, 418, '26.1',
-              region=REGION_INDICIES.DEATH_RUINS_PULLEY),
-    SETObject(ObjectType.GUN_BEETLE, Levels.STAGE_DEATH_RUINS, 419, '26.2',
-              region=REGION_INDICIES.DEATH_RUINS_PULLEY),
+    #SETObject(ObjectType.GUN_BEETLE, Levels.STAGE_DEATH_RUINS, 418, '26.1',
+    #          region=REGION_INDICIES.DEATH_RUINS_PULLEY),
+    #SETObject(ObjectType.GUN_BEETLE, Levels.STAGE_DEATH_RUINS, 419, '26.2',
+    #          region=REGION_INDICIES.DEATH_RUINS_PULLEY),
 
     SETObject(ObjectType.BLACK_LARVAE, Levels.STAGE_DEATH_RUINS, 349, '27',
               region=REGION_INDICIES.DEATH_RUINS_PULLEY, count=4),

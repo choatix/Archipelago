@@ -1961,6 +1961,13 @@ def getLocationGroups():
         groups[key] = [c.name for c in object_locations if c.other == type]
 
     l_info = GetLocationInfoDict()
+    remove_from_groups = []
+    for i in l_info.items():
+        if i[1].location_type == LOCATION_TYPE_WARP:
+            remove_from_groups.append(i[0])
+
+    for i in remove_from_groups:
+        del l_info[i]
 
     new_groups = {}
     for level in Levels.LEVEL_ID_TO_LEVEL.keys():

@@ -609,37 +609,37 @@ class ObjectUnlocks(Toggle):
     """
     display_name = "Object Unlocks"
 
-class ObjectPulleys(Toggle):
+class ObjectPulleys(DefaultOnToggle):
     """
         Whether pulleys need to be unlocked before they can be used.
     """
     display_name = "Objects: Pulleys"
 
-class ObjectZiplines(Toggle):
+class ObjectZiplines(DefaultOnToggle):
     """
         Whether ziplines need to be unlocked before they can be used.
     """
     display_name = "Objects: Ziplines"
 
-class ObjectUnits(Toggle):
+class ObjectUnits(DefaultOnToggle):
     """
         Whether heal units and bombs, as associated servers need to be unlocked before they can be used.
     """
     display_name = "Objects: Units"
 
-class ObjectRockets(Toggle):
+class ObjectRockets(DefaultOnToggle):
     """
         Whether rockets need to be unlocked before they can be used.
     """
     display_name = "Objects: Rockets"
 
-class ObjectLightDashes(Toggle):
+class ObjectLightDashes(DefaultOnToggle):
     """
         Whether light dash trails of rings need to be unlocked before they can be used.
     """
     display_name = "Objects: Light Dashes"
 
-class ObjectWarpHoles(Toggle):
+class ObjectWarpHoles(DefaultOnToggle):
     """
         Whether warp holes need to be unlocked before they can be used.
     """

@@ -65,12 +65,23 @@ def handle_path_rules(options, player, additional_level_region, path_type):
         final_item = Items.GetFinalItem()
         return lambda state: state.has(final_item.name, player)
 
-    if additional_level_region.chaosControlLogicRequiresHeal:
+    if options.chaos_control_logic_level != Options.ChaosControlLogicLevel.option_off \
+        and additional_level_region.chaosControlLogicRequiresHeal:
+
         weapon_rule = Weapons.GetRuleByWeaponRequirement(player, Weapons.WeaponAttributes.HEAL,
                                                          additional_level_region.stageId,
                                                          additional_level_region.fromRegions)
 
-        return weapon_rule
+        if additional_level_region.chaosControlLogicType == Options.ChaosControlLogicLevel.option_intermediate and \
+                options.chaos_control_logic_level not in \
+                [Options.ChaosControlLogicLevel.option_off, Options.ChaosControlLogicLevel.option_easy]:
+
+            return weapon_rule
+
+        if additional_level_region.chaosControlLogicType == Options.ChaosControlLogicLevel.option_hard and \
+                options.chaos_control_logic_level == Options.ChaosControlLogicLevel.option_hard:
+
+            return weapon_rule
 
     if REGION_RESTRICTION_TYPES.KeyDoor in additional_level_region.restrictionTypes:
         key_rule = GetKeyRule(additional_level_region.stageId, player)

@@ -49,9 +49,10 @@ def handle_single_boss(world, boss_name):
         for dealer in [ e for e in egg_dealers if e not in world.available_story_levels]:
             world.options.excluded_stages = Options.ExcludedStages(list(world.options.excluded_stages) + [Levels.LEVEL_ID_TO_LEVEL(dealer)])
     else:
-        choice = world.random.choice(options)
-        for option in [ o for o in options if o != choice ]:
-            world.options.excluded_stages = Options.ExcludedStages(list(world.options.excluded_stages) + [Levels.LEVEL_ID_TO_LEVEL[option]])
+        if len(options) > 0:
+            choice = world.random.choice(options)
+            for option in [ o for o in options if o != choice ]:
+                world.options.excluded_stages = Options.ExcludedStages(list(world.options.excluded_stages) + [Levels.LEVEL_ID_TO_LEVEL[option]])
 
 
 def early_region_checks(world):
