@@ -398,30 +398,18 @@ class StartingLifeCount(Range):
     default = 5
 
 
-class CastleShuffle(Toggle):
+class RingLink(Toggle):
     """
-    Whether level shuffle allows castles in the main pool
+    Whether your in-level coin gain/loss is linked to other players
     """
-    display_name = "Castle Shuffle"
+    display_name = "Ring Link"
 
-class StartWithEasy(Toggle):
-    """
-    Whether to only allow levels to be easy for the first 2 worlds
-    """
-    display_name = "Start with Easy"
-    default = True
 
-class PalaceShuffle(Toggle):
+class TrapLink(Toggle):
     """
-    Whether to shuffle switch palaces among themselves
+    Whether your received traps are linked to other players
     """
-    display_name = "Palace Shuffle"
-
-class WarpReveal(DefaultOnToggle):
-    """
-    Whether to reveal levels in tracker when entering stages
-    """
-    display_name = "Warp Reveal"
+    display_name = "Trap Link"
 
 
 smw_option_groups = [
@@ -445,9 +433,6 @@ smw_option_groups = [
         BowserCastleRooms,
         BossShuffle,
         SwapDonutGhostHouseExits,
-        CastleShuffle,
-        PalaceShuffle,
-        StartWithEasy
     ]),
     OptionGroup("Junk and Traps", [
         JunkFillPercentage,
@@ -476,6 +461,8 @@ smw_option_groups = [
 @dataclass
 class SMWOptions(PerGameCommonOptions):
     death_link: DeathLink
+    ring_link: RingLink
+    trap_link: TrapLink
     goal: Goal
     bosses_required: BossesRequired
     max_yoshi_egg_cap: NumberOfYoshiEggs
@@ -509,7 +496,3 @@ class SMWOptions(PerGameCommonOptions):
     level_palette_shuffle: LevelPaletteShuffle
     overworld_palette_shuffle: OverworldPaletteShuffle
     starting_life_count: StartingLifeCount
-    start_with_easy: StartWithEasy
-    castle_shuffle: CastleShuffle
-    palace_shuffle: PalaceShuffle
-    warp_reveal: WarpReveal

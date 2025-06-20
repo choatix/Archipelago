@@ -11,7 +11,7 @@ from worlds.generic.Rules import add_rule, exclusion_rules
 
 from .Client import SMWSNIClient
 from .Items import SMWItem, ItemData, item_table, junk_table
-from .Levels import full_level_list, generate_level_list, location_id_to_level_id, get_level_info_dict
+from .Levels import full_level_list, generate_level_list, location_id_to_level_id
 from .Locations import SMWLocation, all_locations, setup_locations, special_zone_level_names, special_zone_dragon_coin_names, special_zone_hidden_1up_names, special_zone_blocksanity_names
 from .Names import ItemName, LocationName
 from .Options import SMWOptions, smw_option_groups
@@ -90,6 +90,7 @@ class SMWWorld(World):
             "blocksanity",
         )
         slot_data["active_levels"] = self.active_level_dict
+        slot_data["trap_weights"] = self.output_trap_weights()
 
         return slot_data
 
@@ -109,14 +110,12 @@ class SMWWorld(World):
 
         connect_regions(self, self.active_level_dict)
 
-        castle_shuffle = self.options.castle_shuffle
-        if not castle_shuffle:
-            # Add Boss Token amount requirements for Worlds
-            add_rule(self.multiworld.get_region(LocationName.donut_plains_1_tile, self.player).entrances[0], lambda state: state.has(ItemName.koopaling, self.player, 1))
-            add_rule(self.multiworld.get_region(LocationName.vanilla_dome_1_tile, self.player).entrances[0], lambda state: state.has(ItemName.koopaling, self.player, 2))
-            add_rule(self.multiworld.get_region(LocationName.forest_of_illusion_1_tile, self.player).entrances[0], lambda state: state.has(ItemName.koopaling, self.player, 4))
-            add_rule(self.multiworld.get_region(LocationName.chocolate_island_1_tile, self.player).entrances[0], lambda state: state.has(ItemName.koopaling, self.player, 5))
-            add_rule(self.multiworld.get_region(LocationName.valley_of_bowser_1_tile, self.player).entrances[0], lambda state: state.has(ItemName.koopaling, self.player, 6))
+        # Add Boss Token amount requirements for Worlds
+        add_rule(self.multiworld.get_region(LocationName.donut_plains_1_tile, self.player).entrances[0], lambda state: state.has(ItemName.koopaling, self.player, 1))
+        add_rule(self.multiworld.get_region(LocationName.vanilla_dome_1_tile, self.player).entrances[0], lambda state: state.has(ItemName.koopaling, self.player, 2))
+        add_rule(self.multiworld.get_region(LocationName.forest_of_illusion_1_tile, self.player).entrances[0], lambda state: state.has(ItemName.koopaling, self.player, 4))
+        add_rule(self.multiworld.get_region(LocationName.chocolate_island_1_tile, self.player).entrances[0], lambda state: state.has(ItemName.koopaling, self.player, 5))
+        add_rule(self.multiworld.get_region(LocationName.valley_of_bowser_1_tile, self.player).entrances[0], lambda state: state.has(ItemName.koopaling, self.player, 6))
 
         exclusion_pool = set()
         if self.options.exclude_special_zone:
@@ -210,17 +209,6 @@ class SMWWorld(World):
 
         for location_name in boss_location_names:
             self.multiworld.get_location(location_name, self.player).place_locked_item(self.create_item(ItemName.koopaling))
-
-        if self.options.warp_reveal:
-            for base_level in Levels.level_info_dict.values():
-                if base_level.levelName in [LocationName.front_door, LocationName.back_door]:
-                    continue
-                base_level_name = base_level.levelName
-                warp_location_name = [ w for w in Locations.warp_location_names.items() if w[0] == "Enter "+ base_level_name][0]
-                warp_item_name = [ i for i in Items.stage_item_table.keys() if i == "Warp:" + base_level_name][0]
-                self.multiworld.get_location(warp_location_name[0], self.player).place_locked_item(
-                    self.create_item(warp_item_name))
-
 
         self.multiworld.itempool += itempool
 
@@ -336,23 +324,14 @@ class SMWWorld(World):
     def set_rules(self):
         set_rules(self)
 
-    def write_spoiler(self, spoiler_handle: typing.TextIO):
-        level_info = get_level_info_dict()
-        if self.options.level_shuffle.value >= 0:
-            spoiler_handle.write("\n")
-            header_text = "SMW Level Shuffle for {}:\n"
-            header_text = header_text.format(self.multiworld.player_name[self.player])
-            spoiler_handle.write(header_text)
+    def output_trap_weights(self) -> dict[int, int]:
+        trap_data = {}
 
-            for x in self.active_level_dict.items():
-                replaced_level = x[0]
-                base_level = x[1]
+        trap_data[0xBC0013] = self.options.ice_trap_weight.value
+        trap_data[0xBC0014] = self.options.stun_trap_weight.value
+        trap_data[0xBC0015] = self.options.literature_trap_weight.value
+        trap_data[0xBC0016] = self.options.timer_trap_weight.value
+        trap_data[0xBC001C] = self.options.reverse_trap_weight.value
+        trap_data[0xBC001D] = self.options.thwimp_trap_weight.value
 
-                level_id = level_info[base_level]
-                base_level_name = level_id.levelName
-
-                level_id = level_info[replaced_level]
-                replaced_level_name = level_id.levelName
-
-                text = "Level {n} is now level {n1}\n".format(n=base_level_name, n1=replaced_level_name)
-                spoiler_handle.writelines(text)
+        return trap_data
