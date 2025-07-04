@@ -177,9 +177,15 @@ class EnemyObjectiveSanity(DefaultOnToggle):
 class Enemysanity(Toggle):
     """
         Determines whether standard enemy sanity is enabled.
-        This can be used in tandem with enemy objectve sanity.
+        This can be used in tandem with enemy objective sanity.
     """
     display_name = "Enemy Sanity"
+
+class DifficultEnemysanity(Toggle):
+    """
+        Determines whether enemies marked as difficult are included as part of enemy sanity.
+    """
+    display_name = "Difficult Enemy Sanity"
 
 class Keysanity(Toggle):
     """
@@ -725,9 +731,10 @@ class ShadowTheHedgehogOptions(PerGameCommonOptions):
     enemy_objective_sanity: EnemyObjectiveSanity
     character_sanity: CharacterSanity
     enemy_sanity: Enemysanity
+    enemy_sanity_percentage: EnemySanityPercentage
+    difficult_enemy_sanity: DifficultEnemysanity
     key_sanity: Keysanity
     checkpoint_sanity: Checkpointsanity
-    enemy_sanity_percentage: EnemySanityPercentage
     starting_stages: StartingStages
     force_objective_sanity_chance: ForceObjectiveSanityChance
     force_objective_sanity_max: ForceObjectiveSanityMax

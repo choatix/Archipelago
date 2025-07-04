@@ -49,7 +49,7 @@ class LocationInfo:
                  name: str, stageId: Optional[int] = None,
                  regionId: Optional[int] = None, alignmentId: Optional[int] = None,
                  count: Optional[int] = None, total: Optional[int] = None,
-                 other: Optional[str] = None):
+                 other: Optional[str] = None, flag: Optional[bool] = None):
         self.location_type = location_type
         self.locationId = locationId
         self.name = name
@@ -59,6 +59,7 @@ class LocationInfo:
         self.count = count
         self.total = total
         self.other = other
+        self.flag = flag
 
 
 
@@ -1174,6 +1175,9 @@ def GetBossLocationName(bossName, bossStageId):
     return id_name, view_name
 
 
+def GetClearLocation():
+    return [LocationInfo(LOCATION_TYPE_OTHER, LOCATION_ID_PLUS + 1000, Levels.DevilDoom_Name,
+                  stageId=None, alignmentId=None, total=None, count=None, other=None)]
 
 def GetAllLocationInfo():
     mission_clear_locations = []
@@ -1199,11 +1203,11 @@ def GetAllLocationInfo():
         location_id, entry_location_name = Names.GetObjectLocationName(object)
         info = LocationInfo(LOCATION_TYPE_OBJECT, location_id, entry_location_name,
                             stageId=object.stage, alignmentId=None, count=None, total=None,
-                            other=object.object_type, regionId=object.region)
+                            other=object.object_type, regionId=object.region, flag=object.is_hard)
         object_locations.append(info)
 
     for location in MissionClearLocations:
-        location_id, completion_location_name = GetLevelCompletionNames(location.stageId, location.alignmentId)
+        location_id, completion_location_name = Levels.GetLevelCompletionNames(location.stageId, location.alignmentId)
         info = LocationInfo(LOCATION_TYPE_MISSION_CLEAR, location_id, completion_location_name,
                             stageId=location.stageId, alignmentId=location.alignmentId, count=None, total=None,
                             other=None)
@@ -1259,8 +1263,7 @@ def GetAllLocationInfo():
                                 count=j, total=enemy.total_count, other=None)
             enemysanity_locations.append(info)
 
-    progression_locations = [LocationInfo(LOCATION_TYPE_OTHER, LOCATION_ID_PLUS+1000, Levels.DevilDoom_Name,
-                                          stageId=None, alignmentId=None,total=None, count=None, other=None)]
+    progression_locations = GetClearLocation()
 
     progression_locations.append(
         LocationInfo(LOCATION_TYPE_OTHER, LOCATION_ID_SHADOW_RIFLE_COMPLETE, "Shadow Rifle Complete", stageId=None, \
@@ -1387,6 +1390,8 @@ def create_locations(world, regions: Dict[str, Region]):
      warp_locations, object_locations) = GetAllLocationInfo()
 
     menu_region = regions["Menu"]
+
+    object_location_checks = []
 
     for location in clear_locations:
         if location.stageId not in world.available_levels:
@@ -1596,7 +1601,7 @@ def create_locations(world, regions: Dict[str, Region]):
                                                        beetle_location.locationId, stage_region)
             stage_region.locations.append(beetle_location)
 
-    object_location_checks = []
+
     if world.options.objective_sanity and world.options.objective_sanity_system != Options.ObjectiveSanitySystem.option_count_up:
         for i in Objects.STAGE_OBJECT_ITEMS.items():
             item_key = i[0]
@@ -1639,17 +1644,16 @@ def create_locations(world, regions: Dict[str, Region]):
                     #print("Add:", objective_location.name, i)
 
 
-        if world.options.enemy_sanity and world.options.objective_sanity_system != Options.ObjectiveSanitySystem.option_count_up:
-            enemy_types = Objects.GetStandardEnemyTypes()
-            for objective_location in [x for x in object_locations if x.other in enemy_types and x not in object_location_checks and
-                                       x.stageId in world.available_levels and x.stageId not in Levels.BOSS_STAGES]:
-                stage_region_name = Regions.stage_id_to_region(objective_location.stageId, objective_location.regionId)
-                stage_region = regions[stage_region_name]
-                new_objective_location = ShadowTheHedgehogLocation(world.player, objective_location.name,
-                                                               objective_location.locationId, stage_region)
-                stage_region.locations.append(new_objective_location)
-
-        pass
+    if world.options.enemy_sanity and world.options.objective_sanity_system != Options.ObjectiveSanitySystem.option_count_up:
+        enemy_types = Objects.GetStandardEnemyTypes()
+        for objective_location in [x for x in object_locations if x.other in enemy_types and x not in object_location_checks and
+                                   x.stageId in world.available_levels and x.stageId not in Levels.BOSS_STAGES
+                                                                  and (world.options.difficult_enemy_sanity or not x.flag) ]:
+            stage_region_name = Regions.stage_id_to_region(objective_location.stageId, objective_location.regionId)
+            stage_region = regions[stage_region_name]
+            new_objective_location = ShadowTheHedgehogLocation(world.player, objective_location.name,
+                                                           objective_location.locationId, stage_region)
+            stage_region.locations.append(new_objective_location)
 
 
     if world.options.level_progression != Options.LevelProgression.option_select:
@@ -1662,7 +1666,6 @@ def create_locations(world, regions: Dict[str, Region]):
     end_region.locations.append(devil_doom_location)
 
 def increment_location_count(count, plus, t):
-    #print("ILC", count, plus, t)
     return count + plus
 
 def count_last_way_locations(world):
@@ -1848,7 +1851,7 @@ def count_locations(world):
         enemy_types = Objects.GetStandardEnemyTypes()
         enemy_sanity_object_checks = [x for x in object_locations if
          x.other in enemy_types and x not in object_location_checks and x.stageId in world.available_levels and
-                                      x.stageId not in Levels.BOSS_STAGES]
+                                      x.stageId not in Levels.BOSS_STAGES  and (world.options.difficult_enemy_sanity or not x.flag)]
 
         count = increment_location_count(count, len(enemy_sanity_object_checks), "oe")
 

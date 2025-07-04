@@ -26,8 +26,6 @@ VEHICLE_INFO = \
     VehicleInfo(0x9, "Black Volt", []),
     VehicleInfo(0xA, "Gun Turret", []),
     VehicleInfo(0xB, "Black Turret", []),
-
-    # Other IDs are correct, this one is not yet, if even used the same
     VehicleInfo(0xC, "Gun Lift", [])
 
 ]

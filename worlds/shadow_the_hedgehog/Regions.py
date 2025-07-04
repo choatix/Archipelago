@@ -3,7 +3,7 @@ from typing import Dict
 
 from BaseClasses import Region, Entrance, MultiWorld, Item, ItemClassification
 from Options import OptionError
-from . import Levels, Items, Weapons, Story, GetLevelCompletionNames, Locations, Options, Names
+from . import Levels, Items, Weapons, Story, Locations, Options, Names
 from .Options import LevelProgression
 from .Story import PathInfo
 
@@ -80,7 +80,7 @@ def early_region_checks(world):
                                       s.end_stage_id == level
                                       and
                                       ((s.start_stage_id is None) or
-                                      ( GetLevelCompletionNames(s.start_stage_id,
+                                      ( Levels.GetLevelCompletionNames(s.start_stage_id,
                                       s.alignment_id)[1] not in
                                       world.options.exclude_locations
                                         and s.start_stage_id in available_story_stages
@@ -167,10 +167,12 @@ def create_regions(world) -> Dict[str, Region]:
     remaining_first_stages = [x for x in world.available_levels if x not in Levels.BOSS_STAGES and
                               x not in Levels.LAST_STORY_STAGES ]
 
+    # Handle required for .2/.3
+    plando_items = world.options.plando_items if hasattr(world.options, "plando_items") else world.multiworld.plando_items[world.player]
     if (world.options.level_progression != Options.LevelProgression.option_story and
-            world.multiworld.plando_items is not None and world.player in world.multiworld.plando_items):
+            plando_items is not None):
 
-            items = [ i for i in world.multiworld.plando_items[world.player] if i["from_pool"] and i["force"] ]
+            items = [ i for i in plando_items if i["from_pool"] and i["force"] ]
             item_details = [ item_info[i.item].stageId for i in items if name_map[i["item"]].type == 'level_object']
             banned_by_plando = [ l for l in remaining_first_stages if l in item_details]
 
@@ -453,7 +455,7 @@ def connect_by_story_mode(multiworld: MultiWorld, world, player: int, order: typ
 
         if path.end_stage_id is None:
             if boss_region is not None:
-                boss_completion_location_id, boss_completion_location_name = GetLevelCompletionNames(path.start_stage_id,
+                boss_completion_location_id, boss_completion_location_name = Levels.GetLevelCompletionNames(path.start_stage_id,
                                                                                            path.alignment_id)
 
                 view_name = Names.GetMissionClearEventName(path.start_stage_id, path.alignment_id)
@@ -505,7 +507,7 @@ def connect_by_story_mode(multiworld: MultiWorld, world, player: int, order: typ
             continue
 
         # If mission clear location is in excluded locations, ban this route
-        completion_location_id, completion_location_name = GetLevelCompletionNames(path.start_stage_id,
+        completion_location_id, completion_location_name = Levels.GetLevelCompletionNames(path.start_stage_id,
                                                                                    path.alignment_id)
 
         if completion_location_name in world.options.exclude_locations and \
@@ -680,6 +682,8 @@ def FindStartingItems(world, required=False):
             print("Unknown error with obtaining anti-lock mechanism", failed_item_options)
             raise OptionError("Invalid item options")
         return []
+
+    item_options = list(set(item_options))
 
     print("Safety unlock options:", item_options)
 

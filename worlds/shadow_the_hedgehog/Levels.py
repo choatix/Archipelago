@@ -237,16 +237,16 @@ def IsLogicLevelApplicable(region, options, path_type, starting_items):
             options.chaos_control_logic_level not in \
         [Options.ChaosControlLogicLevel.option_off, Options.ChaosControlLogicLevel.option_easy]:
 
-        if region.chaosControlLogicRequiresHeal:
-            return True
+        #if region.chaosControlLogicRequiresHeal:
+        #    return True
 
         return False
 
     if region.chaosControlLogicType == Options.ChaosControlLogicLevel.option_hard and \
             options.chaos_control_logic_level == Options.ChaosControlLogicLevel.option_hard:
 
-        if region.chaosControlLogicRequiresHeal:
-            return True
+        #if region.chaosControlLogicRequiresHeal:
+        #    return True
 
         return False
 
@@ -608,7 +608,7 @@ LevelRegion(STAGE_LOST_IMPACT, REGION_INDICIES.LOST_IMPACT_BOMB_WALL,
                     REGION_RESTRICTION_TYPES.Explosion)
     .setFromRegion(REGION_INDICIES.LOST_IMPACT_GUN_LIFT),
 
-# requires a rework
+
 LevelRegion(STAGE_GUN_FORTRESS, REGION_INDICIES.GUN_FORTRESS_GUN_TURRET,
                     REGION_RESTRICTION_TYPES.GunTurret),
 LevelRegion(STAGE_GUN_FORTRESS, REGION_INDICIES.GUN_FORTRESS_TURRET_OR_FIRE,
@@ -624,18 +624,14 @@ LevelRegion(STAGE_GUN_FORTRESS, REGION_INDICIES.GUN_FORTRESS_PULLEY,
     .setLogicType(Options.LogicLevel.option_normal, Options.ChaosControlLogicLevel.option_intermediate, True),
 
 LevelRegion(STAGE_GUN_FORTRESS, REGION_INDICIES.GUN_FORTRESS_ZIP_1A,
-            [REGION_RESTRICTION_TYPES.Heal,  REGION_RESTRICTION_TYPES.Pulley])
+            [REGION_RESTRICTION_TYPES.Pulley])
             .setFromRegion([REGION_INDICIES.GUN_FORTRESS_PULLEY]),
 
 LevelRegion(STAGE_GUN_FORTRESS, REGION_INDICIES.GUN_FORTRESS_ZIP_1B,
             REGION_RESTRICTION_TYPES.Zipwire)
     .setLogicType(Options.LogicLevel.option_normal, Options.ChaosControlLogicLevel.option_intermediate, True),
 
-LevelRegion(STAGE_GUN_FORTRESS, REGION_INDICIES.GUN_FORTRESS_ZIP_2A,
-                REGION_RESTRICTION_TYPES.Heal)
-    .setFromRegion([REGION_INDICIES.GUN_FORTRESS_PULLEY]),
-
-LevelRegion(STAGE_GUN_FORTRESS, REGION_INDICIES.GUN_FORTRESS_ZIP_2B,
+LevelRegion(STAGE_GUN_FORTRESS, REGION_INDICIES.GUN_FORTRESS_ZIP_2,
                 [REGION_RESTRICTION_TYPES.Zipwire])
     .setLogicType(Options.LogicLevel.option_normal, Options.ChaosControlLogicLevel.option_hard, True),
 
@@ -645,7 +641,7 @@ LevelRegion(STAGE_GUN_FORTRESS, REGION_INDICIES.GUN_FORTRESS_ZIPWIRE_BASE,
 
 LevelRegion(STAGE_GUN_FORTRESS, REGION_INDICIES.GUN_FORTRESS_ZIPWIRE,
                     REGION_RESTRICTION_TYPES.Zipwire).
-    setFromRegion([REGION_INDICIES.GUN_FORTRESS_ZIP_1B, REGION_INDICIES.GUN_FORTRESS_ZIP_2B,
+    setFromRegion([REGION_INDICIES.GUN_FORTRESS_ZIP_1B, REGION_INDICIES.GUN_FORTRESS_ZIP_2,
                   REGION_INDICIES.GUN_FORTRESS_ZIPWIRE_BASE]),
 
 LevelRegion(STAGE_GUN_FORTRESS, REGION_INDICIES.GUN_FORTRESS_ROCKET_NORMAL,

@@ -1,15 +1,18 @@
+import copy
 import math
+import typing
 from typing import ClassVar, Tuple, Any
 
-from BaseClasses import Tutorial, CollectionState
-from worlds.AutoWorld import WebWorld
+from BaseClasses import Tutorial, CollectionState, Item, ItemClassification
+from Options import OptionError
+from worlds.AutoWorld import WebWorld, World
 from worlds.LauncherComponents import Component, SuffixIdentifier, Type, components, launch_subprocess
+#from .Items import ShadowTheHedgehogItem
 
-from .Levels import GetLevelCompletionNames
-from .Items import *
-from .Locations import *
+#from .Levels import GetLevelCompletionNames
+#from .Locations import *
 
-from . import Options, Rules, Regions, Utils as ShadowUtils, Story, Names
+from . import Options, Rules, Regions, Utils as ShadowUtils, Story, Names, Items, Locations, Levels
 from .Options import shadow_option_groups, PercentOverrides, AutoClearMissions
 
 
@@ -59,8 +62,8 @@ class ShtHWorld(World):
     game: ClassVar[str] = "Shadow The Hedgehog"
     topology_present: bool = True
 
-    item_name_to_id: ClassVar[Dict[str, int]] = Items.GetItemDict()
-    location_name_to_id: ClassVar[Dict[str, int]] = Locations.GetLocationDict()
+    item_name_to_id: ClassVar[typing.Dict[str, int]] = Items.GetItemDict()
+    location_name_to_id: ClassVar[typing.Dict[str, int]] = Locations.GetLocationDict()
 
     required_client_version: Tuple[int, int, int] = (0, 5, 1)
     web = ShtHWebWorld()
@@ -87,7 +90,7 @@ class ShtHWorld(World):
         self.random_value = None
         self.starting_items = []
 
-        for token in TOKENS:
+        for token in Items.TOKENS:
             self.required_tokens[token] = 0
 
     def __init__(self, *args, **kwargs):
@@ -195,16 +198,21 @@ class ShtHWorld(World):
             if "The Last Way" in self.options.excluded_stages.value:
                 self.options.excluded_stages.value.remove("The Last Way")
 
+        if self.options.chaos_control_logic_level != Options.ChaosControlLogicLevel.option_off and \
+            self.options.logic_level != Options.LogicLevel.option_hard:
+                # TODO Handle expert? here in future:
+            self.options.chaos_control_logic_level = Options.ChaosControlLogicLevel(Options.ChaosControlLogicLevel.option_off)
+
         # TODO: Add handle for having excluded all stages
 
 
 
     def calculate_non_objective_sanity_maximums(self):
-        relevant_mission_clears =  [m for m in MissionClearLocations if
-                                    (m.stageId, m.alignmentId) in [ (n[0], n[1]) for n in MINIMUM_STAGE_REQUIREMENTS ]
+        relevant_mission_clears =  [m for m in Locations.MissionClearLocations if
+                                    (m.stageId, m.alignmentId) in [ (n[0], n[1]) for n in Locations.MINIMUM_STAGE_REQUIREMENTS ]
                                     and m.stageId in self.available_levels]
         for clear in relevant_mission_clears:
-            min_requirement_item = [ n for n in MINIMUM_STAGE_REQUIREMENTS if
+            min_requirement_item = [ n for n in Locations.MINIMUM_STAGE_REQUIREMENTS if
                                      n[0] == clear.stageId and \
                                      n[1] == clear.alignmentId][0]
 
@@ -237,7 +245,7 @@ class ShtHWorld(World):
                     elif clear.alignmentId == Levels.MISSION_ALIGNMENT_HERO:
                         key = "OECH."+Levels.LEVEL_ID_TO_LEVEL[clear.stageId]
 
-                expected_base_value = ceil((min_requirement_item[2]+1) * 100 / clear.requirement_count)
+                expected_base_value = math.ceil((min_requirement_item[2] + 1) * 100 / clear.requirement_count)
 
                 while max_required <= min_requirement_item[2]:
                     if key not in self.options.percent_overrides or \
@@ -247,7 +255,6 @@ class ShtHWorld(World):
                         self.options.percent_overrides.value[key] += 1
                     if self.options.percent_overrides.value[key] > 100:
                         raise OptionError("Unable to handle to avoid minimum requirements.")
-                    print("Increment override % to", self.options.percent_overrides[key], max_required)
 
                     max_required = ShadowUtils.getMaxRequired(
                         base_objective_data,
@@ -262,10 +269,10 @@ class ShtHWorld(World):
         else:
             override_settings = self.options.percent_overrides
 
-        for stage in ALL_STAGES:
+        for stage in Locations.ALL_STAGES:
 
-            related_clears = [ c for c in MissionClearLocations if c.stageId == stage]
-            related_es = [ e for e in GetEnemySanityLocations() if e.stageId == stage ]
+            related_clears = [ c for c in Locations.MissionClearLocations if c.stageId == stage]
+            related_es = [ e for e in Locations.GetEnemySanityLocations() if e.stageId == stage ]
 
             for clear in related_clears:
                 clear_class = None
@@ -273,12 +280,12 @@ class ShtHWorld(World):
                 key_prefix = None
 
                 if clear.mission_object_name == "Alien":
-                    clear_class = ENEMY_CLASS_ALIEN
-                    alignment_id = MISSION_ALIGNMENT_HERO
+                    clear_class = Locations.ENEMY_CLASS_ALIEN
+                    alignment_id = Locations.MISSION_ALIGNMENT_HERO
                     key_prefix = "EA"
                 elif clear.mission_object_name == "Soldier":
-                    clear_class = ENEMY_CLASS_GUN
-                    alignment_id = MISSION_ALIGNMENT_DARK
+                    clear_class = Locations.ENEMY_CLASS_GUN
+                    alignment_id = Locations.MISSION_ALIGNMENT_DARK
                     key_prefix = "EG"
 
                 if clear_class is not None:
@@ -566,7 +573,6 @@ class ShtHWorld(World):
             for item in extra_items:
                 self.starting_items.append(item)
                 self.multiworld.push_precollected(self.create_item(item))
-                # TODO: Remove from the item pool!
 
         if self.options.level_progression != Options.LevelProgression.option_select and \
             self.options.story_progression_balancing_passes > 0 and not hasattr(self.multiworld, "re_gen_passthrough"):
@@ -599,7 +605,7 @@ class ShtHWorld(World):
         if self.options.exceeding_items_filler != Options.ExceedingItemsFiller.option_off:
             if item_count > location_count:
                 #print("item_count=", item_count, "location_count=", location_count)
-                potential_downgrades, removals = GetPotentialDowngradeItems(self)
+                potential_downgrades, removals = Items.GetPotentialDowngradeItems(self)
                 if len(potential_downgrades) < item_count - location_count - len(removals):
                     c = item_count - location_count - len(potential_downgrades)
                     print("Issue with counts", item_count, location_count, len(potential_downgrades),
@@ -659,7 +665,7 @@ class ShtHWorld(World):
                 if locationData.requirement_count + mission_total > maximum_force_mission_counter:
                     continue
 
-                location_id, completion_location_name = GetLevelCompletionNames(locationData.stageId, locationData.alignmentId)
+                location_id, completion_location_name = Levels.GetLevelCompletionNames(locationData.stageId, locationData.alignmentId)
 
                 if completion_location_name in self.options.exclude_locations:
                     continue
@@ -673,16 +679,16 @@ class ShtHWorld(World):
                     higher_value = (1 - pow((1 - (chance / 100)), math.sqrt(dark_ratio_base / hero_ratio_base))) * 100
                     ratio_of_change = chance / higher_value
                     if dark_ratio_base >= hero_ratio_base:
-                        chance = ceil(higher_value)
+                        chance = math.ceil(higher_value)
                     else:
-                        chance = floor(chance / ratio_of_change)
+                        chance = math.floor(chance / ratio_of_change)
                 elif locationData.alignmentId == Levels.MISSION_ALIGNMENT_HERO:
                     higher_value = (1 - pow((1 - (chance / 100)), math.sqrt(hero_ratio_base / dark_ratio_base))) * 100
                     ratio_of_change = chance / higher_value
                     if hero_ratio_base >= dark_ratio_base:
-                        chance = ceil(higher_value)
+                        chance = math.ceil(higher_value)
                     else:
-                        chance = floor(chance / ratio_of_change)
+                        chance = math.floor(chance / ratio_of_change)
 
                 r = self.multiworld.random.randrange(0, 100)
                 if r > 100 - chance:
@@ -704,7 +710,7 @@ class ShtHWorld(World):
 
 
     @staticmethod
-    def interpret_slot_data(slot_data: Dict[str, Any]) -> Dict[str, Any]:
+    def interpret_slot_data(slot_data: typing.Dict[str, Any]) -> typing.Dict[str, Any]:
         # returning slot_data so it regens, giving it back in multiworld.re_gen_passthrough
         # we are using re_gen_passthrough over modifying the world here due to complexities with ER
 
@@ -714,9 +720,9 @@ class ShtHWorld(World):
 
         return slot_data
 
-    def create_item(self, name: str) -> "ShadowTheHedgehogItem":
+    def create_item(self, name: str) -> "Items.ShadowTheHedgehogItem":
         info = Items.GetItemByName(name)
-        return ShadowTheHedgehogItem(info, self.player)
+        return Items.ShadowTheHedgehogItem(info, self.player)
 
     def create_items(self):
         Items.PopulateItemPool(self)

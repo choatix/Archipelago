@@ -57,7 +57,7 @@ DESIRABLE_OBJECTS_SPACE_GADGET = [
     SETObject(ObjectType.BLACK_WARRIOR, Levels.STAGE_SPACE_GADGET, 252, '5', region=0),
     SETObject(ObjectType.BLACK_WARRIOR, Levels.STAGE_SPACE_GADGET, 253, '6', region=0),
 
-    SETObject(ObjectType.GUN_ROBOT, Levels.STAGE_SPACE_GADGET, 254, '6.5', region=0),
+    SETObject(ObjectType.GUN_ROBOT, Levels.STAGE_SPACE_GADGET, 254, '6.5', region=0, is_hard=True),
 
     SETObject(ObjectType.GUN_ROBOT, Levels.STAGE_SPACE_GADGET, 255, '7', region=0),
     SETObject(ObjectType.BLACK_HAWK, Levels.STAGE_SPACE_GADGET, 199, '8', region=0),

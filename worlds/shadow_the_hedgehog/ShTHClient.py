@@ -13,7 +13,7 @@ from BaseClasses import ItemClassification
 from CommonClient import ClientCommandProcessor, CommonContext, get_base_parser, gui_enabled, logger, server_loop
 from NetUtils import ClientStatus
 from .Options import WeaponsanityHold
-from . import Levels, Items, Locations, Junk, Utils as ShadowUtils, Weapons, Story, BASE_ID, Objects, Names
+from . import Levels, Items, Locations, Utils as ShadowUtils, Weapons, Story, Objects, Names
 from .Levels import *
 from .Locations import GetStageInformation, GetAlignmentsForStage, \
     GetStageEnemysanityInformation, MissionClearLocations
@@ -1658,8 +1658,8 @@ class ShTHContext(CommonContext):
 
         for vehicle in vehicle_data:
             have_vehicle = False
-            if ((vehicle.itemId + BASE_ID) in [ h[0].item for h in self.handled ] or
-                    (vehicle.itemId + BASE_ID) in [i[0].item for i in self.items_to_handle]):
+            if ((vehicle.itemId + Items.BASE_ID) in [ h[0].item for h in self.handled ] or
+                    (vehicle.itemId + Items.BASE_ID) in [i[0].item for i in self.items_to_handle]):
                 have_vehicle = True
 
             results.append((vehicle.name, have_vehicle))
@@ -1904,6 +1904,11 @@ async def check_save_loaded(ctx):
             #ctx.locations_checked.extend(messages)
 
         if finished and not ctx.finished_game:
+
+            clear_location = Locations.GetClearLocation()[0]
+            message = [{"cmd": 'LocationChecks', "locations": clear_location.locationId}]
+            await ctx.send_msgs(message)
+
             ctx.finished_game = True
             await ctx.send_msgs([{
                 "cmd": "StatusUpdate",
@@ -3041,7 +3046,7 @@ async def check_junk(ctx, current_level, death):
     if len(filler) > 0:
         latest_index = max([ u[0][1] for u in filler])
 
-    filler_nothing = [ f for f in filler if f[1].name == Junk.NothingJunk]
+    filler_nothing = [ f for f in filler if f[1].name == Items.Junk.NothingJunk]
     filler_gauge_dark = [ f for f in filler if f[1].type == "gauge" and f[1].alignmentId == MISSION_ALIGNMENT_DARK]
     filler_gauge_hero = [ f for f in filler if f[1].type == "gauge" and f[1].alignmentId == MISSION_ALIGNMENT_HERO]
     filler_rings = [ f for f in filler if f[1].type == "rings"]
@@ -3190,6 +3195,120 @@ async def check_junk(ctx, current_level, death):
         set_last_index(ctx, latest_index)
 
 
+async def clearout_individual_enemies_by_percentage(ctx, stageId):
+
+    if ctx.objective_sanity_system == Options.ObjectiveSanitySystem.option_count_up:
+        return
+
+    known_objects = [s for s in Objects.GetDesirableObjectsForStage(stageId)]
+    enemy_types = Objects.GetStandardEnemyTypes()
+    if known_objects is None or len(known_objects) == 0:
+        return
+
+    relevant_objects = [r for r in known_objects if r.object_type in enemy_types]
+
+    is_objective = False
+
+    checks_to_autoclear = []
+
+    if ctx.objective_sanity and (stageId, MISSION_ALIGNMENT_DARK) in Objects.STAGE_OBJECT_ITEMS:
+        dark_objects = [ d for d in relevant_objects if d.object_type in Objects.STAGE_OBJECT_ITEMS[(stageId, MISSION_ALIGNMENT_DARK)] ]
+        if len(dark_objects) > 0:
+            mission = [m for m in MissionClearLocations if m.stageId == stageId and m.alignmentId == MISSION_ALIGNMENT_DARK][0]
+            required_count = ShadowUtils.getMaxRequired(
+                ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_OBJECTIVE,
+                                                      mission.mission_object_name, ctx,
+                                                      mission.stageId, mission.alignmentId,
+                                                      ctx.override_settings),
+                mission.requirement_count, mission.stageId, mission.alignmentId, ctx.override_settings)
+
+            completed_dark_objects = [ o for o in dark_objects if GetObjectLocationName(o)[0] in ctx.checked_locations]
+            if len(completed_dark_objects) >= required_count:
+                incompleted_dark_objects = [ GetObjectLocationName(o)[0] for o in dark_objects if GetObjectLocationName(o)[0] in ctx.missing_locations]
+                checks_to_autoclear.extend(incompleted_dark_objects)
+
+
+    if ctx.objective_sanity and (stageId, MISSION_ALIGNMENT_HERO) in Objects.STAGE_OBJECT_ITEMS:
+        hero_objects = [d for d in relevant_objects if
+                        d.object_type in Objects.STAGE_OBJECT_ITEMS[(stageId, MISSION_ALIGNMENT_HERO)]]
+        if len(hero_objects) > 0:
+            mission = \
+            [m for m in MissionClearLocations if m.stageId == stageId and m.alignmentId == MISSION_ALIGNMENT_HERO][0]
+            required_count = ShadowUtils.getMaxRequired(
+                ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_OBJECTIVE,
+                                                          mission.mission_object_name, ctx,
+                                                          mission.stageId, mission.alignmentId,
+                                                          ctx.override_settings),
+                mission.requirement_count, mission.stageId, mission.alignmentId, ctx.override_settings)
+
+            completed_hero_objects = [o for o in hero_objects if GetObjectLocationName(o)[0] in ctx.checked_locations]
+            if len(completed_hero_objects) >= required_count:
+                incompleted_hero_objects = [GetObjectLocationName(o)[0] for o in hero_objects if
+                                            GetObjectLocationName(o)[0] in ctx.missing_locations]
+                checks_to_autoclear.extend(incompleted_hero_objects)
+
+    if ctx.enemy_sanity:
+        egg_objects = [d for d in relevant_objects if
+                        d.object_type in Objects.GetEggTypes() ]
+        if len(egg_objects) > 0:
+            by_type_egg = [m for m in Locations.GetEnemySanityLocations() if m.stageId == stageId
+                    and m.enemyClass == Locations.ENEMY_CLASS_EGG][0]
+            required_count = ShadowUtils.getMaxRequired(
+                ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_ENEMY,
+                                                          by_type_egg.mission_object_name, ctx,
+                                                          by_type_egg.stageId, by_type_egg.enemyClass,
+                                                          ctx.override_settings),
+                by_type_egg.total_count, by_type_egg.stageId, by_type_egg.enemyClass, ctx.override_settings)
+
+            completed_egg_objects = [o for o in egg_objects if GetObjectLocationName(o)[0] in ctx.checked_locations]
+            if len(completed_egg_objects) >= required_count:
+                incompleted_egg_objects = [GetObjectLocationName(o)[0] for o in egg_objects if
+                                            GetObjectLocationName(o)[0] in ctx.missing_locations]
+                checks_to_autoclear.extend(incompleted_egg_objects)
+
+        alien_objects = [d for d in relevant_objects if
+                       d.object_type in Objects.GetAlienTypes()]
+        if len(alien_objects) > 0:
+            by_type_alien = [m for m in Locations.GetEnemySanityLocations() if m.stageId == stageId
+                           and m.enemyClass == Locations.ENEMY_CLASS_ALIEN][0]
+            required_count = ShadowUtils.getMaxRequired(
+                ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_ENEMY,
+                                                          by_type_alien.mission_object_name, ctx,
+                                                          by_type_alien.stageId, by_type_alien.enemyClass,
+                                                          ctx.override_settings),
+                by_type_alien.total_count, by_type_alien.stageId, by_type_alien.enemyClass, ctx.override_settings)
+
+            completed_alien_objects = [o for o in alien_objects if GetObjectLocationName(o)[0] in ctx.checked_locations]
+            if len(completed_alien_objects) >= required_count:
+                incompleted_alien_objects = [GetObjectLocationName(o)[0] for o in alien_objects if
+                                           GetObjectLocationName(o)[0] in ctx.missing_locations]
+                checks_to_autoclear.extend(incompleted_alien_objects)
+
+        gun_objects = [d for d in relevant_objects if
+                       d.object_type in Objects.GetGunTypes()]
+        if len(gun_objects) > 0:
+            by_type_gun = [m for m in Locations.GetEnemySanityLocations() if m.stageId == stageId
+                           and m.enemyClass == Locations.ENEMY_CLASS_GUN][0]
+            required_count = ShadowUtils.getMaxRequired(
+                ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_ENEMY,
+                                                          by_type_gun.mission_object_name, ctx,
+                                                          by_type_gun.stageId, by_type_gun.enemyClass,
+                                                          ctx.override_settings),
+                by_type_gun.total_count, by_type_gun.stageId, by_type_gun.enemyClass, ctx.override_settings)
+
+            completed_gun_objects = [o for o in gun_objects if GetObjectLocationName(o)[0] in ctx.checked_locations]
+            if len(completed_gun_objects) >= required_count:
+                incompleted_gun_objects = [GetObjectLocationName(o)[0] for o in gun_objects if
+                                           GetObjectLocationName(o)[0] in ctx.missing_locations]
+                checks_to_autoclear.extend(incompleted_gun_objects)
+
+
+    if len(checks_to_autoclear) > 0:
+        logger.error("Autoclear enemies")
+        message = [{"cmd": 'LocationChecks', "locations": checks_to_autoclear}]
+        await ctx.send_msgs(message)
+
+
 async def handle_objects(ctx, current_level):
 
     if ctx.level_state is None or len(ctx.level_state.keys()) == 0:
@@ -3303,7 +3422,7 @@ async def handle_objects(ctx, current_level):
         loaded_extra_pointer = int.from_bytes(loaded_extra_pointer_bytes, byteorder='big')
 
         object_id, object_name = Names.GetObjectLocationName(object)
-        if "spawn_message" in ctx.level_state and ctx.level_state["spawn_message"] and loaded_spawn_data == 0x03:
+        if "spawn_message" in ctx.level_state and ctx.level_state["spawn_message"] and loaded_spawn_data in (0x03, 0x0B):
             if object.index not in ctx.level_state["spawn_messages"]:
                 are_locations = [o for o in object_locations if o.locationId in ctx.server_locations
                                  and o.locationId == object_id]
@@ -3567,18 +3686,22 @@ async def handle_objects(ctx, current_level):
         if object.object_type in [Objects.ObjectType.GLYPHIC_CANYON_TEMPLE, Objects.ObjectType.CRYPTIC_CASTLE_LANTERN,
                                   Objects.ObjectType.CREAM, Objects.ObjectType.CHEESE, Objects.ObjectType.SKY_TROOPS_EGG_SHIP,
                                   Objects.ObjectType.SKY_TROOPS_TEMPLE, Objects.ObjectType.MAD_MATRIX_BOMB,
-                                  Objects.ObjectType.MAD_MATRIX_TERMINAL, Objects.ObjectType.LAVA_SHELTER_DEFENSE,
-
-                                  Objects.ObjectType.GUN_SOLIDER
+                                  Objects.ObjectType.MAD_MATRIX_TERMINAL, Objects.ObjectType.LAVA_SHELTER_DEFENSE
                                   ]:
             object_values_complete.append(0xB)
             object_values_complete.append(0x8)
 
-        # This detects death OR despawn, but best we have for now!
         if object.object_type in [
                                   Objects.ObjectType.GUN_SOLIDER
                                   ]:
             object_values_complete.append(0x9)
+            #object_values_complete.append(0xB)
+            object_values_complete.append(0x8)
+
+        if object.object_type in [
+                                  Objects.ObjectType.BLACK_LARVAE
+                                  ]:
+            object_values_complete.append(0x8)
 
 
         # Objects which despawn
@@ -3588,8 +3711,7 @@ async def handle_objects(ctx, current_level):
                                   Objects.ObjectType.BLACK_ASSASSIN, Objects.ObjectType.BLACK_VOLT,
                                   Objects.ObjectType.BLACK_HAWK, Objects.ObjectType.BLACK_WARRIOR,
                                   Objects.ObjectType.BLACK_OAK, Objects.ObjectType.BLACK_WING,
-                                  Objects.ObjectType.BLACK_WORM, Objects.ObjectType.BLACK_LARVAE,
-                                  Objects.ObjectType.ARTIFICIAL_CHAOS,
+                                  Objects.ObjectType.BLACK_WORM, Objects.ObjectType.ARTIFICIAL_CHAOS,
 
                                   Objects.ObjectType.PRISON_ISLAND_DISC, Objects.ObjectType.CENTRAL_CITY_BIG_BOMB,
                                   Objects.ObjectType.THE_ARK_DEFENSE_UNIT, Objects.ObjectType.SPACE_GADGET_DEFENSE_UNIT,
@@ -3597,7 +3719,7 @@ async def handle_objects(ctx, current_level):
 
                                   ]:
 
-            # Enemeis which respawn write 8 then B in quick succession
+            # Enemies which respawn write 8 then B in quick succession
             object_values_complete.append(0xB)
             object_values_complete.append(0x8)
 
@@ -3849,6 +3971,8 @@ async def update_level_behaviour(ctx, current_level, death):
     # If higher than previous value, recognise as check and reduce by 1
 
     await handle_objects(ctx, current_level)
+
+    #await clearout_individual_enemies_by_percentage(ctx, current_level)
 
     #ShowSETChanges(current_level)
 

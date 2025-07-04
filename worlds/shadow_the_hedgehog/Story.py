@@ -1,7 +1,7 @@
 import copy
 import logging
 import math
-from . import Utils as ShadowUtils, GetLevelCompletionNames
+from . import Utils as ShadowUtils
 
 from dataclasses import dataclass
 
@@ -401,7 +401,7 @@ def ChaosShuffle(world):
     #GetLevelCompletionNames(s.start_stage_id, s.alignment_id)[1] not in world.options.exclude_locations
 
     for s in steps_to_randomise:
-        level_location_name = GetLevelCompletionNames(s.start_stage_id, s.alignment_id)[1]
+        level_location_name = Levels.GetLevelCompletionNames(s.start_stage_id, s.alignment_id)[1]
         if level_location_name in world.options.exclude_locations:
             plando_steps.append((s, PathInfo(s.start_stage_id, s.alignment_id,
                                              s.start_stage_id, [])))

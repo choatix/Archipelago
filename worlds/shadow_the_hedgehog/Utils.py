@@ -3,7 +3,7 @@ from typing import Tuple
 
 from . import Levels, Locations
 
-VERSION: Tuple[int, int, int] = (0, 2, 4)
+VERSION: Tuple[int, int, int] = (0, 2, 5)
 
 TYPE_ID_ENEMY = 0
 TYPE_ID_OBJECTIVE = 1
@@ -256,7 +256,7 @@ def getObjectiveTypeAndPercentage(base_objective_type, item_name, options,
                                TYPE_ID_OBJECTIVE_ENEMY_FREQUENCY, TYPE_ID_OBJECTIVE_FREQUENCY):
         if isEnemyObjectiveLocation(item_name):
             if options is not None and not options.enemy_objective_sanity:
-                return base_objective_type, 0, floor
+                return base_objective_type, 0, floor, required_for_completion
 
 
     if base_objective_type == TYPE_ID_ENEMY:

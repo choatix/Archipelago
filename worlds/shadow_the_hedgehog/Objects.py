@@ -32,6 +32,17 @@ ENEMY_CLASS_EGG = 2
 
 LOCATION_ID_PLUS = 100068
 
+def GetObjectSanityTypes():
+    return [
+        ObjectType.STANDARD_PULLEY, ObjectType.LIGHT_DASH_TRAIL,
+        ObjectType.LIGHT_DASH_TRAIL,ObjectType.SPACE_ZIPWIRE,
+        ObjectType.GUN_ZIPWIRE, ObjectType.CIRCUS_ZIPWIRE,
+        ObjectType.BOMB, ObjectType.BOMB_SERVER,
+        ObjectType.HEAL_UNIT, ObjectType.HEAL_SERVER,
+        ObjectType.WARP_HOLE, ObjectType.ROCKET,
+        ObjectType.BALLOON_ZIPWIRE
+    ]
+
 def GetPlayableObjectTypes():
     return [
                         ObjectType.GUN_SOLIDER,
@@ -99,15 +110,24 @@ def GetCentralCityBombDistribution():
 
     return result
 
-def GetStandardEnemyTypes():
-    alien_types = [ObjectType.BLACK_ASSASSIN, ObjectType.BLACK_VOLT, ObjectType.BLACK_HAWK,
+def GetAlienTypes():
+    return [ObjectType.BLACK_ASSASSIN, ObjectType.BLACK_VOLT, ObjectType.BLACK_HAWK,
              ObjectType.BLACK_WARRIOR, ObjectType.BLACK_OAK, ObjectType.BLACK_WING,
              ObjectType.BLACK_WORM , ObjectType.BLACK_LARVAE, ObjectType.ARTIFICIAL_CHAOS]
 
-    gun_types = [ObjectType.GUN_SOLIDER, ObjectType.GUN_BEETLE,
+def GetGunTypes():
+    return [ObjectType.GUN_SOLIDER, ObjectType.GUN_BEETLE,
              ObjectType.BIG_FOOT, ObjectType.GUN_ROBOT]
 
-    egg_types = [ObjectType.EGG_CLOWN, ObjectType.EGG_PAWN, ObjectType.SHADOW_ANDROID ]
+def GetEggTypes():
+    return [ObjectType.EGG_CLOWN, ObjectType.EGG_PAWN, ObjectType.SHADOW_ANDROID ]
+
+def GetStandardEnemyTypes():
+    alien_types = GetAlienTypes()
+
+    gun_types = GetGunTypes()
+
+    egg_types = GetEggTypes()
 
     types = []
     types.extend(alien_types)
@@ -943,3 +963,12 @@ STAGE_OBJECT_ITEMS = {
     (Levels.STAGE_COSMIC_FALL, Levels.MISSION_ALIGNMENT_HERO): (ObjectType.COSMIC_FALL_COMPUTER_ROOM,DOES_NOT_WORK_WITH_INDIVIDUAL),
     (Levels.STAGE_FINAL_HAUNT, Levels.MISSION_ALIGNMENT_DARK): (ObjectType.FINAL_HAUNT_SHIELD, DOES_NOT_WORK_WITH_INDIVIDUAL),
 }
+
+def GetAvailableObjects(world):
+    object_types = GetObjectSanityTypes()
+    relevant_objects = [ o.object_type for o in DESIRABLE_OBJECTS if o.object_type in object_types if o.stage in world.available_levels ]
+    return relevant_objects
+
+def GetAvailableVehicles(world):
+    vehicle_items = set([ v.vehicle for v in DESIRABLE_OBJECTS if v.vehicle is not None and v.stage in world.available_levels ])
+    return vehicle_items
