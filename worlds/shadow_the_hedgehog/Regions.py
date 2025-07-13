@@ -3,9 +3,11 @@ from typing import Dict
 
 from BaseClasses import Region, Entrance, MultiWorld, Item, ItemClassification
 from Options import OptionError
-from . import Levels, Items, Weapons, Story, Locations, Options, Names
+from . import Levels, Items, Weapons, Story, Locations, Options, Names, Utils as ShadowUtils
+from .Names import STAGE_THE_LAST_WAY
 from .Options import LevelProgression
 from .Story import PathInfo
+
 
 
 def stage_id_to_region(level_id: int, region_id = 0) -> str:
@@ -144,8 +146,17 @@ def early_region_checks(world):
         levels_in = weapon.available_stages
         levels_in = [ (l[0] if type(l) is tuple else l) for l in levels_in  ]
         levels_left = [ l for l in levels_in if l in world.available_levels ]
+
         if len(levels_left) == 0:
             continue
+
+        #handle LW Only levels, but still add to the item pool!
+        levels_left_lw = levels_left
+        if world.options.exclude_go_mode_items and not world.options.include_last_way_shuffle:
+            levels_left_lw = [ l for l in levels_left if l != STAGE_THE_LAST_WAY]
+
+        if len(levels_left_lw) == 0:
+            world.go_mode_weapons_only.append(weapon.name)
 
         world.available_weapons.append(weapon.name)
 
@@ -167,13 +178,18 @@ def create_regions(world) -> Dict[str, Region]:
     remaining_first_stages = [x for x in world.available_levels if x not in Levels.BOSS_STAGES and
                               x not in Levels.LAST_STORY_STAGES ]
 
-    # Handle required for .2/.3
-    plando_items = world.options.plando_items if hasattr(world.options, "plando_items") else world.multiworld.plando_items[world.player]
-    if (world.options.level_progression != Options.LevelProgression.option_story and
-            plando_items is not None):
+    plando_items = ShadowUtils.GetPlandoItems(world)
 
-            items = [ i for i in plando_items if i["from_pool"] and i["force"] ]
-            item_details = [ item_info[i.item].stageId for i in items if name_map[i["item"]].type == 'level_object']
+    # TODO: In future migrate
+    #if hasattr(world.options, "plando_items"):
+    #    plando_items = [ {"from_pool": p.from_pool,
+    #                      "force": p.force,
+    #                      "items": p.items,
+    #                      } for p in plando_items.value ]
+
+    if (world.options.level_progression != Options.LevelProgression.option_story and
+            len(plando_items) > 0):
+            item_details = [ item_info[i.item].stageId for i in plando_items if name_map[i].type == 'level_object']
             banned_by_plando = [ l for l in remaining_first_stages if l in item_details]
 
             if len(banned_by_plando) > 0:
@@ -360,10 +376,7 @@ def create_regions(world) -> Dict[str, Region]:
         world.available_characters.append(char_name)
 
     for weapon in Weapons.WEAPON_INFO:
-        levels_in = weapon.available_stages
-        levels_in = [ (l[0] if type(l) is tuple else l) for l in levels_in  ]
-        levels_left = [ l for l in levels_in if l in world.available_levels ]
-        if len(levels_left) == 0:
+        if weapon.name not in world.available_weapons:
             continue
 
         region_name = weapon_name_to_region(weapon.name)

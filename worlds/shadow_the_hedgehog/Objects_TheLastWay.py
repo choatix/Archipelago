@@ -1,11 +1,12 @@
 from . import Levels
 from .ObjectTypes import ObjectType, SETObject
 from .Names import REGION_INDICIES
+from .Weapons import WEAPONS
 
 DESIRABLE_OBJECTS_THE_LAST_WAY = [
 
     SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_THE_LAST_WAY,
-              445, "Special Weapons Box 1", region=0),
+              445, "Special Weapons Box 1", region=0, weapon=WEAPONS.RING_SHOT),
     SETObject(ObjectType.KEY_DOOR, Levels.STAGE_THE_LAST_WAY,
               26, "Secret Door", region=REGION_INDICIES.THE_LAST_WAY_KEY_DOOR),
     SETObject(ObjectType.VEHICLE, Levels.STAGE_THE_LAST_WAY,
@@ -22,15 +23,15 @@ DESIRABLE_OBJECTS_THE_LAST_WAY = [
               42, "Black Volt", vehicle=ObjectType.ObjectTypeVehicle.BLACK_VOLT),
     SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_THE_LAST_WAY,
               192, "Special Weapons Box 2",
-              region=REGION_INDICIES.THE_LAST_WAY_VOLT_OR_WARP),
+              region=REGION_INDICIES.THE_LAST_WAY_VOLT_OR_WARP, weapon=WEAPONS.RING_SHOT),
     SETObject(ObjectType.LIGHT_DASH_TRAIL, Levels.STAGE_THE_LAST_WAY,
               458, "Light Dash Trail"),
     SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_THE_LAST_WAY,
               310, "Special Weapons Box 3",
-              region=REGION_INDICIES.THE_LAST_WAY_LIGHT_DASH_EASY),
+              region=REGION_INDICIES.THE_LAST_WAY_LIGHT_DASH_EASY, weapon=WEAPONS.HEAVY_SHOT),
     SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_THE_LAST_WAY,
               448, "Special Weapons Box 4",
-              region=REGION_INDICIES.THE_LAST_WAY_LIGHT_DASH_EASY),
+              region=REGION_INDICIES.THE_LAST_WAY_LIGHT_DASH_EASY, weapon=WEAPONS.HEAVY_SHOT),
 
     SETObject(ObjectType.BLACK_WARRIOR, Levels.STAGE_THE_LAST_WAY, 23, '0', region=0),
     SETObject(ObjectType.BLACK_OAK, Levels.STAGE_THE_LAST_WAY, 15, '1', region=0),

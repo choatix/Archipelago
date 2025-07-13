@@ -1,6 +1,7 @@
 from . import Levels
 from .ObjectTypes import ObjectType, SETObject
 from .Names import REGION_INDICIES
+from .Weapons import WEAPONS
 
 DESIRABLE_OBJECTS_IRON_JUNGLE = [
 
@@ -8,7 +9,7 @@ DESIRABLE_OBJECTS_IRON_JUNGLE = [
               vehicle=ObjectType.ObjectTypeVehicle.GUN_JUMPER,
               region=0),
     SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_IRON_JUNGLE, 193, "Special Weapons Box 1",
-              region=0),
+              region=0, weapon=WEAPONS.EGG_GUN),
     SETObject(ObjectType.STANDARD_PULLEY, Levels.STAGE_IRON_JUNGLE, 40, "Pulley 1"),
     SETObject(ObjectType.KEY_DOOR, Levels.STAGE_IRON_JUNGLE, 111, "Secret Door",
               region=REGION_INDICIES.IRON_JUNGLE_KEY_DOOR),
@@ -23,10 +24,10 @@ DESIRABLE_OBJECTS_IRON_JUNGLE = [
               region=REGION_INDICIES.IRON_JUNGLE_LIGHT_DASH),
 
     SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_IRON_JUNGLE, 194, "Special Weapons Box 2",
-              region=REGION_INDICIES.IRON_JUNGLE_LIGHT_DASH),
+              region=REGION_INDICIES.IRON_JUNGLE_LIGHT_DASH, weapon=WEAPONS.EGG_GUN),
     SETObject(ObjectType.STANDARD_PULLEY, Levels.STAGE_IRON_JUNGLE, 102, "Pulley 2"),
     SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_IRON_JUNGLE, 25, "Special Weapons Box 3",
-              region=REGION_INDICIES.IRON_JUNGLE_LIGHT_DASH),
+              region=REGION_INDICIES.IRON_JUNGLE_LIGHT_DASH, weapon=WEAPONS.EGG_BAZOOKA),
     SETObject(ObjectType.LIGHT_DASH_TRAIL, Levels.STAGE_IRON_JUNGLE, 272, "Light Dash Trail 3"),
     SETObject(ObjectType.LIGHT_DASH_TRAIL, Levels.STAGE_IRON_JUNGLE, 82, "Light Dash Trail 4"),
     SETObject(ObjectType.STANDARD_PULLEY, Levels.STAGE_IRON_JUNGLE, 104, "Pulley 3"),

@@ -1,13 +1,14 @@
 from . import Levels
 from .ObjectTypes import ObjectType, SETObject
 from .Names import REGION_INDICIES, REGION_RESTRICTION_TYPES
+from .Weapons import WEAPONS
 
 DESIRABLE_OBJECTS_SPACE_GADGET = [
 
     # Space Gadget
 
     SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_SPACE_GADGET, 461, "Special Weapons Box",
-              region=0),
+              region=0, weapon=WEAPONS.BIG_WORM_SHOOTER),
     SETObject(ObjectType.ENERGY_CORE, Levels.STAGE_SPACE_GADGET, 572, "Hero Energy Core",
               region=0),
 

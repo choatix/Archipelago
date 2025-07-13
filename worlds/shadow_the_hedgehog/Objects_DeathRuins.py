@@ -1,18 +1,19 @@
 from . import Levels
 from .ObjectTypes import ObjectType, SETObject
 from .Names import REGION_INDICIES
+from .Weapons import WEAPONS
 
 DESIRABLE_OBJECTS_DEATH_RUINS  = [
 
     SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_DEATH_RUINS, 283, "Special Weapons Box 1",
-              region=0),
+              region=0, weapon=WEAPONS.SEMI_AUTOMATIC_RIFLE),
     SETObject(ObjectType.STANDARD_PULLEY, Levels.STAGE_DEATH_RUINS, 153, "Pulley 1"),
     SETObject(ObjectType.WARP_HOLE, Levels.STAGE_DEATH_RUINS, 341, "Warp Hole Exit"),
     SETObject(ObjectType.KEY_DOOR, Levels.STAGE_DEATH_RUINS, 3, "Secret Door",
               region=REGION_INDICIES.DEATH_RUINS_KEY_DOOR),
     SETObject(ObjectType.WARP_HOLE, Levels.STAGE_DEATH_RUINS, 380, "Warp Hole Entrance"),
     SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_DEATH_RUINS, 294, "Special Weapons Box 2",
-              region=REGION_INDICIES.DEATH_RUINS_WALLS),
+              region=REGION_INDICIES.DEATH_RUINS_WALLS, weapon=WEAPONS.GRENADE_LAUNCHER),
     SETObject(ObjectType.STANDARD_PULLEY, Levels.STAGE_DEATH_RUINS, 86, "Pulley 2"),
     SETObject(ObjectType.STANDARD_PULLEY, Levels.STAGE_DEATH_RUINS, 40, "Pulley 3"),
 

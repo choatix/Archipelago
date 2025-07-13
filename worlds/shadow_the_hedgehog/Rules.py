@@ -523,7 +523,7 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
 
                     total = 0
 
-                    if world.options.objective_sanity_system != Options.ObjectiveSanitySystem.option_count_up:
+                    if world.options.objective_sanity_system == Options.ObjectiveSanitySystem.option_individual:
                         if (clear.stageId, clear.alignmentId) in Objects.STAGE_OBJECT_ITEMS:
                             lookup_info = Objects.STAGE_OBJECT_ITEMS[(clear.stageId, clear.alignmentId)]
                             is_objectable = lookup_info[1]
@@ -541,12 +541,8 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
                         if l % frequency_required != 0 and max_required != l:
                             continue
 
-
-
                         prog_rule = lambda state, ix=l, data=progress_dist_by_name, keys=progress_dist_by_name.keys() \
                             : CountRegionAccessibility(state, keys, data, ix, player)
-
-
 
                         location_id, objective_location_name = (
                             Levels.GetLevelObjectNames(clear.stageId, clear.alignmentId, clear.mission_object_name,
@@ -565,56 +561,49 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
             if clear.requirement_count is not None:
                 location = multiworld.get_location(name, player)
                 item_name = Items.GetStageAlignmentObject(clear.stageId, clear.alignmentId)
-                if world.options.objective_sanity:
+                max_required = ShadowUtils.getMaxRequired(
+                    ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_COMPLETION,
+                                                              clear.mission_object_name, world.options,
+                                                              clear.stageId, clear.alignmentId,
+                                                              world.options.percent_overrides),
+                    clear.requirement_count, clear.stageId, clear.alignmentId,
+                    override_settings)
 
-                    max_required = ShadowUtils.getMaxRequired(
-                        ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_COMPLETION,
-                                                                  clear.mission_object_name, world.options,
-                                                                  clear.stageId, clear.alignmentId,
-                                                                  world.options.percent_overrides),
-                        clear.requirement_count, clear.stageId, clear.alignmentId,
-                        override_settings)
+                new_rule = lambda state: True
+                if world.options.objective_sanity and world.options.objective_sanity_behaviour != Options.ObjectiveSanityBehaviour.option_base_clear:
+                    new_rule = lambda state, itemname=item_name, count=max_required: state.has(itemname, player, count=count)
 
-                    new_rule = lambda state: True
-                    if world.options.objective_sanity_behaviour != Options.ObjectiveSanityBehaviour.option_base_clear:
-                        new_rule = lambda state, itemname=item_name, count=max_required: state.has(itemname, player, count=count)
+                progress_distribution = clear.getDistribution().items()
+                progress_dist_by_name = {}
 
-                    progress_distribution = clear.getDistribution().items()
-                    progress_dist_by_name = {}
+                total = 0
 
-                    total = 0
-                    #if world.options.objective_sanity_system != Options.ObjectiveSanitySystem.option_count_up:
-                    #    if (clear.stageId, clear.alignmentId) in Objects.STAGE_OBJECT_ITEMS:
-                    #        lookup_info = Objects.STAGE_OBJECT_ITEMS[(clear.stageId, clear.alignmentId)]
-                    #        is_objectable = lookup_info[1]
-                    ##        if is_objectable == Objects.WORKS_WITH_INDIVIDUAL:
-                    #            total = -1
-                    if total != -1:
-                        for region, count in progress_distribution:
-                            progress_dist_by_name[Names.GetDistributionRegionEventName(clear.stageId, region)] = count
-                            total += count
+                if total != -1:
+                    for region, count in progress_distribution:
+                        progress_dist_by_name[Names.GetDistributionRegionEventName(clear.stageId, region)] = count
+                        total += count
 
-                    finish_count = 1
-                    if (not world.options.objective_sanity
-                            or world.options.objective_sanity_behaviour != Options.ObjectiveSanityBehaviour.option_default):
-                        finish_count = max_required
-                        if finish_count == 0:
-                            finish_count = 1
+                finish_count = 1
+                if (not world.options.objective_sanity
+                        or world.options.objective_sanity_behaviour != Options.ObjectiveSanityBehaviour.option_default):
+                    finish_count = max_required
+                    if finish_count == 0:
+                        finish_count = 1
 
-                    # Enemy stage clears don't require completing objectives
-                    if world.options.objective_sanity and world.options.objective_sanity_behaviour == Options.ObjectiveSanityBehaviour.option_default and \
-                        clear.mission_object_name in ("Soldier", "Artificial Chaos", "Alien"):
-                        finish_count = 0
+                # Enemy stage clears don't require completing objectives
+                if world.options.objective_sanity and world.options.objective_sanity_behaviour == Options.ObjectiveSanityBehaviour.option_default and \
+                    clear.mission_object_name in ("Soldier", "Artificial Chaos", "Alien"):
+                    finish_count = 0
 
-                    prog_rule = lambda state, keys=progress_dist_by_name.keys(), data=progress_dist_by_name,\
-                                       ix=finish_count\
-                        : CountRegionAccessibility(state, keys, data, ix, player)
+                prog_rule = lambda state, keys=progress_dist_by_name.keys(), data=progress_dist_by_name,\
+                                   ix=finish_count\
+                    : CountRegionAccessibility(state, keys, data, ix, player)
 
-                    # Does this work as an AND or an OR?
-                    level_rule = lambda state, l_rule=level_rule, n_rule=new_rule, p_rule=prog_rule:\
-                        l_rule(state) and n_rule(state) and p_rule(state)
-                    add_rule(location, level_rule)
-                    rule_change = True
+                # Does this work as an AND or an OR?
+                level_rule = lambda state, l_rule=level_rule, n_rule=new_rule, p_rule=prog_rule:\
+                    l_rule(state) and n_rule(state) and p_rule(state)
+                add_rule(location, level_rule)
+                rule_change = True
             else:
 
                 # if equal to 1 there should only be one, and we need that region to finish
@@ -743,6 +732,10 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
             if enemy.stageId not in world.available_levels:
                 continue
 
+            if world.options.exclude_go_mode_items and enemy.stageId == Levels.STAGE_THE_LAST_WAY and \
+                    not world.options.include_last_way_shuffle:
+                continue
+
             max_required = ShadowUtils.getMaxRequired(
                 ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_ENEMY,
                                                           enemy.mission_object_name, world.options,
@@ -825,8 +818,7 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
 
     e_rule = lambda state, g_has=goal_has: check_final_rule(state, player, goal_has)
 
-    if (world.options.level_progression != Options.LevelProgression.option_select and
-            world.options.include_last_way_shuffle and world.options.story_shuffle == Options.StoryShuffle.option_chaos):
+    if world.options.include_last_way_shuffle:
 
         # handle requirement that DD must be found in the level shuffle!
         devil_doom_story_region = Regions.stage_id_to_story_region(Levels.BOSS_DEVIL_DOOM)
@@ -844,11 +836,11 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
                 last_way_region, rule=e_rule)
         # Ensure TLW is beatable
         tlw_location_id, tlw_location_name = Levels.GetLevelCompletionNames(Levels.STAGE_THE_LAST_WAY, Levels.MISSION_ALIGNMENT_NEUTRAL)
-        last_way_rule = lambda state: state.can_reach_loation(tlw_location_name)
+        last_way_rule = lambda state: state.can_reach_location(tlw_location_name, player)
         entrance = connect(world.player, "LastWayToDevilDoom", last_way_region,
-                multiworld.get_region(Regions.stage_id_to_region(Levels.BOSS_DEVIL_DOOM), player), last_way_rule)
+                multiworld.get_region(Regions.stage_id_to_region(Levels.BOSS_DEVIL_DOOM), player))
 
-        entrance.access_rule = lambda state, er=e_rule: er(state)
+        entrance.access_rule = lambda state, lw_rule=last_way_rule, er=e_rule: er(state) and lw_rule(state)
 
     final_item = Items.GetFinalItem()
     mw_final_item = ShadowTheHedgehogItem(final_item, world.player)

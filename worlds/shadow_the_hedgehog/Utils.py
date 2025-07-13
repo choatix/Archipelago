@@ -3,7 +3,7 @@ from typing import Tuple
 
 from . import Levels, Locations
 
-VERSION: Tuple[int, int, int] = (0, 2, 5)
+VERSION: Tuple[int, int, int] = (0, 2, 6)
 
 TYPE_ID_ENEMY = 0
 TYPE_ID_OBJECTIVE = 1
@@ -251,8 +251,8 @@ def getObjectiveTypeAndPercentage(base_objective_type, item_name, options,
                 round_method = ceil
 
     if base_objective_type in (TYPE_ID_OBJECTIVE_AVAILABLE, TYPE_ID_OBJECTIVE,
-                               TYPE_ID_COMPLETION, TYPE_ID_OBJECTIVE_ENEMY,
-                               TYPE_ID_OBJECTIVE_ENEMY_AVAILABLE, TYPE_ID_OBJECTIVE_ENEMY_COMPLETION,
+                               TYPE_ID_OBJECTIVE_ENEMY,
+                               TYPE_ID_OBJECTIVE_ENEMY_AVAILABLE,
                                TYPE_ID_OBJECTIVE_ENEMY_FREQUENCY, TYPE_ID_OBJECTIVE_FREQUENCY):
         if isEnemyObjectiveLocation(item_name):
             if options is not None and not options.enemy_objective_sanity:
@@ -313,6 +313,9 @@ def getMaxRequired(type_default_percentage, total:int, stageId:int, alignmentId:
     #print("ot=", override_settings, override_total)
     max_required = getRequiredCount(total, default_percentage, override=override_total, round_method=round_method)
 
+    if max_required == 0 and type_value in (TYPE_ID_COMPLETION, TYPE_ID_OBJECTIVE_ENEMY_COMPLETION):
+        max_required = 1
+
     if type_value in [ TYPE_ID_ENEMY_FREQUENCY, TYPE_ID_OBJECTIVE_FREQUENCY, TYPE_ID_OBJECTIVE_ENEMY_FREQUENCY]:
         return FrequencyPercentageToIncrementer(max_required, round_method)
 
@@ -330,3 +333,40 @@ def getPercRequired(type_default_percentage, stageId:int, alignmentId:int, overr
     max_perc_required = getRequiredPercentage(default_percentage, override=override_total, round_method=round_method)
 
     return max_perc_required
+
+
+class ShadowPlando:
+    item_name: str
+
+def GetPlandoItems(world):
+    results = []
+    if hasattr(world.options, "plando_items"):
+       plando_items = world.options.plando_items
+       relevant_plando_items = [ p.items for p in plando_items if p.from_pool and p.force]
+       for item_list in relevant_plando_items:
+           for item in item_list:
+               results.append(item)
+    else:
+        plando_items = world.multiworld.plando_items[world.player]
+        base_plando_items = [i["item"] for i in plando_items if i["from_pool"] and i["force"]]
+        for item in base_plando_items:
+            results.append(item)
+
+    return results
+
+TYPE_ID_ENEMY = 0
+TYPE_ID_OBJECTIVE = 1
+TYPE_ID_COMPLETION = 2
+TYPE_ID_OBJECTIVE_AVAILABLE = 3
+TYPE_ID_OBJECTIVE_ENEMY = 4
+TYPE_ID_OBJECTIVE_ENEMY_COMPLETION = 5
+TYPE_ID_OBJECTIVE_ENEMY_AVAILABLE = 6
+TYPE_ID_OBJECTIVE_FREQUENCY = 7
+TYPE_ID_OBJECTIVE_ENEMY_FREQUENCY = 8
+TYPE_ID_ENEMY_FREQUENCY = 9
+
+def GetObjectiveSanityFlag(details, level_info):
+    if level_info[0] == TYPE_ID_OBJECTIVE_ENEMY:
+        return details.enemy_objective_sanity
+
+    return details.objective_sanity

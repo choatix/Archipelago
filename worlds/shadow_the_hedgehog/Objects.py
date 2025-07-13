@@ -972,3 +972,9 @@ def GetAvailableObjects(world):
 def GetAvailableVehicles(world):
     vehicle_items = set([ v.vehicle for v in DESIRABLE_OBJECTS if v.vehicle is not None and v.stage in world.available_levels ])
     return vehicle_items
+
+
+def GetShadowBonusWeapons(stageId):
+    box_weapons = [ m.weapon for m in GetDesirableObjectsForStage(stageId) if m.object_type == ObjectType.SHADOW_BOX
+                    and m.weapon is not None ]
+    return list(set(box_weapons))

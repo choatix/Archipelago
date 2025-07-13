@@ -5,7 +5,6 @@ from BaseClasses import ItemClassification
 from . import Levels, Options
 from .Names import REGION_INDICIES
 
-
 @dataclass
 class WeaponInfo:
     game_id: int
@@ -582,3 +581,5 @@ def GetWeaponClassification(world, weapon : WeaponInfo):
         return ItemClassification.progression
 
     return ItemClassification.useful
+
+

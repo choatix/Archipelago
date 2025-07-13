@@ -1,6 +1,7 @@
 from . import Levels
 from .ObjectTypes import ObjectType, SETObject
 from .Names import REGION_INDICIES
+from .Weapons import WEAPONS
 
 DESIRABLE_OBJECTS_WESTOPOLIS  = [
 
@@ -8,7 +9,7 @@ DESIRABLE_OBJECTS_WESTOPOLIS  = [
               region=0),
     SETObject(ObjectType.STANDARD_PULLEY, Levels.STAGE_WESTOPOLIS, 518, "Key 2 Pulley"),
     SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_WESTOPOLIS, 482, "Special Weapons Box",
-              region=0),
+              region=0, weapon=WEAPONS.FLASH_SHOT),
     SETObject(ObjectType.KEY_DOOR, Levels.STAGE_WESTOPOLIS, 332, "Secret Door",
               region=REGION_INDICIES.WESTOPOLIS_KEY_DOOR),
     SETObject(ObjectType.VEHICLE, Levels.STAGE_WESTOPOLIS, 333, "Secret Armored Car",

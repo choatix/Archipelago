@@ -1,11 +1,12 @@
 from . import Levels
 from .ObjectTypes import ObjectType, SETObject
 from .Names import REGION_INDICIES
+from .Weapons import WEAPONS
 
 DESIRABLE_OBJECTS_FINAL_HAUNT = [
 
     SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_FINAL_HAUNT, 139, "Special Weapons Box 1",
-              region=0),
+              region=0, weapon=WEAPONS.RING_SHOT),
     SETObject(ObjectType.VEHICLE, Levels.STAGE_FINAL_HAUNT, 417, "Black Turret 1",
               vehicle=ObjectType.ObjectTypeVehicle.BLACK_TURRET, region=0),
     SETObject(ObjectType.BLACK_VOLT, Levels.STAGE_FINAL_HAUNT, 454, "Black Volt Enemy 1",
@@ -24,7 +25,7 @@ DESIRABLE_OBJECTS_FINAL_HAUNT = [
               region=REGION_INDICIES.FINAL_HAUNT_SHIELD_4),
 
     SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_FINAL_HAUNT, 166, "Special Weapons Box 2",
-              region=REGION_INDICIES.FINAL_HAUNT_ROCKET_NORMAL),
+              region=REGION_INDICIES.FINAL_HAUNT_ROCKET_NORMAL, weapon=WEAPONS.RING_SHOT),
     SETObject(ObjectType.BLACK_VOLT, Levels.STAGE_FINAL_HAUNT, 455, "Black Volt Enemy 2",
               vehicle=ObjectType.ObjectTypeVehicle.BLACK_VOLT,
               region=REGION_INDICIES.FINAL_HAUNT_HARD_VACUUM_OR_BLACK_VOLT),
@@ -53,7 +54,7 @@ DESIRABLE_OBJECTS_FINAL_HAUNT = [
               vehicle=ObjectType.ObjectTypeVehicle.BLACK_VOLT),
 
     SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_FINAL_HAUNT, 164, "Special Weapons Box 3",
-              region=REGION_INDICIES.FINAL_HAUNT_LIGHT_DASH),
+              region=REGION_INDICIES.FINAL_HAUNT_LIGHT_DASH, weapon=WEAPONS.HEAVY_SHOT),
     SETObject(ObjectType.VEHICLE, Levels.STAGE_FINAL_HAUNT, 161, "Black Turret 6",
               vehicle=ObjectType.ObjectTypeVehicle.BLACK_TURRET),
     SETObject(ObjectType.KEY_DOOR, Levels.STAGE_FINAL_HAUNT, 160, "Secret Door 3",

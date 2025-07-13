@@ -1,6 +1,7 @@
 from . import Levels
 from .ObjectTypes import ObjectType, SETObject
 from .Names import REGION_INDICIES
+from .Weapons import WEAPONS
 
 DESIRABLE_OBJECTS_BLACK_COMET = [
 
@@ -8,12 +9,14 @@ DESIRABLE_OBJECTS_BLACK_COMET = [
               0, "Air Saucer 1", vehicle=ObjectType.ObjectTypeVehicle.AIR_SAUCER,
               region=0),
     SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_BLACK_COMET,
-              370, "Special Weapons Box 1", region=REGION_INDICIES.BLACK_COMET_AIR_SAUCER),
+              370, "Special Weapons Box 1", region=REGION_INDICIES.BLACK_COMET_AIR_SAUCER,
+              weapon=WEAPONS.EIGHT_SHOT_RPG),
     SETObject(ObjectType.VEHICLE, Levels.STAGE_BLACK_COMET,
               10, "Air Saucer 2", vehicle=ObjectType.ObjectTypeVehicle.AIR_SAUCER,
               region=REGION_INDICIES.BLACK_COMET_AIR_SAUCER),
     SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_BLACK_COMET,
-              164, "Special Weapons Box 2", region=REGION_INDICIES.BLACK_COMET_AIR_SAUCER),
+              164, "Special Weapons Box 2", region=REGION_INDICIES.BLACK_COMET_AIR_SAUCER,
+              weapon=WEAPONS.FLASH_SHOT),
     SETObject(ObjectType.VEHICLE, Levels.STAGE_BLACK_COMET,
               30, "Air Saucer 2", vehicle=ObjectType.ObjectTypeVehicle.AIR_SAUCER,
               region=REGION_INDICIES.BLACK_COMET_AIR_SAUCER),
@@ -57,7 +60,7 @@ DESIRABLE_OBJECTS_BLACK_COMET = [
 
     SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_BLACK_COMET,
               61, "Special Weapons Box 3",
-              region=REGION_INDICIES.BLACK_COMET_WARP_HOLE),
+              region=REGION_INDICIES.BLACK_COMET_WARP_HOLE, weapon=WEAPONS.LIGHT_SHOT),
     SETObject(ObjectType.VEHICLE, Levels.STAGE_BLACK_COMET,
               99, "Air Saucer 7", vehicle=ObjectType.ObjectTypeVehicle.AIR_SAUCER,
               region=REGION_INDICIES.BLACK_COMET_WARP_HOLE),
@@ -69,7 +72,7 @@ DESIRABLE_OBJECTS_BLACK_COMET = [
               96, "Secret Door", region=REGION_INDICIES.BLACK_COMET_KEY_DOOR),
     SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_BLACK_COMET,
               374, "Special Weapons Box 4 (Secret)",
-              region=REGION_INDICIES.BLACK_COMET_BEHIND_KEY_DOOR),
+              region=REGION_INDICIES.BLACK_COMET_BEHIND_KEY_DOOR, weapon=WEAPONS.TANK_CANNON),
     SETObject(ObjectType.VEHICLE, Levels.STAGE_BLACK_COMET,
               231, "Air Saucer 8", vehicle=ObjectType.ObjectTypeVehicle.AIR_SAUCER,
               region=REGION_INDICIES.BLACK_COMET_WARP_HOLE),
@@ -94,7 +97,8 @@ DESIRABLE_OBJECTS_BLACK_COMET = [
               35, "Black Turret 3", vehicle=ObjectType.ObjectTypeVehicle.BLACK_TURRET,
               region=REGION_INDICIES.BLACK_COMET_WARP_HOLE),
     SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_BLACK_COMET,
-              449, "Special Weapons Box 5", region=REGION_INDICIES.BLACK_COMET_WARP_HOLE),
+              449, "Special Weapons Box 5", region=REGION_INDICIES.BLACK_COMET_WARP_HOLE,
+              weapon=WEAPONS.LASER_RIFLE),
     SETObject(ObjectType.VEHICLE, Levels.STAGE_BLACK_COMET,
               31, "Air Saucer 11", vehicle=ObjectType.ObjectTypeVehicle.AIR_SAUCER,
               region=REGION_INDICIES.BLACK_COMET_WARP_HOLE),

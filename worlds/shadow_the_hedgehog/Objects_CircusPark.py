@@ -1,19 +1,20 @@
 from . import Levels
 from .ObjectTypes import ObjectType, SETObject
 from .Names import REGION_INDICIES
+from .Weapons import WEAPONS
 
 DESIRABLE_OBJECTS_CIRCUS_PARK  = [
 
     SETObject(ObjectType.CIRCUS_ZIPWIRE, Levels.STAGE_CIRCUS_PARK, 325, "Zipwire 1"),
     SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_CIRCUS_PARK, 215, "Special Weapons Box 1",
-              region=REGION_INDICIES.CIRCUS_PARK_ZIP_WIRE),
+              region=REGION_INDICIES.CIRCUS_PARK_ZIP_WIRE, weapon=WEAPONS.SEMI_AUTOMATIC_RIFLE),
     SETObject(ObjectType.VEHICLE, Levels.STAGE_CIRCUS_PARK, 66, "Gun Turret 1",
               vehicle=ObjectType.ObjectTypeVehicle.GUN_TURRET,
               region=REGION_INDICIES.CIRCUS_PARK_ZIP_WIRE),
     SETObject(ObjectType.ROCKET, Levels.STAGE_CIRCUS_PARK, 266, "Rocket 1"),
     SETObject(ObjectType.LIGHT_DASH_TRAIL, Levels.STAGE_CIRCUS_PARK, 265, "Light Dash Trail"),
     SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_CIRCUS_PARK, 185, "Special Weapons Box 2",
-              region=REGION_INDICIES.CIRCUS_PARK_ROCKET_EASY),
+              region=REGION_INDICIES.CIRCUS_PARK_ROCKET_EASY, weapon=WEAPONS.HEAVY_MACHINE_GUN),
     SETObject(ObjectType.KEY_DOOR, Levels.STAGE_CIRCUS_PARK, 64, "Secret Door",
               region=REGION_INDICIES.CIRCUS_PARK_KEY_DOOR),
     SETObject(ObjectType.ROCKET, Levels.STAGE_CIRCUS_PARK, 292, "Rocket"),

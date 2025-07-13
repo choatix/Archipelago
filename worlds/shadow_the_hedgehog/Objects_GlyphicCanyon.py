@@ -1,15 +1,16 @@
 from . import Levels
 from .ObjectTypes import ObjectType, SETObject
 from .Names import REGION_INDICIES
+from .Weapons import WEAPONS
 
 DESIRABLE_OBJECTS_GLYPHIC_CANYON  = [
 
     # Glyphic Canyon
     SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_GLYPHIC_CANYON, 260, "Special Weapons Box 1",
-              region=0),
+              region=0, weapon=WEAPONS.GRENADE_LAUNCHER),
     SETObject(ObjectType.BOMB, Levels.STAGE_GLYPHIC_CANYON, 204, "Bomb 1"),
     SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_GLYPHIC_CANYON, 261, "Special Weapons Box 2",
-              region=0),
+              region=0, weapon=WEAPONS.SUB_MACHINE_GUN),
     SETObject(ObjectType.STANDARD_PULLEY, Levels.STAGE_GLYPHIC_CANYON, 5, "Pulley"),
     SETObject(ObjectType.BOMB, Levels.STAGE_GLYPHIC_CANYON, 73, "Bomb 2"),
     SETObject(ObjectType.LIGHT_DASH_TRAIL, Levels.STAGE_GLYPHIC_CANYON, 223, "Optional Light Dash Trail"),
@@ -21,9 +22,9 @@ DESIRABLE_OBJECTS_GLYPHIC_CANYON  = [
               vehicle=ObjectType.ObjectTypeVehicle.BLACK_VOLT),
 
     SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_GLYPHIC_CANYON, 292, "Shadow Box 3",
-              region=REGION_INDICIES.GLYPHIC_CANYON_PULLEY),
+              region=REGION_INDICIES.GLYPHIC_CANYON_PULLEY, weapon=WEAPONS.SUB_MACHINE_GUN),
     SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_GLYPHIC_CANYON, 262, "Shadow Box 4",
-              region=REGION_INDICIES.GLYPHIC_CANYON_PULLEY),
+              region=REGION_INDICIES.GLYPHIC_CANYON_PULLEY, weapon=WEAPONS.FLASH_SHOT),
 
     SETObject(ObjectType.GLYPHIC_CANYON_TEMPLE, Levels.STAGE_GLYPHIC_CANYON, 356, "Temple 1",
               region=0),

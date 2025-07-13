@@ -81,6 +81,7 @@ class ShtHWorld(World):
         self.first_regions = []
         self.available_characters = []
         self.available_weapons = []
+        self.go_mode_weapons_only = []
         self.available_levels = []
         self.available_story_levels = []
         self.token_locations = []
@@ -165,13 +166,13 @@ class ShtHWorld(World):
             # If story is off, last way cannot be shuffled
             self.options.include_last_way_shuffle = Options.IncludeLastStoryShuffle(False)
 
-        if self.options.story_shuffle == Options.LevelProgression.option_select and \
+        if self.options.level_progression == Options.LevelProgression.option_select and \
             self.options.include_last_way_shuffle:
 
             # If story is off, last way cannot be shuffled
             self.options.include_last_way_shuffle = Options.IncludeLastStoryShuffle(False)
 
-        if self.options.story_shuffle == Options.LevelProgression.option_select and \
+        if self.options.level_progression == Options.LevelProgression.option_select and \
             self.options.story_shuffle:
 
             # If story is off, last way cannot be shuffled
@@ -413,9 +414,6 @@ class ShtHWorld(World):
                 if "enemy_sanity" in passthrough:
                     self.options.enemy_sanity = passthrough["enemy_sanity"]
 
-                if "objective_enemy_sanity" in passthrough:
-                    self.options.objective_enemy_sanity = passthrough["objective_enemy_sanity"]
-
                 if "weapon_sanity_unlock" in passthrough:
                     self.options.weapon_sanity_unlock = passthrough["weapon_sanity_unlock"]
 
@@ -557,6 +555,12 @@ class ShtHWorld(World):
 
                 if "chaos_control_logic_level" in passthrough:
                     self.options.chaos_control_logic_level = passthrough["chaos_control_logic_level"]
+
+                if "difficult_enemy_sanity" in passthrough:
+                    self.options.difficult_enemy_sanity = passthrough["difficult_enemy_sanity"]
+
+                if "exclude_go_mode_items" in passthrough:
+                    self.options.exclude_go_mode_items = passthrough["exclude_go_mode_items"]
 
         # Set maximum of levels required
         # Exclude missions listed in exclude_locations
@@ -769,7 +773,7 @@ class ShtHWorld(World):
             "requires_emeralds": self.options.goal_chaos_emeralds.value,
             "key_sanity": self.options.key_sanity.value,
             "enemy_sanity": self.options.enemy_sanity.value,
-            "objective_enemy_sanity": self.options.enemy_objective_sanity.value,
+            "enemy_objective_sanity": self.options.enemy_objective_sanity.value,
             "weapon_sanity_unlock": self.options.weapon_sanity_unlock.value,
             "weapon_sanity_hold": self.options.weapon_sanity_hold.value,
             "vehicle_logic": self.options.vehicle_logic.value,
@@ -826,7 +830,9 @@ class ShtHWorld(World):
             "story_and_select_start_together": self.options.story_and_select_start_together.value,
             "objective_sanity_system": self.options.objective_sanity_system.value,
             "objective_sanity_behaviour": self.options.objective_sanity_behaviour.value,
-            "chaos_control_logic_level": self.options.chaos_control_logic_level.value
+            "chaos_control_logic_level": self.options.chaos_control_logic_level.value,
+            "difficult_enemy_sanity": self.options.difficult_enemy_sanity.value,
+            "exclude_go_mode_items": self.options.exclude_go_mode_items.value
         }
 
         return slot_data

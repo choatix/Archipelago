@@ -101,9 +101,10 @@ class SETObject:
     vehicle: int
     restrictionType: int
     is_hard: bool
+    weapon: int
 
     def __init__(self, object_type, stage, index, name,
-                 vehicle=None, region=None, count=1, restrictionType=10, is_hard=False):
+                 vehicle=None, region=None, count=1, restrictionType=10, is_hard=False, weapon=None):
         self.object_type = object_type
         self.stage = stage
         self.index = index
@@ -113,3 +114,4 @@ class SETObject:
         self.count = count
         self.restrictionType = restrictionType
         self.is_hard = is_hard
+        self.weapon = weapon

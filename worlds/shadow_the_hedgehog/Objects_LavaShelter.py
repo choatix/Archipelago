@@ -1,6 +1,7 @@
 from . import Levels
 from .ObjectTypes import ObjectType, SETObject
 from .Names import REGION_INDICIES
+from .Weapons import WEAPONS
 
 DESIRABLE_OBJECTS_LAVA_SHELTER = [
 
@@ -9,13 +10,13 @@ DESIRABLE_OBJECTS_LAVA_SHELTER = [
     SETObject(ObjectType.VEHICLE, Levels.STAGE_LAVA_SHELTER, 8, "Air Saucer (Secret)",
               vehicle=ObjectType.ObjectTypeVehicle.AIR_SAUCER, region=REGION_INDICIES.LAVA_SHELTER_KEY_DOOR),
     SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_LAVA_SHELTER, 223, "Special Weapon Box 1",
-              region=0),
+              region=0, weapon=WEAPONS.EGG_BAZOOKA),
     SETObject(ObjectType.LIGHT_DASH_TRAIL, Levels.STAGE_LAVA_SHELTER, 179, "Light Dash Trail 1"),
     SETObject(ObjectType.STANDARD_PULLEY, Levels.STAGE_LAVA_SHELTER, 15, "Pulley 1"),
     SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_LAVA_SHELTER, 222, "Special Weapon Box 2",
-              region=REGION_INDICIES.LAVA_SHELTER_PULLEY),
+              region=REGION_INDICIES.LAVA_SHELTER_PULLEY, weapon=WEAPONS.EGG_GUN),
     SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_LAVA_SHELTER, 6, "Special Weapon Box 3",
-              region=REGION_INDICIES.LAVA_SHELTER_PULLEY),
+              region=REGION_INDICIES.LAVA_SHELTER_PULLEY, weapon=WEAPONS.EGG_GUN),
     SETObject(ObjectType.STANDARD_PULLEY, Levels.STAGE_LAVA_SHELTER, 344, "Pulley 2 (Easy)"),
 
     SETObject(ObjectType.STANDARD_PULLEY, Levels.STAGE_LAVA_SHELTER, 136, "Pulley 3"),

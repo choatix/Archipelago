@@ -1,6 +1,7 @@
 from . import Levels
 from .ObjectTypes import ObjectType, SETObject
 from .Names import REGION_INDICIES
+from .Weapons import WEAPONS
 
 DESIRABLE_OBJECTS_PRISON_ISLAND  = [
 
@@ -17,16 +18,16 @@ DESIRABLE_OBJECTS_PRISON_ISLAND  = [
               vehicle=ObjectType.ObjectTypeVehicle.AIR_SAUCER,
               region=REGION_INDICIES.PRISON_ISLAND_AIR_SAUCER),
     SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_PRISON_ISLAND, 383, "Special Weapon Box 1",
-              region=REGION_INDICIES.PRISON_ISLAND_AIR_SAUCER),
+              region=REGION_INDICIES.PRISON_ISLAND_AIR_SAUCER, weapon=WEAPONS.HEAVY_MACHINE_GUN),
     SETObject(ObjectType.KEY_DOOR, Levels.STAGE_PRISON_ISLAND, 432, "Secret Door",
               region=REGION_INDICIES.PRISON_ISLAND_KEY_DOOR),
 
     SETObject(ObjectType.STANDARD_PULLEY, Levels.STAGE_PRISON_ISLAND, 565, "Pulley 1"),
 
     SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_PRISON_ISLAND, 379, "Special Weapon Box 2",
-              region=REGION_INDICIES.PRISON_ISLAND_PULLEY_EASY),
+              region=REGION_INDICIES.PRISON_ISLAND_PULLEY_EASY, weapon=WEAPONS.RING_SHOT),
     SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_PRISON_ISLAND, 514, "Special Weapon Box 3",
-              region=REGION_INDICIES.PRISON_ISLAND_PULLEY_EASY),
+              region=REGION_INDICIES.PRISON_ISLAND_PULLEY_EASY, weapon=WEAPONS.RING_SHOT),
     SETObject(ObjectType.VEHICLE, Levels.STAGE_PRISON_ISLAND, 551, "Air Saucer 2 Despawn",
               vehicle=ObjectType.ObjectTypeVehicle.AIR_SAUCER),
 
@@ -58,7 +59,7 @@ DESIRABLE_OBJECTS_PRISON_ISLAND  = [
               vehicle=ObjectType.ObjectTypeVehicle.AIR_SAUCER),
 
     SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_PRISON_ISLAND, 598, "Special Weapon Box 4",
-              region=REGION_INDICIES.PRISON_ISLAND_PULLEY_EASY),
+              region=REGION_INDICIES.PRISON_ISLAND_PULLEY_EASY, weapon=WEAPONS.RING_SHOT),
     SETObject(ObjectType.BLACK_WARRIOR, Levels.STAGE_PRISON_ISLAND,
               567, "Air Saucer 3 Enemy", vehicle=ObjectType.ObjectTypeVehicle.AIR_SAUCER,
               region=REGION_INDICIES.PRISON_ISLAND_AIR_SAUCER),

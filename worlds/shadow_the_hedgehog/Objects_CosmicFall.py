@@ -1,13 +1,14 @@
 from . import Levels
 from .ObjectTypes import ObjectType, SETObject
 from .Names import REGION_INDICIES
+from .Weapons import WEAPONS
 
 DESIRABLE_OBJECTS_COSMIC_FALL  = [
 
     SETObject(ObjectType.SPACE_ZIPWIRE, Levels.STAGE_COSMIC_FALL, 2, "Zipwire 1"),
     SETObject(ObjectType.STANDARD_PULLEY, Levels.STAGE_COSMIC_FALL, 40, "Pulley 1 (Hard poss)"),
     SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_COSMIC_FALL, 135, "Special Weapons Box 1",
-              region=REGION_INDICIES.COSMIC_FALL_PULLEY_NORMAL),
+              region=REGION_INDICIES.COSMIC_FALL_PULLEY_NORMAL, weapon=WEAPONS.HEAVY_MACHINE_GUN),
     SETObject(ObjectType.LIGHT_DASH_TRAIL, Levels.STAGE_COSMIC_FALL, 25, "Light Dash Trail 1"),
     SETObject(ObjectType.SPACE_ZIPWIRE, Levels.STAGE_COSMIC_FALL, 247, "Zipwire 2"),
     SETObject(ObjectType.STANDARD_PULLEY, Levels.STAGE_COSMIC_FALL, 204, "Pulley 2"),
@@ -36,7 +37,7 @@ DESIRABLE_OBJECTS_COSMIC_FALL  = [
     SETObject(ObjectType.STANDARD_PULLEY, Levels.STAGE_COSMIC_FALL, 292, "Pulley 5"),
     SETObject(ObjectType.STANDARD_PULLEY, Levels.STAGE_COSMIC_FALL, 293, "Pulley 6"),
     SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_COSMIC_FALL, 331, "Special Weapons Box 2",
-              region=REGION_INDICIES.COSMIC_FALL_GUN_JUMPER_PULLEY_HARD),
+              region=REGION_INDICIES.COSMIC_FALL_GUN_JUMPER_PULLEY_HARD, weapon=WEAPONS.LASER_RIFLE),
     SETObject(ObjectType.VEHICLE, Levels.STAGE_COSMIC_FALL, 253, "Gun Cannon",
               vehicle=ObjectType.ObjectTypeVehicle.GUN_CANNON,
               region=REGION_INDICIES.COSMIC_FALL_GUN_JUMPER_PULLEY_HARD),

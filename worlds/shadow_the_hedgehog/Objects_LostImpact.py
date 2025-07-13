@@ -1,11 +1,12 @@
 from . import Levels
 from .ObjectTypes import ObjectType, SETObject
 from .Names import REGION_INDICIES
+from .Weapons import WEAPONS
 
 DESIRABLE_OBJECTS_LOST_IMPACT = [
 
     SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_LOST_IMPACT,
-              158, "Special Weapons Box 1", region=0),
+              158, "Special Weapons Box 1", region=0, weapon=WEAPONS.SUB_MACHINE_GUN),
     SETObject(ObjectType.VEHICLE, Levels.STAGE_LOST_IMPACT,
               345, "Gun Lift 1 (First Room)", vehicle=ObjectType.ObjectTypeVehicle.GUN_LIFT,
               region=REGION_INDICIES.LOST_IMPACT_GUN_LIFT),

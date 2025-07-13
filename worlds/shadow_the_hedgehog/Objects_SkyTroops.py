@@ -1,13 +1,14 @@
 from . import Levels
 from .ObjectTypes import ObjectType, SETObject
 from .Names import REGION_INDICIES, REGION_RESTRICTION_TYPES
+from .Weapons import WEAPONS
 
 DESIRABLE_OBJECTS_SKY_TROOPS  = [
 
     # Sky Troops
 
     SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_SKY_TROOPS, 240, "Special Weapons Box 1",
-              region=0),
+              region=0, weapon=WEAPONS.RING_SHOT),
     SETObject(ObjectType.VEHICLE, Levels.STAGE_SKY_TROOPS, 27, "Black Turret 1",
               vehicle=ObjectType.ObjectTypeVehicle.BLACK_TURRET,
               region=0),
@@ -17,10 +18,10 @@ DESIRABLE_OBJECTS_SKY_TROOPS  = [
               vehicle=ObjectType.ObjectTypeVehicle.GUN_JUMPER,
               region=REGION_INDICIES.SKY_TROOPS_GUN_JUMPER_EASY),
     SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_SKY_TROOPS, 101, "Special Weapons Box 2",
-              region=REGION_INDICIES.SKY_TROOPS_GUN_JUMPER_EASY),
+              region=REGION_INDICIES.SKY_TROOPS_GUN_JUMPER_EASY, weapon=WEAPONS.EGG_GUN),
     SETObject(ObjectType.ROCKET, Levels.STAGE_SKY_TROOPS, 314, "Rocket 1"),
     SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_SKY_TROOPS, 171, "Special Weapons Box 3",
-              region=REGION_INDICIES.SKY_TROOPS_ROCKET_NORMAL),
+              region=REGION_INDICIES.SKY_TROOPS_ROCKET_NORMAL, weapon=WEAPONS.RING_SHOT),
     SETObject(ObjectType.VEHICLE, Levels.STAGE_SKY_TROOPS, 59, "Black Turret 2",
               vehicle=ObjectType.ObjectTypeVehicle.BLACK_TURRET,
               region=REGION_INDICIES.SKY_TROOPS_ROCKET_NORMAL),
@@ -37,7 +38,7 @@ DESIRABLE_OBJECTS_SKY_TROOPS  = [
               region=REGION_INDICIES.SKY_TROOPS_ROCKET),
     SETObject(ObjectType.ROCKET, Levels.STAGE_SKY_TROOPS, 60, "Rocket 3"),
     SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_SKY_TROOPS, 239, "Special Weapons Box 4",
-              region=REGION_INDICIES.SKY_TROOPS_ROCKET),
+              region=REGION_INDICIES.SKY_TROOPS_ROCKET, weapon=WEAPONS.RING_SHOT),
 
     SETObject(ObjectType.VEHICLE, Levels.STAGE_SKY_TROOPS, 223, "Black Hawk Vehicle",
               vehicle=ObjectType.ObjectTypeVehicle.BLACK_HAWK),

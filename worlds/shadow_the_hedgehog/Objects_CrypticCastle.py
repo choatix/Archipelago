@@ -1,6 +1,7 @@
 from . import Levels
 from .ObjectTypes import ObjectType, SETObject
 from .Names import REGION_INDICIES, REGION_RESTRICTION_TYPES
+from .Weapons import WEAPONS
 
 DESIRABLE_OBJECTS_CRYPTIC_CASTLE  = [
 
@@ -12,7 +13,7 @@ DESIRABLE_OBJECTS_CRYPTIC_CASTLE  = [
     SETObject(ObjectType.BOMB, Levels.STAGE_CRYPTIC_CASTLE, 51, "Bomb 2"),
     SETObject(ObjectType.BOMB, Levels.STAGE_CRYPTIC_CASTLE, 52, "Bomb 3"),
     SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_CRYPTIC_CASTLE, 465, "Special Weapons Box 1",
-              region=REGION_INDICIES.CRYPTIC_CASTLE_TORCH),
+              region=REGION_INDICIES.CRYPTIC_CASTLE_TORCH, weapon=WEAPONS.EGG_GUN),
     SETObject(ObjectType.BLACK_HAWK, Levels.STAGE_CRYPTIC_CASTLE, 392, "Black Hawk Enemy Lower",
               vehicle=ObjectType.ObjectTypeVehicle.BLACK_HAWK, region=REGION_INDICIES.CRYPTIC_CASTLE_TORCH),
     SETObject(ObjectType.VEHICLE, Levels.STAGE_CRYPTIC_CASTLE, 421, "Black Hawk Vehicle Lower",
@@ -27,14 +28,14 @@ DESIRABLE_OBJECTS_CRYPTIC_CASTLE  = [
               region=REGION_INDICIES.CRYPTIC_CASTLE_KEY_DOOR),
     SETObject(ObjectType.LIGHT_DASH_TRAIL, Levels.STAGE_CRYPTIC_CASTLE, 134, "Secret Path Light Dash Trail"),
     SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_CRYPTIC_CASTLE, 314, "Special Weapons Box 2",
-              region=REGION_INDICIES.CRYPTIC_CASTLE_HAWK),
+              region=REGION_INDICIES.CRYPTIC_CASTLE_HAWK, weapon=WEAPONS.RING_SHOT),
     SETObject(ObjectType.BOMB, Levels.STAGE_CRYPTIC_CASTLE, 115, "Bomb 4"),
     SETObject(ObjectType.BOMB, Levels.STAGE_CRYPTIC_CASTLE, 112, "Bomb 5"),
     SETObject(ObjectType.BOMB, Levels.STAGE_CRYPTIC_CASTLE, 117, "Bomb 6"),
     SETObject(ObjectType.BOMB, Levels.STAGE_CRYPTIC_CASTLE, 114, "Bomb 7"),
     SETObject(ObjectType.BOMB, Levels.STAGE_CRYPTIC_CASTLE, 414, "Bomb 8"),
     SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_CRYPTIC_CASTLE, 187, "Special Weapons Box 3",
-              region=REGION_INDICIES.CRYPTIC_CASTLE_HAWK),
+              region=REGION_INDICIES.CRYPTIC_CASTLE_HAWK, weapon=WEAPONS.RING_SHOT),
     SETObject(ObjectType.BALLOON_ZIPWIRE, Levels.STAGE_CRYPTIC_CASTLE, 1, "Balloon 4"),
     SETObject(ObjectType.LIGHT_DASH_TRAIL, Levels.STAGE_CRYPTIC_CASTLE, 170, "Mini Light Dash Trail"),
     SETObject(ObjectType.VEHICLE, Levels.STAGE_CRYPTIC_CASTLE, 204, "Black Hawk Vehicle End",

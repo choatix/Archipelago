@@ -1,13 +1,14 @@
 from . import Levels
 from .ObjectTypes import ObjectType, SETObject
 from .Names import REGION_INDICIES, REGION_RESTRICTION_TYPES
+from .Weapons import WEAPONS
 
 DESIRABLE_OBJECTS_GUN_FORTRESS = [
 
     SETObject(ObjectType.VEHICLE, Levels.STAGE_GUN_FORTRESS, 421, "Armored Car",
               vehicle=ObjectType.ObjectTypeVehicle.ARMORED_CAR, region=0),
     SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_GUN_FORTRESS, 80, "Special Weapons Box 1",
-              region=0),
+              region=0, weapon=WEAPONS.RPG),
     SETObject(ObjectType.VEHICLE, Levels.STAGE_GUN_FORTRESS, 115, "Gun Turret 1",
               vehicle=ObjectType.ObjectTypeVehicle.GUN_TURRET, region=0),
     SETObject(ObjectType.VEHICLE, Levels.STAGE_GUN_FORTRESS, 281, "Gun Turret 2",
@@ -16,7 +17,7 @@ DESIRABLE_OBJECTS_GUN_FORTRESS = [
     SETObject(ObjectType.STANDARD_PULLEY, Levels.STAGE_GUN_FORTRESS, 49, "Tunnel 1 Pulley 1"),
     SETObject(ObjectType.STANDARD_PULLEY, Levels.STAGE_GUN_FORTRESS, 55, "Tunnel 1 Pulley 2"),
     SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_GUN_FORTRESS, 279, "Special Weapons Box 2",
-              region=REGION_INDICIES.GUN_FORTRESS_PULLEY),
+              region=REGION_INDICIES.GUN_FORTRESS_PULLEY, weapon=WEAPONS.SEMI_AUTOMATIC_RIFLE),
     SETObject(ObjectType.VEHICLE, Levels.STAGE_GUN_FORTRESS, 0, "GUN Computer 1 Turret 1",
               vehicle=ObjectType.ObjectTypeVehicle.GUN_TURRET),
     SETObject(ObjectType.GUN_ZIPWIRE, Levels.STAGE_GUN_FORTRESS, 62, "Zipwire 2", ),

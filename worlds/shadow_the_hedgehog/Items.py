@@ -489,19 +489,16 @@ def ChooseJunkItems(random, junk, options, junk_count):
 
 
 def AddItemsToStartInventory(world, count):
-    plando_items = world.options.plando_items if hasattr(world.options, "plando_items") else \
-    world.multiworld.plando_items[world.player]
+    base_plando_items = []
+    plando_items = ShadowUtils.GetPlandoItems(world)
 
-    base_plando_items = [i["item"] for i in plando_items if i["from_pool"] and i["force"]]
     valid_removals = [ i for i in world.multiworld.itempool if i.name not in base_plando_items
-                       and i.classification == ItemClassification.progression]
+                       and i.classification == ItemClassification.progression and i.name not in plando_items]
 
     if len(valid_removals) < count:
         raise OptionError(f"Unable to remove {count} items from valid list of {len(valid_removals)}")
 
     startings = world.random.sample(valid_removals, k=count)
-    #world.random.seed(0)
-    #startings = valid_removals[0:count]
     for s in startings:
         world.multiworld.itempool.remove(s)
         logging.info(f"Add {s} to starting inventory")
@@ -996,7 +993,7 @@ def PopulateItemPool(world: World):
         reverse_count = -junk_count
         junk_count = 0
 
-    if not world.options.include_last_way_shuffle:
+    if not world.options.include_last_way_shuffle and not world.options.exclude_go_mode_items:
         tlw_locations = count_last_way_locations(world)
         if junk_count < tlw_locations:
             reverse_count += tlw_locations

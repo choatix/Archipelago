@@ -1,10 +1,11 @@
 from . import Levels
 from .ObjectTypes import ObjectType, SETObject
 from .Names import REGION_INDICIES
+from .Weapons import WEAPONS
 
 DESIRABLE_OBJECTS_DIGITAL_CIRCUIT  = [
 SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_DIGITAL_CIRCUIT, 63, "Special Weapons Box 1",
-                  region=0),
+                  region=0, weapon=WEAPONS.RING_SHOT),
         SETObject(ObjectType.KEY_DOOR, Levels.STAGE_DIGITAL_CIRCUIT, 170, "Secret Door",
                   region=REGION_INDICIES.DIGITAL_CIRCUIT_KEY_DOOR),
         SETObject(ObjectType.WARP_HOLE, Levels.STAGE_DIGITAL_CIRCUIT, 168, "Secret Warp Hole"),
@@ -12,7 +13,7 @@ SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_DIGITAL_CIRCUIT, 63, "Special Weap
         SETObject(ObjectType.WARP_HOLE, Levels.STAGE_DIGITAL_CIRCUIT, 276, "Dark Warp Hole"),
         SETObject(ObjectType.WARP_HOLE, Levels.STAGE_DIGITAL_CIRCUIT, 277, "Dark Warp Hole Exit"),
         SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_DIGITAL_CIRCUIT, 508, "Special Weapons Box 2",
-                  region=REGION_INDICIES.DIGITAL_CIRCUIT_DARK_WARP_HOLE),
+                  region=REGION_INDICIES.DIGITAL_CIRCUIT_DARK_WARP_HOLE, weapon=WEAPONS.RING_SHOT),
 
         SETObject(ObjectType.DIGITAL_CORE, Levels.STAGE_DIGITAL_CIRCUIT, 625, "Digital Core",
               region=REGION_INDICIES.DIGITAL_CIRCUIT_DARK_WARP_HOLE),
@@ -28,8 +29,8 @@ SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_DIGITAL_CIRCUIT, 63, "Special Weap
         SETObject(ObjectType.GUN_BEETLE, Levels.STAGE_DIGITAL_CIRCUIT, 20, '8', region=0),
         SETObject(ObjectType.GUN_BEETLE, Levels.STAGE_DIGITAL_CIRCUIT, 546, '9', region=0),
         SETObject(ObjectType.GUN_BEETLE, Levels.STAGE_DIGITAL_CIRCUIT, 30, '10', region=0),
-        SETObject(ObjectType.GUN_BEETLE, Levels.STAGE_DIGITAL_CIRCUIT, 29, '11', region=0),
-        SETObject(ObjectType.GUN_BEETLE, Levels.STAGE_DIGITAL_CIRCUIT, 293, '12', region=0),
+        SETObject(ObjectType.GUN_BEETLE, Levels.STAGE_DIGITAL_CIRCUIT, 29, '11', region=0, is_hard=True),
+        SETObject(ObjectType.GUN_BEETLE, Levels.STAGE_DIGITAL_CIRCUIT, 293, '12', region=0, is_hard=True),
         SETObject(ObjectType.BLACK_WARRIOR, Levels.STAGE_DIGITAL_CIRCUIT, 67, '13', region=0),
         SETObject(ObjectType.BLACK_WARRIOR, Levels.STAGE_DIGITAL_CIRCUIT, 23, '14', region=0),
         SETObject(ObjectType.BLACK_WORM, Levels.STAGE_DIGITAL_CIRCUIT, 284, '15', region=0),

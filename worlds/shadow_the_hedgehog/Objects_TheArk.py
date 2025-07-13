@@ -1,13 +1,14 @@
 from . import Levels
 from .ObjectTypes import ObjectType, SETObject
 from .Names import REGION_INDICIES, REGION_RESTRICTION_TYPES
+from .Weapons import WEAPONS
 
 DESIRABLE_OBJECTS_THE_ARK = [
 
     SETObject(ObjectType.VEHICLE, Levels.STAGE_THE_ARK, 1, "Black Volt 1",
               vehicle=ObjectType.ObjectTypeVehicle.BLACK_VOLT),
     SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_THE_ARK, 261, "Special Weapons Box 1",
-              region=REGION_INDICIES.THE_ARK_BLACK_VOLT),
+              region=REGION_INDICIES.THE_ARK_BLACK_VOLT, weapon=WEAPONS.HEAVY_MACHINE_GUN),
     SETObject(ObjectType.VEHICLE, Levels.STAGE_THE_ARK, 356, "Black Volt 2",
               vehicle=ObjectType.ObjectTypeVehicle.BLACK_VOLT),
     SETObject(ObjectType.VEHICLE, Levels.STAGE_THE_ARK, 357, "Black Volt 3",
@@ -20,7 +21,7 @@ DESIRABLE_OBJECTS_THE_ARK = [
     SETObject(ObjectType.BOMB, Levels.STAGE_THE_ARK, 238, "Bomb 5"),
 
     SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_THE_ARK, 233, "Special Weapons Box 2",
-              region=REGION_INDICIES.THE_ARK_BLACK_VOLT),
+              region=REGION_INDICIES.THE_ARK_BLACK_VOLT, weapon=WEAPONS.PISTOL),
 
     SETObject(ObjectType.VEHICLE, Levels.STAGE_THE_ARK, 362, "Black Volt 4",
               vehicle=ObjectType.ObjectTypeVehicle.BLACK_VOLT),
@@ -52,8 +53,8 @@ DESIRABLE_OBJECTS_THE_ARK = [
     SETObject(ObjectType.GUN_BEETLE, Levels.STAGE_THE_ARK, 69, '5', region=REGION_INDICIES.THE_ARK_BLACK_VOLT),
     SETObject(ObjectType.GUN_BEETLE, Levels.STAGE_THE_ARK, 62, '6', region=REGION_INDICIES.THE_ARK_BLACK_VOLT),
     SETObject(ObjectType.GUN_BEETLE, Levels.STAGE_THE_ARK, 63, '7', region=REGION_INDICIES.THE_ARK_BLACK_VOLT),
-    SETObject(ObjectType.BLACK_HAWK, Levels.STAGE_THE_ARK, 49, '8', region=REGION_INDICIES.THE_ARK_BLACK_VOLT),
-    SETObject(ObjectType.BLACK_HAWK, Levels.STAGE_THE_ARK, 50, '9', region=REGION_INDICIES.THE_ARK_BLACK_VOLT),
+    #SETObject(ObjectType.BLACK_HAWK, Levels.STAGE_THE_ARK, 49, '8', region=REGION_INDICIES.THE_ARK_BLACK_VOLT),
+    #SETObject(ObjectType.BLACK_HAWK, Levels.STAGE_THE_ARK, 50, '9', region=REGION_INDICIES.THE_ARK_BLACK_VOLT),
     SETObject(ObjectType.GUN_BEETLE, Levels.STAGE_THE_ARK, 67, '10', region=REGION_INDICIES.THE_ARK_BLACK_VOLT),
     SETObject(ObjectType.GUN_BEETLE, Levels.STAGE_THE_ARK, 74, '11', region=REGION_INDICIES.THE_ARK_BLACK_VOLT),
     SETObject(ObjectType.GUN_BEETLE, Levels.STAGE_THE_ARK, 75, '12', region=REGION_INDICIES.THE_ARK_BLACK_VOLT),

@@ -707,6 +707,13 @@ class SelectPercentage(Range):
     range_end = 100
     default_value = range_end
 
+class ExcludeGoModeItems(DefaultOnToggle):
+    """
+        Excludes go-mode items from being checks, which is currently limited to
+        - Checks within The Last Way on Select/Story Shuffle-less modes
+    """
+    display_name = "Exclude Go Mode Items"
+
 @dataclass
 class ShadowTheHedgehogOptions(PerGameCommonOptions):
     #goal: Goal
@@ -792,6 +799,7 @@ class ShadowTheHedgehogOptions(PerGameCommonOptions):
     exceeding_items_filler: ExceedingItemsFiller
     exceeding_items_filler_random: ExceedingItemsFillerRandom
     start_inventory_excess_items: StartInventoryExcessItems
+    exclude_go_mode_items: ExcludeGoModeItems
 
 
 shadow_option_groups = [

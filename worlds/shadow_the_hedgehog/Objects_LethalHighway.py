@@ -1,6 +1,7 @@
 from . import Levels
 from .ObjectTypes import ObjectType, SETObject
 from .Names import REGION_INDICIES
+from .Weapons import WEAPONS
 
 DESIRABLE_OBJECTS_LETHAL_HIGHWAY  = [
 
@@ -10,7 +11,7 @@ DESIRABLE_OBJECTS_LETHAL_HIGHWAY  = [
     SETObject(ObjectType.HEAL_UNIT, Levels.STAGE_LETHAL_HIGHWAY, 542, "Heal Unit 4"),
 
     SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_LETHAL_HIGHWAY, 320, "Special Weapons Box 1",
-              region=0),
+              region=0, weapon=WEAPONS.SEMI_AUTOMATIC_RIFLE),
     SETObject(ObjectType.KEY_DOOR, Levels.STAGE_LETHAL_HIGHWAY, 25, "Secret Door",
               region=REGION_INDICIES.LETHAL_HIGHWAY_KEY_DOOR),
     SETObject(ObjectType.ROCKET, Levels.STAGE_LETHAL_HIGHWAY, 399, "Rocket 1"),
@@ -22,14 +23,14 @@ DESIRABLE_OBJECTS_LETHAL_HIGHWAY  = [
               vehicle=ObjectType.ObjectTypeVehicle.CONVERTIBLE,
               region=REGION_INDICIES.LETHAL_HIGHWAY_ROCKET),
     SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_LETHAL_HIGHWAY, 518, "Special Weapons Box 2",
-              region=REGION_INDICIES.LETHAL_HIGHWAY_ROCKET),
+              region=REGION_INDICIES.LETHAL_HIGHWAY_ROCKET, weapon=WEAPONS.FLASH_SHOT),
     SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_LETHAL_HIGHWAY, 141, "Special Weapons Box 3",
-              region=REGION_INDICIES.LETHAL_HIGHWAY_ROCKET),
+              region=REGION_INDICIES.LETHAL_HIGHWAY_ROCKET, weapon=WEAPONS.SEMI_AUTOMATIC_RIFLE),
 
     SETObject(ObjectType.ENERGY_CORE, Levels.STAGE_LETHAL_HIGHWAY, 458, "Dark Energy Core",
               region=REGION_INDICIES.LETHAL_HIGHWAY_ROCKET),
     SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_LETHAL_HIGHWAY, 324, "Special Weapons Box 4",
-              region=REGION_INDICIES.LETHAL_HIGHWAY_PULLEY),
+              region=REGION_INDICIES.LETHAL_HIGHWAY_PULLEY, weapon=WEAPONS.SEMI_AUTOMATIC_RIFLE),
     SETObject(ObjectType.STANDARD_PULLEY, Levels.STAGE_LETHAL_HIGHWAY, 53, "Pulley"),
 
     SETObject(ObjectType.VEHICLE, Levels.STAGE_LETHAL_HIGHWAY, 230, "Motorbike 2",
@@ -38,7 +39,7 @@ DESIRABLE_OBJECTS_LETHAL_HIGHWAY  = [
     SETObject(ObjectType.HEAL_UNIT, Levels.STAGE_LETHAL_HIGHWAY, 377, "Heal Unit 5"),
     SETObject(ObjectType.ROCKET, Levels.STAGE_LETHAL_HIGHWAY, 381, "Rocket 2"),
     SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_LETHAL_HIGHWAY, 519, "Special Weapon Box 5",
-              region=REGION_INDICIES.LETHAL_HIGHWAY_ROCKET),
+              region=REGION_INDICIES.LETHAL_HIGHWAY_ROCKET, weapon=WEAPONS.SEMI_AUTOMATIC_RIFLE),
     SETObject(ObjectType.VEHICLE, Levels.STAGE_LETHAL_HIGHWAY, 343, "Convertible 2",
               vehicle=ObjectType.ObjectTypeVehicle.CONVERTIBLE,
               region=REGION_INDICIES.LETHAL_HIGHWAY_ROCKET),

@@ -409,16 +409,20 @@ LevelRegion(STAGE_CENTRAL_CITY, REGION_INDICIES.CENTRAL_CITY_ROCKET_1_OR_TRAVERS
         .setLogicType(Options.LogicLevel.option_easy),
     LevelRegion(STAGE_CENTRAL_CITY, REGION_INDICIES.CENTRAL_CITY_KEY_DOOR,
                     REGION_RESTRICTION_TYPES.KeyDoor),
-    LevelRegion(STAGE_CENTRAL_CITY, REGION_INDICIES.CENTRAL_CITY_GUN_TURRET,
-                    REGION_RESTRICTION_TYPES.GunTurret)
-        .setFromRegion(REGION_INDICIES.CENTRAL_CITY_TRAVERSE_EASY),
+
     LevelRegion(STAGE_CENTRAL_CITY, REGION_INDICIES.CENTRAL_CITY_BOMB_OR_BAZOOKA_2,
                 REGION_RESTRICTION_TYPES.Explosion)
         .setFromRegion(REGION_INDICIES.CENTRAL_CITY_TRAVERSE_EASY)
         .setLogicType(Options.LogicLevel.option_normal, Options.ChaosControlLogicLevel.option_hard),
+
+    LevelRegion(STAGE_CENTRAL_CITY, REGION_INDICIES.CENTRAL_CITY_GUN_TURRET,
+                REGION_RESTRICTION_TYPES.GunTurret),
+
     LevelRegion(STAGE_CENTRAL_CITY, REGION_INDICIES.CENTRAL_CITY_ROCKET_2,
                     REGION_RESTRICTION_TYPES.Rocket)
-        .setLogicType(Options.LogicLevel.option_hard),
+        .setLogicType(Options.LogicLevel.option_hard)
+        .setFromRegion(REGION_INDICIES.CENTRAL_CITY_BOMB_OR_BAZOOKA_2),
+
     LevelRegion(STAGE_CENTRAL_CITY, REGION_INDICIES.CENTRAL_CITY_BOMB_OR_BAZOOKA_3,
                 REGION_RESTRICTION_TYPES.Explosion)
         .setLogicType(Options.LogicLevel.option_hard),
@@ -431,17 +435,21 @@ LevelRegion(STAGE_CENTRAL_CITY, REGION_INDICIES.CENTRAL_CITY_ROCKET_1_OR_TRAVERS
                     REGION_RESTRICTION_TYPES.Explosion)
         .setFromRegion(0)
         .setLogicType(Options.LogicLevel.option_normal, Options.ChaosControlLogicLevel.option_easy),
-    LevelRegion(STAGE_THE_DOOM, REGION_INDICIES.THE_DOOM_PULLEY_2,
-                    REGION_RESTRICTION_TYPES.Pulley),
 
     LevelRegion(STAGE_THE_DOOM, REGION_INDICIES.THE_DOOM_THROUGH_DOOR,
                 REGION_RESTRICTION_TYPES.SatelliteGun)
-        .setHardLogicOnly()
-        .setLogicType(Options.LogicLevel.option_normal, Options.ChaosControlLogicLevel.option_easy)
-        .setFromRegion(0),
+    .setHardLogicOnly()
+    .setLogicType(Options.LogicLevel.option_normal, Options.ChaosControlLogicLevel.option_easy)
+    .setFromRegion(0),
+
     LevelRegion(STAGE_THE_DOOM, REGION_INDICIES.THE_DOOM_DOOR_1_SWITCH,
                 REGION_RESTRICTION_TYPES.NoRestriction)
-        .setFromRegion([REGION_INDICIES.THE_DOOM_BOMBS, REGION_INDICIES.THE_DOOM_THROUGH_DOOR]),
+    .setFromRegion([REGION_INDICIES.THE_DOOM_BOMBS, REGION_INDICIES.THE_DOOM_THROUGH_DOOR]),
+
+    LevelRegion(STAGE_THE_DOOM, REGION_INDICIES.THE_DOOM_PULLEY_2,
+                    REGION_RESTRICTION_TYPES.Pulley)
+    .setFromRegion(REGION_INDICIES.THE_DOOM_BOMBS),
+
     LevelRegion(STAGE_THE_DOOM, REGION_INDICIES.THE_DOOM_GOLD_BEETLE,
                 REGION_RESTRICTION_TYPES.GoldBeetle)
     .setFromRegion(REGION_INDICIES.THE_DOOM_BOMBS),
@@ -675,11 +683,12 @@ LevelRegion(STAGE_GUN_FORTRESS, REGION_INDICIES.GUN_FORTRESS_AFTER_TUNNEL_2,
     .setFromRegion([REGION_INDICIES.GUN_FORTRESS_TUNNEL_2,
                    REGION_INDICIES.GUN_FORTRESS_TOP_TUNNEL_2]),
 
-LevelRegion(STAGE_GUN_FORTRESS, REGION_INDICIES.GUN_FORTRESS_KEY_DOOR,
-                    REGION_RESTRICTION_TYPES.KeyDoor),
-
 LevelRegion(STAGE_GUN_FORTRESS, REGION_INDICIES.GUN_FORTRESS_KEY_PULLEY,
             REGION_RESTRICTION_TYPES.Pulley)
+    .setFromRegion(REGION_INDICIES.GUN_FORTRESS_AFTER_TUNNEL_2),
+
+LevelRegion(STAGE_GUN_FORTRESS, REGION_INDICIES.GUN_FORTRESS_KEY_DOOR,
+                    REGION_RESTRICTION_TYPES.KeyDoor)
     .setFromRegion(REGION_INDICIES.GUN_FORTRESS_AFTER_TUNNEL_2),
 
     # Pulley also present here, without pulley it may not be possible at all
@@ -814,15 +823,15 @@ LevelRegion(STAGE_FINAL_HAUNT, REGION_INDICIES.FINAL_HAUNT_BLACK_VOLT_ACCESS,
     .setFromRegion([REGION_INDICIES.FINAL_HAUNT_BLACK_VOLT_BASE,
                     REGION_INDICIES.FINAL_HAUNT_BLACK_VOLT_BACK]),
 
-LevelRegion(STAGE_FINAL_HAUNT, REGION_INDICIES.FINAL_HAUNT_HARD_VACUUM_OR_BLACK_VOLT,
-                    REGION_RESTRICTION_TYPES.NoRestriction)
-    .setFromRegion([REGION_INDICIES.FINAL_HAUNT_VACUUM_HARD,
-                    REGION_INDICIES.FINAL_HAUNT_BLACK_VOLT]),
-
 LevelRegion(STAGE_FINAL_HAUNT, REGION_INDICIES.FINAL_HAUNT_BLACK_VOLT_BACK,
                     REGION_RESTRICTION_TYPES.NoRestriction)
     .setHardLogicOnly()
     .setFromRegion(REGION_INDICIES.FINAL_HAUNT_HARD_VACUUM_OR_BLACK_VOLT),
+
+LevelRegion(STAGE_FINAL_HAUNT, REGION_INDICIES.FINAL_HAUNT_HARD_VACUUM_OR_BLACK_VOLT,
+                    REGION_RESTRICTION_TYPES.NoRestriction)
+    .setFromRegion([REGION_INDICIES.FINAL_HAUNT_VACUUM_HARD,
+                    REGION_INDICIES.FINAL_HAUNT_BLACK_VOLT]),
 
 LevelRegion(STAGE_FINAL_HAUNT, REGION_INDICIES.FINAL_HAUNT_ROCKET_NORMAL,
                     REGION_RESTRICTION_TYPES.Rocket)
@@ -830,14 +839,14 @@ LevelRegion(STAGE_FINAL_HAUNT, REGION_INDICIES.FINAL_HAUNT_ROCKET_NORMAL,
     .setFromRegion(REGION_INDICIES.FINAL_HAUNT_HARD_VACUUM_OR_BLACK_VOLT),
 
 LevelRegion(STAGE_FINAL_HAUNT, REGION_INDICIES.FINAL_HAUNT_SHIELD_2,
-                    REGION_RESTRICTION_TYPES.NoRestriction)
-    .setFromRegion([REGION_INDICIES.FINAL_HAUNT_ROCKET_NORMAL]),
+            REGION_RESTRICTION_TYPES.NoRestriction)
+.setFromRegion([REGION_INDICIES.FINAL_HAUNT_ROCKET_NORMAL]),
 
 LevelRegion(STAGE_FINAL_HAUNT, REGION_INDICIES.FINAL_HAUNT_SHIELD_COUNT_2,
-                    REGION_RESTRICTION_TYPES.RegionAccess(REGION_INDICIES.FINAL_HAUNT_SHIELD_2))
-    .setLogicType(Options.LogicLevel.option_normal, Options.ChaosControlLogicLevel.option_easy)
-    .setFromRegion([REGION_INDICIES.FINAL_HAUNT_SHIELD_4,
-                    REGION_INDICIES.FINAL_HAUNT_BLACK_VOLT]),
+            REGION_RESTRICTION_TYPES.RegionAccess(REGION_INDICIES.FINAL_HAUNT_SHIELD_2))
+.setLogicType(Options.LogicLevel.option_normal, Options.ChaosControlLogicLevel.option_easy)
+.setFromRegion([REGION_INDICIES.FINAL_HAUNT_SHIELD_4,
+                REGION_INDICIES.FINAL_HAUNT_BLACK_VOLT]),
 
 LevelRegion(STAGE_FINAL_HAUNT, REGION_INDICIES.FINAL_HAUNT_BLACK_VOLT_2,
                     REGION_RESTRICTION_TYPES.BlackVolt)

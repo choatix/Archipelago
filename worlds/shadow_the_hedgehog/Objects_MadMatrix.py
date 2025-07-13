@@ -1,6 +1,7 @@
 from . import Levels
 from .ObjectTypes import ObjectType, SETObject
 from .Names import REGION_INDICIES
+from .Weapons import WEAPONS
 
 DESIRABLE_OBJECTS_MAD_MATRIX  = [
 
@@ -18,11 +19,11 @@ DESIRABLE_OBJECTS_MAD_MATRIX  = [
               region=REGION_INDICIES.MAD_MATRIX_GUN),
 
     SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_MAD_MATRIX, 500, "Shadow Box Near Red",
-              region=REGION_INDICIES.MAD_MATRIX_GUN),
+              region=REGION_INDICIES.MAD_MATRIX_GUN, weapon=WEAPONS.WIDE_WORM_SHOOTER),
     SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_MAD_MATRIX, 452, "Shadow Box Near Secret Door",
-              region=REGION_INDICIES.MAD_MATRIX_GUN),
+              region=REGION_INDICIES.MAD_MATRIX_GUN, weapon=WEAPONS.EGG_BAZOOKA),
     SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_MAD_MATRIX, 444, "Shadow Box Near Blue",
-              region=REGION_INDICIES.MAD_MATRIX_GUN),
+              region=REGION_INDICIES.MAD_MATRIX_GUN, weapon=WEAPONS.EGG_BAZOOKA),
     SETObject(ObjectType.ENERGY_CORE, Levels.STAGE_MAD_MATRIX, 443, "Hero Core",
               region=REGION_INDICIES.MAD_MATRIX_GUN),
     SETObject(ObjectType.KEY_DOOR, Levels.STAGE_MAD_MATRIX, 332, "Secret Door",
@@ -157,12 +158,12 @@ DESIRABLE_OBJECTS_MAD_MATRIX  = [
     SETObject(ObjectType.EGG_PAWN, Levels.STAGE_MAD_MATRIX, 285, '42', region=REGION_INDICIES.MAD_MATRIX_RED_ENTRY),
     SETObject(ObjectType.EGG_PAWN, Levels.STAGE_MAD_MATRIX, 286, '43', region=REGION_INDICIES.MAD_MATRIX_RED_ENTRY),
     SETObject(ObjectType.EGG_PAWN, Levels.STAGE_MAD_MATRIX, 287, '44', region=REGION_INDICIES.MAD_MATRIX_RED_ENTRY),
+    SETObject(ObjectType.EGG_PAWN, Levels.STAGE_MAD_MATRIX, 289, '45',
+              region=REGION_INDICIES.MAD_MATRIX_RED_ENTRY),
 
     SETObject(ObjectType.ENERGY_CORE_IN_WOOD_BOX, Levels.STAGE_MAD_MATRIX, 504, 'Dark Core in Box',
               region=REGION_INDICIES.MAD_MATRIX_GUN),
 SETObject(ObjectType.WARP_HOLE, Levels.STAGE_MAD_MATRIX, 105, 'Other Warp Hole',
-              region=REGION_INDICIES.MAD_MATRIX_GUN),
-SETObject(ObjectType.EGG_PAWN, Levels.STAGE_MAD_MATRIX, 289, 'Mystery Egg Pawn',
               region=REGION_INDICIES.MAD_MATRIX_GUN),
 
 ]

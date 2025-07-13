@@ -1,6 +1,7 @@
 from . import Levels
 from .ObjectTypes import ObjectType, SETObject
 from .Names import REGION_INDICIES
+from .Weapons import WEAPONS
 
 DESIRABLE_OBJECTS_AIR_FLEET  = [
 
@@ -12,9 +13,9 @@ DESIRABLE_OBJECTS_AIR_FLEET  = [
               vehicle=ObjectType.ObjectTypeVehicle.AIR_SAUCER,
               region=REGION_INDICIES.AIR_FLEET_KEY_DOOR),
     SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_AIR_FLEET, 339, "Special Weapons Box 1 (Secret)",
-              region=REGION_INDICIES.AIR_FLEET_RAILS),
+              region=REGION_INDICIES.AIR_FLEET_RAILS, weapon=WEAPONS.SEMI_AUTOMATIC_RIFLE),
     SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_AIR_FLEET, 169, "Special Weapons Box 2",
-              region=REGION_INDICIES.AIR_FLEET_PULLEY),
+              region=REGION_INDICIES.AIR_FLEET_PULLEY, weapon=WEAPONS.SEMI_AUTOMATIC_RIFLE),
     SETObject(ObjectType.VEHICLE, Levels.STAGE_AIR_FLEET, 476, "Car 1",
               vehicle=ObjectType.ObjectTypeVehicle.STANDARD_CAR,
               region=REGION_INDICIES.AIR_FLEET_PULLEY),
@@ -22,15 +23,15 @@ DESIRABLE_OBJECTS_AIR_FLEET  = [
               vehicle=ObjectType.ObjectTypeVehicle.GUN_CANNON,
               region=REGION_INDICIES.AIR_FLEET_PULLEY),
     SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_AIR_FLEET, 275, "Special Weapons Box 3",
-              region=REGION_INDICIES.AIR_FLEET_PULLEY),
+              region=REGION_INDICIES.AIR_FLEET_PULLEY, weapon=WEAPONS.SEMI_AUTOMATIC_RIFLE),
     SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_AIR_FLEET, 244, "Special Weapons Box 4 (Secret)",
-              region=REGION_INDICIES.AIR_FLEET_RAILS),
+              region=REGION_INDICIES.AIR_FLEET_RAILS, weapon=WEAPONS.HEAVY_MACHINE_GUN),
     SETObject(ObjectType.VEHICLE, Levels.STAGE_AIR_FLEET, 475, "Car 2",
               vehicle=ObjectType.ObjectTypeVehicle.STANDARD_CAR,
               region=REGION_INDICIES.AIR_FLEET_PULLEY),
 
     SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_AIR_FLEET, 237, "Special Weapons Box 5",
-              region=REGION_INDICIES.AIR_FLEET_PULLEY),
+              region=REGION_INDICIES.AIR_FLEET_PULLEY, weapon=WEAPONS.SEMI_AUTOMATIC_RIFLE),
     SETObject(ObjectType.VEHICLE, Levels.STAGE_AIR_FLEET, 156, "Gun Cannon 2",
               vehicle=ObjectType.ObjectTypeVehicle.GUN_CANNON,
               region=REGION_INDICIES.AIR_FLEET_PULLEY),
@@ -48,7 +49,7 @@ DESIRABLE_OBJECTS_AIR_FLEET  = [
               vehicle=ObjectType.ObjectTypeVehicle.GUN_TURRET,
               region=REGION_INDICIES.AIR_FLEET_PULLEY),
     SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_AIR_FLEET, 347, "Special Weapons Box 6 (Secret)",
-              region=REGION_INDICIES.AIR_FLEET_RAILS),
+              region=REGION_INDICIES.AIR_FLEET_RAILS, weapon=WEAPONS.HEAVY_MACHINE_GUN),
     SETObject(ObjectType.LIGHT_DASH_TRAIL, Levels.STAGE_AIR_FLEET, 329, "Gun Jumper",
               region=REGION_INDICIES.AIR_FLEET_PULLEY),
     SETObject(ObjectType.VEHICLE, Levels.STAGE_AIR_FLEET, 471, "Gun Cannon 2",

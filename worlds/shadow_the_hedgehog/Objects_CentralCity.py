@@ -1,6 +1,7 @@
 from . import Levels
 from .ObjectTypes import ObjectType, SETObject
 from .Names import REGION_INDICIES, REGION_RESTRICTION_TYPES
+from .Weapons import WEAPONS
 
 DESIRABLE_OBJECTS_CENTRAL_CITY  = [
 
@@ -21,7 +22,7 @@ DESIRABLE_OBJECTS_CENTRAL_CITY  = [
               region=0),
 
     SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_CENTRAL_CITY, 525, "Special Weapons Box 1",
-              region=0),
+              region=0, weapon=WEAPONS.HEAVY_MACHINE_GUN),
     SETObject(ObjectType.VEHICLE, Levels.STAGE_CENTRAL_CITY, 275, "Car 1",
               vehicle=ObjectType.ObjectTypeVehicle.STANDARD_CAR,
               region=0),
@@ -48,7 +49,7 @@ DESIRABLE_OBJECTS_CENTRAL_CITY  = [
               vehicle=ObjectType.ObjectTypeVehicle.GUN_TURRET,
               region=REGION_INDICIES.CENTRAL_CITY_ROCKET_2),
     SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_CENTRAL_CITY, 400, "Special Weapons Box 2",
-              region=REGION_INDICIES.CENTRAL_CITY_ROCKET_2),
+              region=REGION_INDICIES.CENTRAL_CITY_ROCKET_2, weapon=WEAPONS.HEAVY_MACHINE_GUN),
 
     SETObject(ObjectType.BOMB, Levels.STAGE_CENTRAL_CITY, 422, "End Bomb 1"),
     SETObject(ObjectType.BOMB, Levels.STAGE_CENTRAL_CITY, 334, "End Bomb 2"),

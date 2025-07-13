@@ -1,18 +1,19 @@
 from . import Levels
 from .ObjectTypes import ObjectType, SETObject
 from .Names import REGION_INDICIES, REGION_RESTRICTION_TYPES
+from .Weapons import WEAPONS
 
 DESIRABLE_OBJECTS_THE_DOOM = [
 
     SETObject(ObjectType.HEAL_SERVER, Levels.STAGE_THE_DOOM, 397, "Heal Server 1"),
     SETObject(ObjectType.HEAL_SERVER, Levels.STAGE_THE_DOOM, 396, "Heal Server 2"),
     SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_THE_DOOM, 258, "Special Weapons Box 1",
-              region=0),
+              region=0, weapon=WEAPONS.SEMI_AUTOMATIC_RIFLE),
     SETObject(ObjectType.KEY_DOOR, Levels.STAGE_THE_DOOM, 178, "Secret Door",
               region=REGION_INDICIES.THE_DOOM_KEY_DOOR),
     SETObject(ObjectType.STANDARD_PULLEY, Levels.STAGE_THE_DOOM, 189, "Pulley To Secret Door"),
     SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_THE_DOOM, 109, "Special Weapons Box 2",
-              region=0),
+              region=0, weapon=WEAPONS.HEAVY_MACHINE_GUN),
 
     SETObject(ObjectType.BOMB_SERVER, Levels.STAGE_THE_DOOM, 214, "Bomb Server 1"),
     SETObject(ObjectType.HEAL_SERVER, Levels.STAGE_THE_DOOM, 398, "Heal Server 2"),
@@ -26,7 +27,7 @@ DESIRABLE_OBJECTS_THE_DOOM = [
     SETObject(ObjectType.HEAL_SERVER, Levels.STAGE_THE_DOOM, 401, "Heal Server 6"),
     SETObject(ObjectType.HEAL_SERVER, Levels.STAGE_THE_DOOM, 402, "Heal Server 7"),
     SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_THE_DOOM, 265, "Special Weapons Box 3",
-              region=REGION_INDICIES.THE_DOOM_DOOR_1_SWITCH),
+              region=REGION_INDICIES.THE_DOOM_DOOR_1_SWITCH, weapon=WEAPONS.RPG),
 
     SETObject(ObjectType.DOOM_RESEARCHER, Levels.STAGE_THE_DOOM, 408, "Doom Researcher 1",
               region=0, restrictionType=REGION_RESTRICTION_TYPES.Heal),
@@ -75,12 +76,10 @@ DESIRABLE_OBJECTS_THE_DOOM = [
     SETObject(ObjectType.GUN_SOLIDER, Levels.STAGE_THE_DOOM, 166, '24', region=REGION_INDICIES.THE_DOOM_BOMBS),
     SETObject(ObjectType.GUN_SOLIDER, Levels.STAGE_THE_DOOM, 167, '25', region=REGION_INDICIES.THE_DOOM_BOMBS),
     SETObject(ObjectType.GUN_SOLIDER, Levels.STAGE_THE_DOOM, 217, '26', region=REGION_INDICIES.THE_DOOM_BOMBS),
+    SETObject(ObjectType.GUN_SOLIDER, Levels.STAGE_THE_DOOM, 219, '27', region=REGION_INDICIES.THE_DOOM_BOMBS),
 
-
-    SETObject(ObjectType.GUN_SOLIDER, Levels.STAGE_THE_DOOM, 219, '27', region=REGION_INDICIES.THE_DOOM_DOOR_1_SWITCH),
     SETObject(ObjectType.GUN_SOLIDER, Levels.STAGE_THE_DOOM, 224, '28', region=REGION_INDICIES.THE_DOOM_DOOR_1_SWITCH),
     SETObject(ObjectType.GUN_SOLIDER, Levels.STAGE_THE_DOOM, 226, '29', region=REGION_INDICIES.THE_DOOM_DOOR_1_SWITCH),
-
 
     SETObject(ObjectType.GUN_ROBOT, Levels.STAGE_THE_DOOM, 195, '30', region=REGION_INDICIES.THE_DOOM_DOOR_1_SWITCH),
     SETObject(ObjectType.GUN_SOLIDER, Levels.STAGE_THE_DOOM, 259, '31', region=REGION_INDICIES.THE_DOOM_DOOR_1_SWITCH),
