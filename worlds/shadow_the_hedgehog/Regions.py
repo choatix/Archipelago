@@ -379,11 +379,6 @@ def create_regions(world) -> Dict[str, Region]:
         if weapon.name not in world.available_weapons:
             continue
 
-        if (world.options.weapon_sanity_hold == Options.WeaponsanityHold.option_off and not
-            world.options.weapon_sanity_unlock):
-            # Do not need weapon regions, even when the available weapons are in the game
-            continue
-
         region_name = weapon_name_to_region(weapon.name)
         new_region = Region(region_name, world.player, world.multiworld)
         regions[region_name] = new_region

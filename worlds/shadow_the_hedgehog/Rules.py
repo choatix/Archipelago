@@ -502,6 +502,7 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
                                 r_rule(state) and l_rule(state))
                         rule_change = True
 
+            # This part sets up accessibilty to the locations
             if clear.getDistribution() is not None:
 
                 # This functionality requires access to ALL to complete which is inflating
@@ -515,60 +516,66 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
 
                 if clear.requirement_count is not None and world.options.objective_sanity:
 
-                    max_required = ShadowUtils.getMaxRequired(
-                        ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_OBJECTIVE,
-                                                                  clear.mission_object_name, world.options,
-                                                                  clear.stageId, clear.alignmentId,
-                                                                  world.options.percent_overrides),
-                        clear.requirement_count, clear.stageId, clear.alignmentId,
-                        override_settings)
+                    location_details = ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_OBJECTIVE,
+                                                                                 clear.mission_object_name,
+                                                                                 world.options, clear.stageId,
+                                                                                 clear.alignmentId,
+                                                                                 world.options.percent_overrides)
 
-                    frequency_required = ShadowUtils.getMaxRequired(
-                        ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_OBJECTIVE_FREQUENCY,
-                                                                  clear.mission_object_name, world.options,
-                                                                  clear.stageId, clear.alignmentId,
-                                                                  world.options.percent_overrides),
-                        100, clear.stageId, clear.alignmentId,
-                        override_settings)
+                    result_sanity = ShadowUtils.GetObjectiveSanityFlag(world.options, location_details)
+                    if result_sanity:
 
-                    progress_distribution = clear.getDistribution().items()
-                    progress_dist_by_name = {}
+                        max_required = ShadowUtils.getMaxRequired(
+                            location_details,
+                            clear.requirement_count, clear.stageId, clear.alignmentId,
+                            override_settings)
 
-                    total = 0
+                        frequency_required = ShadowUtils.getMaxRequired(
+                            ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_OBJECTIVE_FREQUENCY,
+                                                                      clear.mission_object_name, world.options,
+                                                                      clear.stageId, clear.alignmentId,
+                                                                      world.options.percent_overrides),
+                            100, clear.stageId, clear.alignmentId,
+                            override_settings)
 
-                    if world.options.objective_sanity_system == Options.ObjectiveSanitySystem.option_individual:
-                        if (clear.stageId, clear.alignmentId) in Objects.STAGE_OBJECT_ITEMS:
-                            lookup_info = Objects.STAGE_OBJECT_ITEMS[(clear.stageId, clear.alignmentId)]
-                            is_objectable = lookup_info[1]
-                            if is_objectable == Objects.WORKS_WITH_INDIVIDUAL:
-                                total = -1
-                    if total != -1:
-                        for region, count in progress_distribution:
-                            progress_dist_by_name[Names.GetDistributionRegionEventName(clear.stageId, region)] = count
-                            total += count
+                        progress_distribution = clear.getDistribution().items()
+                        progress_dist_by_name = {}
 
-                    for l in range(1, total + 1):
-                        if l > max_required:
-                            break
+                        total = 0
 
-                        if l % frequency_required != 0 and max_required != l:
-                            continue
+                        if world.options.objective_sanity_system == Options.ObjectiveSanitySystem.option_individual:
+                            if (clear.stageId, clear.alignmentId) in Objects.STAGE_OBJECT_ITEMS:
+                                lookup_info = Objects.STAGE_OBJECT_ITEMS[(clear.stageId, clear.alignmentId)]
+                                is_objectable = lookup_info[1]
+                                if is_objectable == Objects.WORKS_WITH_INDIVIDUAL:
+                                    total = -1
+                        if total != -1:
+                            for region, count in progress_distribution:
+                                progress_dist_by_name[Names.GetDistributionRegionEventName(clear.stageId, region)] = count
+                                total += count
 
-                        prog_rule = lambda state, ix=l, data=progress_dist_by_name, keys=progress_dist_by_name.keys() \
-                            : CountRegionAccessibility(state, keys, data, ix, player)
+                        for l in range(1, total + 1):
+                            if l > max_required:
+                                break
 
-                        location_id, objective_location_name = (
-                            Levels.GetLevelObjectNames(clear.stageId, clear.alignmentId, clear.mission_object_name,
-                                                l))
-                        location = multiworld.get_location(objective_location_name, player)
+                            if l % frequency_required != 0 and max_required != l:
+                                continue
 
-                        progression_rule = lambda state, p_rule=prog_rule, r_rule=req_rule : \
-                            p_rule(state) and r_rule(state)
+                            prog_rule = lambda state, ix=l, data=progress_dist_by_name, keys=progress_dist_by_name.keys() \
+                                : CountRegionAccessibility(state, keys, data, ix, player)
 
-                        add_rule(location, progression_rule)
+                            location_id, objective_location_name = (
+                                Levels.GetLevelObjectNames(clear.stageId, clear.alignmentId, clear.mission_object_name,
+                                                    l))
+                            location = multiworld.get_location(objective_location_name, player)
 
-                        if l > max_required:
-                            break
+                            progression_rule = lambda state, p_rule=prog_rule, r_rule=req_rule : \
+                                p_rule(state) and r_rule(state)
+
+                            add_rule(location, progression_rule)
+
+                            if l > max_required:
+                                break
 
 
             if clear.requirement_count is not None:
@@ -583,7 +590,17 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
                     override_settings)
 
                 new_rule = lambda state: True
-                if world.options.objective_sanity and world.options.objective_sanity_behaviour != Options.ObjectiveSanityBehaviour.option_base_clear:
+
+                location_details = ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_OBJECTIVE,
+                                                                             clear.mission_object_name,
+                                                                             world.options, clear.stageId,
+                                                                             clear.alignmentId,
+                                                                             world.options.percent_overrides)
+
+                result_sanity = ShadowUtils.GetObjectiveSanityFlag(world.options, location_details)
+
+                if world.options.objective_sanity and world.options.objective_sanity_behaviour != Options.ObjectiveSanityBehaviour.option_base_clear \
+                    and result_sanity:
                     new_rule = lambda state, itemname=item_name, count=max_required: state.has(itemname, player, count=count)
 
                 progress_distribution = clear.getDistribution().items()
@@ -598,13 +615,14 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
 
                 finish_count = 1
                 if (not world.options.objective_sanity
-                        or world.options.objective_sanity_behaviour != Options.ObjectiveSanityBehaviour.option_default):
+                        or world.options.objective_sanity_behaviour != Options.ObjectiveSanityBehaviour.option_default) or \
+                        not result_sanity:
                     finish_count = max_required
                     if finish_count == 0:
                         finish_count = 1
 
                 # Enemy stage clears don't require completing objectives
-                if world.options.objective_sanity and world.options.objective_sanity_behaviour == Options.ObjectiveSanityBehaviour.option_default and \
+                if world.options.enemy_objective_sanity and world.options.objective_sanity_behaviour == Options.ObjectiveSanityBehaviour.option_default and \
                     clear.mission_object_name in ("Soldier", "Artificial Chaos", "Alien"):
                     finish_count = 0
 
@@ -714,32 +732,31 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
                 region_stage = world.get_region(stage_id_to_region(stage, region_index))
                 region_stage.connect(region, region_name_for_character(Levels.LEVEL_ID_TO_LEVEL[stage], character))
 
-    if (world.options.weapon_sanity_hold != Options.WeaponsanityHold.option_off or
-        world.options.weapon_sanity_unlock):
-        for weapon in Weapons.WEAPON_INFO:
-            if weapon.name in world.available_weapons:
-                region_name = weapon_name_to_region(weapon.name)
-                region = world.get_region(region_name)
-                for stage in weapon.available_stages:
-                    region_index = 0
-                    if type(stage) is tuple:
-                        region_index = stage[1]
-                        stage = stage[0]
-                        pass
 
-                    if stage not in world.available_levels:
-                        continue
+    for weapon in Weapons.WEAPON_INFO:
+        if weapon.name in world.available_weapons:
+            region_name = weapon_name_to_region(weapon.name)
+            region = world.get_region(region_name)
+            for stage in weapon.available_stages:
+                region_index = 0
+                if type(stage) is tuple:
+                    region_index = stage[1]
+                    stage = stage[0]
+                    pass
 
-                    rule = lambda state: True
+                if stage not in world.available_levels:
+                    continue
 
-                    if (world.options.weapon_sanity_unlock and
-                        world.options.weapon_sanity_hold == Options.WeaponsanityHold.option_unlocked) or \
-                        Weapons.WeaponAttributes.SPECIAL in weapon.attributes:
-                            rule = Weapons.GetRuleByWeaponRequirement(player, weapon.name, None, None)
+                rule = lambda state: True
 
-                    region_stage = world.get_region(stage_id_to_region(stage, region_index))
-                    region_stage.connect(region, region_name_for_weapon(Levels.LEVEL_ID_TO_LEVEL[stage], weapon.name),
-                                         rule=rule)
+                if (world.options.weapon_sanity_unlock and
+                    world.options.weapon_sanity_hold == Options.WeaponsanityHold.option_unlocked) or \
+                    Weapons.WeaponAttributes.SPECIAL in weapon.attributes:
+                        rule = Weapons.GetRuleByWeaponRequirement(player, weapon.name, None, None)
+
+                region_stage = world.get_region(stage_id_to_region(stage, region_index))
+                region_stage.connect(region, region_name_for_weapon(Levels.LEVEL_ID_TO_LEVEL[stage], weapon.name),
+                                     rule=rule)
 
     if world.options.enemy_sanity and world.options.objective_sanity_system != Options.ObjectiveSanitySystem.option_individual:
         for enemy in Locations.GetEnemySanityLocations():

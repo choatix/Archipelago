@@ -665,7 +665,7 @@ def GetEnemySanityLocations():
                 count += items
 
             EnemySanityLocations.append(
-                EnemySanityLocation(stage, ENEMY_CLASS_GUN, count, "GUN Solider")
+                EnemySanityLocation(stage, ENEMY_CLASS_GUN, count, "GUN Soldier")
                     .setEnemyDistribution(dark_mission_enemies),
             )
 

@@ -204,6 +204,9 @@ class ShtHWorld(World):
                 # TODO Handle expert? here in future:
             self.options.chaos_control_logic_level = Options.ChaosControlLogicLevel(Options.ChaosControlLogicLevel.option_off)
 
+        if not self.options.enemy_objective_sanity and self.options.enemy_sanity:
+            self.options.enemy_sanity = Options.Enemysanity(False)
+
         # TODO: Add handle for having excluded all stages
 
 
