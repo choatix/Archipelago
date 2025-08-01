@@ -812,7 +812,7 @@ def PrintSETChange(address, index, type, previous, new, additional_bytes):
             region = relevant_line["region"]
             counter = relevant_line["counter"]
 
-            prints.append( f"SETObject(ObjectType.{typeString.upper().replace(" ","_")}, Levels.STAGE_DEATH_RUINS, "
+            prints.append( "SETObject(ObjectType."+typeString.upper().replace(" ","_")+",Levels.STAGE_DEATH_RUINS"
                    f"{index}, \'{counter}\', region={region}),")
 
     if l:

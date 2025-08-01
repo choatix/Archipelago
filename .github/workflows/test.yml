@@ -12,6 +12,6 @@ jobs:
     steps:
       - uses: Eijebong/ap-actions/ap-tests@main
         with:
-          apworld-path: worlds/shadow_the_hegdehog
+          apworld-path: worlds/shadow_the_hedgehog
           ap-version: '0.6.2'
           python-version: '3.12'
