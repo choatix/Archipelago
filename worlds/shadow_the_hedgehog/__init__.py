@@ -126,6 +126,20 @@ class ShtHWorld(World):
                 self.starting_items.append(item)
                 self.multiworld.push_precollected(self.create_item(item))
 
+        # Test here
+
+        locs = self.get_locations()
+        l_count = len([ l for l in locs if not l.locked ])
+        l_x = Locations.count_locations(self)
+
+        if l_count != l_x:
+            print("Invalid location counting")
+
+        player_items = [ a for a in self.multiworld.itempool if a.player == self.player ]
+        if len(player_items) not in [l_count, l_x]:
+            print("Invalid item pool vs locations")
+
+
 
 
     def check_invalid_configurations(self):

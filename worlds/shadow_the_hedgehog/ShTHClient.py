@@ -41,6 +41,8 @@ valid_game_bytes = [
     bytes(SHADOW_THE_HEDGEHOG_GAME_ID_SX, "utf-8")
 ]
 
+SAVE_VALUE_CHECK = False
+
 @dataclass
 class CharacterAddress:
     name: str
@@ -1010,7 +1012,9 @@ def GetStageClearAddresses():
 
 
 def writeBytes(addr, data):
-    #print("write=", addr, data)
+    #traceback.print_stack()
+
+    print("write=", addr, data)
     dolphin_memory_engine.write_bytes(addr, data)
 
 
@@ -1758,7 +1762,7 @@ async def check_save_loaded(ctx):
     ctx.save_rejected = False
     if loaded_bytes == 0:
         first_game_load = True
-    elif loaded_bytes != ctx.save_value:
+    elif SAVE_VALUE_CHECK and loaded_bytes != ctx.save_value:
         logger.error("Unrecognised save value. Please load from the correct/new save.")
         ctx.save_rejected = True
         loaded = False
@@ -4255,7 +4259,7 @@ async def update_level_behaviour(ctx, current_level, death):
 
         hero_write = hero_count
 
-        if (ctx.objective_sanity and ctx.objective_sanity_behaviour != Options.ObjectiveSanityBehaviour.option_default
+        if (ctx.objective_sanity and ctx.objective_sanity_behaviour == Options.ObjectiveSanityBehaviour.option_base_clear
                 and result_sanity):
             hero_write = ctx.level_state["hero_progress"]
 
@@ -4269,10 +4273,18 @@ async def update_level_behaviour(ctx, current_level, death):
             set_max_up = True
             if ctx.objective_sanity and result_sanity: #and ctx.objective_sanity_behaviour != Options.ObjectiveSanityBehaviour.option_base_clear:
                 hero_count_max = heroMaxAvailable + extra_increase
-            #elif ctx.objective_sanity:
-            #    hero_count_max = extra_increase
             else:
-                hero_count_max = heroMaxAdjusted
+                relevant_keys = [ l for l in Levels.MINIMUM_STAGE_REQUIREMENTS if
+                                  l[0] == current_level and l[1] == MISSION_ALIGNMENT_HERO ]
+                if len(relevant_keys) == 1:
+                    max_value = relevant_keys[0][2] + 1
+                    if heroMaxAdjusted < max_value:
+                        hero_count_max = max_value
+                        logger.error("Issue with total hero enemies from created seed")
+                    else:
+                        hero_count_max = heroMaxAdjusted
+                else:
+                        hero_count_max = heroMaxAdjusted
             ctx.level_state["hero_completable"] = COMPLETE_FLAG_OFF_SET
         elif hero_completable == COMPLETE_FLAG_READY:
             set_max_up = True
@@ -4305,7 +4317,6 @@ async def update_level_behaviour(ctx, current_level, death):
 
     if darkInfo is not None and darkInfo.requirement_count is not None:
         dark_count = ctx.level_state["dark_count"]
-        dark_write = dark_count
 
         location_details = ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_OBJECTIVE,
                                                                      darkInfo.mission_object_name,
@@ -4334,8 +4345,13 @@ async def update_level_behaviour(ctx, current_level, death):
             difference_over = 0
 
         set_max_up = False
-        if ctx.objective_sanity and ctx.objective_sanity_behaviour != Options.ObjectiveSanityBehaviour.option_base_clear and \
-            result_sanity:
+        dark_write = dark_count
+        if (ctx.objective_sanity and ctx.objective_sanity_behaviour == Options.ObjectiveSanityBehaviour.option_base_clear
+                and result_sanity):
+            dark_write = ctx.level_state["dark_progress"]
+
+        if ctx.objective_sanity and ctx.objective_sanity_behaviour != Options.ObjectiveSanityBehaviour.option_base_clear\
+                and result_sanity:
             restore_dark = True
 
         dark_completable = ctx.level_state["dark_completable"]
@@ -4343,10 +4359,18 @@ async def update_level_behaviour(ctx, current_level, death):
             set_max_up = True
             if ctx.objective_sanity and result_sanity: #and ctx.objective_sanity_behaviour != Options.ObjectiveSanityBehaviour.option_base_clear:
                 dark_count_max = darkMaxAvailable + extra_increase
-            #elif ctx.objective_sanity:
-            #    dark_count_max = extra_increase
             else:
-                dark_count_max = darkMaxAdjusted
+                relevant_keys = [l for l in Levels.MINIMUM_STAGE_REQUIREMENTS if
+                                 l[0] == current_level and l[1] == MISSION_ALIGNMENT_DARK]
+                if len(relevant_keys) == 1:
+                    max_value = relevant_keys[0][2] + 1
+                    if darkMaxAdjusted < max_value:
+                        logger.error("Issue with total dark enemies from created seed")
+                        dark_count_max = max_value
+                    else:
+                        dark_count_max = darkMaxAdjusted
+                else:
+                    dark_count_max = darkMaxAdjusted
             ctx.level_state["dark_completable"] = COMPLETE_FLAG_OFF_SET
         elif dark_completable == COMPLETE_FLAG_READY:
             set_max_up = True
@@ -4367,9 +4391,9 @@ async def update_level_behaviour(ctx, current_level, death):
         if dark_count >= darkMaxAdjusted or ctx.objective_sanity_behaviour == Options.ObjectiveSanityBehaviour.option_base_clear:
             dark_max_hit = True
 
-        if ctx.objective_sanity and ctx.objective_sanity_behaviour != Options.ObjectiveSanityBehaviour.option_default and \
-                result_sanity:
-            dark_write = ctx.level_state["dark_progress"]
+        #if ctx.objective_sanity and ctx.objective_sanity_behaviour != Options.ObjectiveSanityBehaviour.option_default and \
+        #        result_sanity:
+        #    dark_write = ctx.level_state["dark_progress"]
 
         if set_max_up and dark_address_total is not None:
             #dark_total_address = dark_address - 16
