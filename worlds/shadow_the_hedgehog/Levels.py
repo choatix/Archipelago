@@ -160,7 +160,7 @@ def IsRegionRestrictionApplication(region_restriction, options, starting_items):
         return False
 
     if region_restriction == REGION_RESTRICTION_TYPES.Explosion and not \
-            (options.weapon_sanity_unlock and options.object_units):
+            (options.weapon_sanity_unlock or options.object_units):
         return False
 
     if region_restriction == REGION_RESTRICTION_TYPES.Explosion and "Bombs" in starting_items:
