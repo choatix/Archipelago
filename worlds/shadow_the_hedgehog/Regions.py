@@ -57,6 +57,133 @@ def handle_single_boss(world, boss_name):
                 world.options.excluded_stages = Options.ExcludedStages(list(world.options.excluded_stages) + [Levels.LEVEL_ID_TO_LEVEL[option]])
 
 
+def DetermineFirstStages(world):
+    stages = Levels.ALL_STAGES
+    first_stages_selections = []
+    within_selections = []
+
+    stage_regions = []
+    region_to_stage_id = {}
+    possible_first_regions = []
+
+    remaining_first_stages = [x for x in world.available_levels if x not in Levels.BOSS_STAGES and
+                              x not in Levels.LAST_STORY_STAGES]
+
+    item_info = Items.GetItemLookupDict()
+    name_map = {v.name: v for k, v in item_info.items()}
+
+    plando_items = ShadowUtils.GetPlandoItems(world)
+
+    if (world.options.level_progression != Options.LevelProgression.option_story and
+            len(plando_items) > 0):
+        item_details = [item_info[i.item].stageId for i in plando_items if name_map[i].type == 'level_object']
+        banned_by_plando = [l for l in remaining_first_stages if l in item_details]
+
+        if len(banned_by_plando) > 0:
+            remaining_first_stages = [s for s in remaining_first_stages if s not in banned_by_plando]
+
+    if world.options.level_progression == Options.LevelProgression.option_both and \
+            world.options.story_and_select_start_together:
+        # print("Check together")
+        first_choice = [s.end_stage_id for s in world.shuffled_story_mode if s.start_stage_id is None][0]
+        if first_choice not in remaining_first_stages:
+            raise OptionError("Invalid first stage based on other settings")
+        first_stages_selections.append([first_choice])
+        within_selections.append(first_choice)
+        remaining_first_stages = [l for l in remaining_first_stages if l not in within_selections]
+
+    if world.options.plando_starting_stages:
+        rev_level_map = {v: k for k, v in Levels.LEVEL_ID_TO_LEVEL.items()}
+        plando_starting_stages = [rev_level_map[x] for x in world.options.plando_starting_stages]
+        plando_first_stages = [l for l in plando_starting_stages if
+                               l not in within_selections and l in remaining_first_stages]
+        # print("plando firsts left", plando_starting_stages, within_selections, plando_first_stages)
+        first_stages_selections.append(plando_first_stages)
+        within_selections.extend(plando_first_stages)
+        remaining_first_stages = [l for l in remaining_first_stages if l not in within_selections]
+
+    if world.options.starting_level_method == Options.StartingLevelMethod.option_clear_stage:
+        clearable = Locations.GetStagesWithNoRequirements(world)
+        clearable_stages = [l for l in clearable if l not in within_selections and l in remaining_first_stages]
+        first_stages_selections.append(clearable_stages)
+        within_selections.extend(clearable_stages)
+        remaining_first_stages = [l for l in remaining_first_stages if l not in within_selections]
+
+    if len(remaining_first_stages) > 0:
+        first_stages_selections.append(remaining_first_stages)
+        within_selections.extend(remaining_first_stages)
+
+    possible_first_regions = [ r for r in within_selections if r not in Levels.LAST_STORY_STAGES and r not in Levels.BOSS_STAGES ]
+
+    if world.options.level_progression != Options.LevelProgression.option_story:
+        starting_stage_count = world.options.starting_stages.value
+
+        #print("Select picking", starting_stage_count, possible_first_regions, first_stages_selections)
+
+        if starting_stage_count > len(possible_first_regions) and \
+            len(first_stages_selections) > 0:
+
+            while len(first_stages_selections) > 0 and len(possible_first_regions) < starting_stage_count:
+                first_choices = first_stages_selections.pop(0)
+                backup_picks = starting_stage_count - len(possible_first_regions)
+                #print("backups", len(first_choices), len(possible_first_regions), backup_picks)
+
+                if backup_picks >= len(first_choices):
+                    possible_first_regions.extend(first_choices)
+                else:
+                    possible_first_regions.extend(world.random.sample(
+                        first_choices, backup_picks))
+
+        if starting_stage_count > len(possible_first_regions):
+            starting_stage_count = len(possible_first_regions)
+
+        first_stages = world.random.sample(possible_first_regions, starting_stage_count)
+        world.first_regions = first_stages
+
+    if world.options.level_progression != Options.LevelProgression.option_select:
+        stage_ids = [ start.end_stage_id for start in world.shuffled_story_mode if start.start_stage_id is None ]
+        world.first_regions.extend(stage_ids)
+        pass
+
+def DetermineGates(world):
+    gate_mode = world.options.select_gates
+    select_gates_count = world.options.select_gates_count + 1
+
+    if gate_mode == Options.SelectGates.option_off:
+        return {}
+
+
+
+    stages_to_assign = [ l for l in Levels.ALL_STAGES if Levels.LEVEL_ID_TO_LEVEL[l] not in world.options.excluded_stages and
+                         l not in Levels.LAST_STORY_STAGES and l not in world.first_regions and
+                         (world.options.select_bosses if l in Levels.BOSS_STAGES else True) ]
+
+    world.random.shuffle(stages_to_assign)
+
+    gates = {0: world.first_regions}
+    weights = []
+
+    for i in range(1, select_gates_count):
+        gates[i] = []
+        percentage = i / select_gates_count * 100
+        weight = 50
+        if gate_mode == Options.SelectGates.option_early:
+            weight = int((100 - percentage) * weight)
+        elif gate_mode == Options.SelectGates.option_late:
+            weight = int(percentage * weight)
+
+        weights.append(weight)
+
+    valid_gates = [ l for l in gates.keys() if l != 0 ]
+
+    for stage in stages_to_assign:
+        randomised_gate = world.random.choices(valid_gates, k=1, weights=weights)[0]
+        gates[randomised_gate].append(stage)
+
+    return gates
+
+
+
 def early_region_checks(world):
 
     # needto iterate in story order, not default order
@@ -163,84 +290,26 @@ def early_region_checks(world):
 def create_regions(world) -> Dict[str, Region]:
     regions: Dict[str, Region] = {}
     stages = Levels.ALL_STAGES
-    item_info = Items.GetItemLookupDict()
-    name_map = {v.name: v for k, v in item_info.items()}
 
     stage_regions = []
     region_to_stage_id = {}
-    possible_first_regions = []
 
     last_way_standard = (world.options.level_progression == Options.LevelProgression.option_select
                          or not world.options.include_last_way_shuffle or not world.options.story_shuffle == Options.StoryShuffle.option_chaos)
 
-    first_stages_selections = []
-    within_selections = []
-    remaining_first_stages = [x for x in world.available_levels if x not in Levels.BOSS_STAGES and
-                              x not in Levels.LAST_STORY_STAGES ]
-
-    plando_items = ShadowUtils.GetPlandoItems(world)
-
-    # TODO: In future migrate
-    #if hasattr(world.options, "plando_items"):
-    #    plando_items = [ {"from_pool": p.from_pool,
-    #                      "force": p.force,
-    #                      "items": p.items,
-    #                      } for p in plando_items.value ]
-
-    if (world.options.level_progression != Options.LevelProgression.option_story and
-            len(plando_items) > 0):
-            item_details = [ item_info[i.item].stageId for i in plando_items if name_map[i].type == 'level_object']
-            banned_by_plando = [ l for l in remaining_first_stages if l in item_details]
-
-            if len(banned_by_plando) > 0:
-                remaining_first_stages = [ s for s in remaining_first_stages if s not in banned_by_plando ]
-
-
-    if world.options.level_progression == Options.LevelProgression.option_both and \
-        world.options.story_and_select_start_together:
-        #print("Check together")
-        first_choice = [ s.end_stage_id for s in world.shuffled_story_mode if s.start_stage_id is None][0]
-        if first_choice not in remaining_first_stages:
-            raise OptionError("Invalid first stage based on other settings")
-        first_stages_selections.append([first_choice])
-        within_selections.append(first_choice)
-        remaining_first_stages = [l for l in remaining_first_stages if l not in within_selections]
-
-    if world.options.plando_starting_stages:
-        rev_level_map = {v: k for k, v in Levels.LEVEL_ID_TO_LEVEL.items()}
-        plando_starting_stages = [ rev_level_map[x] for x in world.options.plando_starting_stages]
-        plando_first_stages = [l for l in plando_starting_stages if l not in within_selections and l in remaining_first_stages]
-        #print("plando firsts left", plando_starting_stages, within_selections, plando_first_stages)
-        first_stages_selections.append(plando_first_stages)
-        within_selections.extend(plando_first_stages)
-        remaining_first_stages = [l for l in remaining_first_stages if l not in within_selections]
-
-    if world.options.starting_level_method == Options.StartingLevelMethod.option_clear_stage:
-        clearable = Locations.GetStagesWithNoRequirements(world)
-        clearable_stages = [l for l in clearable if l not in within_selections and l in remaining_first_stages]
-        first_stages_selections.append(clearable_stages)
-        within_selections.extend(clearable_stages)
-        remaining_first_stages = [l for l in remaining_first_stages if l not in within_selections]
-
-    if len(remaining_first_stages) > 0:
-        first_stages_selections.append(remaining_first_stages)
-        within_selections.extend(remaining_first_stages)
-
-
-    #print("Check starting stages", first_stages_selections)
-
+    first_regions = []
     for level_id in stages:
         if level_id not in world.available_levels:
             continue
+
         base_region_name = stage_id_to_region(level_id, 0)
         new_region = Region(base_region_name, world.player, world.multiworld)
         regions[base_region_name] = new_region
         stage_regions.append(new_region)
-        #if level_id not in Levels.BOSS_STAGES and level_id not in Levels.LAST_STORY_STAGES:
-        #    if level_id in within_selections:
-        #        possible_first_regions.append(new_region)
-        #print("Add r", new_region, level_id)
         region_to_stage_id[new_region] = level_id
+
+        if level_id in world.first_regions:
+            first_regions.append(new_region)
 
         for additional_region in [ r for r in Levels.INDIVIDUAL_LEVEL_REGIONS if r.stageId == level_id]:
 
@@ -259,45 +328,14 @@ def create_regions(world) -> Dict[str, Region]:
             story_region_name = stage_id_to_story_region(level_id)
             new_story_region = Region(story_region_name, world.player, world.multiworld)
             regions[story_region_name] = new_story_region
-            #stage_regions.append(new_story_region)
 
             connect(world.player, "stage-access:"+Levels.LEVEL_ID_TO_LEVEL[level_id],
                     new_story_region, new_region)
 
-
-    if world.options.level_progression != Options.LevelProgression.option_story:
-        starting_stage_count = world.options.starting_stages.value
-
-        #print("Select picking", starting_stage_count, possible_first_regions, first_stages_selections)
-
-        if starting_stage_count > len(possible_first_regions) and \
-            len(first_stages_selections) > 0:
-
-            while len(first_stages_selections) > 0 and len(possible_first_regions) < starting_stage_count:
-                first_choices = first_stages_selections.pop(0)
-                backup_picks = starting_stage_count - len(possible_first_regions)
-                #print("backups", len(first_choices), len(possible_first_regions), backup_picks)
-
-                if backup_picks >= len(first_choices):
-                    possible_first_regions.extend(first_choices)
-                else:
-                    possible_first_regions.extend(world.random.sample(
-                        first_choices, backup_picks))
-
-        if starting_stage_count > len(possible_first_regions):
-            starting_stage_count = len(possible_first_regions)
-
-        first_stages = world.random.sample(possible_first_regions, starting_stage_count)
-        world.first_regions = first_stages
-
-    if world.options.level_progression != Options.LevelProgression.option_select:
-        stage_ids = [ start.end_stage_id for start in world.shuffled_story_mode if start.start_stage_id is None ]
-        world.first_regions.extend(stage_ids)
-        pass
-
     regions["Menu"] = Region("Menu", world.player, world.multiworld)
-    #for region in first_regions:
-    #    regions["Menu"].connect(regions[region.name], "Start Game "+region.name)
+
+    for region in first_regions:
+        regions["Menu"].connect(regions[region.name], "Start Game "+region.name)
 
     if world.options.level_progression != LevelProgression.option_story:
         for region in stage_regions:

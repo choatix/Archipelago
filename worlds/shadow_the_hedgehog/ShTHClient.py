@@ -163,14 +163,19 @@ class MenuOptions:
 
 
 
-
+last_level = None
 memory_data = {}
 def ShowSETChanges(current_level):
     global memory_data
+    global last_level
 
     if current_level is None:
         memory_data = {}
         return
+
+    if last_level != current_level:
+        last_level = current_level
+        memory_data = {}
 
     length = Objects.GetSETFileLength(current_level)
     if length is None or length == 0:
@@ -192,6 +197,7 @@ def ShowSETChanges(current_level):
 
         spawn_data = start_address  + (0x2C * i) + 0x20
         object_type = spawn_data + 0x08
+        link_id_ref = object_type + 0x02
         object_additional_pointer = None
 
         loaded_bytes = dolphin_memory_engine.read_bytes(spawn_data+3, 1)
@@ -199,6 +205,9 @@ def ShowSETChanges(current_level):
 
         loaded_bytes = dolphin_memory_engine.read_bytes(object_type, 2)
         loaded_object_type = int.from_bytes(loaded_bytes, byteorder='big')
+
+        loaded_bytes = dolphin_memory_engine.read_bytes(link_id_ref, 1)
+        link_id = int.from_bytes(loaded_bytes, byteorder='big')
 
         if loaded_spawn_data == 0 and loaded_object_type == 0 and spawn_data in memory_data:
             del memory_data[spawn_data]
@@ -218,7 +227,7 @@ def ShowSETChanges(current_level):
 
         if last_known_spawn != loaded_spawn_data:
             outputs = Objects.PrintSETChange(spawn_data, i, loaded_object_type, last_known_spawn, loaded_spawn_data,
-                                   loaded_from_extra_pointer_bytes)
+                                   loaded_from_extra_pointer_bytes, link_id)
             memory_data[spawn_data] = [loaded_spawn_data, loaded_object_type]
 
             new_outputs.extend(outputs)
@@ -1108,6 +1117,7 @@ class ShTHContext(CommonContext):
         self.awaiting_server = True
         self.invalid_rom = False
         self.last_rcvd_index = -1
+        self.key_check_index = -1
         self.has_send_death = False
         self.available_levels = []
 
@@ -1132,6 +1142,14 @@ class ShTHContext(CommonContext):
         self.required_final_boss_tokens = 0
         self.requires_emeralds = True
         self.key_sanity = False
+        self.key_collection_method = Options.KeyCollectionMethod.default
+        self.keys_required_for_doors = Options.KeysRequiredForDoors.default
+        self.gates = {}
+        self.gate_requirements = {}
+        self.select_gates = Options.SelectGates.default
+        self.select_gates_count = Options.SelectGatesCount.default
+        self.gate_unlock_requirement = Options.GateUnlockRequirement.default
+
         self.enemy_sanity = False
         self.enemy_objective_sanity = False
         self.weapon_sanity_unlock = False
@@ -1381,6 +1399,23 @@ class ShTHContext(CommonContext):
 
             if "key_sanity" in slot_data:
                 self.key_sanity = slot_data["key_sanity"]
+
+            if "key_collection_method" in slot_data:
+                self.key_collection_method = slot_data["key_collection_method"]
+
+            if "keys_required_for_doors" in slot_data:
+                self.keys_required_for_doors = slot_data["keys_required_for_doors"]
+
+            if "gates" in slot_data:
+                self.gates = slot_data["gates"]
+            if "gate_requirements" in slot_data:
+                self.gate_requirements = slot_data["gate_requirements"]
+            if "select_gates" in slot_data:
+                self.select_gates = slot_data["select_gates"]
+            if "select_gates_count" in slot_data:
+                self.select_gates_count = slot_data["select_gates_count"]
+            if "gate_unlock_requirement" in slot_data:
+                self.gate_unlock_requirement = slot_data["gate_unlock_requirement"]
 
             if "required_mission_tokens" in slot_data:
                 self.required_mission_tokens = slot_data["required_mission_tokens"]
@@ -2408,6 +2443,8 @@ async def check_level_status(ctx):
     levels_to_unlock = [ info[level[0].item].stageId for level in i ]
     ctx.available_levels.extend(levels_to_unlock)
 
+    CheckGateConditions(ctx)
+
     remove = []
     for ix in i:
         ctx.handled.append(ix)
@@ -3058,6 +3095,9 @@ async def check_junk(ctx, current_level, death):
     filler = [(unlock,info[unlock[0].item]) for unlock in ctx.items_to_handle if unlock[0].item in info and \
         info[unlock[0].item].classification == ItemClassification.filler and unlock[1] > last_index ]
 
+    traps = [(unlock,info[unlock[0].item]) for unlock in ctx.items_to_handle if unlock[0].item in info and \
+        info[unlock[0].item].classification == ItemClassification.trap and unlock[1] > last_index ]
+
     latest_index = None
 
     if len(filler) > 0:
@@ -3068,6 +3108,8 @@ async def check_junk(ctx, current_level, death):
     filler_gauge_hero = [ f for f in filler if f[1].type == "gauge" and f[1].alignmentId == MISSION_ALIGNMENT_HERO]
     filler_rings = [ f for f in filler if f[1].type == "rings"]
 
+    ammo_traps = [ a for a in traps if a[1].type == "ammotrap" ]
+    poison_traps = [a for a in traps if a[1].type == "poisontrap"]
 
     newly_handled = []
     newly_handled.extend([f[0] for f in filler_nothing])
@@ -3110,7 +3152,6 @@ async def check_junk(ctx, current_level, death):
             #print("add hero gauge:", ctx.hero_gauge_buffer, gaugeJunk[1].value)
             ctx.hero_gauge_buffer += gaugeJunk[1].value
             newly_handled.append(gaugeJunk[0])
-
 
     if ctx.hero_max_meter > 0:
         ctx.hero_max_meter -= 10
@@ -3199,6 +3240,36 @@ async def check_junk(ctx, current_level, death):
             writeBytes(GAME_ADDRESSES.DARK_GAUGE_ADDRESS, new_bytes)
 
         ctx.dark_gauge_last = current_dark_gauge
+
+    if len(ammo_traps) > 0:
+        pass
+
+    if len(poison_traps) > 0:
+        current_rings_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.RINGS_ADDRESS, 4)
+        current_rings = int.from_bytes(current_rings_bytes, byteorder="big")
+
+        if current_rings > 0:
+            new_rings = current_rings - 1
+            new_bytes = new_rings.to_bytes(4, byteorder='big')
+            writeBytes(GAME_ADDRESSES.RINGS_ADDRESS, new_bytes)
+            r = random.random()
+            if r < 0.1:
+                newly_handled.append(poison_traps[0][0])
+        elif current_rings == 1:
+            new_rings = current_rings - 1
+            new_bytes = new_rings.to_bytes(4, byteorder='big')
+            writeBytes(GAME_ADDRESSES.RINGS_ADDRESS, new_bytes)
+            newly_handled.append(poison_traps[0][0])
+
+    if len(ammo_traps) > 0:
+        current_ammo_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.CURRENT_AMMO_ADDRESS, 4)
+        current_ammo = int.from_bytes(current_ammo_bytes, byteorder="big")
+
+        if current_ammo % 10 > 1:
+            new_ammo = 1
+            new_bytes = new_ammo.to_bytes(4, byteorder='big')
+            writeBytes(GAME_ADDRESSES.CURRENT_AMMO_ADDRESS, new_bytes)
+            newly_handled.append(ammo_traps[0][0])
 
     remove = []
     for r in newly_handled:
@@ -3399,6 +3470,7 @@ async def handle_objects(ctx, current_level):
 
     start_address = GAME_ADDRESSES.LEVEL_SET_DATA
 
+    key_sanity = ctx.key_sanity
     object_unlocks = ctx.object_unlocks
     vehicle_sanity = ctx.vehicle_logic
     shadow_box_sanity = ctx.shadow_boxes
@@ -3783,7 +3855,8 @@ async def handle_objects(ctx, current_level):
             object_values_complete.append(0x8)
 
         # Base style objects 0
-        if (shadow_box_sanity and object.object_type == Objects.ObjectType.SHADOW_BOX) or \
+        if (key_sanity and object.object_type == Objects.ObjectType.KEY) or \
+            (shadow_box_sanity and object.object_type == Objects.ObjectType.SHADOW_BOX) or \
             (core_sanity and object.object_type == Objects.ObjectType.ENERGY_CORE or \
             object.object_type == Objects.ObjectType.ENERGY_CORE_IN_WOOD_BOX):
 
@@ -4031,11 +4104,11 @@ async def update_level_behaviour(ctx, current_level, death):
 
     await handle_objects(ctx, current_level)
 
-    await clearout_individual_enemies_by_percentage(ctx, current_level)
+    #await clearout_individual_enemies_by_percentage(ctx, current_level)
 
     #ShowSETChanges(current_level)
 
-    DisplayMessages(ctx)
+    #DisplayMessages(ctx)
 
     # Add handle for first load of level, when state is blank
 
@@ -4694,36 +4767,70 @@ async def update_level_behaviour(ctx, current_level, death):
                         empty_bytes = 0xFFFFFFFF.to_bytes(4, byteorder='big')
                         writeBytes(key_addresses[state_key_index], empty_bytes)
                     elif current_key_data in key_options:
-                        ctx.level_state["key_index"] = state_key_index + 1
-                        ctx.level_keys.append(current_key_data)
-                        key_index = key_options.index(current_key_data)
-                        key_locations = [k for k in keysanity_locations if k.stageId == current_level and k.count == key_index]
-                        if len(key_locations) == 0:
-                            if ctx.error_logging:
-                                logger.error("Unable to find location associated %d %d", key_index, current_level)
+                        # What to do when the player gets a new key
+                        logger.error("Take key away when arch key item only")
+                        if ctx.key_collection_method == Options.KeyCollectionMethod.option_arch:
+                            empty_bytes = 0xFFFFFFFF.to_bytes(4, byteorder='big')
+                            writeBytes(key_addresses[state_key_index], empty_bytes)
                         else:
-                            messages.extend([k.locationId for k in key_locations])
+                            ctx.level_state["key_index"] = state_key_index + 1
+                            ctx.level_keys.append(current_key_data)
+
+                        #key_index = key_options.index(current_key_data)
+                        #key_locations = [k for k in keysanity_locations if k.stageId == current_level and k.count == key_index]
+                        #if len(key_locations) == 0:
+                        #    if ctx.error_logging:
+                        #        logger.error("Unable to find location associated %d %d", key_index, current_level)
+                        #else:
+                        #    messages.extend([k.locationId for k in key_locations])
+                    elif current_key_data == 0:
+                        # Fake key, ignore
+                        ctx.level_state["key_index"] = state_key_index + 1
                     else:
                         if ctx.error_logging:
                             logger.error("Unknown key object: %d %s %s", current_level, str(key_options), str(current_key_data))
                         key_locations = [k for k in keysanity_locations if k.stageId == current_level and k.count == state_key_index]
                         messages.extend([k.locationId for k in key_locations])
                 elif not ctx.key_restore_complete:
-                    key_options_unknown = KEY_IDENTIFIER_BY_STAGE[current_level]
-                    keys_to_confirm = [ k for k in key_options_unknown if k not in ctx.level_keys]
-                    key_ind = [ key_options_unknown.index(k) for k in keys_to_confirm ]
-                    key_locations = [k.locationId for k in keysanity_locations if k.stageId == current_level and k.count in key_ind]
-                    checked_keys = [ c for c in ctx.checked_locations if c in key_locations]
-                    if len(checked_keys) > 0:
-                        first_key_location_id = checked_keys.pop()
-                        key_data = [k for k in keysanity_locations if k.locationId == first_key_location_id][0]
-                        key_value_to_write = key_options_unknown[key_data.count]
-                        restored_key_bytes = key_value_to_write.to_bytes(4, byteorder='big')
-
-                        writeBytes(key_addresses[state_key_index], restored_key_bytes)
+                    door_requirement = ctx.keys_required_for_doors
+                    if state_key_index < (5 - door_requirement):
+                        fake_key_value = 0
+                        fake_key_bytes = fake_key_value.to_bytes(4, byteorder='big')
+                        ctx.level_state["key_index"] = state_key_index + 1
+                        writeBytes(key_addresses[state_key_index], fake_key_bytes)
+                        logger.error("Fake key added")
                     else:
-                        ctx.key_restore_complete = True
+                        key_options_unknown = KEY_IDENTIFIER_BY_STAGE[current_level]
+                        keys_to_confirm = [ k for k in key_options_unknown if k not in ctx.level_keys]
+                        key_ind = [ key_options_unknown.index(k) for k in keys_to_confirm ]
+                        key_locations = [k.locationId for k in keysanity_locations if k.stageId == current_level and k.count in key_ind]
+                        checked_keys = [ c for c in ctx.checked_locations if c in key_locations]
+                        if len(checked_keys) > 0:
+                            first_key_location_id = checked_keys.pop()
+                            key_data = [k for k in keysanity_locations if k.locationId == first_key_location_id][0]
+                            key_value_to_write = key_options_unknown[key_data.count]
+                            restored_key_bytes = key_value_to_write.to_bytes(4, byteorder='big')
+                            logger.error("Key index restored")
+                            writeBytes(key_addresses[state_key_index], restored_key_bytes)
+                        else:
+                            logger.error("Key restore complete")
+                            ctx.key_restore_complete = True
+                else:
+                    if ctx.key_check_index != ctx.last_rcvd_index:
+                        info = Items.GetItemLookupDict()
 
+                        key_items = [unlock for unlock in ctx.items_to_handle if unlock[0].item in info and \
+                                              info[unlock[0].item].stageId == current_level and
+                                              info[unlock[0].item].type == "key" and unlock not in ctx.handled]
+
+                        for item in key_items:
+                            empty_bytes = 0x00.to_bytes(4, byteorder='big')
+                            writeBytes(key_addresses[state_key_index], empty_bytes)
+                            state_key_index += 1
+                            ctx.level_state["key_index"] = state_key_index
+                            ctx.handled.append(item)
+
+                        ctx.key_check_index = ctx.last_rcvd_index
         else:
             logger.error("Key index not present")
 
@@ -4790,6 +4897,38 @@ async def check_death(ctx: ShTHContext):
     #    return None
 
     return False
+
+def CheckGateConditions(ctx: ShTHContext):
+    required_items = ctx.gate_requirements
+    info = Items.GetItemLookupDict()
+    current_items = [ info[i.item].name for i in ctx.items_received ]
+
+    max_gate = 0
+    for item in required_items.items():
+        gate_no = item[0]
+        gate_reqs = item[1]
+        enough = True
+        for gate_req in gate_reqs.items():
+            item_name = gate_req[0]
+            count = gate_req[1]
+
+            if current_items.count(item_name) < count:
+                enough = False
+                break
+
+        if enough:
+            max_gate = gate_no
+
+    for gate in ctx.gates.items():
+        if int(gate[0]) > int(max_gate):
+            continue
+
+        logger.info(f"Gate {gate} is open!")
+
+        stages = gate[1]
+        for stage in stages:
+            if stage not in ctx.available_levels:
+                ctx.available_levels.append(stage)
 
 def resetGameState(ctx):
     if ctx.initialised:
@@ -4933,9 +5072,9 @@ async def dolphin_sync_task(ctx: ShTHContext):
                         await asyncio.sleep(5)
                     else:
                         logger.info(CONNECTION_CONNECTED_STATUS)
+                        logger.info(f"Shadow The Hedgehog Client connected: Version:{'.'.join([ str(s) for s in ShadowUtils.VERSION])}")
                         ctx.dolphin_status = CONNECTION_CONNECTED_STATUS
                         ctx.game_id = game_id_bytes
-                        #ctx.locations_checked = set()
                 else:
                     logger.info("Connection to Dolphin failed, attempting again in 5 seconds...")
                     ctx.dolphin_status = CONNECTION_LOST_STATUS

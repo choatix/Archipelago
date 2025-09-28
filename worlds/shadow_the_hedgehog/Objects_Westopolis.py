@@ -101,4 +101,11 @@ SETObject(ObjectType.GUN_BEETLE, Levels.STAGE_WESTOPOLIS, 454, '78', region=0),
 SETObject(ObjectType.BLACK_WARRIOR, Levels.STAGE_WESTOPOLIS, 459, '79', region=0),
 SETObject(ObjectType.BLACK_WING, Levels.STAGE_WESTOPOLIS, 461, '80', region=0),
 SETObject(ObjectType.BLACK_WING, Levels.STAGE_WESTOPOLIS, 460, '81', region=0),
+
+SETObject(ObjectType.KEY, Levels.STAGE_WESTOPOLIS, 486, 'Key 1', region=0),
+SETObject(ObjectType.KEY, Levels.STAGE_WESTOPOLIS, 99, 'Key 2', region=REGION_INDICIES.WESTOPOLIS_PULLEY),
+SETObject(ObjectType.KEY, Levels.STAGE_WESTOPOLIS, 162, 'Key 3', region=0),
+SETObject(ObjectType.KEY, Levels.STAGE_WESTOPOLIS, 263, 'Key 4', region=0),
+SETObject(ObjectType.KEY, Levels.STAGE_WESTOPOLIS, 246, 'Key 5', region=0),
+SETObject(ObjectType.GOAL_RING, Levels.STAGE_WESTOPOLIS, 539, 'Goal Ring',region=0)
 ]

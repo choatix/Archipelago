@@ -197,4 +197,11 @@ DESIRABLE_OBJECTS_LETHAL_HIGHWAY  = [
 
     SETObject(ObjectType.BLACK_LARVAE, Levels.STAGE_LETHAL_HIGHWAY, 357, '83.4',
               region=REGION_INDICIES.LETHAL_HIGHWAY_ROCKET, count=6),
+
+    SETObject(ObjectType.KEY, Levels.STAGE_LETHAL_HIGHWAY, 337, 'Key 1', region=0),
+    SETObject(ObjectType.KEY, Levels.STAGE_LETHAL_HIGHWAY, 157, 'Key 2', region=0),
+    SETObject(ObjectType.KEY, Levels.STAGE_LETHAL_HIGHWAY, 152, 'Key 3', region=0),
+    SETObject(ObjectType.KEY, Levels.STAGE_LETHAL_HIGHWAY, 227, 'Key 4', region=REGION_INDICIES.LETHAL_HIGHWAY_ROCKET),
+    SETObject(ObjectType.KEY, Levels.STAGE_LETHAL_HIGHWAY, 352, 'Key 5', region=REGION_INDICIES.LETHAL_HIGHWAY_PULLEY),
+    SETObject(ObjectType.GOAL_RING, Levels.STAGE_LETHAL_HIGHWAY, 81, 'Goal Ring',region=REGION_INDICIES.LETHAL_HIGHWAY_PULLEY)
 ]

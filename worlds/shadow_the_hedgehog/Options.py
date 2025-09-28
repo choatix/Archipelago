@@ -194,7 +194,24 @@ class Keysanity(Toggle):
     """
     display_name = "Key Sanity"
 
+class KeysRequiredForDoors(Range):
+    """
+        Determines how many keys are required to open doors.
+    """
+    display_name = "Keys Required For Doors"
+    range_start = 0
+    range_end = 5
+    default = 3
 
+class KeyCollectionMethod(Choice):
+    """
+        Determines how keys can be collected.
+    """
+    display_name = "Key Collection Method"
+    option_local = 0
+    option_arch = 1
+    option_both = 2
+    default = 1
 
 class Checkpointsanity(DefaultOnToggle):
     """
@@ -276,6 +293,37 @@ class StartingStages(Range):
     range_start = 0
     range_end = 22
     default = 1
+
+class SelectGates(Choice):
+    """
+        Determines distribution behaviour for select gates.
+    """
+    display_name = "Select Gates"
+    option_off = 0
+    option_early = 1
+    option_medium = 2
+    option_late = 3
+    default = option_medium
+
+class SelectGatesCount(Range):
+    """
+        Determines the number of select gates.
+    """
+    display_name = "Select Gates"
+    range_start = 1
+    range_end = 5
+    default = 2
+
+class GateUnlockRequirement(Choice):
+    """
+        Determines distribution behaviour for select gates.
+    """
+    display_name = "Gate Unlock Requirement"
+    option_items = 0
+    option_objective = 1
+    option_chaos_emeralds = 2
+    option_objective_available = 3
+    default = option_objective_available
 
 class ForceObjectiveSanityChance(Range):
     """Determines the probability of a objective-sanity stage being force-added to Priority Locations"""
@@ -720,6 +768,44 @@ class ExcludeGoModeItems(DefaultOnToggle):
     """
     display_name = "Exclude Go Mode Items"
 
+
+class EnableTraps(Toggle):
+    """
+        Enables traps for the multiworld
+    """
+    display_name = "Enable Traps"
+
+class PoisonTraps(Choice):
+    """
+        Enables traps for the multiworld
+    """
+    display_name = "Enable Poison Traps"
+    option_off = 0
+    option_low = 1
+    option_medium = 2
+    option_high = 3
+    default = option_off
+
+class AmmoTraps(Choice):
+    """
+        Enables traps for the multiworld
+    """
+    display_name = "Enable Ammo Traps"
+    option_off = 0
+    option_low = 1
+    option_medium = 2
+    option_high = 3
+    default = option_off
+
+class TrapFillPercentage(Range):
+    """
+        Enables traps for the multiworld
+    """
+    display_name = "Trap Fill Percentage"
+    range_start = 1
+    range_end = 100
+    default = 5
+
 @dataclass
 class ShadowTheHedgehogOptions(PerGameCommonOptions):
     #goal: Goal
@@ -747,8 +833,13 @@ class ShadowTheHedgehogOptions(PerGameCommonOptions):
     enemy_sanity_percentage: EnemySanityPercentage
     difficult_enemy_sanity: DifficultEnemysanity
     key_sanity: Keysanity
+    keys_required_for_doors: KeysRequiredForDoors
+    key_collection_method: KeyCollectionMethod
     checkpoint_sanity: Checkpointsanity
     starting_stages: StartingStages
+    select_gates: SelectGates
+    select_gates_count: SelectGatesCount
+    gate_unlock_requirement: GateUnlockRequirement
     force_objective_sanity_chance: ForceObjectiveSanityChance
     force_objective_sanity_max: ForceObjectiveSanityMax
     force_objective_sanity_max_counter: ForceObjectiveSanityMaxCounter
@@ -806,6 +897,10 @@ class ShadowTheHedgehogOptions(PerGameCommonOptions):
     exceeding_items_filler_random: ExceedingItemsFillerRandom
     start_inventory_excess_items: StartInventoryExcessItems
     exclude_go_mode_items: ExcludeGoModeItems
+    enable_traps: EnableTraps
+    ammo_trap_enabled: AmmoTraps
+    poison_trap_enabled: PoisonTraps
+    trap_fill_percentage: TrapFillPercentage
 
 
 shadow_option_groups = [

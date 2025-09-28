@@ -81,7 +81,9 @@ def GetPlayableObjectTypes():
                           ObjectType.BLACK_WING,
                           ObjectType.BLACK_WORM,
                           ObjectType.BLACK_LARVAE,
-                          ObjectType.ARTIFICIAL_CHAOS
+                          ObjectType.ARTIFICIAL_CHAOS,
+
+                            ObjectType.KEY
 
                           ]
 
@@ -355,10 +357,42 @@ def GetTypeId(objectType):
     #if objectType == ObjectType.PARTNER:
     #    return 0x190
 
+    if objectType == ObjectType.KEY:
+        return 0x1D
+
+    if objectType == ObjectType.GOAL_RING:
+        return 0x14
+
+    #if objectType == ObjectType.ITEM_CAPSULE: #Item Capsule
+    #    return 0x12
+
+    #if objectType == ObjectType.BALLOON_ITEM: # Balloon
+    #    return 0x13
+
+    #if objectType == ObjectType.FIRE:
+    #    return 0x34
+
+    #if objectType == ObjectType.POISON_GAS:
+    #    return 0x35
+
+    #if objectType == ObjectType.DARK_SPIN_ENTRY:
+    #    return 0x61
+
+    #if objectType == ObjectType.DEFENSE_PROGRAM:
+    #    return 0x7D4
+
+    #if objectType == ObjectType.RING_OF_FIRE:
+    #    return 0xC85
+
+    #if objectType == ObjectType.HELICOPTER:
+    #    return 0xFA2
+
+    if objectType == ObjectType.CLEAR_TRIGGER:
+        return 0x2595
 
     return None
 
-def CheckVehicleAttributes(objectType, extra_bytes, index):
+def CheckVehicleAttributes(objectType, extra_bytes, index, link_id):
 
     if objectType == "Server":
         byte = extra_bytes[3]
@@ -454,6 +488,9 @@ def CheckVehicleAttributes(objectType, extra_bytes, index):
         box_type = extra_bytes[0:4]
         box_weapon_bytes = extra_bytes[4:8]
         return "Weapon Box"
+
+    if objectType == "Key":
+        return "Key " + str(hex(link_id))
 
 
     return objectType
@@ -705,7 +742,8 @@ def TypeToString(type):
     elif type == 0x2589:
         return "Destructible"
 
-
+    elif type == 0x1D:
+        return "Key"
 
     return str(type)
 
@@ -740,13 +778,13 @@ def StateToString(type, state):
 
     return state
 
-def PrintSETChange(address, index, type, previous, new, additional_bytes):
+def PrintSETChange(address, index, type, previous, new, additional_bytes, link_id):
 
     #if not use:
     #    return
 
     typeString = TypeToString(type)
-    typeString = CheckVehicleAttributes(typeString, additional_bytes, index)
+    typeString = CheckVehicleAttributes(typeString, additional_bytes, index, link_id)
 
     found = False
     for v in ObjectType.__dict__.items():

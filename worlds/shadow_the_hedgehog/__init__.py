@@ -90,6 +90,7 @@ class ShtHWorld(World):
         self.shuffled_story_mode = None
         self.random_value = None
         self.starting_items = []
+        self.gates = {}
 
         for token in Items.TOKENS:
             self.required_tokens[token] = 0
@@ -428,6 +429,27 @@ class ShtHWorld(World):
                 if "key_sanity" in passthrough:
                     self.options.key_sanity = passthrough["key_sanity"]
 
+                if "key_collection_method" in passthrough:
+                    self.options.key_collection_method = passthrough["key_collection_method"]
+
+                if "keys_required_for_doors" in passthrough:
+                    self.options.keys_required_for_doors = passthrough["keys_required_for_doors"]
+
+                if "gates" in passthrough:
+                    self.options.gates = passthrough["gates"]
+
+                if "gate_requirements" in passthrough:
+                    self.options.gate_requirements = passthrough["gate_requirements"]
+
+                if "select_gates" in passthrough:
+                    self.options.select_gates = passthrough["select_gates"]
+
+                if "select_gates_count" in passthrough:
+                    self.options.select_gates_count = passthrough["select_gates_count"]
+
+                if "gate_unlock_requirement" in passthrough:
+                    self.options.gate_unlock_requirement = passthrough["gate_unlock_requirement"]
+
                 if "enemy_sanity" in passthrough:
                     self.options.enemy_sanity = passthrough["enemy_sanity"]
 
@@ -588,6 +610,10 @@ class ShtHWorld(World):
         mission_total = 0
 
         Regions.early_region_checks(self)
+        Regions.DetermineFirstStages(self)
+        self.gates = Regions.DetermineGates(self)
+        self.gate_unlocks = {}
+        self.gate_requirements = {}
 
         if self.options.starting_level_method == Options.StartingLevelMethod.option_stage_and_item:
             extra_items = Regions.FindStartingItems(self, required=False)
@@ -789,6 +815,14 @@ class ShtHWorld(World):
             "required_final_boss_tokens": self.required_tokens[Items.Progression.FinalBossToken],
             "requires_emeralds": self.options.goal_chaos_emeralds.value,
             "key_sanity": self.options.key_sanity.value,
+            "key_collection_method": self.options.key_collection_method.value,
+            "keys_required_for_doors": self.options.keys_required_for_doors.value,
+            "gates": self.gates,
+            "gate_requirements": self.gate_requirements,
+            "select_gates": self.options.select_gates.value,
+            "select_gates_count": self.options.select_gates_count.value,
+            "gate_unlock_requirement": self.options.gate_unlock_requirement.value,
+
             "enemy_sanity": self.options.enemy_sanity.value,
             "enemy_objective_sanity": self.options.enemy_objective_sanity.value,
             "weapon_sanity_unlock": self.options.weapon_sanity_unlock.value,

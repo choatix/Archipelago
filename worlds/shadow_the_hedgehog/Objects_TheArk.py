@@ -154,4 +154,11 @@ DESIRABLE_OBJECTS_THE_ARK = [
     SETObject(ObjectType.GOLD_BEETLE, Levels.STAGE_THE_ARK, 354, 'Gold Beetle',
               region=REGION_INDICIES.THE_ARK_BLACK_VOLT),
 
+    SETObject(ObjectType.KEY, Levels.STAGE_THE_ARK, 47, 'Key 1', region=0),
+    SETObject(ObjectType.KEY, Levels.STAGE_THE_ARK, 133, 'Key 2', region=REGION_INDICIES.THE_ARK_BLACK_VOLT),
+    SETObject(ObjectType.KEY, Levels.STAGE_THE_ARK, 143, 'Key 3', region=REGION_INDICIES.THE_ARK_BLACK_VOLT),
+    SETObject(ObjectType.KEY, Levels.STAGE_THE_ARK, 271, 'Key 4', region=REGION_INDICIES.THE_ARK_BLACK_VOLT),
+    SETObject(ObjectType.KEY, Levels.STAGE_THE_ARK, 206, 'Key 5', region=REGION_INDICIES.THE_ARK_BLACK_VOLT),
+    SETObject(ObjectType.GOAL_RING, Levels.STAGE_THE_ARK, 364, 'Goal Ring',region=REGION_INDICIES.THE_ARK_BLACK_VOLT)
+
 ]

@@ -1,4 +1,5 @@
 import logging
+import math
 import typing
 from math import ceil, floor
 
@@ -18,12 +19,27 @@ from .Regions import character_name_to_region, stage_id_to_region, region_name_f
     region_name_for_weapon
 from . import Utils as ShadowUtils
 
-def GetKeyRule(stage, player):
-    relevant_key_base = [ k for k in Locations.KeyLocations if k.stageId == stage]
-    key_regions = relevant_key_base[0].region
-    regions = set([ Names.GetDistributionRegionEventName(stage, k) for k in key_regions])
-    region_names = list(set([ stage_id_to_region(stage, k) for k in key_regions]))
-    return lambda state, ri=regions: state.has_all(ri, player), region_names
+def GetKeyRule(options, stage, player):
+
+    required_keys = options.keys_required_for_doors
+
+    region_list = []
+    region_names = []
+
+    arch_item = None
+
+    if options.key_collection_method in [Options.KeyCollectionMethod.option_local, Options.KeyCollectionMethod.option_both]:
+        relevant_key_base = [k for k in Locations.KeyLocations if k.stageId == stage]
+        key_regions = relevant_key_base[0].region
+        region_items = [Names.GetDistributionRegionEventName(stage, k) for k in key_regions]
+        region_names = list(set([stage_id_to_region(stage, k) for k in key_regions]))
+        region_list.extend(region_items)
+
+    if options.key_collection_method in [Options.KeyCollectionMethod.option_arch, Options.KeyCollectionMethod.option_both]:
+        arch_item = Items.GetStageKeyItem(stage)
+
+    return (lambda state, ri=region_list, a_item=arch_item: (state.count_from_list(ri, player) +
+                                          (0 if a_item is None else state.count(a_item, player)) >= required_keys), region_names)
 
 def GetRelevantTokenItem(token: LocationInfo):
     level_token_items = GetLevelTokenItems()
@@ -87,7 +103,7 @@ def handle_path_rules(options, player, additional_level_region, path_type):
             return weapon_rule, indirects
 
     if Names.REGION_RESTRICTION_TYPES.KeyDoor in additional_level_region.restrictionTypes:
-        key_rule, regions = GetKeyRule(additional_level_region.stageId, player)
+        key_rule, regions = GetKeyRule(options, additional_level_region.stageId, player)
         rule = lambda state,r=rule: key_rule(state) and r(state)
         indirects.extend(regions)
 
@@ -325,6 +341,91 @@ def lock_warp_items(multiworld, world, player):
 
         location.place_locked_item(
             mw_token_item)
+
+
+
+def CalculateObjectiveValueForGate(value, max_gates, gate_no, rate=1):
+    perc = pow(gate_no, 2) / pow((max_gates+1), 2)
+    result = value * perc
+    expected_result = round(result, 0)
+    if expected_result == 0:
+        return 1
+
+    return expected_result
+
+def GetGateKeyRule(world, player, gate_no):
+
+    reqs = []
+    if gate_no in world.gate_requirements:
+        reqs = world.gate_requirements[gate_no]
+    else:
+        if world.options.gate_unlock_requirement == Options.GateUnlockRequirement.option_objective:
+            full_reqs = world.objective_requirements.copy()
+            reqs = {}
+
+            for o in full_reqs.items():
+                key = o[0]
+                value = o[1]
+                reqs[key] = CalculateObjectiveValueForGate(value, world.options.select_gates_count, gate_no)
+
+            world.gate_requirements[gate_no] = reqs
+        elif world.options.gate_unlock_requirement == Options.GateUnlockRequirement.option_objective_available:
+            full_reqs = world.objective_requirements.copy()
+            reqs = {}
+
+            gated_stages = []
+            for i in world.gates.keys():
+                if i < gate_no:
+                    gated_stages.extend(world.gates[i])
+
+            for o in [ a for a in full_reqs.items() if Items.GetItemByName(a[0]).stageId
+                                                  in gated_stages ]:
+                key = o[0]
+                value = o[1]
+                reqs[key] = CalculateObjectiveValueForGate(value, world.options.select_gates_count, gate_no)
+
+            world.gate_requirements[gate_no] = reqs
+        elif world.options.gate_unlock_requirement == Options.GateUnlockRequirement.option_items:
+
+            reqs = {
+                "Gate Key": gate_no
+            }
+
+            world.gate_requirements[gate_no] = reqs
+        elif world.options.gate_unlock_requirement == Options.GateUnlockRequirement.option_chaos_emeralds:
+            if gate_no == 1:
+                reqs = {
+                    "Green Chaos Emerald": 1
+                }
+            elif gate_no == 2:
+                reqs = {
+                    "Blue Chaos Emerald": 1
+                }
+            elif gate_no == 3:
+                reqs = {
+                    "Yellow Chaos Emerald": 1
+                }
+            elif gate_no == 4:
+                reqs = {
+                    "White Chaos Emerald": 1
+                }
+            elif gate_no == 5:
+                reqs = {
+                    "Cyan Chaos Emerald": 1
+                }
+            elif gate_no == 6:
+                reqs = {
+                    "Purple Chaos Emerald": 1
+                }
+            elif gate_no == 7:
+                reqs = {
+                    "Red Chaos Emerald": 1
+                }
+
+
+
+
+    return lambda state, o=reqs: state.has_all_counts(o, player)
 
 def CountRegionAccessibility(state, keys, data, ix, player, perc=100):
     #sum(
@@ -819,6 +920,23 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
 
                 if l > max_required:
                     break
+
+    for gate in world.gates.items():
+        gate_no = gate[0]
+        gate_stages = gate[1]
+
+        if gate_no == 0:
+            continue
+
+        menu_region = world.get_region("Menu")
+
+        for gate_stage in gate_stages:
+            base_region_name = stage_id_to_region(gate_stage, 0)
+
+            menu_region.connect(world.get_region(base_region_name),
+                                f"Gate Entrance {gate_no} - {base_region_name}",
+                                rule=GetGateKeyRule(world, player, gate_no))
+
 
     goal_has = []
     if world.options.goal_chaos_emeralds:

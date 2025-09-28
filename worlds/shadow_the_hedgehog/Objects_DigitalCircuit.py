@@ -108,4 +108,12 @@ SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_DIGITAL_CIRCUIT, 63, "Special Weap
                  region=REGION_INDICIES.DIGITAL_CIRCUIT_DARK_WARP_HOLE),
         SETObject(ObjectType.GUN_BEETLE, Levels.STAGE_DIGITAL_CIRCUIT, 414, '70',
                  region=REGION_INDICIES.DIGITAL_CIRCUIT_DARK_WARP_HOLE),
+
+SETObject(ObjectType.KEY, Levels.STAGE_DIGITAL_CIRCUIT, 468, 'Key 1', region=0),
+SETObject(ObjectType.KEY, Levels.STAGE_DIGITAL_CIRCUIT, 509, 'Key 2', region=0),
+SETObject(ObjectType.KEY, Levels.STAGE_DIGITAL_CIRCUIT, 484, 'Key 3', region=0),
+SETObject(ObjectType.KEY, Levels.STAGE_DIGITAL_CIRCUIT, 491, 'Key 4', region=0),
+SETObject(ObjectType.KEY, Levels.STAGE_DIGITAL_CIRCUIT, 505, 'Key 5', region=REGION_INDICIES.DIGITAL_CIRCUIT_DARK_WARP_HOLE),
+SETObject(ObjectType.GOAL_RING, Levels.STAGE_DIGITAL_CIRCUIT, 622, 'Goal Ring',region=0)
+
 ]

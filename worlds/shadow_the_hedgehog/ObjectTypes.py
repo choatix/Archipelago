@@ -92,6 +92,20 @@ class ObjectType:
 
     PARTNER = 72
 
+    KEY = 73
+    GOAL_RING = 74
+    FIRE = 75
+    POISON_GAS = 76
+    DARK_SPIN_ENTRY = 77
+    DEFENSE_PROGRAM = 78
+    RING_OF_FIRE = 79
+    HELICOPTER = 80
+    CLEAR_TRIGGER = 81
+
+    ITEM_CAPSULE = 82
+    BALLOON_ITEM = 83
+
+
 
 class SETObject:
     object_type: int

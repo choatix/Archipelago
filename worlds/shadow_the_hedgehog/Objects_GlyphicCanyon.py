@@ -146,4 +146,11 @@ DESIRABLE_OBJECTS_GLYPHIC_CANYON  = [
               region=REGION_INDICIES.GLYPHIC_CANYON_BLACK_VOLT),
     SETObject(ObjectType.BLACK_HAWK, Levels.STAGE_GLYPHIC_CANYON, 247, '63',
               region=REGION_INDICIES.GLYPHIC_CANYON_BLACK_VOLT),
+
+    SETObject(ObjectType.KEY, Levels.STAGE_GLYPHIC_CANYON, 257, 'Key 1', region=0),
+    SETObject(ObjectType.KEY, Levels.STAGE_GLYPHIC_CANYON, 259, 'Key 2', region=0),
+    SETObject(ObjectType.KEY, Levels.STAGE_GLYPHIC_CANYON, 258, 'Key 3', region=0),
+    SETObject(ObjectType.KEY, Levels.STAGE_GLYPHIC_CANYON, 251, 'Key 4', region=REGION_INDICIES.GLYPHIC_CANYON_PULLEY),
+    SETObject(ObjectType.KEY, Levels.STAGE_GLYPHIC_CANYON, 252, 'Key 5', region=REGION_INDICIES.GLYPHIC_CANYON_PULLEY),
+    SETObject(ObjectType.GOAL_RING, Levels.STAGE_GLYPHIC_CANYON, 404, 'Goal Ring',region=0)
 ]
