@@ -104,7 +104,11 @@ class ObjectType:
 
     ITEM_CAPSULE = 82
     BALLOON_ITEM = 83
+    ITEM_IN_BOX = 84
+    ITEM_IN_METAL_BOX = 85
 
+    BLACK_WING_LOTTERY = 86
+    EGG_PAWN_LOTTERY = 87
 
 
 class SETObject:

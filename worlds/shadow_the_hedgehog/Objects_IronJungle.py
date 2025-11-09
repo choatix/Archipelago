@@ -114,6 +114,35 @@ DESIRABLE_OBJECTS_IRON_JUNGLE = [
     SETObject(ObjectType.KEY, Levels.STAGE_IRON_JUNGLE, 232, 'Key 3', region=REGION_INDICIES.IRON_JUNGLE_LIGHT_DASH),
     SETObject(ObjectType.KEY, Levels.STAGE_IRON_JUNGLE, 234, 'Key 4', region=REGION_INDICIES.IRON_JUNGLE_LIGHT_DASH_DARK),
     SETObject(ObjectType.KEY, Levels.STAGE_IRON_JUNGLE, 233, 'Key 5', region=REGION_INDICIES.IRON_JUNGLE_LIGHT_DASH),
-    SETObject(ObjectType.GOAL_RING, Levels.STAGE_IRON_JUNGLE, 94, 'Goal Ring',region=REGION_INDICIES.IRON_JUNGLE_LIGHT_DASH)
+    SETObject(ObjectType.GOAL_RING, Levels.STAGE_IRON_JUNGLE, 94, 'Goal Ring',region=REGION_INDICIES.IRON_JUNGLE_LIGHT_DASH),
+
+    SETObject(ObjectType.ITEM_IN_BOX, Levels.STAGE_IRON_JUNGLE, 114, 'Jumper Section A',
+              region=REGION_INDICIES.IRON_JUNGLE_EARLY_JUMPER),
+    SETObject(ObjectType.ITEM_IN_BOX, Levels.STAGE_IRON_JUNGLE, 27, 'Jumper Section B',
+              region=REGION_INDICIES.IRON_JUNGLE_EARLY_JUMPER),
+
+    SETObject(ObjectType.ITEM_CAPSULE, Levels.STAGE_IRON_JUNGLE, 54, 'Trail A',
+              region=REGION_INDICIES.IRON_JUNGLE_ROCKET),
+    SETObject(ObjectType.ITEM_CAPSULE, Levels.STAGE_IRON_JUNGLE, 55, 'Trail B',
+              region=REGION_INDICIES.IRON_JUNGLE_ROCKET),
+    SETObject(ObjectType.ITEM_CAPSULE, Levels.STAGE_IRON_JUNGLE, 56, 'Trail C',
+              region=REGION_INDICIES.IRON_JUNGLE_ROCKET),
+
+    SETObject(ObjectType.ITEM_IN_BOX, Levels.STAGE_IRON_JUNGLE, 176, 'Before Split',
+              region=REGION_INDICIES.IRON_JUNGLE_ROCKET),
+
+    SETObject(ObjectType.ITEM_CAPSULE, Levels.STAGE_IRON_JUNGLE, 86, 'Dark Trail A',
+              region=REGION_INDICIES.IRON_JUNGLE_LIGHT_DASH_DARK),
+    SETObject(ObjectType.ITEM_CAPSULE, Levels.STAGE_IRON_JUNGLE, 80, 'Dark Trail B',
+              region=REGION_INDICIES.IRON_JUNGLE_LIGHT_DASH_DARK),
+    SETObject(ObjectType.ITEM_CAPSULE, Levels.STAGE_IRON_JUNGLE, 81, 'Dark Trail C',
+              region=REGION_INDICIES.IRON_JUNGLE_LIGHT_DASH_DARK),
+
+    SETObject(ObjectType.ITEM_IN_BOX, Levels.STAGE_IRON_JUNGLE, 88, 'Dark Box A',
+              region=REGION_INDICIES.IRON_JUNGLE_LIGHT_DASH_DARK),
+    SETObject(ObjectType.ITEM_IN_BOX, Levels.STAGE_IRON_JUNGLE, 87, 'Dark Box B',
+              region=REGION_INDICIES.IRON_JUNGLE_LIGHT_DASH_DARK),
+
+
 
 ]

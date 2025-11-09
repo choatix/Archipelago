@@ -95,6 +95,36 @@ SETObject(ObjectType.KEY, Levels.STAGE_COSMIC_FALL, 152, 'Key 2', region=REGION_
 SETObject(ObjectType.KEY, Levels.STAGE_COSMIC_FALL, 153, 'Key 3', region=REGION_INDICIES.COSMIC_FALL_PULLEY_NORMAL),
 SETObject(ObjectType.KEY, Levels.STAGE_COSMIC_FALL, 78, 'Key 4', region=REGION_INDICIES.COSMIC_FALL_GUN_JUMPER_PULLEY_HARD),
 SETObject(ObjectType.KEY, Levels.STAGE_COSMIC_FALL, 203, 'Key 5', region=REGION_INDICIES.COSMIC_FALL_LD_OR_JUMPER),
-SETObject(ObjectType.GOAL_RING, Levels.STAGE_COSMIC_FALL, 329, 'Goal Ring',region=REGION_INDICIES.COSMIC_FALL_COMPUTER_ROOM)
+SETObject(ObjectType.GOAL_RING, Levels.STAGE_COSMIC_FALL, 329, 'Goal Ring',region=REGION_INDICIES.COSMIC_FALL_COMPUTER_ROOM),
+
+    SETObject(ObjectType.ITEM_IN_METAL_BOX, Levels.STAGE_COSMIC_FALL, 47, 'Box By Check 1',
+              region=REGION_INDICIES.COSMIC_FALL_ZIPWIRE),
+
+    SETObject(ObjectType.ITEM_CAPSULE, Levels.STAGE_COSMIC_FALL, 128, 'Descend A',
+              region=REGION_INDICIES.COSMIC_FALL_ZIPWIRE),
+    SETObject(ObjectType.ITEM_CAPSULE, Levels.STAGE_COSMIC_FALL, 129, 'Descend B',
+              region=REGION_INDICIES.COSMIC_FALL_ZIPWIRE),
+    SETObject(ObjectType.ITEM_CAPSULE, Levels.STAGE_COSMIC_FALL, 130, 'Descend C',
+              region=REGION_INDICIES.COSMIC_FALL_ZIPWIRE),
+    SETObject(ObjectType.ITEM_IN_METAL_BOX, Levels.STAGE_COSMIC_FALL, 84, 'Red Shield Before Entry',
+              region=REGION_INDICIES.COSMIC_FALL_ZIPWIRE),
+
+    SETObject(ObjectType.ITEM_CAPSULE, Levels.STAGE_COSMIC_FALL, 205, 'Below Door After Vector',
+              region=REGION_INDICIES.COSMIC_FALL_ZIPWIRE),
+
+    SETObject(ObjectType.BALLOON_ITEM, Levels.STAGE_COSMIC_FALL, 244, 'Balloon Ascent A',
+              region=REGION_INDICIES.COSMIC_FALL_ZIPWIRE),
+    SETObject(ObjectType.BALLOON_ITEM, Levels.STAGE_COSMIC_FALL, 242, 'Balloon Ascent B',
+              region=REGION_INDICIES.COSMIC_FALL_ZIPWIRE),
+    SETObject(ObjectType.BALLOON_ITEM, Levels.STAGE_COSMIC_FALL, 245, 'Balloon Ascent C',
+              region=REGION_INDICIES.COSMIC_FALL_ZIPWIRE),
+    SETObject(ObjectType.BALLOON_ITEM, Levels.STAGE_COSMIC_FALL, 243, 'Balloon Ascent D',
+              region=REGION_INDICIES.COSMIC_FALL_ZIPWIRE),
+    SETObject(ObjectType.ITEM_CAPSULE, Levels.STAGE_COSMIC_FALL, 227, 'By KeyDoor When Open',
+              region=REGION_INDICIES.COSMIC_FALL_KEY_DOOR),
+    SETObject(ObjectType.ITEM_CAPSULE, Levels.STAGE_COSMIC_FALL, 299, 'Final Section A',
+              region=REGION_INDICIES.COSMIC_FALL_KEY_DOOR),
+    SETObject(ObjectType.ITEM_CAPSULE, Levels.STAGE_COSMIC_FALL, 300, 'Final Section B',
+              region=REGION_INDICIES.COSMIC_FALL_KEY_DOOR)
 
 ]

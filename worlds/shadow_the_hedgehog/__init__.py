@@ -222,9 +222,6 @@ class ShtHWorld(World):
         if not self.options.enemy_objective_sanity and self.options.enemy_sanity:
             self.options.enemy_sanity = Options.Enemysanity(False)
 
-        # TODO: Add handle for having excluded all stages
-
-
 
     def calculate_non_objective_sanity_maximums(self):
         relevant_mission_clears =  [m for m in Locations.MissionClearLocations if
@@ -435,12 +432,6 @@ class ShtHWorld(World):
                 if "keys_required_for_doors" in passthrough:
                     self.options.keys_required_for_doors = passthrough["keys_required_for_doors"]
 
-                if "gates" in passthrough:
-                    self.options.gates = passthrough["gates"]
-
-                if "gate_requirements" in passthrough:
-                    self.options.gate_requirements = passthrough["gate_requirements"]
-
                 if "select_gates" in passthrough:
                     self.options.select_gates = passthrough["select_gates"]
 
@@ -526,6 +517,12 @@ class ShtHWorld(World):
                 if "shuffled_story_mode" in passthrough:
                     self.shuffled_story_mode = Story.StringToStory(passthrough["shuffled_story_mode"])
 
+                if "gates" in passthrough:
+                    self.gates = passthrough["gates"]
+
+                if "gate_requirements" in passthrough:
+                    self.gate_requirements = passthrough["gate_requirements"]
+
                 if "shadow_mod" in passthrough:
                     self.options.shadow_mod = passthrough["shadow_mod"]
 
@@ -601,6 +598,15 @@ class ShtHWorld(World):
                 if "exclude_go_mode_items" in passthrough:
                     self.options.exclude_go_mode_items = passthrough["exclude_go_mode_items"]
 
+                if "first_levels" in passthrough:
+                    self.first_regions = passthrough["first_levels"]
+
+                if "boss_enemy_sanity" in passthrough:
+                    self.options.boss_enemy_sanity = passthrough["boss_enemy_sanity"]
+
+                if "item_sanity" in passthrough:
+                    self.options.item_sanity = passthrough["item_sanity"]
+
         # Set maximum of levels required
         # Exclude missions listed in exclude_locations
         maximum_force_missions = self.options.force_objective_sanity_max.value
@@ -610,12 +616,15 @@ class ShtHWorld(World):
         mission_total = 0
 
         Regions.early_region_checks(self)
-        Regions.DetermineFirstStages(self)
-        self.gates = Regions.DetermineGates(self)
-        self.gate_unlocks = {}
-        self.gate_requirements = {}
 
-        if self.options.starting_level_method == Options.StartingLevelMethod.option_stage_and_item:
+        if not hasattr(self.multiworld, "re_gen_passthrough"):
+            Regions.DetermineFirstStages(self)
+
+        if not hasattr(self.multiworld, "re_gen_passthrough"):
+            self.gates = Regions.DetermineGates(self)
+            self.gate_requirements = {}
+
+        if not hasattr(self.multiworld, "re_gen_passthrough") and self.options.starting_level_method == Options.StartingLevelMethod.option_stage_and_item:
             extra_items = Regions.FindStartingItems(self, required=False)
             for item in extra_items:
                 self.starting_items.append(item)
@@ -883,7 +892,9 @@ class ShtHWorld(World):
             "objective_sanity_behaviour": self.options.objective_sanity_behaviour.value,
             "chaos_control_logic_level": self.options.chaos_control_logic_level.value,
             "difficult_enemy_sanity": self.options.difficult_enemy_sanity.value,
-            "exclude_go_mode_items": self.options.exclude_go_mode_items.value
+            "exclude_go_mode_items": self.options.exclude_go_mode_items.value,
+            "boss_enemy_sanity": self.options.boss_enemy_sanity.value,
+            "item_sanity": self.options.item_sanity.value
         }
 
         return slot_data

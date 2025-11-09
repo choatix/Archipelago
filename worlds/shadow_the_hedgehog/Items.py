@@ -81,9 +81,6 @@ TOKENS = [
     Progression.FinalToken, Progression.ObjectiveToken, Progression.BossToken, Progression.FinalBossToken
 ]
 
-
-# TODO: Add boss token
-
 class Junk:
     NothingJunk = "Nothing Junk"
 
@@ -93,8 +90,6 @@ class Junk:
 
 GaugeAmounts = \
     {
-        1: 1,
-        5: 1,
         100: 5,
         500: 10,
         1000: 20,
@@ -108,10 +103,8 @@ GaugeAmounts = \
 
 RingAmounts = \
     {
-        1: 10,
-        2: 10,
         5: 20,
-        10: 20,
+        10: 15,
         20: 10
     }
 
@@ -327,6 +320,17 @@ def GetRingItems():
 
     return infos
 
+def GetAmmoBoostItems():
+    id_s = ITEM_ID_START_AT_JUNK + 75
+    info = []
+    for weapon in Weapons.WEAPON_INFO:
+        info.append(ItemInfo(id_s, weapon.name + " Ammo Boost",  ItemClassification.filler,
+                              None, None, "ammoboost", weapon.game_id))
+        id_s += 1
+
+    return info
+
+
 def GetTraps():
     id_t = ITEM_ID_START_AT_JUNK + 70
 
@@ -337,6 +341,10 @@ def GetTraps():
 
     infos.append(ItemInfo(id_t, "Poison Trap", ItemClassification.trap,
                           None, None, "poisontrap", None))
+    id_t+=1
+
+    infos.append(ItemInfo(id_t, "Checkpoint Trap", ItemClassification.trap,
+                          None, None, "checkpointtrap", None))
     id_t+=1
 
     return infos
@@ -443,6 +451,9 @@ def GetJunkItemInfo():
     ring_items = GetRingItems()
     junk_items.extend(ring_items)
 
+    ammo_boost_items = GetAmmoBoostItems()
+    junk_items.extend(ammo_boost_items)
+
     return junk_items
 
 
@@ -502,7 +513,7 @@ def GetTrapDensity(option):
 
     return 0
 
-def ChooseJunkItems(random, junk, traps, options, junk_count):
+def ChooseJunkItems(random, junk, traps, options, junk_count, available_weapons):
     junk_distribution = {}
     trap_distribution = {}
     junk_items = []
@@ -532,6 +543,13 @@ def ChooseJunkItems(random, junk, traps, options, junk_count):
             trap_distribution[trap_total] = GetTrapDensity(options.ammo_trap_enabled)
             trap_total += 1
 
+        if options.checkpoint_trap_enabled:
+            trap_item = \
+                [j for j in traps if j.type == "checkpointtrap"][0]
+            trap_items.append(trap_item)
+            trap_distribution[trap_total] = GetTrapDensity(options.checkpoint_trap_enabled)
+            trap_total += 1
+
     else:
         filler_count = junk_count
 
@@ -554,6 +572,31 @@ def ChooseJunkItems(random, junk, traps, options, junk_count):
             junk_items.append(r_item)
             total += 1
 
+    if options.enable_ammo_boost_items:
+        weapons = Weapons.WEAPON_INFO
+        r_items = [j for j in junk if j.type == "ammoboost"]
+        for r in r_items:
+            weapon_info = [ w for w in weapons if w.game_id == r.value][0]
+            if weapon_info.game_id not in available_weapons:
+                continue
+            weight = 0.5
+            if weapon_info.power is None:
+                weight = 2
+            elif weapon_info.power > 15:
+                weight = 0.1
+            elif weapon_info.power == 2 and weapon_info.base_ammo == 4:
+                weight = 0
+            elif weapon_info.power < 2:
+                weight = 4
+            elif weapon_info.base_ammo < 10:
+                weight = 3
+            elif weapon_info.power < 8:
+                weight = 1
+
+            junk_distribution[total] = weight
+            junk_items.append(r)
+            total += 1
+
     NothingJunk = [j for j in junk if j.type == "Junk"][0]
     junk_items.append(NothingJunk)
     junk_distribution[total] = 1
@@ -562,11 +605,14 @@ def ChooseJunkItems(random, junk, traps, options, junk_count):
     randomised_indicies = random.choices(list(junk_distribution.keys()), k=filler_count,
                                          weights=list(junk_distribution.values()))
 
-    randomised_traps = random.choices(list(trap_distribution.keys()), k=trap_count,
+    if trap_count > 0:
+        randomised_traps = random.choices(list(trap_distribution.keys()), k=trap_count,
                                          weights=list(trap_distribution.values()))
+        traps = [trap_items[k] for k in randomised_traps]
+    else:
+        traps = []
 
     junk =  [junk_items[k] for k in randomised_indicies]
-    traps = [trap_items[k] for k in randomised_traps]
 
     junk.extend(traps)
     return junk
@@ -929,15 +975,6 @@ def PopulateItemPool(world: World):
 
     mw_stage_items = GetStageItems(world, stage_objective_items)
 
-    #if world.options.exceeding_items_filler == Options.ExceedingItemsFiller.option_always:
-    #    downgrade_count = 1000
-    #if world.excess_item_count > 0:
-    #    downgrade_count = world.excess_item_count
-
-    # TODO
-    # Excess item selection must be added to to_remove
-
-
     potential_downgrade, to_remove = GetPotentialDowngradeItems(world, mw_stage_items)
     if world.excess_item_count > 0 and len(potential_downgrade) > 0:
         t_size = len(to_remove)
@@ -1134,7 +1171,7 @@ def PopulateItemPool(world: World):
     logging.info("Junk counts are: junk:%d, reverse:%d", junk_count, reverse_count)
     if junk_count > 0:
         mw_junk_items = [ShadowTheHedgehogItem(i, world.player) for i in
-                         ChooseJunkItems(world.random, junk_items, trap_items, world.options, junk_count)]
+                         ChooseJunkItems(world.random, junk_items, trap_items, world.options, junk_count, world.available_weapons)]
         world.multiworld.itempool += mw_junk_items
 
     if reverse_count > 0:

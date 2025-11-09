@@ -1,11 +1,9 @@
-#from __future__ import annotations
+
 import copy
-from dataclasses import dataclass
-from math import floor
 from typing import Dict, Optional
 
-from BaseClasses import Location, Region, ItemClassification, Item, LocationProgressType
-from . import Regions, Levels, Weapons, Objects, Options, Names
+from BaseClasses import Location, Region, LocationProgressType
+from . import Regions, Levels, Weapons, Objects, Names
 from .Levels import *
 from . import Utils as ShadowUtils
 from .ObjectTypes import ObjectType
@@ -274,7 +272,8 @@ MissionClearLocations = [
         {
             REGION_INDICIES.CRYPTIC_CASTLE_TORCH: 2,
             REGION_INDICIES.CRYPTIC_CASTLE_HAWK: 1,
-            REGION_INDICIES.CRYPTIC_CASTLE_BOMB_EASY_2: 2
+            REGION_INDICIES.CRYPTIC_CASTLE_BOMB_EASY_2: 1,
+            REGION_INDICIES.CRYPTIC_CASTLE_HAWK_2: 1
         }
         )
         .setRequirement(REGION_RESTRICTION_TYPES.Torch),
@@ -790,7 +789,8 @@ CheckpointLocations = \
             0: [1],
             REGION_INDICIES.CRYPTIC_CASTLE_TORCH: [2],
             REGION_INDICIES.CRYPTIC_CASTLE_HAWK: [3,4,5],
-            REGION_INDICIES.CRYPTIC_CASTLE_BOMB_EASY_2: [6,7,8]
+            REGION_INDICIES.CRYPTIC_CASTLE_BOMB_EASY_2: [6,8],
+            REGION_INDICIES.CRYPTIC_CASTLE_HAWK_2: [7]
         }
     ),
     CheckpointLocation(STAGE_PRISON_ISLAND, 7)
@@ -1425,10 +1425,6 @@ def create_locations(world, regions: Dict[str, Region]):
 
         within_region.locations.append(completion_location)
 
-        # TODO:
-        # Work out each stages required tokens and add a location
-        # If the various settings are enabled
-
     override_settings = world.options.percent_overrides
 
     if world.options.objective_sanity:
@@ -1726,8 +1722,25 @@ def create_locations(world, regions: Dict[str, Region]):
     if world.options.enemy_sanity and world.options.objective_sanity_system != Options.ObjectiveSanitySystem.option_count_up:
         enemy_types = Objects.GetStandardEnemyTypes()
         for objective_location in [x for x in object_locations if x.other in enemy_types and x not in object_location_checks and
-                                   x.stageId in world.available_levels and x.stageId not in Levels.BOSS_STAGES
-                                                                  and (world.options.difficult_enemy_sanity or not x.flag) ]:
+                                   x.stageId in world.available_levels
+                                    and (world.options.boss_enemy_sanity or x.stageId not in Levels.BOSS_STAGES)
+                                    and (world.options.difficult_enemy_sanity or not x.flag) ]:
+
+            if world.options.exclude_go_mode_items and objective_location.stageId == STAGE_THE_LAST_WAY and \
+                    not world.options.include_last_way_shuffle:
+                continue
+
+            stage_region_name = Regions.stage_id_to_region(objective_location.stageId, objective_location.regionId)
+            stage_region = regions[stage_region_name]
+            new_objective_location = ShadowTheHedgehogLocation(world.player, objective_location.name,
+                                                           objective_location.locationId, stage_region)
+            stage_region.locations.append(new_objective_location)
+
+    if world.options.item_sanity:
+        item_types = Objects.GetItemBoxTypes()
+        for objective_location in [x for x in object_locations if x.other in item_types and
+                                   x.stageId in world.available_levels
+                                    and (world.options.difficult_enemy_sanity or not x.flag) ]:
 
             if world.options.exclude_go_mode_items and objective_location.stageId == STAGE_THE_LAST_WAY and \
                     not world.options.include_last_way_shuffle:
@@ -1959,11 +1972,23 @@ def count_locations(world):
         enemy_types = Objects.GetStandardEnemyTypes()
         enemy_sanity_object_checks = [x for x in object_locations if
          x.other in enemy_types and x not in object_location_checks and x.stageId in world.available_levels and
-                                      x.stageId not in Levels.BOSS_STAGES  and (world.options.difficult_enemy_sanity or not x.flag) and
+                                      (world.options.boss_enemy_sanity or x.stageId not in Levels.BOSS_STAGES)
+                                      and (world.options.difficult_enemy_sanity or not x.flag) and
                                       (not world.options.exclude_go_mode_items or x.stageId != STAGE_THE_LAST_WAY or
                                        world.options.include_last_way_shuffle)]
 
         count = increment_location_count(count, len(enemy_sanity_object_checks), "oe")
+
+    if world.options.item_sanity:
+        item_types = Objects.GetItemBoxTypes()
+        possible = [x for x in object_locations if x.other in item_types and
+                                   x.stageId in world.available_levels
+                                    and (world.options.difficult_enemy_sanity or not x.flag) and
+                    (not world.options.exclude_go_mode_items or x.stageId != STAGE_THE_LAST_WAY or
+                     world.options.include_last_way_shuffle)
+                    ]
+
+        count = increment_location_count(count, len(possible), "i")
 
     return count
 

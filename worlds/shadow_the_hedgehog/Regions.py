@@ -58,13 +58,10 @@ def handle_single_boss(world, boss_name):
 
 
 def DetermineFirstStages(world):
-    stages = Levels.ALL_STAGES
     first_stages_selections = []
     within_selections = []
 
-    stage_regions = []
-    region_to_stage_id = {}
-    possible_first_regions = []
+    starting_stage_count = world.options.starting_stages.value
 
     remaining_first_stages = [x for x in world.available_levels if x not in Levels.BOSS_STAGES and
                               x not in Levels.LAST_STORY_STAGES]
@@ -76,7 +73,7 @@ def DetermineFirstStages(world):
 
     if (world.options.level_progression != Options.LevelProgression.option_story and
             len(plando_items) > 0):
-        item_details = [item_info[i.item].stageId for i in plando_items if name_map[i].type == 'level_object']
+        item_details = [name_map[i].stageId for i in plando_items if name_map[i].type == 'level_object']
         banned_by_plando = [l for l in remaining_first_stages if l in item_details]
 
         if len(banned_by_plando) > 0:
@@ -109,14 +106,14 @@ def DetermineFirstStages(world):
         within_selections.extend(clearable_stages)
         remaining_first_stages = [l for l in remaining_first_stages if l not in within_selections]
 
-    if len(remaining_first_stages) > 0:
+    if len(remaining_first_stages) > 0 and starting_stage_count > len(remaining_first_stages):
         first_stages_selections.append(remaining_first_stages)
         within_selections.extend(remaining_first_stages)
 
     possible_first_regions = [ r for r in within_selections if r not in Levels.LAST_STORY_STAGES and r not in Levels.BOSS_STAGES ]
 
     if world.options.level_progression != Options.LevelProgression.option_story:
-        starting_stage_count = world.options.starting_stages.value
+
 
         #print("Select picking", starting_stage_count, possible_first_regions, first_stages_selections)
 
@@ -152,11 +149,14 @@ def DetermineGates(world):
     if gate_mode == Options.SelectGates.option_off:
         return {}
 
-
-
     stages_to_assign = [ l for l in Levels.ALL_STAGES if Levels.LEVEL_ID_TO_LEVEL[l] not in world.options.excluded_stages and
                          l not in Levels.LAST_STORY_STAGES and l not in world.first_regions and
                          (world.options.select_bosses if l in Levels.BOSS_STAGES else True) ]
+
+
+    #print("WFIRST", world.first_regions)
+    #fake_gates = {0: world.first_regions, 1: [Levels.BOSS_BLACK_BULL_LH, Levels.BOSS_EGG_BREAKER_MM, Levels.STAGE_BLACK_COMET], 2: [Levels.STAGE_LETHAL_HIGHWAY, Levels.STAGE_MAD_MATRIX]}
+    #return fake_gates
 
     world.random.shuffle(stages_to_assign)
 
@@ -196,8 +196,6 @@ def early_region_checks(world):
     if last_way_required:
         story_sorted_stages.append(Levels.STAGE_THE_LAST_WAY)
         story_sorted_stages.append(Levels.BOSS_DEVIL_DOOM)
-
-    # TODO: Add handling for story NOT having all stages, in future
 
     for level in story_sorted_stages:
         if Levels.LEVEL_ID_TO_LEVEL[level] in world.options.excluded_stages and \
@@ -665,10 +663,6 @@ def FindStartingItems(world, required=False):
 
     if world.options.level_progression != Options.LevelProgression.option_story:
         starting_stages.extend(world.first_regions)
-
-    # TODO
-    # Handle which regions the player has default access too owing to logic level
-    # Use this as the limiter for base regions
 
     if len(world.starting_items) == 0:
         if len(world.options.start_inventory.value.keys()) > 0:

@@ -6,8 +6,8 @@ from math import ceil, floor
 from BaseClasses import MultiWorld, Region, Entrance, Item, ItemClassification
 from worlds.AutoWorld import World
 from worlds.generic.Rules import add_rule
-from . import Items, Levels, Utils, Weapons, Regions, Vehicle, Options, Locations,Names, Objects
-    
+from . import Items, Levels, Utils, Weapons, Regions, Vehicle, Options, Locations, Names, Objects, Story
+
 #LEVEL_ID_TO_LEVEL, CharacterToLevel, Items.ITEM_TOKEN_TYPE_FINAL, \    Levels.MISSION_ALIGNMENT_DARK, Levels.MISSION_ALIGNMENT_HERO, Items.ITEM_TOKEN_TYPE_OBJECTIVE
 #Items.ITEM_TOKEN_TYPE_STANDARD, Items.ITEM_TOKEN_TYPE_ALIGNMENT,GetLevelObjectNamesItems.ITEM_TOKEN_TYPE_BOSSItems.ITEM_TOKEN_TYPE_FINAL_BOSSLevels.REGION_RESTRICTION_REFERENCE_TYPES
 #Names.REGION_RESTRICTION_TYPESGetEnemyLocationNameLevelRegion
@@ -286,7 +286,7 @@ def handle_path_rules(options, player, additional_level_region, path_type):
 
         rule = lambda state, r=rule: o_rule(state) and r(state)
 
-    for regionAccess in [ a for a in additional_level_region.restrictionTypes if a > 100]:
+    for regionAccess in [ a.value for a in additional_level_region.restrictionTypes if a.value > 100]:
         required_stage_region = regionAccess - 100
         access_rule = lambda state: state.can_reach_region(
             stage_id_to_region(additional_level_region.stageId, required_stage_region), player)
@@ -342,10 +342,8 @@ def lock_warp_items(multiworld, world, player):
         location.place_locked_item(
             mw_token_item)
 
-
-
-def CalculateObjectiveValueForGate(value, max_gates, gate_no, rate=1):
-    perc = pow(gate_no, 2) / pow((max_gates+1), 2)
+def CalculateObjectiveValueForGate(value, max_gates, gate_no, gate_density, rate=1):
+    perc = pow((gate_no + gate_density), 2) / pow((max_gates+1+gate_density), 2)
     result = value * perc
     expected_result = round(result, 0)
     if expected_result == 0:
@@ -355,6 +353,7 @@ def CalculateObjectiveValueForGate(value, max_gates, gate_no, rate=1):
 
 def GetGateKeyRule(world, player, gate_no):
 
+    gate_density = world.options.gate_density
     reqs = []
     if gate_no in world.gate_requirements:
         reqs = world.gate_requirements[gate_no]
@@ -366,8 +365,7 @@ def GetGateKeyRule(world, player, gate_no):
             for o in full_reqs.items():
                 key = o[0]
                 value = o[1]
-                reqs[key] = CalculateObjectiveValueForGate(value, world.options.select_gates_count, gate_no)
-
+                reqs[key] = CalculateObjectiveValueForGate(value, world.options.select_gates_count, gate_no, gate_density)
             world.gate_requirements[gate_no] = reqs
         elif world.options.gate_unlock_requirement == Options.GateUnlockRequirement.option_objective_available:
             full_reqs = world.objective_requirements.copy()
@@ -378,11 +376,17 @@ def GetGateKeyRule(world, player, gate_no):
                 if i < gate_no:
                     gated_stages.extend(world.gates[i])
 
+            previous_gates = {}
             for o in [ a for a in full_reqs.items() if Items.GetItemByName(a[0]).stageId
                                                   in gated_stages ]:
                 key = o[0]
                 value = o[1]
-                reqs[key] = CalculateObjectiveValueForGate(value, world.options.select_gates_count, gate_no)
+                gate_value = CalculateObjectiveValueForGate(value, world.options.select_gates_count, gate_no, gate_density)
+
+                for key, value in previous_gates:
+                    pass
+
+                reqs[key] = gate_value
 
             world.gate_requirements[gate_no] = reqs
         elif world.options.gate_unlock_requirement == Options.GateUnlockRequirement.option_items:
@@ -421,9 +425,6 @@ def GetGateKeyRule(world, player, gate_no):
                 reqs = {
                     "Red Chaos Emerald": 1
                 }
-
-
-
 
     return lambda state, o=reqs: state.has_all_counts(o, player)
 
@@ -530,7 +531,8 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
             path_rule, indirects = handle_path_rules(world.options, player, additional_level_region,
                                           Levels.REGION_RESTRICTION_REFERENCE_TYPES.BaseLogic)
             if path_rule is not None:
-                connection_name = base_region_name+ ">" + "(" + str(additional_level_region.restrictionTypes) + ")" + new_region_name
+                connection_name = Names.GetRegionEntranceName(base_region_name, new_region_name,
+                                                              additional_level_region.restrictionTypes)
                 connect(world.player, connection_name,
                     base_region, new_region, path_rule)
 
@@ -552,8 +554,6 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
 
         event_location.place_locked_item(Item(view_name,
                                               ItemClassification.progression_skip_balancing, None, player))
-
-            # TODO: Add logic here for obtaining access
 
     override_settings = world.options.percent_overrides
     lock_warp_items(multiworld, world, world.player)
@@ -933,9 +933,17 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
         for gate_stage in gate_stages:
             base_region_name = stage_id_to_region(gate_stage, 0)
 
+            rule = GetGateKeyRule(world, player, gate_no)
+            if gate_stage in Levels.BOSS_STAGES:
+                if gate_stage not in Levels.LAST_STORY_STAGES and gate_stage not in Levels.FINAL_BOSSES:
+                    boss_stage_requirement = Story.GetVanillaBossStage(gate_stage)
+                    if boss_stage_requirement is not None:
+                        base_base_region_name = stage_id_to_region(boss_stage_requirement, 0)
+                        rule = lambda state, r1=rule: r1(state) and state.can_reach_region(base_base_region_name, player)
+
             menu_region.connect(world.get_region(base_region_name),
                                 f"Gate Entrance {gate_no} - {base_region_name}",
-                                rule=GetGateKeyRule(world, player, gate_no))
+                                rule=rule)
 
 
     goal_has = []
