@@ -109,9 +109,15 @@ def handle_path_rules(options, player, additional_level_region, path_type):
 
     if Names.REGION_RESTRICTION_TYPES.ShootOrTurret in additional_level_region.restrictionTypes:
         if options.weapon_sanity_unlock and options.vehicle_logic:
-            rule_weapon = Weapons.GetRuleByWeaponRequirement(player, Weapons.WeaponAttributes.LONG_RANGE,
+            rule_weapon_1 = Weapons.GetRuleByWeaponRequirement(player, Weapons.WeaponAttributes.LONG_RANGE,
                                                       additional_level_region.stageId,
                                                       additional_level_region.fromRegions)
+
+            rule_weapon_2 = Weapons.GetRuleByWeaponRequirement(player, Weapons.WeaponAttributes.LOCKON,
+                                                             additional_level_region.stageId,
+                                                             additional_level_region.fromRegions)
+
+            rule_weapon = lambda state: rule_weapon_1(state) or rule_weapon_2(state)
 
             rule_vehicle = Vehicle.GetRuleByVehicleRequirement(player, "Gun Turret")
 
@@ -261,7 +267,7 @@ def handle_path_rules(options, player, additional_level_region, path_type):
         if Names.REGION_RESTRICTION_TYPES.GunTurret in additional_level_region.restrictionTypes:
             v_rule = Vehicle.GetRuleByVehicleRequirement(player, "Gun Turret")
 
-        rule = lambda state, r=rule: v_rule(state) and r(state)
+        rule = lambda state, r=rule, v=v_rule: v(state) and r(state)
 
     if Names.REGION_RESTRICTION_TYPES.ShadowRifle in additional_level_region.restrictionTypes:
         sr_rule = Weapons.GetRuleByWeaponRequirement(player, Weapons.WeaponAttributes.SHADOW_RIFLE,
@@ -351,7 +357,10 @@ def CalculateObjectiveValueForGate(value, max_gates, gate_no, gate_density, rate
 
     return expected_result
 
+
+
 def GetGateKeyRule(world, player, gate_no):
+    # Add weapon unlocks as gate requirement
 
     gate_density = world.options.gate_density
     reqs = []
@@ -934,16 +943,30 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
             base_region_name = stage_id_to_region(gate_stage, 0)
 
             rule = GetGateKeyRule(world, player, gate_no)
-            if gate_stage in Levels.BOSS_STAGES:
-                if gate_stage not in Levels.LAST_STORY_STAGES and gate_stage not in Levels.FINAL_BOSSES:
+            if gate_stage in Levels.BOSS_STAGES and gate_stage not in Levels.LAST_STORY_STAGES and gate_stage not in Levels.FINAL_BOSSES:
                     boss_stage_requirement = Story.GetVanillaBossStage(gate_stage)
                     if boss_stage_requirement is not None:
-                        base_base_region_name = stage_id_to_region(boss_stage_requirement, 0)
-                        rule = lambda state, r1=rule: r1(state) and state.can_reach_region(base_base_region_name, player)
+                        boss_base_region_name = stage_id_to_region(boss_stage_requirement, 0)
+                        boss_gate_rule = lambda state, r1=rule, boss_region=boss_base_region_name: r1(state) and \
+                                                                                        state.can_reach_region(boss_region, player)
 
-            menu_region.connect(world.get_region(base_region_name),
-                                f"Gate Entrance {gate_no} - {base_region_name}",
-                                rule=rule)
+                        bossExit = menu_region.connect(world.get_region(base_region_name),
+                                            f"Gate Entrance {gate_no} - {base_region_name}",
+                                            rule=boss_gate_rule)
+
+                        multiworld.register_indirect_condition(
+                            world.get_region(base_region_name), bossExit)
+
+                        multiworld.register_indirect_condition(
+                            world.get_region(boss_base_region_name), bossExit)
+            else:
+                menu_region.connect(world.get_region(base_region_name),
+                                    f"Gate Entrance {gate_no} - {base_region_name}",
+                                    rule=rule)
+
+
+
+
 
 
     goal_has = []

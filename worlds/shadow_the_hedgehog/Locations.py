@@ -1622,6 +1622,11 @@ def create_locations(world, regions: Dict[str, Region]):
         for core_location in [ x for x in object_locations if (x.other == ObjectType.ENERGY_CORE or
                                  x.other == ObjectType.ENERGY_CORE_IN_WOOD_BOX) and
                                                               x.stageId in world.available_levels]:
+
+            if world.options.exclude_go_mode_items and core_location.stageId == STAGE_THE_LAST_WAY and \
+                    not world.options.include_last_way_shuffle:
+                continue
+
             if core_location.regionId is not None:
                 stage_region_name = Regions.stage_id_to_region(core_location.stageId, core_location.regionId)
                 stage_region = regions[stage_region_name]
@@ -1650,6 +1655,11 @@ def create_locations(world, regions: Dict[str, Region]):
 
         for beetle_location in [ x for x in object_locations if x.other == ObjectType.GOLD_BEETLE and
                                  x.stageId in world.available_levels]:
+
+            if world.options.exclude_go_mode_items and beetle_location.stageId == STAGE_THE_LAST_WAY and \
+                    not world.options.include_last_way_shuffle:
+                continue
+
             stage_region_name = Regions.stage_id_to_region(beetle_location.stageId, beetle_location.regionId)
             stage_region = regions[stage_region_name]
             beetle_location = ShadowTheHedgehogLocation(world.player, beetle_location.name,
@@ -1660,6 +1670,11 @@ def create_locations(world, regions: Dict[str, Region]):
 
         for key_location in [ x for x in object_locations if x.other == ObjectType.KEY and
                                  x.stageId in world.available_levels]:
+
+            if world.options.exclude_go_mode_items and key_location.stageId == STAGE_THE_LAST_WAY and \
+                    not world.options.include_last_way_shuffle:
+                continue
+
             stage_region_name = Regions.stage_id_to_region(key_location.stageId, key_location.regionId)
             stage_region = regions[stage_region_name]
             key_location = ShadowTheHedgehogLocation(world.player, key_location.name,
@@ -1818,6 +1833,11 @@ def count_locations(world):
                                 world.options.include_last_way_shuffle)]
 
     charactersanity_locations = [ ml for ml in charactersanity_locations if ml.other in world.available_characters ]
+
+    object_locations = [ml for ml in object_locations if ml.stageId
+                                  in world.available_levels and (
+                                              not world.options.exclude_go_mode_items or ml.stageId != STAGE_THE_LAST_WAY or \
+                                              world.options.include_last_way_shuffle)]
 
     #keysanity_locations = [ks for ks in keysanity_locations if ks.stageId
     #                         in world.available_levels and (not world.options.exclude_go_mode_items or ks.stageId != STAGE_THE_LAST_WAY or \

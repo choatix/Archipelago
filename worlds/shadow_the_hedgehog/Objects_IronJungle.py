@@ -121,15 +121,15 @@ DESIRABLE_OBJECTS_IRON_JUNGLE = [
     SETObject(ObjectType.ITEM_IN_BOX, Levels.STAGE_IRON_JUNGLE, 27, 'Jumper Section B',
               region=REGION_INDICIES.IRON_JUNGLE_EARLY_JUMPER),
 
-    SETObject(ObjectType.ITEM_CAPSULE, Levels.STAGE_IRON_JUNGLE, 54, 'Trail A',
-              region=REGION_INDICIES.IRON_JUNGLE_ROCKET),
-    SETObject(ObjectType.ITEM_CAPSULE, Levels.STAGE_IRON_JUNGLE, 55, 'Trail B',
-              region=REGION_INDICIES.IRON_JUNGLE_ROCKET),
-    SETObject(ObjectType.ITEM_CAPSULE, Levels.STAGE_IRON_JUNGLE, 56, 'Trail C',
-              region=REGION_INDICIES.IRON_JUNGLE_ROCKET),
-
     SETObject(ObjectType.ITEM_IN_BOX, Levels.STAGE_IRON_JUNGLE, 176, 'Before Split',
               region=REGION_INDICIES.IRON_JUNGLE_ROCKET),
+
+    SETObject(ObjectType.ITEM_CAPSULE, Levels.STAGE_IRON_JUNGLE, 54, 'Trail A',
+              region=REGION_INDICIES.IRON_JUNGLE_JUMPER_OR_LIGHT_DASH),
+    SETObject(ObjectType.ITEM_CAPSULE, Levels.STAGE_IRON_JUNGLE, 55, 'Trail B',
+              region=REGION_INDICIES.IRON_JUNGLE_JUMPER_OR_LIGHT_DASH),
+    SETObject(ObjectType.ITEM_CAPSULE, Levels.STAGE_IRON_JUNGLE, 56, 'Trail C',
+              region=REGION_INDICIES.IRON_JUNGLE_JUMPER_OR_LIGHT_DASH),
 
     SETObject(ObjectType.ITEM_CAPSULE, Levels.STAGE_IRON_JUNGLE, 86, 'Dark Trail A',
               region=REGION_INDICIES.IRON_JUNGLE_LIGHT_DASH_DARK),

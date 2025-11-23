@@ -106,7 +106,7 @@ def DetermineFirstStages(world):
         within_selections.extend(clearable_stages)
         remaining_first_stages = [l for l in remaining_first_stages if l not in within_selections]
 
-    if len(remaining_first_stages) > 0 and starting_stage_count > len(remaining_first_stages):
+    if len(remaining_first_stages) > 0 and starting_stage_count > len(within_selections):
         first_stages_selections.append(remaining_first_stages)
         within_selections.extend(remaining_first_stages)
 
@@ -177,7 +177,11 @@ def DetermineGates(world):
     valid_gates = [ l for l in gates.keys() if l != 0 ]
 
     for stage in stages_to_assign:
-        randomised_gate = world.random.choices(valid_gates, k=1, weights=weights)[0]
+        empty_gates = [ g[0] for g in gates.items() if len(g[1]) == 0 ]
+        if len(empty_gates) > 0:
+            randomised_gate = world.random.choice(empty_gates)
+        else:
+            randomised_gate = world.random.choices(valid_gates, k=1, weights=weights)[0]
         gates[randomised_gate].append(stage)
 
     return gates

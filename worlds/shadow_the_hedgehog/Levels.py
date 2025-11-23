@@ -203,15 +203,18 @@ def IsLogicLevelApplicable(region, options, path_type, starting_items):
     logic_level = options.logic_level
 
     if path_type == REGION_RESTRICTION_REFERENCE_TYPES.BossLogic:
+
         if options.boss_logic_level == Options.BossLogicLevel.option_hard:
-            return False
+            if region.logicType == Options.LogicLevel.option_easy:
+                return False
 
         logic_level = options.boss_logic_level
 
 
     if path_type == REGION_RESTRICTION_REFERENCE_TYPES.CraftLogic:
         if options.craft_logic_level == Options.CraftLogicLevel.option_hard:
-            return False
+            if region.logicType == Options.LogicLevel.option_easy:
+                return False
 
         logic_level = options.craft_logic_level
 
@@ -599,9 +602,20 @@ LevelRegion(STAGE_IRON_JUNGLE, REGION_INDICIES.IRON_JUNGLE_ROCKET,
     .setLogicType(Options.LogicLevel.option_normal, Options.ChaosControlLogicLevel.option_easy),
 LevelRegion(STAGE_IRON_JUNGLE, REGION_INDICIES.IRON_JUNGLE_GOLD_BEETLE,
                     REGION_RESTRICTION_TYPES.GoldBeetle),
+
+LevelRegion(STAGE_IRON_JUNGLE, REGION_INDICIES.IRON_JUNGLE_LIGHT_DASH_LOWER,
+                    REGION_RESTRICTION_TYPES.LightDash)
+    .setLogicType(Options.LogicLevel.option_easy)
+    .setFromRegion(REGION_INDICIES.IRON_JUNGLE_ROCKET),
+
 LevelRegion(STAGE_IRON_JUNGLE, REGION_INDICIES.IRON_JUNGLE_GUN_JUMPER,
                     REGION_RESTRICTION_TYPES.GunJumper)
     .setFromRegion(REGION_INDICIES.IRON_JUNGLE_ROCKET),
+
+LevelRegion(STAGE_IRON_JUNGLE, REGION_INDICIES.IRON_JUNGLE_JUMPER_OR_LIGHT_DASH,
+                    REGION_RESTRICTION_TYPES.NoRestriction)
+    .setFromRegion([REGION_INDICIES.IRON_JUNGLE_GUN_JUMPER, REGION_INDICIES.IRON_JUNGLE_LIGHT_DASH_LOWER]),
+
 LevelRegion(STAGE_IRON_JUNGLE, REGION_INDICIES.IRON_JUNGLE_LIGHT_DASH,
                     REGION_RESTRICTION_TYPES.LightDash)
     .setFromRegion(REGION_INDICIES.IRON_JUNGLE_ROCKET)
@@ -743,19 +757,17 @@ LevelRegion(STAGE_BLACK_COMET, REGION_INDICIES.BLACK_COMET_WORMS,
 LevelRegion(STAGE_BLACK_COMET, REGION_INDICIES.BLACK_COMET_FLOATERS,
                     REGION_RESTRICTION_TYPES.LongRangeGun)
     .setFromRegion(REGION_INDICIES.BLACK_COMET_AIR_SAUCER),
-LevelRegion(STAGE_BLACK_COMET, REGION_INDICIES.BLACK_COMET_BLACK_TURRET,
-                    REGION_RESTRICTION_TYPES.BlackArmsTurret)
-    .setFromRegion(REGION_INDICIES.BLACK_COMET_AIR_SAUCER),
 LevelRegion(STAGE_BLACK_COMET, REGION_INDICIES.BLACK_COMET_WARP_HOLE,
-                    REGION_RESTRICTION_TYPES.WarpHole)
-    .setFromRegion(REGION_INDICIES.BLACK_COMET_AIR_SAUCER),
+                    REGION_RESTRICTION_TYPES.WarpHole),
+LevelRegion(STAGE_BLACK_COMET, REGION_INDICIES.BLACK_COMET_BLACK_TURRET,
+                    REGION_RESTRICTION_TYPES.BlackArmsTurret),
 LevelRegion(STAGE_BLACK_COMET, REGION_INDICIES.BLACK_COMET_FLOATERS_2,
-                    REGION_RESTRICTION_TYPES.LongRangeGun),
-
+                    REGION_RESTRICTION_TYPES.LongRangeGun)
+    .setFromRegion(REGION_INDICIES.BLACK_COMET_WARP_HOLE),
 LevelRegion(STAGE_BLACK_COMET, REGION_INDICIES.BLACK_COMET_HIGHER_CREATURES,
                     REGION_RESTRICTION_TYPES.LongRangeGun)
     .setLogicType(Options.LogicLevel.option_normal, Options.ChaosControlLogicLevel.option_easy)
-    .setFromRegion(REGION_INDICIES.BLACK_COMET_AIR_SAUCER),
+    .setFromRegion(REGION_INDICIES.BLACK_COMET_WARP_HOLE),
 
 LevelRegion(STAGE_BLACK_COMET, REGION_INDICIES.BLACK_COMET_WORMS_2,
                     REGION_RESTRICTION_TYPES.VacuumOrShot)

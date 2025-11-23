@@ -190,11 +190,11 @@ DESIRABLE_OBJECTS_LAVA_SHELTER = [
     SETObject(ObjectType.ITEM_CAPSULE, Levels.STAGE_LAVA_SHELTER, 251, 'Secret Section A',
               region=REGION_INDICIES.LAVA_SHELTER_AIR_SAUCER),
     SETObject(ObjectType.ITEM_CAPSULE, Levels.STAGE_LAVA_SHELTER, 180, 'Secret Section B',
-              region=REGION_INDICIES.LAVA_SHELTER_PULLEY_OR_LAVA),
+              region=REGION_INDICIES.LAVA_SHELTER_AIR_SAUCER),
     SETObject(ObjectType.ITEM_CAPSULE, Levels.STAGE_LAVA_SHELTER, 252, 'Secret Section C',
-              region=REGION_INDICIES.LAVA_SHELTER_PULLEY_OR_LAVA),
+              region=REGION_INDICIES.LAVA_SHELTER_AIR_SAUCER),
     SETObject(ObjectType.ITEM_CAPSULE, Levels.STAGE_LAVA_SHELTER, 253, 'Secret Section D',
-              region=REGION_INDICIES.LAVA_SHELTER_PULLEY_OR_LAVA)
+              region=REGION_INDICIES.LAVA_SHELTER_AIR_SAUCER)
 
 
 

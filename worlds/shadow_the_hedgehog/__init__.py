@@ -785,7 +785,9 @@ class ShtHWorld(World):
 
     def get_filler_item_name(self) -> str:
         # Use the same weights for filler items that are used in the base randomizer.
-        item_info = Items.ChooseJunkItems(self.random, Items.GetJunkItemInfo(), self.options, 1)[0]
+        #random, junk, traps, options, junk_count, available_weapons
+        item_info = Items.ChooseJunkItems(self.random, Items.GetJunkItemInfo(), Items.GetTraps(), self.options, 1,
+                                          self.available_weapons)[0]
         return item_info.name
 
 
@@ -801,7 +803,7 @@ class ShtHWorld(World):
     def fill_slot_data(self):
         slot_data = {
             "check_level": None if len(self.first_regions) == 0 else self.first_regions[0],
-            "first_levels": self.first_regions,
+            #"first_levels": self.first_regions,
 
             "objective_sanity": self.options.objective_sanity.value,
             "objective_percentage": self.options.objective_percentage.value,
@@ -899,7 +901,27 @@ class ShtHWorld(World):
 
         return slot_data
 
+    def PrintGates(self, spoiler_handle, gates, gate_requirements):
+        if spoiler_handle is not None:
+            spoiler_handle.write(f"{self.multiworld.get_player_name(self.player)}'s Gate Unlocks\n")
+            for gate_number, gate_stages in gates.items():
+                spoiler_handle.write(f"Gate {gate_number} = {gate_stages}\n")
+
+            spoiler_handle.write("\n")
+
+            spoiler_handle.write(f"{self.multiworld.get_player_name(self.player)}'s Gate Requirements\n")
+            for gate_number, requirements in gate_requirements.items():
+                spoiler_handle.write(f"Gate {gate_number} = {requirements}\n")
+
+            spoiler_handle.write("\n")
+
+
+
     def write_spoiler(self, spoiler_handle: typing.TextIO):
         if self.options.story_shuffle != Options.StoryShuffle.option_off:
             Story.PrintStoryMode(self, spoiler_handle)
+
+        if self.options.select_gates != Options.SelectGates.option_off:
+            self.PrintGates(spoiler_handle, self.gates, self.gate_requirements)
+
 
