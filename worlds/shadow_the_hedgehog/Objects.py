@@ -837,35 +837,12 @@ def PrintSETChange(address, index, type, previous, new, additional_bytes, link_i
 
     l = True
     if oldStateString is None:
-        l = False
-        file = "C://Users/Alex/Documents/Crystal/Shadow/parse.txt"
-        lines = [ m.strip().split(" ") for m in open(file).readlines() if m != ""]
-        data = [
-            {
-                "index": l[1],
-                "region": l[3],
-                "counter": l[5]
-            }
-            for l in lines ]
-
-        relevant_lines = [ d for d in data if d["index"] == str(index)]
-        if len(relevant_lines) == 0:
-            l = True
-        else:
-            relevant_line = [d for d in data if d["index"] == str(index)][0]
-
-            region = relevant_line["region"]
-            counter = relevant_line["counter"]
-
-            prints.append( "SETObject(ObjectType."+typeString.upper().replace(" ","_")+",Levels.STAGE_DEATH_RUINS"
-                   f"{index}, \'{counter}\', region={region}),")
+        l = True
 
     if l:
         prints.append(f"SET has changed: index={index}, type={typeString}, old={oldStateString}, new={newStateString}")
 
     return prints
-
-
 
 
 def GetSETFileLength(level):

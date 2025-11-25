@@ -1,0 +1,6 @@
+{
+    "game": "Shadow The Hedgehog",
+	"authors": [ "choatix" ],
+    "minimum_ap_version": "0.6.2",
+    "world_version": "0.3.1"
+}

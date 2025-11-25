@@ -683,13 +683,13 @@ def CountItems(world: World):
 
     select_stage_count = 0
     if len(use_level_unlock_items) > 0:
-        unlock_items = [l for l in use_level_unlock_items if l.stageId not in world.first_regions]
-        select_stage_count = ceil(len(unlock_items) * world.options.select_percentage / 100)
-        select_stage_count = min(select_stage_count, world.options.starting_stages)
+        unlock_items = [l for l in use_level_unlock_items if l.stageId in world.available_select_stages and
+                        l.stageId not in world.first_regions]
+        select_stage_count = len(unlock_items)
 
     item_count = increment_item_count(0, select_stage_count)
     item_count = increment_item_count(item_count, using_stage_objective_items)
-    if world.options.goal_chaos_emeralds:
+    if world.options.goal_chaos_emeralds or world.options.gate_unlock_requirement == Options.GateUnlockRequirement.option_chaos_emeralds:
         item_count = increment_item_count(item_count, emerald_items)
 
     weapon_dict = Weapons.GetWeaponDict()
@@ -961,15 +961,9 @@ def PopulateItemPool(world: World):
     # Convert to multiworld items
     mw_em_items = [ShadowTheHedgehogItem(e, world.player) for e in emerald_items]
 
-    required_select_unlocks = [ e for e in use_level_unlock_items if e.stageId not in world.available_story_levels ]
-    select_stage_count = ceil(len(use_level_unlock_items) * world.options.select_percentage / 100)
-    level_unlock_item_selections = required_select_unlocks
-
-    if len(required_select_unlocks) < select_stage_count:
-
-        more_level_unlocks = world.random.sample([ u for u in use_level_unlock_items if u not in level_unlock_item_selections],
-                                                 k=select_stage_count-len(level_unlock_item_selections))
-        level_unlock_item_selections.extend(more_level_unlocks)
+    unlock_items = [l for l in use_level_unlock_items if l.stageId in world.available_select_stages and
+                    l.stageId not in world.first_regions]
+    level_unlock_item_selections = [ l for l in unlock_items ]
 
     mw_level_unlock_items = [ShadowTheHedgehogItem(l, world.player) for l in level_unlock_item_selections]
 
@@ -1045,7 +1039,7 @@ def PopulateItemPool(world: World):
 
     item_count = increment_item_count(0, mw_level_unlock_items)
     item_count = increment_item_count(item_count, mw_stage_items)
-    if world.options.goal_chaos_emeralds:
+    if world.options.goal_chaos_emeralds or world.options.gate_unlock_requirement == Options.GateUnlockRequirement.option_chaos_emeralds:
         item_count = increment_item_count(item_count, mw_em_items)
 
     if world.options.weapon_sanity_unlock:
@@ -1112,7 +1106,7 @@ def PopulateItemPool(world: World):
             mw_useful_items.extend(
                 [ShadowTheHedgehogItem(item, world.player) for _ in range(0, useful_to_count[item.name])])
 
-    if world.options.goal_chaos_emeralds:
+    if world.options.goal_chaos_emeralds or world.options.gate_unlock_requirement == Options.GateUnlockRequirement.option_chaos_emeralds:
         world.multiworld.itempool += mw_em_items
 
     world.multiworld.itempool += mw_level_unlock_items

@@ -84,6 +84,7 @@ class ShtHWorld(World):
         self.go_mode_weapons_only = []
         self.available_levels = []
         self.available_story_levels = []
+        self.available_select_stages = []
         self.token_locations = []
         self.required_tokens = {}
         self.excess_item_count = 0
@@ -222,6 +223,12 @@ class ShtHWorld(World):
         if not self.options.enemy_objective_sanity and self.options.enemy_sanity:
             self.options.enemy_sanity = Options.Enemysanity(False)
 
+        if self.options.enable_traps:
+            if not self.options.poison_trap_enabled and not self.options.ammo_trap_enabled and not self.options.checkpoint_trap_enabled:
+                self.options.enable_traps = Options.EnableTraps(False)
+
+        if self.options.level_progression == Options.LevelProgression.option_story:
+            self.options.select_gates = Options.SelectGates(Options.SelectGates.option_off)
 
     def calculate_non_objective_sanity_maximums(self):
         relevant_mission_clears =  [m for m in Locations.MissionClearLocations if

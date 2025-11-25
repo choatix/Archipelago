@@ -363,7 +363,7 @@ def GetGateKeyRule(world, player, gate_no):
     # Add weapon unlocks as gate requirement
 
     gate_density = world.options.gate_density
-    reqs = []
+    reqs = {}
     if gate_no in world.gate_requirements:
         reqs = world.gate_requirements[gate_no]
     else:
@@ -434,6 +434,8 @@ def GetGateKeyRule(world, player, gate_no):
                 reqs = {
                     "Red Chaos Emerald": 1
                 }
+        else:
+            print("Unknown requirements:", reqs)
 
     return lambda state, o=reqs: state.has_all_counts(o, player)
 

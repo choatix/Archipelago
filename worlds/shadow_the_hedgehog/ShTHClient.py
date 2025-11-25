@@ -4302,7 +4302,7 @@ async def update_level_behaviour(ctx, current_level, death):
 
     await clearout_individual_enemies_by_percentage(ctx, current_level)
 
-    ShowSETChanges(current_level)
+    #ShowSETChanges(current_level)
 
     #DisplayMessages(ctx)
 

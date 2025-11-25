@@ -1,3 +1,4 @@
+import math
 import typing
 from typing import Dict
 
@@ -149,10 +150,7 @@ def DetermineGates(world):
     if gate_mode == Options.SelectGates.option_off:
         return {}
 
-    stages_to_assign = [ l for l in Levels.ALL_STAGES if Levels.LEVEL_ID_TO_LEVEL[l] not in world.options.excluded_stages and
-                         l not in Levels.LAST_STORY_STAGES and l not in world.first_regions and
-                         (world.options.select_bosses if l in Levels.BOSS_STAGES else True) ]
-
+    stages_to_assign = [ l for l in Levels.ALL_STAGES if l in world.available_select_stages ]
 
     #print("WFIRST", world.first_regions)
     #fake_gates = {0: world.first_regions, 1: [Levels.BOSS_BLACK_BULL_LH, Levels.BOSS_EGG_BREAKER_MM, Levels.STAGE_BLACK_COMET], 2: [Levels.STAGE_LETHAL_HIGHWAY, Levels.STAGE_MAD_MATRIX]}
@@ -184,6 +182,7 @@ def DetermineGates(world):
             randomised_gate = world.random.choices(valid_gates, k=1, weights=weights)[0]
         gates[randomised_gate].append(stage)
 
+    print("Gates = ", gates)
     return gates
 
 
@@ -192,7 +191,9 @@ def early_region_checks(world):
 
     # needto iterate in story order, not default order
     available_story_stages = []
+    available_select_stages = []
 
+    # TODO: Recall why story sorted order is used rather than randomly
     story_sorted_stages = Story.StoryToOrder(world.shuffled_story_mode)
 
     last_way_required = not world.options.include_last_way_shuffle or world.options.level_progression == Options.LevelProgression.option_select
@@ -200,6 +201,18 @@ def early_region_checks(world):
     if last_way_required:
         story_sorted_stages.append(Levels.STAGE_THE_LAST_WAY)
         story_sorted_stages.append(Levels.BOSS_DEVIL_DOOM)
+
+    #if (world.options.story_shuffle and world.options.story_boss_count == 0 and world.options.select_bosses and
+    #        world.options.level_progression != Options.LevelProgression.option_story):
+    #    mid_boss_stages = [ s for s in Levels.ALL_STAGES if s in Levels.BOSS_STAGES and s not in Levels.FINAL_BOSSES
+    #                        and Levels.LEVEL_ID_TO_LEVEL[s] not in world.options.excluded_stages
+    #                        and (Story.GetVanillaBossStage(s) is None or s in Levels.FINAL_BOSSES
+    #                             or Levels.LEVEL_ID_TO_LEVEL[
+    #                                 Story.GetVanillaBossStage(s)] not in world.options.excluded_stages)
+    #                        ]
+    #    story_sorted_stages.extend(mid_boss_stages)
+    #    available_select_stages.extend(mid_boss_stages)
+
 
     for level in story_sorted_stages:
         if Levels.LEVEL_ID_TO_LEVEL[level] in world.options.excluded_stages and \
@@ -253,6 +266,8 @@ def early_region_checks(world):
         if level == Levels.BOSS_DEVIL_DOOM and last_way_required:
             world.available_levels.append(level)
 
+
+
     world.available_story_levels = available_story_stages
 
     if world.options.level_progression == Options.LevelProgression.option_story and not world.options.story_shuffle:
@@ -261,6 +276,24 @@ def early_region_checks(world):
         available_story_stages_no_bosses = [ x for x in world.available_story_levels if x not in Levels.BOSS_STAGES]
         if len(not_excluded_stages) != len(available_story_stages_no_bosses):
             raise OptionError("Invalid stage accessibility for Story w/o Shuffle")
+
+    if world.options.level_progression == Options.LevelProgression.option_both:
+        story_inaccessible_stages = [ s for s in world.available_levels if s not in world.available_story_levels]
+        available_select_stages.extend(story_inaccessible_stages)
+
+    total_select_stages = math.ceil(len(world.available_levels) * world.options.select_percentage / 100)
+    while len(available_select_stages) < total_select_stages:
+        available_stages = [ l for l in world.available_levels if l not in available_select_stages
+                             and (Story.GetVanillaBossStage(l) is None or l in Levels.FINAL_BOSSES
+                                                               or Levels.LEVEL_ID_TO_LEVEL[
+                                                                   Story.GetVanillaBossStage(l)] not in world.options.excluded_stages )]
+        if len(available_stages) == 0:
+            break
+        new_item = world.random.choice(available_stages)
+        available_select_stages.append(new_item)
+
+    if world.options.level_progression != Options.LevelProgression.option_story:
+        world.available_select_stages = available_select_stages
 
     for char_name in Levels.CharacterToLevel.keys():
         levels_in = Levels.CharacterToLevel[char_name]
@@ -306,6 +339,9 @@ def create_regions(world) -> Dict[str, Region]:
 
         base_region_name = stage_id_to_region(level_id, 0)
         new_region = Region(base_region_name, world.player, world.multiworld)
+
+        print("Create region:", base_region_name)
+
         regions[base_region_name] = new_region
         stage_regions.append(new_region)
         region_to_stage_id[new_region] = level_id
