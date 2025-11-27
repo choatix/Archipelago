@@ -182,9 +182,7 @@ def DetermineGates(world):
             randomised_gate = world.random.choices(valid_gates, k=1, weights=weights)[0]
         gates[randomised_gate].append(stage)
 
-    print("Gates = ", gates)
     return gates
-
 
 
 def early_region_checks(world):
@@ -339,9 +337,6 @@ def create_regions(world) -> Dict[str, Region]:
 
         base_region_name = stage_id_to_region(level_id, 0)
         new_region = Region(base_region_name, world.player, world.multiworld)
-
-        print("Create region:", base_region_name)
-
         regions[base_region_name] = new_region
         stage_regions.append(new_region)
         region_to_stage_id[new_region] = level_id

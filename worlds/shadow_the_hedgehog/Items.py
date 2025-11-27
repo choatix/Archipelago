@@ -577,7 +577,7 @@ def ChooseJunkItems(random, junk, traps, options, junk_count, available_weapons)
         r_items = [j for j in junk if j.type == "ammoboost"]
         for r in r_items:
             weapon_info = [ w for w in weapons if w.game_id == r.value][0]
-            if weapon_info.game_id not in available_weapons:
+            if weapon_info.name not in available_weapons:
                 continue
             weight = 0.5
             if weapon_info.power is None:
@@ -1144,7 +1144,7 @@ def PopulateItemPool(world: World):
     # If required, replace all TLW checks with junk items in the pool, start inventory will get amended
 
     junk_count = (location_count - item_count - len(mw_useful_items))
-    print("Junk count is", location_count, junk_count)
+    #print("Junk count is", location_count, junk_count)
     reverse_count = 0
 
     if junk_count < 0:
@@ -1160,9 +1160,6 @@ def PopulateItemPool(world: World):
             reverse_count += tlw_locations
             junk_count += tlw_locations
 
-
-
-    logging.info("Junk counts are: junk:%d, reverse:%d", junk_count, reverse_count)
     if junk_count > 0:
         mw_junk_items = [ShadowTheHedgehogItem(i, world.player) for i in
                          ChooseJunkItems(world.random, junk_items, trap_items, world.options, junk_count, world.available_weapons)]
