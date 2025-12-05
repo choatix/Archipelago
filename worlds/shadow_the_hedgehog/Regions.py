@@ -764,9 +764,6 @@ def FindStartingItems(world, required=False):
         return []
 
     item_options = list(set(item_options))
-
-    print("Safety unlock options:", item_options)
-
     return [world.random.choice(item_options)]
 
 

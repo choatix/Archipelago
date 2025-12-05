@@ -105,28 +105,29 @@ class ShtHWorld(World):
         Rules.set_rules(self.multiworld, self, self.player)
 
         sphere_one_useful = []
-        while len(sphere_one_useful) == 0:
-            sphere_one_locs = self.multiworld.get_reachable_locations(CollectionState(self.multiworld), self.player)
-            sphere_one_useful = [s for s in sphere_one_locs if not s.locked]
+        if not hasattr(self.multiworld, "re_gen_passthrough"):
+            while len(sphere_one_useful) == 0:
+                sphere_one_locs = self.multiworld.get_reachable_locations(CollectionState(self.multiworld), self.player)
+                sphere_one_useful = [s for s in sphere_one_locs if not s.locked]
 
-            if len(sphere_one_useful) > 0:
-                break
+                if len(sphere_one_useful) > 0:
+                    break
 
-            locked_items = [ c for c in sphere_one_locs if c.locked and c not in self.starting_items]
-            for item in locked_items:
-                print("Locked item given:", item.item.name)
-                self.starting_items.append(item)
-                item = Item(item.item.name,ItemClassification.progression, None, self.player)
-                self.multiworld.push_precollected(item)
+                locked_items = [ c for c in sphere_one_locs if c.locked and c not in self.starting_items]
+                for item in locked_items:
+                    print("Locked item given:", item.item.name)
+                    self.starting_items.append(item)
+                    item = Item(item.item.name,ItemClassification.progression, None, self.player)
+                    self.multiworld.push_precollected(item)
 
-            if len(locked_items) != 0:
-                continue
+                if len(locked_items) != 0:
+                    continue
 
-            push_items = Regions.FindStartingItems(self, required=True)
-            for item in push_items:
-                print("Push emergency item:", item)
-                self.starting_items.append(item)
-                self.multiworld.push_precollected(self.create_item(item))
+                push_items = Regions.FindStartingItems(self, required=True)
+                for item in push_items:
+                    print("Push emergency item:", item)
+                    self.starting_items.append(item)
+                    self.multiworld.push_precollected(self.create_item(item))
 
         # Test here
 
@@ -140,8 +141,6 @@ class ShtHWorld(World):
         player_items = [ a for a in self.multiworld.itempool if a.player == self.player ]
         if len(player_items) not in [l_count, l_x]:
             print("Invalid item pool vs locations")
-
-
 
 
     def check_invalid_configurations(self):
@@ -626,8 +625,6 @@ class ShtHWorld(World):
 
         if not hasattr(self.multiworld, "re_gen_passthrough"):
             Regions.DetermineFirstStages(self)
-
-        if not hasattr(self.multiworld, "re_gen_passthrough"):
             self.gates = Regions.DetermineGates(self)
             self.gate_requirements = {}
 
@@ -810,7 +807,7 @@ class ShtHWorld(World):
     def fill_slot_data(self):
         slot_data = {
             "check_level": None if len(self.first_regions) == 0 else self.first_regions[0],
-            #"first_levels": self.first_regions,
+            "first_levels": self.first_regions,
 
             "objective_sanity": self.options.objective_sanity.value,
             "objective_percentage": self.options.objective_percentage.value,
