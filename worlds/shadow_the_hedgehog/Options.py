@@ -210,7 +210,7 @@ class KeysRequiredForDoors(Range):
     display_name = "Keys Required For Doors"
     range_start = 0
     range_end = 5
-    default = 3
+    default = 5
 
 class KeyCollectionMethod(Choice):
     """
@@ -220,7 +220,7 @@ class KeyCollectionMethod(Choice):
     option_local = 0
     option_arch = 1
     option_both = 2
-    default = 1
+    default = option_arch
 
 class Checkpointsanity(DefaultOnToggle):
     """
@@ -344,7 +344,7 @@ class GateDensity(Range):
     """
     Determines the density of items required for gates
     """
-
+    display_name = "Gate Density"
     range_start = 0
     range_end = 100
     default = 0
