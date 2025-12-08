@@ -277,7 +277,7 @@ def early_region_checks(world):
 
     if world.options.level_progression == Options.LevelProgression.option_both:
         story_inaccessible_stages = [ s for s in world.available_levels if s not in world.available_story_levels
-                                      and s not in [Levels.BOSS_DEVIL_DOOM] ]
+                                      and s not in [Levels.LAST_STORY_STAGES] ]
         available_select_stages.extend(story_inaccessible_stages)
 
     total_select_stages = math.ceil(len(world.available_levels) * world.options.select_percentage / 100)
