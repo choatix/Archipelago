@@ -229,6 +229,25 @@ class Checkpointsanity(DefaultOnToggle):
     """
     display_name = "Checkpoint Sanity"
 
+class CheckpointShuffle(Choice):
+    """
+        Determines whether checkpoint shuffle is enabled.
+        This only adds checks and does not add anything to the pool.
+    """
+    display_name = "Checkpoint Shuffle"
+    option_off = 0
+    option_unlocks_only = 1
+    option_start_and_unlock = 2
+    default = option_unlocks_only
+
+class CheckpointConvenience(DefaultOnToggle):
+    """
+        Determines whether checkpoint convenience is enabled, allowing warping back to a checkpoint
+        On re-entering a stage if it has been enabled before.
+        Requires Checkpoint sanity.
+    """
+    display_name = "Checkpoint Convenience"
+
 class CharacterSanity(DefaultOnToggle):
     """
         Determines if character checks are enabled.
@@ -879,6 +898,8 @@ class ShadowTheHedgehogOptions(PerGameCommonOptions):
     keys_required_for_doors: KeysRequiredForDoors
     key_collection_method: KeyCollectionMethod
     checkpoint_sanity: Checkpointsanity
+    checkpoint_shuffle: CheckpointShuffle
+    checkpoint_convenience: CheckpointConvenience
     starting_stages: StartingStages
     select_gates: SelectGates
     select_gates_count: SelectGatesCount

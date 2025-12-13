@@ -92,6 +92,7 @@ class ShtHWorld(World):
         self.random_value = None
         self.starting_items = []
         self.gates = {}
+        self.first_checkpoints = {}
 
         for token in Items.TOKENS:
             self.required_tokens[token] = 0
@@ -613,6 +614,12 @@ class ShtHWorld(World):
                 if "item_sanity" in passthrough:
                     self.options.item_sanity = passthrough["item_sanity"]
 
+                if "checkpoint_shuffle" in passthrough:
+                    self.options.checkpoint_shuffle = passthrough["checkpoint_shuffle"]
+
+                if "first_checkpoints" in passthrough:
+                    self.first_checkpoints = passthrough["first_checkpoints"]
+
         # Set maximum of levels required
         # Exclude missions listed in exclude_locations
         maximum_force_missions = self.options.force_objective_sanity_max.value
@@ -633,6 +640,10 @@ class ShtHWorld(World):
             for item in extra_items:
                 self.starting_items.append(item)
                 self.multiworld.push_precollected(self.create_item(item))
+
+        if (not hasattr(self.multiworld, "re_gen_passthrough") and
+                self.options.checkpoint_shuffle == Options.CheckpointShuffle.option_start_and_unlock):
+            self.first_checkpoints = Regions.GenerateFirstCheckpoints(self)
 
         if self.options.level_progression != Options.LevelProgression.option_select and \
             self.options.story_progression_balancing_passes > 0 and not hasattr(self.multiworld, "re_gen_passthrough"):
@@ -900,10 +911,21 @@ class ShtHWorld(World):
             "difficult_enemy_sanity": self.options.difficult_enemy_sanity.value,
             "exclude_go_mode_items": self.options.exclude_go_mode_items.value,
             "boss_enemy_sanity": self.options.boss_enemy_sanity.value,
-            "item_sanity": self.options.item_sanity.value
+            "item_sanity": self.options.item_sanity.value,
+            "checkpoint_shuffle": self.options.checkpoint_shuffle.value,
+            "first_checkpoints": self.first_checkpoints,
+            "checkpoint_convenience": self.options.checkpoint_convenience.value
         }
 
         return slot_data
+
+    def PrintFirstCheckpoints(self, spoiler_handle, first_checkpoints):
+        if spoiler_handle is not None:
+            spoiler_handle.write(f"{self.multiworld.get_player_name(self.player)}'s First Checkpoints\n")
+            for stage, checkpoint in first_checkpoints.items():
+                spoiler_handle.write(f"Stage {Levels.LEVEL_ID_TO_LEVEL[stage]} = {checkpoint}\n")
+
+            spoiler_handle.write("\n")
 
     def PrintGates(self, spoiler_handle, gates, gate_requirements):
         if spoiler_handle is not None:
@@ -920,12 +942,14 @@ class ShtHWorld(World):
             spoiler_handle.write("\n")
 
 
-
     def write_spoiler(self, spoiler_handle: typing.TextIO):
         if self.options.story_shuffle != Options.StoryShuffle.option_off:
             Story.PrintStoryMode(self, spoiler_handle)
 
         if self.options.select_gates != Options.SelectGates.option_off:
             self.PrintGates(spoiler_handle, self.gates, self.gate_requirements)
+
+        if self.options.checkpoint_shuffle == Options.CheckpointShuffle.option_start_and_unlock:
+            self.PrintFirstCheckpoints(spoiler_handle, self.first_checkpoints)
 
 

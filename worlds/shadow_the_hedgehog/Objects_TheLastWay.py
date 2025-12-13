@@ -364,11 +364,11 @@ DESIRABLE_OBJECTS_THE_LAST_WAY = [
     SETObject(ObjectType.BLACK_OAK, Levels.STAGE_THE_LAST_WAY, 125, '166',
               region=REGION_INDICIES.THE_LAST_WAY_LIGHT_DASH_EASY),
 
-    SETObject(ObjectType.KEY, Levels.STAGE_THE_LAST_WAY, 36, 'Key 1', region=0),
-    SETObject(ObjectType.KEY, Levels.STAGE_THE_LAST_WAY, 451, 'Key 2', region=REGION_INDICIES.THE_LAST_WAY_BLACK_VOLT),
-    SETObject(ObjectType.KEY, Levels.STAGE_THE_LAST_WAY, 452, 'Key 3', region=REGION_INDICIES.THE_LAST_WAY_BLACK_VOLT),
-    SETObject(ObjectType.KEY, Levels.STAGE_THE_LAST_WAY, 450, 'Key 4', region=REGION_INDICIES.THE_LAST_WAY_BLACK_VOLT),
-    SETObject(ObjectType.KEY, Levels.STAGE_THE_LAST_WAY, 358, 'Key 5', region=REGION_INDICIES.THE_LAST_WAY_VOLT_OR_WARP),
+    SETObject(ObjectType.KEY, Levels.STAGE_THE_LAST_WAY, 36, 'Key 1', count=1, region=0),
+    SETObject(ObjectType.KEY, Levels.STAGE_THE_LAST_WAY, 451, 'Key 2', count=2, region=REGION_INDICIES.THE_LAST_WAY_BLACK_VOLT),
+    SETObject(ObjectType.KEY, Levels.STAGE_THE_LAST_WAY, 452, 'Key 3', count=3, region=REGION_INDICIES.THE_LAST_WAY_BLACK_VOLT),
+    SETObject(ObjectType.KEY, Levels.STAGE_THE_LAST_WAY, 450, 'Key 4', count=4, region=REGION_INDICIES.THE_LAST_WAY_BLACK_VOLT),
+    SETObject(ObjectType.KEY, Levels.STAGE_THE_LAST_WAY, 358, 'Key 5', count=5, region=REGION_INDICIES.THE_LAST_WAY_VOLT_OR_WARP),
 
     SETObject(ObjectType.BALLOON_ITEM, Levels.STAGE_THE_LAST_WAY, 94, 'Balloon A', region=REGION_INDICIES.THE_LAST_WAY_BLACK_VOLT),
     SETObject(ObjectType.BALLOON_ITEM, Levels.STAGE_THE_LAST_WAY, 141, 'Balloon B', region=REGION_INDICIES.THE_LAST_WAY_BLACK_VOLT),

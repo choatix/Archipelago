@@ -1000,3 +1000,21 @@ def GetShadowBonusWeapons(stageId):
     box_weapons = [ m.weapon for m in GetDesirableObjectsForStage(stageId) if m.object_type == ObjectType.SHADOW_BOX
                     and m.weapon is not None ]
     return list(set(box_weapons))
+
+def GetAllKeyLocations():
+    all_locations = []
+    for stage in Levels.ALL_STAGES:
+        key_locations = GetKeyLocations(stage)
+        all_locations.extend(key_locations)
+
+    return all_locations
+
+def GetKeyLocations(stageId):
+    keys = []
+    key_objects = [ k for k in DESIRABLE_OBJECTS if k.stage == stageId and k.object_type == ObjectType.KEY ]
+    for o_key in key_objects:
+        from worlds.shadow_the_hedgehog.Locations import NewKeyLocation
+        k = NewKeyLocation(stageId, o_key.region, o_key.count)
+        keys.append(k)
+
+    return keys

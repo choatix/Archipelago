@@ -14,7 +14,7 @@ from .Levels import LEVEL_ID_TO_LEVEL, ALL_STAGES, MISSION_ALIGNMENT_DARK, \
     MISSION_ALIGNMENT_HERO, MISSION_ALIGNMENT_NEUTRAL, ITEM_TOKEN_TYPE_STANDARD, ITEM_TOKEN_TYPE_FINAL, \
     ITEM_TOKEN_TYPE_OBJECTIVE, ITEM_TOKEN_TYPE_ALIGNMENT, ITEM_TOKEN_TYPE_BOSS, \
     ITEM_TOKEN_TYPE_FINAL_BOSS
-from .Locations import MissionClearLocations, GetAlignmentsForStage, count_locations, count_last_way_locations
+from .Locations import MissionClearLocations, GetAlignmentsForStage, count_locations, count_last_way_locations, CheckpointLocations
 
 BASE_ID = 1743800000
 ITEM_ID_START_AT_WEAPONS = 2000
@@ -22,6 +22,7 @@ ITEM_ID_START_AT_VEHICLES = 2500
 ITEM_ID_START_AT_RIFLE = 2600
 ITEM_ID_START_AT_OBJECTS = 2700
 ITEM_ID_START_AT_JUNK = 3000
+ITEM_ID_START_AT_CHECKPOINTS = 3100
 ITEM_ID_START_AT_MISSION = 1000
 ITEM_ID_START_AT_IMPORTANT = 10
 ITEM_ID_START_AT_LEVEL = 100
@@ -486,10 +487,11 @@ def GetAllItemInfo():
 
     rifle_components = GetRifleComponents()
     object_items = GetObjectItems()
+    checkpoint_items = GetCheckpointItems()
 
     return (emerald_items, required_items, level_unlock_items, stage_objective_items, junk_items,
             token_items, weapon_items, vehicle_items, level_warp_items, rifle_components,
-            weapon_group_items, object_items, key_items, trap_items)
+            weapon_group_items, object_items, key_items, trap_items, checkpoint_items)
 
 
 
@@ -640,7 +642,7 @@ def AddItemsToStartInventory(world, count):
 def CountItems(world: World):
     (emerald_items, required_items, level_unlock_items, stage_objective_items_x,
      junk_items, token_items, weapon_items, vehicle_items, warp_items, rifle_components,
-     weapon_group_items, object_items, key_items, trap_items) = GetAllItemInfo()
+     weapon_group_items, object_items, key_items, trap_items, checkpoint_items) = GetAllItemInfo()
 
     if (not world.options.objective_sanity or
             world.options.objective_sanity_behaviour == Options.ObjectiveSanityBehaviour.option_base_clear):
@@ -750,6 +752,11 @@ def CountItems(world: World):
         if world.options.object_warp_holes and ObjectTypes.ObjectType.WARP_HOLE in available_objects:
             item_count = increment_item_count(item_count, 1)
 
+    if world.options.checkpoint_shuffle != Options.CheckpointShuffle.option_off:
+        relevant_checkpoint_items = [c for c in checkpoint_items if c.stageId in world.available_levels and
+                                     (world.options.checkpoint_shuffle == Options.CheckpointShuffle.option_start_and_unlock or c.value != 0)]
+        item_count = increment_item_count(item_count, len(relevant_checkpoint_items))
+
     return item_count
 
 
@@ -762,7 +769,7 @@ def GetStageItems(world, stage_objective_items=None):
     if stage_objective_items is None:
         (emerald_items, required_items, level_unlock_items, stage_objective_items,
          junk_items, token_items, weapon_items, vehicle_items, warp_items, rifle_components,
-         weapon_group_items, object_items, key_items, trap_items) = GetAllItemInfo()
+         weapon_group_items, object_items, key_items, trap_items,checkpoint_items) = GetAllItemInfo()
 
     if (not world.options.objective_sanity or
             world.options.objective_sanity_behaviour == Options.ObjectiveSanityBehaviour.option_base_clear):
@@ -861,7 +868,7 @@ def GetPotentialDowngradeItems(world, mw_stage_items=None):
 def GetShadowRifle():
     (emerald_items, required_items, level_unlock_items, stage_objective_items,
      junk_items, token_items, weapon_items, vehicle_items, warp_items, rifle_components,
-     weapon_group_items, object_items, key_items, trap_items) = GetAllItemInfo()
+     weapon_group_items, object_items, key_items, trap_items,checkpoint_items) = GetAllItemInfo()
 
     return [w for w in weapon_items if w.name == 'Shadow Rifle' or w.name == 'Weapon:Shadow Rifle'][0]
 
@@ -925,6 +932,21 @@ def increment_item_count(count, items):
 
     return count + plus
 
+def GetCheckpointItemName(stageId, index):
+    return f"{Levels.LEVEL_ID_TO_LEVEL[stageId]} Checkpoint {index}"
+
+def GetCheckpointItems():
+    id_c = ITEM_ID_START_AT_CHECKPOINTS
+    items = []
+    for checkpoint in CheckpointLocations:
+        for check_count in range(0, checkpoint.total_count+1):
+            item = ItemInfo(id_c, GetCheckpointItemName(checkpoint.stageId, check_count),
+                            ItemClassification.progression, checkpoint.stageId, None, "checkpoint", check_count)
+            items.append(item)
+            id_c += 1
+
+    return items
+
 
 def GetObjectItems():
     id_s = ITEM_ID_START_AT_OBJECTS
@@ -946,7 +968,7 @@ def GetObjectItems():
 def PopulateItemPool(world: World):
     (emerald_items, required_items, level_unlock_items, stage_objective_items,
      junk_items, token_items, weapon_items, vehicle_items, warp_items, rifle_components,
-     weapon_group_items, object_items, key_items, trap_items) = GetAllItemInfo()
+     weapon_group_items, object_items, key_items, trap_items,checkpoint_items) = GetAllItemInfo()
 
     use_level_unlock_items = []
     if world.options.level_progression != Options.LevelProgression.option_story and \
@@ -1140,6 +1162,14 @@ def PopulateItemPool(world: World):
         item_count = increment_item_count(item_count, mw_gate_keys)
         world.multiworld.itempool += mw_gate_keys
 
+
+    if world.options.checkpoint_shuffle != Options.CheckpointShuffle.option_off:
+        relevant_checkpoint_items = [ c for c in checkpoint_items if c.stageId in world.available_levels and
+                                      (world.options.checkpoint_shuffle == Options.CheckpointShuffle.option_start_and_unlock or c.value != 0)]
+        mw_checkpoint_items = [ ShadowTheHedgehogItem(i, world.player) for i in relevant_checkpoint_items ]
+        item_count = increment_item_count(item_count, mw_checkpoint_items)
+        world.multiworld.itempool += mw_checkpoint_items
+
     # Add checks here for checks locked by The Last Way when this is the final part
     # If required, replace all TLW checks with junk items in the pool, start inventory will get amended
 
@@ -1171,7 +1201,7 @@ def PopulateItemPool(world: World):
 def get_item_groups():
     (emerald_items, required_items, level_unlock_items, stage_objective_items,
      junk_items, token_items, weapon_items, vehicle_items, warp_items, rifle_components,
-     weapon_group_items, object_items, key_items, trap_items) = GetAllItemInfo()
+     weapon_group_items, object_items, key_items, trap_items, checkpoint_items) = GetAllItemInfo()
 
     item_groups: typing.Dict[str, list] = {
         "Chaos Emeralds": [e.name for e in emerald_items],

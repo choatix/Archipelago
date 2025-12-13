@@ -13,6 +13,7 @@ from . import Items, Levels, Utils, Weapons, Regions, Vehicle, Options, Location
 #Names.REGION_RESTRICTION_TYPESGetEnemyLocationNameLevelRegion
 
 from .Items import ShadowTheHedgehogItem, GetLevelTokenItems
+from .Levels import BACKTRACKING_REGIONS
 from .Locations import MissionClearLocations, LocationInfo, BossClearLocations
 from .Options import LevelProgression
 from .Regions import character_name_to_region, stage_id_to_region, region_name_for_character, weapon_name_to_region, \
@@ -29,8 +30,9 @@ def GetKeyRule(options, stage, player):
     arch_item = None
 
     if options.key_collection_method in [Options.KeyCollectionMethod.option_local, Options.KeyCollectionMethod.option_both]:
-        relevant_key_base = [k for k in Locations.KeyLocations if k.stageId == stage]
-        key_regions = relevant_key_base[0].region
+        relevant_keys_base = Objects.GetKeyLocations(stage)
+        #relevant_key_base = [k for k in Locations.KeyLocations if k.stageId == stage]
+        key_regions = relevant_keys_base[0].region
         region_items = [Names.GetDistributionRegionEventName(stage, k) for k in key_regions]
         region_names = list(set([stage_id_to_region(stage, k) for k in key_regions]))
         region_list.extend(region_items)
@@ -206,7 +208,8 @@ def handle_path_rules(options, player, additional_level_region, path_type):
                                                       additional_level_region.fromRegions)
 
             if ruleA is None and ruleB is None:
-                raise Exception("Unhandled issue with VacuumOrShot region")
+                print("Unhandled maybe issue with VacuumOrShot region")
+                v_or_s_rule = lambda state: True
 
             elif ruleA is None:
                 v_or_s_rule = ruleB
@@ -238,7 +241,15 @@ def handle_path_rules(options, player, additional_level_region, path_type):
                                                       additional_level_region.stageId,
                                                       additional_level_region.fromRegions)
 
-        rule = lambda state, r=rule: w_rule(state) and r(state)
+        if w_rule is None and rule is None:
+            print("Unhandled errors")
+            rule = lambda state: False
+        elif w_rule is None:
+            rule = lambda state, r=rule: r(state)
+        elif rule is None:
+            rule = lambda state, w=w_rule: w(state)
+        else:
+            rule = lambda state, w=w_rule, r=rule: w(state) and r(state)
 
     if options.vehicle_logic and Names.REGION_RESTRICTION_TYPES.Car in additional_level_region.restrictionTypes:
         c_rule = lambda state: True
@@ -291,6 +302,10 @@ def handle_path_rules(options, player, additional_level_region, path_type):
             o_rule = lambda state: state.has("Pulley", player)
 
         rule = lambda state, r=rule: o_rule(state) and r(state)
+
+    if (options.logic_level == Options.LogicLevel.option_easy and
+            Names.REGION_RESTRICTION_TYPES.NoBacktracking in additional_level_region.restrictionTypes):
+        rule = lambda state: False
 
     for regionAccess in [ a.value for a in additional_level_region.restrictionTypes if a.value > 100]:
         required_stage_region = regionAccess - 100
@@ -507,12 +522,59 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
         view_name = Names.GetDistributionRegionEventName(stage, 0)
 
         event_location = multiworld.get_location(view_name, player)
+
         event_location.access_rule = lambda state, r=stage_id_to_region(stage,
                                                                         0): \
             state.can_reach_region(r, player)
 
         event_location.place_locked_item(Item(view_name,
                                               ItemClassification.progression_skip_balancing, None, player))
+
+
+
+
+        #default_stage_index = Levels.GetDefaultCheckpointForStage(world, stage)
+        #if default_stage_index != 0:
+        #    checkpoint_rule = lambda state: True
+        #    checkpoint_warp_name = Names.GetCheckpointWarpName(0)
+        #    base_region_name = stage_id_to_region(stage, default_stage_index)
+        #    start_region_name = stage_id_to_region(stage, 0)
+        #    connect(player, checkpoint_warp_name,
+        #            world.get_region(base_region_name),
+        #            world.get_region(start_region_name),
+        #            checkpoint_rule)
+
+    if world.options.checkpoint_shuffle != Options.CheckpointShuffle.option_off:
+        for stage in Levels.ALL_STAGES:
+            if stage in Levels.BOSS_STAGES:
+                continue
+
+            if stage not in world.available_levels:
+                continue
+
+            # Temporary code til level is resolved
+            #if stage == Levels.STAGE_THE_LAST_WAY:
+            #    continue
+
+            default_stage_index = Regions.GetDefaultCheckpointIndexForStage(world, stage)
+            if default_stage_index == 0:
+                # Always require access to a checkpoint to warp between checkpoints
+                default_stage_index = 1
+
+            base_checkpoint_region = Regions.GetCheckpointRegion(stage, default_stage_index)
+            base_region_name = stage_id_to_region(stage, base_checkpoint_region)
+            for checkpoint in range(0, [ c.total_count for c in Locations.CheckpointLocations if c.stageId == stage ][0]):
+                warp_to_region = Regions.GetCheckpointRegion(stage, checkpoint)
+                new_region_name = stage_id_to_region(stage, warp_to_region)
+                print("NWRN", new_region_name)
+                checkpoint_warp_name = Names.GetCheckpointWarpName(stage, warp_to_region)
+                checkpoint_rule = lambda state, s=stage, c=checkpoint:\
+                    state.has(Items.GetCheckpointItemName(s, c), player)
+                connect(player, checkpoint_warp_name,
+                                    world.get_region(base_region_name),
+                                    world.get_region(new_region_name),
+                                    checkpoint_rule)
+
 
     skip_regions = []
     if world.options.logic_level != Options.LogicLevel.option_hard:
@@ -565,6 +627,46 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
 
         event_location.place_locked_item(Item(view_name,
                                               ItemClassification.progression_skip_balancing, None, player))
+
+    for backtrack_region in Levels.BACKTRACKING_REGIONS:
+
+        if backtrack_region.stageId not in world.available_levels:
+            continue
+
+        mock_region_info = (Levels.LevelRegion(backtrack_region.stageId,
+                                               backtrack_region.backtrackToRegion,
+                                               backtrack_region.restrictionTypes)
+                            .setFromRegion(backtrack_region.backtrackFromRegion)
+                            .setLogicType(backtrack_region.logicType))
+
+        if mock_region_info.hardLogicOnly:
+            mock_region_info.setHardLogicOnly()
+
+        if (mock_region_info.stageId, mock_region_info) in skip_regions:
+            continue
+
+        from_region_name = stage_id_to_region(mock_region_info.stageId, backtrack_region.backtrackFromRegion)
+        to_region_name = stage_id_to_region(mock_region_info.stageId, backtrack_region.backtrackToRegion)
+
+        from_region = world.get_region(from_region_name)
+        to_region = world.get_region(to_region_name)
+
+        path_rule, indirects = handle_path_rules(world.options, player, mock_region_info,
+                                                 Levels.REGION_RESTRICTION_REFERENCE_TYPES.BaseLogic)
+        if path_rule is not None:
+            connection_name = Names.GetRegionEntranceName(from_region_name, to_region_name,
+                                                          mock_region_info.restrictionTypes)
+            connect(world.player, connection_name,
+                    from_region, to_region, path_rule)
+
+            if indirects is not None:
+                for indirect in indirects:
+                    multiworld.register_indirect_condition(
+                        multiworld.get_region(indirect, player),
+                        multiworld.get_entrance(connection_name, player))
+
+        else:
+            print("Path rule is None", base_region_name, new_region_name)
 
     override_settings = world.options.percent_overrides
     lock_warp_items(multiworld, world, world.player)
@@ -867,7 +969,7 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
                         rule = Weapons.GetRuleByWeaponRequirement(player, weapon.name, None, None)
 
                 region_stage = world.get_region(stage_id_to_region(stage, region_index))
-                region_stage.connect(region, region_name_for_weapon(Levels.LEVEL_ID_TO_LEVEL[stage], weapon.name),
+                region_stage.connect(region, region_name_for_weapon(Levels.LEVEL_ID_TO_LEVEL[stage], region_index, weapon.name),
                                      rule=rule)
 
     if world.options.enemy_sanity and world.options.objective_sanity_system != Options.ObjectiveSanitySystem.option_individual:
@@ -942,13 +1044,15 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
         menu_region = world.get_region("Menu")
 
         for gate_stage in gate_stages:
-            base_region_name = stage_id_to_region(gate_stage, 0)
+            check_x1 = Regions.GetDefaultCheckpointRegionForStage(world, gate_stage)
+            base_region_name = stage_id_to_region(gate_stage, check_x1)
 
             rule = GetGateKeyRule(world, player, gate_no)
             if gate_stage in Levels.BOSS_STAGES and gate_stage not in Levels.LAST_STORY_STAGES and gate_stage not in Levels.FINAL_BOSSES:
                     boss_stage_requirement = Story.GetVanillaBossStage(gate_stage)
                     if boss_stage_requirement is not None:
-                        boss_base_region_name = stage_id_to_region(boss_stage_requirement, 0)
+                        default_region_index = Regions.GetDefaultCheckpointRegionForStage(world, boss_stage_requirement)
+                        boss_base_region_name = stage_id_to_region(boss_stage_requirement, default_region_index)
                         boss_gate_rule = lambda state, r1=rule, boss_region=boss_base_region_name: r1(state) and \
                                                                                         state.can_reach_region(boss_region, player)
 
@@ -965,10 +1069,6 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
                 menu_region.connect(world.get_region(base_region_name),
                                     f"Gate Entrance {gate_no} - {base_region_name}",
                                     rule=rule)
-
-
-
-
 
 
     goal_has = []
@@ -1011,13 +1111,14 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
             entrance.access_rule = lambda state, er=e_rule, b_rule=entrance.access_rule: er(state) and b_rule(state)
 
     else:
-        last_way_region = multiworld.get_region(stage_id_to_region(Levels.STAGE_THE_LAST_WAY), player)
+        default_region_index = Regions.GetDefaultCheckpointRegionForStage(world, Levels.STAGE_THE_LAST_WAY)
+        last_way_region = multiworld.get_region(stage_id_to_region(Levels.STAGE_THE_LAST_WAY, default_region_index), player)
         lw_entrance = connect(world.player, 'LastStoryToLastWay', multiworld.get_region("Menu", player),
                 last_way_region, rule=e_rule)
         # Ensure TLW is beatable
         tlw_location_id, tlw_location_name = Levels.GetLevelCompletionNames(Levels.STAGE_THE_LAST_WAY, Levels.MISSION_ALIGNMENT_NEUTRAL)
         last_way_rule = lambda state: state.can_reach_location(tlw_location_name, player)
-        dd_region = multiworld.get_region(Regions.stage_id_to_region(Levels.BOSS_DEVIL_DOOM), player)
+        dd_region = multiworld.get_region(Regions.boss_stage_id_to_region(Levels.BOSS_DEVIL_DOOM), player)
         entrance = connect(world.player, "LastWayToDevilDoom", last_way_region,
                 dd_region)
 

@@ -14,7 +14,7 @@ from BaseClasses import ItemClassification
 from CommonClient import ClientCommandProcessor, CommonContext, get_base_parser, gui_enabled, logger, server_loop
 from NetUtils import ClientStatus
 from .Options import WeaponsanityHold
-from . import Levels, Items, Locations, Utils as ShadowUtils, Weapons, Story, Objects, Names
+from . import Levels, Items, Locations, Utils as ShadowUtils, Weapons, Story, Objects, Names, Checkpoints
 from .Levels import *
 from .Locations import GetStageInformation, GetAlignmentsForStage, \
     GetStageEnemysanityInformation, MissionClearLocations
@@ -98,6 +98,7 @@ class GAME_ADDRESSES:
     ADDRESS_LOADING_MAYBE = 0x80570B26
 
     ADDRESS_LEVEL_STATUS = 0x80575F80
+    INPUT_DETECTOR = 0x8056ED4E
     button_menu_address = 0x8056ED4F
     CHECKPOINT_FLAGS = [0x80575FFC, 0x80576018, 0x80576034, 0x80576050,
                         0x8057606C, 0x80576088, 0x805760A4, 0x805760C0]
@@ -119,6 +120,9 @@ class GAME_ADDRESSES:
 
     SUBTITLE_INFO = 0x8057FA6C
     LAST_SUBTITLE_TEXT = 0x80573340
+
+    LEVEL_SPAWN_BASE = 0x8057AC64
+    CHECKPOINT_ENABLE_DATA = 0x80575FE4
 
     CharacterAddresses = [
         CharacterAddress("Sonic", 0x8057D77B),
@@ -163,6 +167,38 @@ class MenuOptions:
     Select = 0x06
 
 
+def GetSpawnAddresses():
+    spawn_addresses = {}
+    stage_index = 0
+
+    for stage in Levels.ALL_STAGES:
+        if stage not in Levels.BOSS_STAGES:
+            spawn_addresses[stage] = GAME_ADDRESSES.LEVEL_SPAWN_BASE + (stage_index * 0xC0)
+            stage_index += 1
+
+    return spawn_addresses
+
+
+class CheckpointEnableData:
+    index = None
+    spawn_address = None
+    flag_address = None
+
+    def __init__(self, index, spawn_address, flag_address):
+        self.index = index
+        self.spawn_address = spawn_address
+        self.flag_address = flag_address
+
+
+def GetCheckpointEnableAddresses():
+    checkpoint_addresses = {}
+
+    for i in range(0, 8):
+        checkpoint_addresses[i+1] = CheckpointEnableData(i+1,
+                                     GAME_ADDRESSES.CHECKPOINT_ENABLE_DATA + (i * 0x1C),
+                                     GAME_ADDRESSES.CHECKPOINT_ENABLE_DATA + (i * 0x1C) + 0x18)
+
+    return checkpoint_addresses
 
 last_level = None
 memory_data = {}
@@ -1263,6 +1299,7 @@ class ShTHContext(CommonContext):
         self.key_restore_complete = False
         self.shuffled_story_mode = Story.DefaultStoryMode
         self.successful_shuffle = False
+        self.successful_spawn_write = False
         self.include_last_way_shuffle = False
         self.dead = False
         self.initialised = False
@@ -1296,6 +1333,9 @@ class ShTHContext(CommonContext):
         self.last_save_index = None
         self.last_save_index_message = None
         self.last_subtitle_message_base_pointer = None
+        self.first_checkpoints = {}
+        self.checkpoint_convenience = False
+        self.checkpoint_shuffle = None
 
 
     async def disconnect(self, allow_autoreconnect: bool = False):
@@ -1637,6 +1677,15 @@ class ShTHContext(CommonContext):
 
             if "difficult_enemy_sanity" in slot_data:
                 self.difficult_enemy_sanity = slot_data["difficult_enemy_sanity"]
+
+            if "checkpoint_shuffle" in slot_data:
+                self.checkpoint_shuffle = slot_data["checkpoint_shuffle"]
+
+            if "first_checkpoints" in slot_data:
+                self.first_checkpoints = slot_data["first_checkpoints"]
+
+            if "checkpoint_convenience" in slot_data:
+                self.checkpoint_convenience = slot_data["checkpoint_convenience"]
 
             self.restoreState()
             self.awaiting_server = False
@@ -2316,7 +2365,63 @@ def complete_completable_levels(ctx):
     return new_clears
 
 
+def check_level_spawns(ctx):
+    spawn_checkpoints = ctx.first_checkpoints
+    if ctx.successful_spawn_write or ctx.checkpoint_shuffle != Options.CheckpointShuffle.option_start_and_unlock:
+        return
 
+    spawn_address_data = GetSpawnAddresses()
+    for item_s, checkpoint_index in spawn_checkpoints.items():
+        item = int(item_s)
+        address = spawn_address_data[item]
+        location_bytes = Checkpoints.GetBytesForCheckpointSpawn(item, checkpoint_index)
+        writeBytes(address, location_bytes)
+
+    ctx.successful_spawn_write = True
+
+def setCheckpointZero(ctx, current_level):
+    spawn_address_data = GetSpawnAddresses()
+    current_address = spawn_address_data[current_level]
+    location_bytes = Checkpoints.GetBytesForCheckpointSpawn(current_level, 0)
+    writeBytes(current_address, location_bytes)
+
+def enable_checkpoints(ctx, stage):
+
+    # Check mission clears and keys and clear checks from those not known to the server
+    info = Items.GetItemLookupDict()
+    received_checkpoints = [
+        info[unlock[0]] for unlock in ctx.items_received if info[unlock[0]].stageId == stage
+                                                    and info[unlock[0]].type == "checkpoint"
+    ]
+
+    received_check_inds = [ check.value for check in received_checkpoints ]
+
+    if ctx.checkpoint_convenience:
+        loc_dict = Locations.GetLocationInfoDict()
+
+        completed_checks = [loc_dict[c].count for c in ctx.checked_locations
+                            if loc_dict[c].location_type == Locations.LOCATION_TYPE_CHECKPOINT and
+                            loc_dict[c].stageId == stage]
+
+        for c in completed_checks:
+            if c not in received_check_inds:
+                received_check_inds.append(c)
+
+    checkpoint_data = GetCheckpointEnableAddresses()
+
+    print("Checkpoint INDS", received_check_inds)
+    for check in received_check_inds:
+        if check == 0:
+            print("ZERO IS AVAILABLE")
+            ctx.level_state["checkpoint_zero_available"] = True
+            continue
+        set_addresses = checkpoint_data[check]
+        bytes_to_write = Checkpoints.GetBytesForCheckpointSpawn(stage, check)
+        writeBytes(set_addresses.spawn_address, bytes_to_write)
+        enabled = 1
+        enabled_bytes = enabled.to_bytes(1, byteorder='big')
+        print("Check Enable", set_addresses.spawn_address, bytes_to_write)
+        writeBytes(set_addresses.flag_address, enabled_bytes)
 
 
 def check_story(ctx):
@@ -4351,6 +4456,9 @@ async def update_level_behaviour(ctx, current_level, death):
         ctx.level_state["characters_set"] = False
         ctx.level_state["spawn_messages"] = []
         ctx.level_state["key_check_index"] = -1
+        ctx.level_state["checkpoint_check_index"] = -1
+        ctx.level_state["checkpoint_zero_available"] = False
+        ctx.level_state["checkpoint_zero_state"] = -1
         ctx.level_state["music_set"] = True
         ctx.checkpoint_trap_active = False
 
@@ -5058,6 +5166,27 @@ async def update_level_behaviour(ctx, current_level, death):
     # If an objective is currently completable then check for pause state, etc
 
     is_back_button = 0x20
+    is_y_button = 0x10
+
+    if (ctx.checkpoint_shuffle or
+            (ctx.level_state["checkpoint_check_index"] == -1 and ctx.checkpoint_convenience)):
+        if ctx.level_state["checkpoint_check_index"] != ctx.last_rcvd_index:
+            enable_checkpoints(ctx, current_level)
+            ctx.level_state["checkpoint_check_index"] = ctx.last_rcvd_index
+
+    if ctx.level_state["checkpoint_zero_available"]:
+        current_paused_data = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.is_paused_address, 1)
+        currently_paused = int.from_bytes(current_paused_data, byteorder='big') == 1
+
+        button_data = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.INPUT_DETECTOR+1, 1)
+        button_data_byte = int.from_bytes(button_data, byteorder='big')
+        if currently_paused and button_data_byte == is_y_button and ctx.level_state["checkpoint_zero_state"] == -1:
+            setCheckpointZero(ctx, current_level)
+            ctx.level_state["checkpoint_zero_state"] = 1
+        elif ctx.level_state["checkpoint_zero_state"] == 1 and not currently_paused:
+            ctx.level_state["checkpoint_zero_state"] = 2
+        elif currently_paused and button_data_byte == is_y_button and ctx.level_state["checkpoint_zero_state"] == 2:
+            ctx.successful_spawn_write = False
 
     if ctx.objective_sanity:
         if (dark_max_hit and current_alignment == MISSION_ALIGNMENT_DARK) or \
@@ -5065,7 +5194,7 @@ async def update_level_behaviour(ctx, current_level, death):
             current_paused_data = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.is_paused_address, 1)
             currently_paused = int.from_bytes(current_paused_data, byteorder='big') == 1
 
-            button_data = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.button_menu_address, 1)
+            button_data = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.INPUT_DETECTOR+1, 1)
             button_data_byte = int.from_bytes(button_data, byteorder='big')
             if currently_paused and button_data_byte == is_back_button:
                 if current_alignment == MISSION_ALIGNMENT_DARK:
@@ -5076,6 +5205,9 @@ async def update_level_behaviour(ctx, current_level, death):
                     ctx.level_state["hero_completable"] = COMPLETE_FLAG_READY
                     #new_messages = complete_completable_levels(ctx, current_level, current_alignment)
                     #messages.extend(new_messages)
+
+
+
 
 
     if len(messages) > 0:
@@ -5156,6 +5288,7 @@ def CheckGateConditions(ctx: ShTHContext):
 def resetGameState(ctx):
     if ctx.initialised:
         ctx.successful_shuffle = False
+        ctx.successful_spawn_write = False
         ctx.initialised = False
         ctx.select_initialised = False
 
@@ -5341,6 +5474,7 @@ async def dolphin_sync_task(ctx: ShTHContext):
                 if not ctx.initialised:
                     ctx.initialised = True
                 check_story(ctx)
+                check_level_spawns(ctx)
 
                 death = await check_death(ctx)
                 if death is None:
