@@ -283,7 +283,7 @@ def early_region_checks(world):
     total_select_stages = math.ceil(len(world.available_levels) * world.options.select_percentage / 100)
     while len(available_select_stages) < total_select_stages:
         available_stages = [ l for l in world.available_levels if l not in available_select_stages
-                             and l not in [Levels.BOSS_DEVIL_DOOM]
+                             and l not in Levels.LAST_STORY_STAGES
                              and (Story.GetVanillaBossStage(l) is None or l in Levels.FINAL_BOSSES
                                                                or Levels.LEVEL_ID_TO_LEVEL[
                                                                    Story.GetVanillaBossStage(l)] not in world.options.excluded_stages )]
