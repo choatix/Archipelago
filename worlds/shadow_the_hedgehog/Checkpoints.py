@@ -241,10 +241,17 @@ class CheckpointData:
 
 def GetBytesForCheckpointSpawn(stageId, checkpointIndex):
     stage_name = Levels.LEVEL_ID_TO_LEVEL[stageId].replace(" ", "")
-    stage_info = CheckpointData.__dict__[stage_name]
-    checkpoint_info = stage_info.__dict__["Checkpoint"+str(checkpointIndex)]
 
-    print("CHECK INFO IS", checkpoint_info)
+    if stage_name not in CheckpointData.__dict__:
+        return None
+
+    stage_info = CheckpointData.__dict__[stage_name]
+
+    check_key = f"Checkpoint{str(checkpointIndex)}"
+    if check_key not in stage_info.__dict__:
+        return None
+
+    checkpoint_info = stage_info.__dict__[check_key]
 
     location_bytes = bytes(checkpoint_info)
     return location_bytes

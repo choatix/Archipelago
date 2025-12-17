@@ -239,16 +239,24 @@ class CharacterLocation:
 
 MissionClearLocations = [
     MissionClearLocation(STAGE_WESTOPOLIS, MISSION_ALIGNMENT_DARK, 35, "Soldier"),
-    MissionClearLocation(STAGE_WESTOPOLIS, MISSION_ALIGNMENT_NEUTRAL, None, None),
+    MissionClearLocation(STAGE_WESTOPOLIS, MISSION_ALIGNMENT_NEUTRAL, None, None).setDistribution(
+        {
+            REGION_INDICIES.WESTOPOLIS_CHECKPOINT_FIVE: 1
+        }
+    ),
     MissionClearLocation(STAGE_WESTOPOLIS, MISSION_ALIGNMENT_HERO, 45, "Alien"),
 
     MissionClearLocation(STAGE_DIGITAL_CIRCUIT, MISSION_ALIGNMENT_DARK, None, None)
     .setDistribution(
         {
-            REGION_INDICIES.DIGITAL_CIRCUIT_DARK_WARP_HOLE: 1
+            REGION_INDICIES.DIGITAL_CIRCUIT_CHECKPOINT_SEVEN: 1
         }
     ),
-    MissionClearLocation(STAGE_DIGITAL_CIRCUIT, MISSION_ALIGNMENT_HERO, None, None),
+    MissionClearLocation(STAGE_DIGITAL_CIRCUIT, MISSION_ALIGNMENT_HERO, None, None).setDistribution(
+        {
+            REGION_INDICIES.DIGITAL_CIRCUIT_CHECKPOINT_SIX: 1
+        }
+    ),
     #MissionClearLocation(STAGE_DIGITAL_CIRCUIT, MISSION_ALIGNMENT_DARK, 1, "Core"),
 
     MissionClearLocation(STAGE_GLYPHIC_CANYON, MISSION_ALIGNMENT_DARK, 5, "Temple").setDistribution(
@@ -306,7 +314,7 @@ MissionClearLocations = [
     MissionClearLocation(STAGE_PRISON_ISLAND, MISSION_ALIGNMENT_NEUTRAL, None, None)
         .setDistribution(
         {
-            REGION_INDICIES.PRISON_ISLAND_AIR_SAUCER: 1
+            REGION_INDICIES.PRISON_ISLAND_CHECKPOINT_FIVE: 1
         }
     ),
 
@@ -352,7 +360,7 @@ MissionClearLocations = [
     MissionClearLocation(STAGE_THE_DOOM, MISSION_ALIGNMENT_NEUTRAL, None, None)
         .setDistribution(
         {
-            REGION_INDICIES.THE_DOOM_DOOR_1_SWITCH: 1
+            REGION_INDICIES.THE_DOOM_CHECKPOINT_SIX: 1
         }
         ),
     MissionClearLocation(STAGE_THE_DOOM, MISSION_ALIGNMENT_HERO, 10, "Researcher")
@@ -394,7 +402,7 @@ MissionClearLocations = [
     MissionClearLocation(STAGE_MAD_MATRIX, MISSION_ALIGNMENT_DARK, 30, "Bomb")
         .setDistribution(
         {
-            REGION_INDICIES.MAD_MATRIX_GUN: 30
+            REGION_INDICIES.MAD_MATRIX_CIRCUIT_ROOM: 30
         }
     ),
     MissionClearLocation(STAGE_MAD_MATRIX, MISSION_ALIGNMENT_NEUTRAL, None, None)
@@ -407,8 +415,8 @@ MissionClearLocations = [
     MissionClearLocation(STAGE_MAD_MATRIX, MISSION_ALIGNMENT_HERO, 4, "Terminal")
         .setDistribution(
         {
-            REGION_INDICIES.MAD_MATRIX_GUN: 1,
-            REGION_INDICIES.MAD_MATRIX_YELLOW_ENTRY: 1,
+            REGION_INDICIES.MAD_MATRIX_BLUE_TERMINAL: 1,
+            REGION_INDICIES.MAD_MATRIX_YELLOW_LIGHT_DASH: 1,
             REGION_INDICIES.MAD_MATRIX_GREEN_PROGRESSION: 1,
             REGION_INDICIES.MAD_MATRIX_RED_ENTRY: 1
         }
@@ -456,13 +464,13 @@ MissionClearLocations = [
     MissionClearLocation(STAGE_IRON_JUNGLE, MISSION_ALIGNMENT_NEUTRAL, None, None)
         .setDistribution(
         {
-            REGION_INDICIES.IRON_JUNGLE_LIGHT_DASH: 1
+            REGION_INDICIES.IRON_JUNGLE_CHECKPOINT_EIGHT: 1
         }
         ),
     MissionClearLocation(STAGE_IRON_JUNGLE, MISSION_ALIGNMENT_HERO, 1, "Egg Balloon")
         .setDistribution(
         {
-            REGION_INDICIES.IRON_JUNGLE_LIGHT_DASH: 1
+            REGION_INDICIES.IRON_JUNGLE_CHECKPOINT_EIGHT: 1
         }
         )
         .setRequirement(REGION_RESTRICTION_TYPES.Gun)
@@ -534,13 +542,13 @@ MissionClearLocations = [
     MissionClearLocation(STAGE_COSMIC_FALL, MISSION_ALIGNMENT_DARK, None, None)
         .setDistribution(
         {
-            REGION_INDICIES.COSMIC_FALL_PULLEY_NORMAL: 1
+            REGION_INDICIES.COSMIC_FALL_CHECKPOINT_FIVE: 1
         }
     ),
     MissionClearLocation(STAGE_COSMIC_FALL, MISSION_ALIGNMENT_HERO, None, None)
         .setDistribution(
         {
-            REGION_INDICIES.COSMIC_FALL_COMPUTER_ROOM: 1
+            REGION_INDICIES.COSMIC_FALL_CHECKPOINT_SEVEN: 1
         }
     ),
     #MissionClearLocation(STAGE_COSMIC_FALL, MISSION_ALIGNMENT_HERO, 1, "Computer Room"),
@@ -769,6 +777,16 @@ def GetEnemySanityLocations():
 #    EnemySanityLocation(STAGE_FINAL_HAUNT, ENEMY_CLASS_ALIEN, 122, "Black Arm"),
 #]
 
+def HasCheckpointZero(stage):
+    stage_name = Levels.LEVEL_ID_TO_LEVEL[stage].replace(" ", "_")
+    checkpoint_keys = list([k for k in REGION_INDICIES.__dict__.items() if
+                            k[0].startswith(stage_name.upper()) and "CHECKPOINT_" in k[0] and
+                            "CHECKPOINT_ZERO" in k[0]])
+
+    #print("HC0", checkpoint_keys)
+
+    return len(checkpoint_keys) > 0
+
 
 def GetCheckpointLocations():
     CheckLocations = []
@@ -784,7 +802,6 @@ def GetCheckpointLocations():
 
         CheckLocations.append(check)
 
-    print(CheckLocations)
     return CheckLocations
 
 
@@ -2264,6 +2281,9 @@ def SetRegionEvents(world, player, regions):
 
         if world.options.logic_level != Options.LogicLevel.option_hard \
             and region.hardLogicOnly:
+            continue
+
+        if region.regionIndex == 0:
             continue
 
         view_name = Names.GetDistributionRegionEventName(region.stageId, region.regionIndex)

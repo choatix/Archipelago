@@ -12,8 +12,9 @@ from .Story import PathInfo
 
 
 def stage_id_to_region(level_id: int, region_id) -> str:
-    level_name = Levels.LEVEL_ID_TO_LEVEL[level_id]
-    region_name = "REGION_" + level_name + "_" + str(region_id)
+    #level_name = Levels.LEVEL_ID_TO_LEVEL[level_id]
+    region_name_base = Names.GetRegionName(level_id, region_id)
+    region_name = "REGION_" + region_name_base
     return region_name
 
 def boss_stage_id_to_region(level_id: int, region_id=0) -> str:
@@ -198,11 +199,13 @@ def early_region_checks(world):
     # TODO: Recall why story sorted order is used rather than randomly
     story_sorted_stages = Story.StoryToOrder(world.shuffled_story_mode)
 
-    last_way_required = not world.options.include_last_way_shuffle or world.options.level_progression == Options.LevelProgression.option_select
+    last_way_required = (not world.options.include_last_way_shuffle or
+                           world.options.level_progression == Options.LevelProgression.option_select)
 
     if last_way_required:
         story_sorted_stages.append(Levels.STAGE_THE_LAST_WAY)
         story_sorted_stages.append(Levels.BOSS_DEVIL_DOOM)
+
 
     #if (world.options.story_shuffle and world.options.story_boss_count == 0 and world.options.select_bosses and
     #        world.options.level_progression != Options.LevelProgression.option_story):
@@ -287,10 +290,11 @@ def early_region_checks(world):
     total_select_stages = math.ceil(len(world.available_levels) * world.options.select_percentage / 100)
     while len(available_select_stages) < total_select_stages:
         available_stages = [ l for l in world.available_levels if l not in available_select_stages
-                             and l not in Levels.LAST_STORY_STAGES
-                             and (Story.GetVanillaBossStage(l) is None or l in Levels.FINAL_BOSSES
+                             and l != Levels.BOSS_DEVIL_DOOM and
+                                  (l not in Levels.LAST_STORY_STAGES or world.options.include_last_way_shuffle)
+                                  and (Story.GetVanillaBossStage(l) is None or l in Levels.FINAL_BOSSES
                                                                or Levels.LEVEL_ID_TO_LEVEL[
-                                                                   Story.GetVanillaBossStage(l)] not in world.options.excluded_stages )]
+                                                                   Story.GetVanillaBossStage(l)] not in world.options.excluded_stages)]
         if len(available_stages) == 0:
             break
         new_item = world.random.choice(available_stages)
@@ -360,6 +364,9 @@ def create_regions(world) -> Dict[str, Region]:
 
             if additional_region.hardLogicOnly and \
                 world.options.logic_level != Options.LogicLevel.option_hard:
+                continue
+
+            if additional_region.regionIndex == 0:
                 continue
 
             new_region_name = stage_id_to_region(level_id, additional_region.regionIndex)
@@ -791,7 +798,6 @@ def GetCheckpointRegion(stageId, index):
 
     c = [ l for l in Locations.CheckpointLocations if l.stageId == stageId ]
     for check in c:
-        print("CheckIndex=", index)
         result = check.getRegion(index)
         return result
 
@@ -832,7 +838,5 @@ def GenerateFirstCheckpoints(world):
         c = [l for l in Locations.CheckpointLocations if l.stageId == level][0]
         first = world.random.choice(range(0, c.total_count + 1))
         first_checkpoints[level] = first
-
-    print("FPs", first_checkpoints)
 
     return first_checkpoints

@@ -566,7 +566,6 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
             for checkpoint in range(0, [ c.total_count for c in Locations.CheckpointLocations if c.stageId == stage ][0]):
                 warp_to_region = Regions.GetCheckpointRegion(stage, checkpoint)
                 new_region_name = stage_id_to_region(stage, warp_to_region)
-                print("NWRN", new_region_name)
                 checkpoint_warp_name = Names.GetCheckpointWarpName(stage, warp_to_region)
                 checkpoint_rule = lambda state, s=stage, c=checkpoint:\
                     state.has(Items.GetCheckpointItemName(s, c), player)
@@ -586,6 +585,9 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
             continue
 
         if (additional_level_region.stageId, additional_level_region.regionIndex) in skip_regions:
+            continue
+
+        if additional_level_region.regionIndex == 0:
             continue
 
         from_regions = additional_level_region.fromRegions
@@ -1096,12 +1098,10 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
     if world.options.goal_final_bosses > 0:
         tokens = get_token_count(world, Items.Progression.FinalBossToken, token_assignments, world.options.goal_final_bosses)
         goal_has.append(tokens)
-    if world.options.include_last_way_shuffle:
-        pass
 
     e_rule = lambda state, g_has=goal_has: check_final_rule(state, player, goal_has)
 
-    if world.options.include_last_way_shuffle:
+    if world.options.include_last_way_shuffle and world.options.level_progression != Options.LevelProgression.option_select:
 
         # handle requirement that DD must be found in the level shuffle!
         devil_doom_story_region = Regions.stage_id_to_story_region(Levels.BOSS_DEVIL_DOOM)

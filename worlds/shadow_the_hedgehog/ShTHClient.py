@@ -2002,12 +2002,11 @@ async def check_save_loaded(ctx):
 
         # decide settings for goal
 
-        set_last_way = IsEndGameEnabled(ctx)
+        enable_last_story = IsLastWayEnabled(ctx)
 
         last_way_available_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.ADDRESS_LAST_STORY_OPTION, 1)
         is_last_way_available = int.from_bytes(last_way_available_bytes, byteorder='big')
-        if (set_last_way and
-                (not ctx.include_last_way_shuffle or not ctx.story_mode_available)):
+        if (enable_last_story):
             if is_last_way_available != 1:
                 set_to = 1
                 set_last_way_bytes = set_to.to_bytes(1, byteorder='big')
@@ -2072,6 +2071,15 @@ async def check_save_loaded(ctx):
         writeBytes(GAME_ADDRESSES.EXTRA_SAVE_DATA, new_bytes)
 
     return loaded
+
+def IsLastWayEnabled(ctx):
+    if IsEndGameEnabled(ctx):
+        return True
+
+    if Levels.STAGE_THE_LAST_WAY in ctx.available_levels:
+        return True
+
+    return False
 
 
 def IsEndGameEnabled(ctx):
@@ -2375,7 +2383,8 @@ def check_level_spawns(ctx):
         item = int(item_s)
         address = spawn_address_data[item]
         location_bytes = Checkpoints.GetBytesForCheckpointSpawn(item, checkpoint_index)
-        writeBytes(address, location_bytes)
+        if location_bytes is not None:
+            writeBytes(address, location_bytes)
 
     ctx.successful_spawn_write = True
 
@@ -2383,7 +2392,8 @@ def setCheckpointZero(ctx, current_level):
     spawn_address_data = GetSpawnAddresses()
     current_address = spawn_address_data[current_level]
     location_bytes = Checkpoints.GetBytesForCheckpointSpawn(current_level, 0)
-    writeBytes(current_address, location_bytes)
+    if location_bytes is not None:
+        writeBytes(current_address, location_bytes)
 
 def enable_checkpoints(ctx, stage):
 
@@ -2412,16 +2422,15 @@ def enable_checkpoints(ctx, stage):
     print("Checkpoint INDS", received_check_inds)
     for check in received_check_inds:
         if check == 0:
-            print("ZERO IS AVAILABLE")
             ctx.level_state["checkpoint_zero_available"] = True
             continue
         set_addresses = checkpoint_data[check]
         bytes_to_write = Checkpoints.GetBytesForCheckpointSpawn(stage, check)
-        writeBytes(set_addresses.spawn_address, bytes_to_write)
-        enabled = 1
-        enabled_bytes = enabled.to_bytes(1, byteorder='big')
-        print("Check Enable", set_addresses.spawn_address, bytes_to_write)
-        writeBytes(set_addresses.flag_address, enabled_bytes)
+        if bytes_to_write is not None:
+            writeBytes(set_addresses.spawn_address, bytes_to_write)
+            enabled = 1
+            enabled_bytes = enabled.to_bytes(1, byteorder='big')
+            writeBytes(set_addresses.flag_address, enabled_bytes)
 
 
 def check_story(ctx):
@@ -5028,24 +5037,24 @@ async def update_level_behaviour(ctx, current_level, death):
         max_checkpoint_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.CHECKPOINT_RESPAWN_ID, 1)
         max_checkpoint = int.from_bytes(max_checkpoint_bytes, byteorder='big')
 
-        if (max_checkpoint == 0 and len(ctx.level_state.keys()) > 0 and
-                len(ctx.checkpoint_snapshots) > 1):
-            if not ctx.checkpoint_trap_active:
-                if ctx.debug_logging:
-                    logger.error("Detected a stage restart (CP)")
-                ctx.restart = True
-                ctx.level_state = {}
-                ctx.checkpoint_snapshots = []
-            else:
-                first_addr = GAME_ADDRESSES.CHECKPOINT_FLAGS[0]
-                checkpoint_status_bytes = dolphin_memory_engine.read_bytes(first_addr, 1)
-                checkpoint_status = int.from_bytes(checkpoint_status_bytes, byteorder='big') == 1
-                if not checkpoint_status:
-                    if ctx.debug_logging:
-                        logger.error("Detected a stage restart (CP) (with checktrap)")
-                    ctx.restart = True
-                    ctx.level_state = {}
-                    ctx.checkpoint_snapshots = []
+        #if (max_checkpoint == 0 and len(ctx.level_state.keys()) > 0 and
+        #        len(ctx.checkpoint_snapshots) > 1):
+        #    if not ctx.checkpoint_trap_active:
+        #        if ctx.debug_logging:
+        #            logger.error("Detected a stage restart (CP)")
+        #        ctx.restart = True
+        #        ctx.level_state = {}
+        #        ctx.checkpoint_snapshots = []
+        #    else:
+        ##        first_addr = GAME_ADDRESSES.CHECKPOINT_FLAGS[0]
+        #        checkpoint_status_bytes = dolphin_memory_engine.read_bytes(first_addr, 1)
+        #        checkpoint_status = int.from_bytes(checkpoint_status_bytes, byteorder='big') == 1
+        #        if not checkpoint_status:
+        #            if ctx.debug_logging:
+        #                logger.error("Detected a stage restart (CP) (with checktrap)")
+        #            ctx.restart = True
+        #            ctx.level_state = {}
+        #            ctx.checkpoint_snapshots = []
 
         active = []
         new = []
@@ -5161,20 +5170,38 @@ async def update_level_behaviour(ctx, current_level, death):
 
                         ctx.level_state["key_check_index"] = ctx.last_rcvd_index
         else:
-            logger.error("Key index not present")
+            logger.error("Key index not present: %s", str(ctx.level_state))
 
     # If an objective is currently completable then check for pause state, etc
 
     is_back_button = 0x20
     is_y_button = 0x10
 
-    if (ctx.checkpoint_shuffle or
+    # TODO: Resolve issues with setting states
+    ready_to_check_state = True
+    if ctx.checkpoint_shuffle or ctx.checkpoint_convenience:
+        if len(ctx.level_state.keys()) == 0:
+            ready_to_check_state = False
+
+        if "checkpoint_check_index" not in ctx.level_state:
+            ready_to_check_state = False
+            #ctx.level_state["checkpoint_check_index"] = -1
+
+        if "checkpoint_zero_state" not in ctx.level_state:
+            ready_to_check_state = False
+            #ctx.level_state["checkpoint_zero_state"] = False
+
+        if "checkpoint_zero_available" not in ctx.level_state:
+            ready_to_check_state = False
+            #ctx.level_state["checkpoint_zero_available"] = False
+
+    if ready_to_check_state and (ctx.checkpoint_shuffle or
             (ctx.level_state["checkpoint_check_index"] == -1 and ctx.checkpoint_convenience)):
         if ctx.level_state["checkpoint_check_index"] != ctx.last_rcvd_index:
             enable_checkpoints(ctx, current_level)
             ctx.level_state["checkpoint_check_index"] = ctx.last_rcvd_index
 
-    if ctx.level_state["checkpoint_zero_available"]:
+    if ready_to_check_state and ctx.level_state["checkpoint_zero_available"]:
         current_paused_data = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.is_paused_address, 1)
         currently_paused = int.from_bytes(current_paused_data, byteorder='big') == 1
 
@@ -5207,9 +5234,6 @@ async def update_level_behaviour(ctx, current_level, death):
                     #messages.extend(new_messages)
 
 
-
-
-
     if len(messages) > 0:
         message = [{"cmd": 'LocationChecks', "locations": messages}]
         await ctx.send_msgs(message)
@@ -5227,6 +5251,7 @@ async def check_death(ctx: ShTHContext):
         return True
 
     if level_status_value == LevelStatusOptions.Restarting:
+        logger.info("Detected a stage restart")
         ctx.restart = True
 
     ctx.dead = False
@@ -5283,6 +5308,8 @@ def CheckGateConditions(ctx: ShTHContext):
                     logger.info(f"Gate {gate[0]} is open!")
                     logger.info("")
                     opening = True
+
+                print("Stage is available by gate", stage)
                 ctx.available_levels.append(stage)
 
 def resetGameState(ctx):

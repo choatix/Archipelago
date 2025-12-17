@@ -9,7 +9,7 @@ from typing import List, Optional
 from BaseClasses import Item, ItemClassification
 from Options import OptionError
 from worlds.AutoWorld import World
-from . import Weapons, Vehicle, Utils as ShadowUtils, Options, Levels, Objects, ObjectTypes
+from . import Weapons, Vehicle, Utils as ShadowUtils, Options, Levels, Objects, ObjectTypes, Locations
 from .Levels import LEVEL_ID_TO_LEVEL, ALL_STAGES, MISSION_ALIGNMENT_DARK, \
     MISSION_ALIGNMENT_HERO, MISSION_ALIGNMENT_NEUTRAL, ITEM_TOKEN_TYPE_STANDARD, ITEM_TOKEN_TYPE_FINAL, \
     ITEM_TOKEN_TYPE_OBJECTIVE, ITEM_TOKEN_TYPE_ALIGNMENT, ITEM_TOKEN_TYPE_BOSS, \
@@ -148,7 +148,7 @@ def PopulateLevelUnlockItems():
         #if stageId in BOSS_STAGES or stageId in LAST_STORY_STAGES:
         #    continue
 
-        if stageId in Levels.LAST_STORY_STAGES:
+        if stageId in [Levels.BOSS_DEVIL_DOOM]:
             continue
 
         item = ItemInfo(count, GetStageUnlockItem(stageId), ItemClassification.progression, stageId=stageId,
@@ -940,6 +940,13 @@ def GetCheckpointItems():
     items = []
     for checkpoint in CheckpointLocations:
         for check_count in range(0, checkpoint.total_count+1):
+
+            #if check_count == 0:
+            #    if not Locations.HasCheckpointZero(checkpoint.stageId):
+            #        continue
+
+            # TODO Link Check 1 to Check 0 somewhere
+
             item = ItemInfo(id_c, GetCheckpointItemName(checkpoint.stageId, check_count),
                             ItemClassification.progression, checkpoint.stageId, None, "checkpoint", check_count)
             items.append(item)
@@ -1165,7 +1172,8 @@ def PopulateItemPool(world: World):
 
     if world.options.checkpoint_shuffle != Options.CheckpointShuffle.option_off:
         relevant_checkpoint_items = [ c for c in checkpoint_items if c.stageId in world.available_levels and
-                                      (world.options.checkpoint_shuffle == Options.CheckpointShuffle.option_start_and_unlock or c.value != 0)]
+                                      (world.options.checkpoint_shuffle == Options.CheckpointShuffle.option_start_and_unlock or c.value != 0)
+                                      and (c.stageId not in world.first_checkpoints or world.first_checkpoints[c.stageId] != c.value)]
         mw_checkpoint_items = [ ShadowTheHedgehogItem(i, world.player) for i in relevant_checkpoint_items ]
         item_count = increment_item_count(item_count, mw_checkpoint_items)
         world.multiworld.itempool += mw_checkpoint_items
@@ -1180,6 +1188,8 @@ def PopulateItemPool(world: World):
     if junk_count < 0:
         reverse_count = -junk_count
         junk_count = 0
+
+    print("LWS=", world.options.include_last_way_shuffle)
 
     if not world.options.include_last_way_shuffle:
         if not world.options.exclude_go_mode_items:

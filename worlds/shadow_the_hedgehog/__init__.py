@@ -147,8 +147,11 @@ class ShtHWorld(World):
     def check_invalid_configurations(self):
 
         not_excluded_stages = [x for x in Levels.ALL_STAGES if
-                                   x not in Levels.BOSS_STAGES and x not in Levels.LAST_STORY_STAGES and
-                                   Names.LEVEL_ID_TO_LEVEL[x] not in self.options.excluded_stages]
+                                   x not in Levels.BOSS_STAGES and \
+                               (self.options.include_last_way_shuffle or x not in Levels.LAST_STORY_STAGES) and \
+                                   Names.LEVEL_ID_TO_LEVEL[x] not in self.options.excluded_stages
+                               ]
+
         if len(not_excluded_stages) == 0:
             raise OptionError("You cannot exclude all stages")
 
@@ -176,17 +179,17 @@ class ShtHWorld(World):
             self.options.key_sanity:
             raise OptionError("Key/RSR sanity not supported in Reloaded at this time.")
 
-        if self.options.story_shuffle == Options.StoryShuffle.option_off and \
-            self.options.include_last_way_shuffle:
+        #if self.options.story_shuffle == Options.StoryShuffle.option_off and \
+        #    self.options.include_last_way_shuffle:
 
             # If story is off, last way cannot be shuffled
-            self.options.include_last_way_shuffle = Options.IncludeLastStoryShuffle(False)
+        #    self.options.include_last_way_shuffle = Options.IncludeLastStoryShuffle(False)
 
-        if self.options.level_progression == Options.LevelProgression.option_select and \
-            self.options.include_last_way_shuffle:
+        #if self.options.level_progression == Options.LevelProgression.option_select and \
+        #    self.options.include_last_way_shuffle:
 
-            # If story is off, last way cannot be shuffled
-            self.options.include_last_way_shuffle = Options.IncludeLastStoryShuffle(False)
+        #    # If story is off, last way cannot be shuffled
+        #    self.options.include_last_way_shuffle = Options.IncludeLastStoryShuffle(False)
 
         if self.options.level_progression == Options.LevelProgression.option_select and \
             self.options.story_shuffle:
