@@ -278,13 +278,13 @@ class ShTHCommandProcessor(ClientCommandProcessor):
     #    self.reports.append((arguments["i"], self.region))
 
 
-    #def arg_finish(self, build, type, results, value):
-    ##    to_use = " ".join(build)
+    def arg_finish(self, build, type, results, value):
+        to_use = " ".join(build)
 
-    #   if value:
-    #        results[type] = to_use
-    #    else:
-    #        results[type+to_use] = True
+        if value:
+            results[type] = to_use
+        else:
+            results[type+to_use] = True
 
     def parse_args(self, args, value=True):
         arguments = {}
