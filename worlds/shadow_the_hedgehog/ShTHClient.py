@@ -316,6 +316,9 @@ class ShTHCommandProcessor(ClientCommandProcessor):
     def arg_finish(self, build, type, results, value):
         to_use = " ".join(build)
 
+    def arg_finish(self, build, type, results, value):
+        to_use = " ".join(build)
+
         if value:
             results[type] = to_use
         else:
@@ -2156,7 +2159,7 @@ def HandleLocationAutoclears():
 def is_level_accessible(ctx, stageId, story=False):
     info = Items.GetItemLookupDict()
 
-    if stageId in ctx.available_levels:
+    if not story and stageId in ctx.available_levels:
         return True
 
     if ctx.select_mode_available and not story:
