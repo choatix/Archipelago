@@ -2100,7 +2100,7 @@ def HandleLocationAutoclears():
 def is_level_accessible(ctx, stageId, story=False):
     info = Items.GetItemLookupDict()
 
-    if stageId in ctx.available_levels:
+    if not story and stageId in ctx.available_levels:
         return True
 
     if ctx.select_mode_available and not story:
