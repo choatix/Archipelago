@@ -828,6 +828,8 @@ LevelRegion(STAGE_THE_ARK, REGION_INDICIES.THE_ARK_CHECKPOINT_EIGHT,
 # need to work out the hard logic for this
 LevelRegion(STAGE_AIR_FLEET, REGION_INDICIES.AIR_FLEET_PULLEY,
                     REGION_RESTRICTION_TYPES.Pulley),
+LevelRegion(STAGE_AIR_FLEET, REGION_INDICIES.AIR_FLEET_KEYDOOR_ENTRANCE,
+                    REGION_RESTRICTION_TYPES.NoRestriction),
 LevelRegion(STAGE_AIR_FLEET, REGION_INDICIES.AIR_FLEET_KEY_DOOR,
                     REGION_RESTRICTION_TYPES.KeyDoor),
 LevelRegion(STAGE_AIR_FLEET, REGION_INDICIES.AIR_FLEET_AIR_SAUCER,
@@ -840,9 +842,49 @@ LevelRegion(STAGE_AIR_FLEET, REGION_INDICIES.AIR_FLEET_RAILS,
                     REGION_RESTRICTION_TYPES.NoRestriction)
     .setFromRegion([REGION_INDICIES.AIR_FLEET_RAIL_HARD,
                     REGION_INDICIES.AIR_FLEET_AIR_SAUCER]),
-LevelRegion(STAGE_AIR_FLEET, REGION_INDICIES.AIR_FLEET_GOLD_BEETLE,
-                    REGION_RESTRICTION_TYPES.GoldBeetle)
+LevelRegion(STAGE_AIR_FLEET, REGION_INDICIES.AIR_FLEET_SECRET_1,
+                    REGION_RESTRICTION_TYPES.NoRestriction),
+LevelRegion(STAGE_AIR_FLEET, REGION_INDICIES.AIR_FLEET_BEHIND_CHECK_ONE,
+                    REGION_RESTRICTION_TYPES.NoRestriction)
     .setFromRegion(REGION_INDICIES.AIR_FLEET_PULLEY),
+LevelRegion(STAGE_AIR_FLEET, REGION_INDICIES.AIR_FLEET_CHECKPOINT_ONE,
+                    REGION_RESTRICTION_TYPES.NoRestriction),
+LevelRegion(STAGE_AIR_FLEET, REGION_INDICIES.AIR_FLEET_CHECKPOINT_TWO,
+                    REGION_RESTRICTION_TYPES.NoRestriction),
+LevelRegion(STAGE_AIR_FLEET, REGION_INDICIES.AIR_FLEET_GOLD_BEETLE,
+                    REGION_RESTRICTION_TYPES.GoldBeetle),
+LevelRegion(STAGE_AIR_FLEET, REGION_INDICIES.AIR_FLEET_CHECKPOINT_THREE,
+                    REGION_RESTRICTION_TYPES.NoRestriction)
+    .setFromRegion(REGION_INDICIES.AIR_FLEET_CHECKPOINT_TWO),
+LevelRegion(STAGE_AIR_FLEET, REGION_INDICIES.AIR_FLEET_THREE_FLOATERS,
+                    REGION_RESTRICTION_TYPES.VacuumOrShot),
+# Note that because the level is linear, access to first rails is enough,
+    # but if this changes, this logic will be more complex
+LevelRegion(STAGE_AIR_FLEET, REGION_INDICIES.AIR_FLEET_SECRET_2,
+                    [REGION_RESTRICTION_TYPES.Region5]
+            ).setLogicType(Options.LogicLevel.option_hard)
+    .setFromRegion(REGION_INDICIES.AIR_FLEET_CHECKPOINT_THREE),
+LevelRegion(STAGE_AIR_FLEET, REGION_INDICIES.AIR_FLEET_CHECKPOINT_FOUR,
+                    REGION_RESTRICTION_TYPES.NoRestriction)
+    .setFromRegion(REGION_INDICIES.AIR_FLEET_CHECKPOINT_THREE),
+LevelRegion(STAGE_AIR_FLEET, REGION_INDICIES.AIR_FLEET_CHECKPOINT_FIVE,
+                    REGION_RESTRICTION_TYPES.NoRestriction),
+LevelRegion(STAGE_AIR_FLEET, REGION_INDICIES.AIR_FLEET_FIVE_FLOATERS,
+                    REGION_RESTRICTION_TYPES.VacuumOrShot),
+LevelRegion(STAGE_AIR_FLEET, REGION_INDICIES.AIR_FLEET_CHECKPOINT_SIX,
+                    REGION_RESTRICTION_TYPES.NoRestriction)
+        .setFromRegion(REGION_INDICIES.AIR_FLEET_CHECKPOINT_FIVE),
+LevelRegion(STAGE_AIR_FLEET, REGION_INDICIES.AIR_FLEET_SECRET_3,
+                    [REGION_RESTRICTION_TYPES.Region5]
+            ).setLogicType(Options.LogicLevel.option_hard),
+LevelRegion(STAGE_AIR_FLEET, REGION_INDICIES.AIR_FLEET_CHECKPOINT_SEVEN,
+                    REGION_RESTRICTION_TYPES.NoRestriction),
+LevelRegion(STAGE_AIR_FLEET, REGION_INDICIES.AIR_FLEET_SEVEN_DESCEND,
+                    REGION_RESTRICTION_TYPES.VacuumOrShot),
+LevelRegion(STAGE_AIR_FLEET, REGION_INDICIES.AIR_FLEET_CHECKPOINT_EIGHT,
+                    REGION_RESTRICTION_TYPES.NoRestriction)
+    .setFromRegion(REGION_INDICIES.AIR_FLEET_CHECKPOINT_SEVEN),
+
 
 LevelRegion(STAGE_IRON_JUNGLE, REGION_INDICIES.IRON_JUNGLE_ZERO_BACKTRACK,
                     REGION_RESTRICTION_TYPES.NoRestriction),
@@ -1746,6 +1788,28 @@ BACKTRACKING_REGIONS = [
                     REGION_RESTRICTION_TYPES.NoRestriction).setHardLogicOnly(),
     BacktrackRegion(STAGE_THE_ARK, REGION_INDICIES.THE_ARK_CHECKPOINT_EIGHT,
                     REGION_INDICIES.THE_ARK_GOLD_BEETLE, Options.LogicLevel.option_normal,
+                    REGION_RESTRICTION_TYPES.NoRestriction).setHardLogicOnly(),
+
+    BacktrackRegion(STAGE_AIR_FLEET, REGION_INDICIES.AIR_FLEET_CHECKPOINT_ONE,
+                    REGION_INDICIES.AIR_FLEET_PULLEY, Options.LogicLevel.option_normal,
+                    REGION_RESTRICTION_TYPES.NoRestriction).setHardLogicOnly(),
+    BacktrackRegion(STAGE_AIR_FLEET, REGION_INDICIES.AIR_FLEET_CHECKPOINT_ONE,
+                    REGION_INDICIES.AIR_FLEET_SECRET_1, Options.LogicLevel.option_normal,
+                    REGION_RESTRICTION_TYPES.NoRestriction).setHardLogicOnly(),
+    BacktrackRegion(STAGE_AIR_FLEET, REGION_INDICIES.AIR_FLEET_CHECKPOINT_ONE,
+                    REGION_INDICIES.AIR_FLEET_CHECKPOINT_ZERO, Options.LogicLevel.option_normal,
+                    REGION_RESTRICTION_TYPES.NoRestriction).setHardLogicOnly(),
+    BacktrackRegion(STAGE_AIR_FLEET, REGION_INDICIES.AIR_FLEET_CHECKPOINT_ONE,
+                    REGION_INDICIES.AIR_FLEET_KEYDOOR_ENTRANCE, Options.LogicLevel.option_normal,
+                    REGION_RESTRICTION_TYPES.NoRestriction).setHardLogicOnly(),
+    BacktrackRegion(STAGE_AIR_FLEET, REGION_INDICIES.AIR_FLEET_CHECKPOINT_TWO,
+                    REGION_INDICIES.AIR_FLEET_CHECKPOINT_ONE, Options.LogicLevel.option_easy,
+                    REGION_RESTRICTION_TYPES.NoBacktracking),
+    BacktrackRegion(STAGE_AIR_FLEET, REGION_INDICIES.AIR_FLEET_CHECKPOINT_FIVE,
+                    REGION_INDICIES.AIR_FLEET_CHECKPOINT_FOUR, Options.LogicLevel.option_easy,
+                    REGION_RESTRICTION_TYPES.NoBacktracking),
+    BacktrackRegion(STAGE_AIR_FLEET, REGION_INDICIES.AIR_FLEET_CHECKPOINT_SIX,
+                    REGION_INDICIES.AIR_FLEET_CHECKPOINT_FIVE, Options.LogicLevel.option_normal,
                     REGION_RESTRICTION_TYPES.NoRestriction).setHardLogicOnly(),
 
 
