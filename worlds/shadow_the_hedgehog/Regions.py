@@ -4,7 +4,7 @@ from typing import Dict
 
 from BaseClasses import Region, Entrance, MultiWorld, Item, ItemClassification
 from Options import OptionError
-from . import Levels, Items, Weapons, Story, Locations, Options, Names, Utils as ShadowUtils
+from . import Levels, Items, Weapons, Story, Locations, Options, Names, Utils as ShadowUtils, Objects
 from .Names import STAGE_THE_LAST_WAY, REGION_INDICIES
 from .Options import LevelProgression
 from .Story import PathInfo
@@ -12,17 +12,32 @@ from .Story import PathInfo
 
 
 def stage_id_to_region(level_id: int, region_id) -> str:
+    if level_id in Levels.BOSS_STAGES:
+        raise Exception("Wrong function called" + str(level_id))
     #level_name = Levels.LEVEL_ID_TO_LEVEL[level_id]
     region_name_base = Names.GetRegionName(level_id, region_id)
     region_name = "REGION_" + region_name_base
     return region_name
 
 def boss_stage_id_to_region(level_id: int, region_id=0) -> str:
+    if level_id not in Levels.BOSS_STAGES:
+        raise Exception("Wrong function called" + str(level_id))
     level_name = Levels.LEVEL_ID_TO_LEVEL[level_id]
     region_name = "BOSS_REGION_" + level_name + "_" + str(region_id)
     return region_name
 
-def stage_id_to_story_region(level_id: int, region_id = 0) -> str:
+def boss_stage_id_to_story_region(level_id: int, region_id=0) -> str:
+    if level_id not in Levels.BOSS_STAGES:
+        raise Exception("Wrong function called" + str(level_id))
+
+    level_name = Levels.LEVEL_ID_TO_LEVEL[level_id]
+    region_name = "BOSS_STORY_REGION_" + level_name + "_" + str(region_id)
+    return region_name
+
+def stage_id_to_story_region(level_id: int, region_id) -> str:
+    if level_id in Levels.BOSS_STAGES:
+        raise Exception("Wrong function called:" + str(level_id))
+
     level_name = Levels.LEVEL_ID_TO_LEVEL[level_id]
     region_name = "STORY_REGION_" + level_name + "_" + str(region_id)
     return region_name
@@ -33,8 +48,8 @@ def character_name_to_region(name):
 def weapon_name_to_region(name):
     return "REGION_" + name
 
-def region_name_for_character(stage_name, name):
-    return name + "_in_" + stage_name
+def region_name_for_character(stage_name, name, region):
+    return name + "_in_" + stage_name + "_" + str(region)
 
 def region_name_for_weapon(stage_name, region_index, name):
     return f"{name}_in_{stage_name}_{region_index}"
@@ -303,14 +318,14 @@ def early_region_checks(world):
     if world.options.level_progression != Options.LevelProgression.option_story:
         world.available_select_stages = available_select_stages
 
-    for char_name in Levels.CharacterToLevel.keys():
-        levels_in = Levels.CharacterToLevel[char_name]
+    for char in Names.Characters:
+        levels_in = Objects.CharacterToLevel[char.name]
         levels_in = [ (l[0] if type(l) is tuple else l) for l in levels_in  ]
         levels_left = [ l for l in levels_in if l in world.available_levels ]
         if len(levels_left) == 0:
             continue
 
-        world.available_characters.append(char_name)
+        world.available_characters.append(char.name)
 
     for weapon in Weapons.WEAPON_INFO:
         levels_in = weapon.available_stages
@@ -382,12 +397,22 @@ def create_regions(world) -> Dict[str, Region]:
             if level_id == Levels.STAGE_THE_LAST_WAY and last_way_standard:
                 continue
 
-            story_region_name = stage_id_to_story_region(level_id)
+            connect_region = new_region
+
+            default_region_index = GetDefaultCheckpointRegionForStage(world, level_id)
+
+            if level_id in Levels.BOSS_STAGES:
+                story_region_name = boss_stage_id_to_story_region(level_id)
+            else:
+                story_region_name = stage_id_to_story_region(level_id, default_region_index)
+                connect_region_name = stage_id_to_region(level_id, default_region_index)
+                connect_region = regions[connect_region_name]
+
             new_story_region = Region(story_region_name, world.player, world.multiworld)
             regions[story_region_name] = new_story_region
 
             connect(world.player, "stage-access:"+Levels.LEVEL_ID_TO_LEVEL[level_id],
-                    new_story_region, new_region)
+                    new_story_region, connect_region)
 
     regions["Menu"] = Region("Menu", world.player, world.multiworld)
 
@@ -431,12 +456,14 @@ def create_regions(world) -> Dict[str, Region]:
                 if len([ s for s in world.shuffled_story_mode if s == stage_id ]) == 0:
                     possible_via_story = False
 
+
+
                 if possible_via_story and possible_via_select:
                     connect_rule = lambda state, si=stage_item_name, b_name=boss_item_name, b_stage=boss_stage_requirement: (
                             state.has(si, world.player) and
                             (state.has(b_name, world.player)
                              or
-                             state.can_reach_region(stage_id_to_story_region(b_stage),world.player))
+                             state.can_reach_region(boss_stage_id_to_story_region(b_stage),world.player))
                              )
                 elif possible_via_select:
                     connect_rule = lambda state, si=stage_item_name, b_name=boss_item_name: (
@@ -458,17 +485,17 @@ def create_regions(world) -> Dict[str, Region]:
                 connect(world.player, connect_name,
                         regions["Menu"], region, connect_rule)
 
-    for char_name in Levels.CharacterToLevel.keys():
-        levels_in = Levels.CharacterToLevel[char_name]
-        levels_in = [ (l[0] if type(l) is tuple else l) for l in levels_in  ]
-        levels_left = [ l for l in levels_in if l in world.available_levels ]
-        if len(levels_left) == 0:
-            continue
+    #for char in Names.Characters:
+    #    levels_in = Objects.CharacterToLevel[char.name]
+    #    levels_in = [ (l[0] if type(l) is tuple else l) for l in levels_in  ]
+    ##    levels_left = [ l for l in levels_in if l in world.available_levels ]
+    #    if len(levels_left) == 0:
+    #        continue
 
-        region_name = character_name_to_region(char_name)
+    for char in world.available_characters:
+        region_name = character_name_to_region(char)
         new_region = Region(region_name, world.player, world.multiworld)
         regions[region_name] = new_region
-        world.available_characters.append(char_name)
 
     for weapon in Weapons.WEAPON_INFO:
         if weapon.name not in world.available_weapons:
@@ -503,7 +530,8 @@ def connect_by_story_mode(multiworld: MultiWorld, world, player: int, order: typ
     for path in order:
         if path.start_stage_id is None:
             start_region = world.get_region("Menu")
-            end_region_name = stage_id_to_story_region(path.end_stage_id)
+            default_region_index = GetDefaultCheckpointRegionForStage(world, path.end_stage_id)
+            end_region_name = stage_id_to_story_region(path.end_stage_id, default_region_index)
             end_region = world.get_region(end_region_name)
 
             secret_rule = None
@@ -528,16 +556,17 @@ def connect_by_story_mode(multiworld: MultiWorld, world, player: int, order: typ
                 and (path.boss is None or path.boss not in world.available_story_levels):
             continue
 
-        start_base_region_name = stage_id_to_story_region(path.start_stage_id)
+        default_region_index = GetDefaultCheckpointRegionForStage(world, path.start_stage_id)
+        start_base_region_name = stage_id_to_story_region(path.start_stage_id, default_region_index)
         start_region = world.get_region(start_base_region_name)
 
         invalid_boss = False
         if path.boss is not None:
             if path.boss in world.available_story_levels: # and path.end_stage_id is not None:
-                boss_base_region_name = stage_id_to_region(path.boss)
+                boss_base_region_name = boss_stage_id_to_region(path.boss)
                 boss_base_region = world.get_region(boss_base_region_name)
 
-                boss_region_name = stage_id_to_story_region(path.boss)
+                boss_region_name = boss_stage_id_to_story_region(path.boss)
                 boss_region = world.get_region(boss_region_name)
 
                 if path.end_stage_id is not None and path.end_stage_id in world.available_story_levels:
@@ -596,7 +625,7 @@ def connect_by_story_mode(multiworld: MultiWorld, world, player: int, order: typ
                 multiworld.register_indirect_condition(start_region, boss_end_entrance)
                 default_region_index = GetDefaultCheckpointRegionForStage(world, path.start_stage_id)
                 base_region_name = stage_id_to_region(path.start_stage_id, default_region_index)
-                base_story_region_name = stage_id_to_story_region(path.start_stage_id)
+                base_story_region_name = stage_id_to_story_region(path.start_stage_id, default_region_index)
                 base_region = world.get_region(base_region_name)
                 base_story_region = world.get_region(base_story_region_name)
                 multiworld.register_indirect_condition(base_region, boss_end_entrance)
@@ -670,7 +699,8 @@ def connect_by_story_mode(multiworld: MultiWorld, world, player: int, order: typ
         if path.end_stage_id is not None and path.end_stage_id not in world.available_story_levels:
             continue
 
-        end_region_name = stage_id_to_story_region(path.end_stage_id)
+        default_region_index = GetDefaultCheckpointRegionForStage(world, path.end_stage_id)
+        end_region_name = stage_id_to_story_region(path.end_stage_id, default_region_index)
         end_region = world.get_region(end_region_name)
 
         if boss_rule is not None:
@@ -829,10 +859,6 @@ def GenerateFirstCheckpoints(world):
     first_checkpoints = {}
     for level in world.available_levels:
         if level in Levels.BOSS_STAGES:
-            continue
-
-        if level == Levels.STAGE_THE_LAST_WAY:
-            first_checkpoints[level] = 2
             continue
 
         c = [l for l in Locations.CheckpointLocations if l.stageId == level][0]

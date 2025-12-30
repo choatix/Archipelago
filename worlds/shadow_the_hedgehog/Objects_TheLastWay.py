@@ -396,4 +396,12 @@ DESIRABLE_OBJECTS_THE_LAST_WAY = [
 
     SETObject(ObjectType.ITEM_IN_BOX, Levels.STAGE_THE_LAST_WAY, 455, 'Drop Down Life',
               region=REGION_INDICIES.THE_LAST_WAY_CHECKPOINT_SEVEN),
+
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_THE_LAST_WAY, 173, '1', count=1),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_THE_LAST_WAY, 97, '2', count=2),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_THE_LAST_WAY, 409, '3', count=3),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_THE_LAST_WAY, 302, '4', count=4),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_THE_LAST_WAY, 424, '5', count=5),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_THE_LAST_WAY, 411, '6', count=6),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_THE_LAST_WAY, 209, '7', count=7)
 ]

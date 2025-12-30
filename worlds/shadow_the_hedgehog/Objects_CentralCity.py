@@ -1,6 +1,6 @@
 from . import Levels
 from .ObjectTypes import ObjectType, SETObject
-from .Names import REGION_INDICIES, REGION_RESTRICTION_TYPES
+from .Names import REGION_INDICIES, REGION_RESTRICTION_TYPES, Characters
 from .Weapons import WEAPONS
 
 DESIRABLE_OBJECTS_CENTRAL_CITY  = [
@@ -412,7 +412,30 @@ SETObject(ObjectType.KEY, Levels.STAGE_CENTRAL_CITY, 299, 'Key 5',
     SETObject(ObjectType.ITEM_CAPSULE, Levels.STAGE_CENTRAL_CITY, 584, 'Shield Above Loop Stretch',
               region=REGION_INDICIES.CENTRAL_CITY_CHECKPOINT_SIX),
     SETObject(ObjectType.ITEM_IN_BOX, Levels.STAGE_CENTRAL_CITY, 481, 'Box First Up Bombs Section Last',
-              region=REGION_INDICIES.CENTRAL_CITY_BOMB_OR_BAZOOKA_3)
+              region=REGION_INDICIES.CENTRAL_CITY_BOMB_OR_BAZOOKA_3),
 
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_CENTRAL_CITY, 42, '1', count=1),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_CENTRAL_CITY, 390, '2', count=2),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_CENTRAL_CITY, 391, '3', count=3),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_CENTRAL_CITY, 329, '4', count=4),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_CENTRAL_CITY, 369, '5', count=5),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_CENTRAL_CITY, 435, '6', count=6),
+
+SETObject(ObjectType.PARTNER, Levels.STAGE_CENTRAL_CITY, 619, 'Dooms Eye 1', character=Characters.Doom,
+          region=REGION_INDICIES.CENTRAL_CITY_CHECKPOINT_ZERO),
+SETObject(ObjectType.PARTNER, Levels.STAGE_CENTRAL_CITY, 677, 'Dooms Eye 2', character=Characters.Doom,
+          region=REGION_INDICIES.CENTRAL_CITY_CHECKPOINT_FIVE),
+SETObject(ObjectType.PARTNER, Levels.STAGE_CENTRAL_CITY, 678, 'Knuckles 1', character=Characters.Knuckles,
+              region=REGION_INDICIES.CENTRAL_CITY_CHECKPOINT_FIVE),
+SETObject(ObjectType.PARTNER, Levels.STAGE_CENTRAL_CITY, 692, 'Knuckles 2', character=Characters.Knuckles,
+              region=REGION_INDICIES.CENTRAL_CITY_CHECKPOINT_ZERO),
+SETObject(ObjectType.PARTNER, Levels.STAGE_CENTRAL_CITY, 696, 'Knuckles 3', character=Characters.Knuckles,
+              region=REGION_INDICIES.CENTRAL_CITY_CHECKPOINT_ZERO),
+    SETObject(ObjectType.PARTNER, Levels.STAGE_CENTRAL_CITY, 697, 'Dooms Eye 3', character=Characters.Doom,
+              region=REGION_INDICIES.CENTRAL_CITY_CHECKPOINT_ONE),
+SETObject(ObjectType.PARTNER, Levels.STAGE_CENTRAL_CITY, 698, 'Knuckles 4', character=Characters.Knuckles,
+              region=REGION_INDICIES.CENTRAL_CITY_CHECKPOINT_TWO),
+SETObject(ObjectType.PARTNER, Levels.STAGE_BLACK_COMET, 699, 'Knuckles 5', character=Characters.Knuckles,
+              region=REGION_INDICIES.CENTRAL_CITY_CHECKPOINT_ONE)
 
 ]

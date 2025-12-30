@@ -82,21 +82,86 @@ class MissionClearLocation:
         self.logicType = Options.LogicLevel.option_normal
         self.craft_requirements = None
         self.craftLogicType = None
-        self.setEnemyDistribution()
+        self.setAutoDistribution()
 
-
-    def setEnemyDistribution(self):
-        pass
+    def setAutoDistribution(self):
         if self.mission_object_name == "Soldier":
             self.distribution = GetEnemyDistributionInStageByBaseType(self.stageId, ENEMY_CLASS_GUN)
         elif self.mission_object_name == "Alien":
             self.distribution = GetEnemyDistributionInStageByBaseType(self.stageId, ENEMY_CLASS_ALIEN)
         elif self.mission_object_name == "Artificial Chaos":
             self.distribution = GetEnemyDistributionInStageByBaseType(self.stageId, ENEMY_CLASS_ALIEN)
+        elif self.mission_object_name == "Goal Ring":
+            self.distribution = Objects.GetDistributionInStageByBaseType(self.stageId, ObjectType.GOAL_RING)
+        elif self.mission_object_name == "Core":
+            self.distribution = Objects.GetDistributionInStageByBaseType(self.stageId, ObjectType.DIGITAL_CORE)
+        elif self.mission_object_name == "Temple":
+            if self.stageId == Levels.STAGE_GLYPHIC_CANYON:
+                self.distribution = Objects.GetDistributionInStageByBaseType(self.stageId, ObjectType.GLYPHIC_CANYON_TEMPLE)
+            if self.stageId == Levels.STAGE_SKY_TROOPS:
+                self.distribution = Objects.GetDistributionInStageByBaseType(self.stageId, ObjectType.SKY_TROOPS_TEMPLE)
+        elif self.mission_object_name == "Tank":
+            return {
+                REGION_INDICIES.LETHAL_HIGHWAY_KEY_DOOR: 1
+            }
+            self.distribution = Objects.GetDistributionInStageByBaseType(self.stageId, ObjectType.LETHAL_HIGHWAY_TANK)
+        elif self.mission_object_name == "Lantern":
+            self.distribution = Objects.GetDistributionInStageByBaseType(self.stageId, ObjectType.CRYPTIC_CASTLE_LANTERN)
+        elif self.mission_object_name == "Cream":
+            self.distribution = Objects.GetDistributionInStageByBaseType(self.stageId, [ObjectType.CREAM, ObjectType.CHEESE])
+        elif self.mission_object_name == "Disc":
+            self.distribution = Objects.GetDistributionInStageByBaseType(self.stageId, ObjectType.PRISON_ISLAND_DISC)
+        elif self.mission_object_name == "Little Bomb":
+            self.distribution = Objects.GetDistributionInStageByBaseType(self.stageId, ObjectType.SMALL_BOMB)
+        elif self.mission_object_name == "Big Bomb":
+            self.distribution = Objects.GetDistributionInStageByBaseType(self.stageId, ObjectType.CENTRAL_CITY_BIG_BOMB)
+        elif self.mission_object_name == "Researcher":
+            self.distribution = Objects.GetDistributionInStageByBaseType(self.stageId, ObjectType.DOOM_RESEARCHER)
+        elif self.mission_object_name == "Egg Ship":
+            self.distribution = Objects.GetDistributionInStageByBaseType(self.stageId, ObjectType.SKY_TROOPS_EGG_SHIP)
+        elif self.mission_object_name == "Bomb":
+            self.distribution = Objects.GetDistributionInStageByBaseType(self.stageId, ObjectType.MAD_MATRIX_BOMB)
+        elif self.mission_object_name == "Terminal":
+            self.distribution = Objects.GetDistributionInStageByBaseType(self.stageId, ObjectType.MAD_MATRIX_TERMINAL)
+        elif self.mission_object_name == "Defense Unit":
+            if self.stageId == Levels.STAGE_THE_ARK:
+                self.distribution = Objects.GetDistributionInStageByBaseType(self.stageId, ObjectType.THE_ARK_DEFENSE_UNIT)
+            elif self.stageId == Levels.STAGE_SPACE_GADGET:
+                self.distribution = Objects.GetDistributionInStageByBaseType(self.stageId, ObjectType.SPACE_GADGET_DEFENSE_UNIT)
+        elif self.mission_object_name == "President Aircraft":
+            return {
+                REGION_INDICIES.AIR_FLEET_KEY_DOOR: 1
+            }
+            self.distribution = Objects.GetDistributionInStageByBaseType(self.stageId, ObjectType.AIR_FLEET_PRESIDENT_POD)
+        elif self.mission_object_name == "Egg Balloon":
+            return {
+                REGION_INDICIES.IRON_JUNGLE_KEY_DOOR: 1
+            }
+            self.distribution = Objects.GetDistributionInStageByBaseType(self.stageId, ObjectType.IRON_JUNGLE_EGG_BALLOON)
+        elif self.mission_object_name == "Computer":
+            self.distribution = Objects.GetDistributionInStageByBaseType(self.stageId, ObjectType.GUN_FORTRESS_COMPUTER)
+        elif self.mission_object_name == "Defense":
+            self.distribution = Objects.GetDistributionInStageByBaseType(self.stageId, ObjectType.LAVA_SHELTER_DEFENSE)
+        elif self.mission_object_name == "Computer Room":
+            self.distribution = Objects.GetDistributionInStageByBaseType(self.stageId, ObjectType.COSMIC_FALL_COMPUTER_ROOM)
+        elif self.mission_object_name == "Shield":
+            self.distribution = Objects.GetDistributionInStageByBaseType(self.stageId, ObjectType.FINAL_HAUNT_SHIELD)
+        else:
+            if self.stageId in [Levels.STAGE_THE_LAST_WAY]:
+                pass
+            else:
+                raise Exception(f"Unhandled exception with auto distribution type:{self.stageId}/{self.mission_object_name}")
+
+        if self.distribution is None:
+            if self.stageId in [Levels.STAGE_THE_LAST_WAY]:
+                pass
+            else:
+                raise Exception(f"Unhandled exception lack of"
+                            f" type:{self.stageId}/{self.mission_object_name}")
 
     def setDistribution(self, dist):
-        #if len(dist.keys()) == 0:
-        #    raise Exception("Invalid Distribution")
+        if self.distribution is not None:
+            raise Exception("Invalid distribution")
 
         self.distribution = dist
         return self
@@ -195,7 +260,15 @@ class CheckpointLocation:
         return self
 
     def getRegion(self, index):
-        return self.region[index-1]
+        # Temporary code
+
+        if len(self.region) == 0:
+            return 0
+
+        try:
+            return self.region[index-1]
+        except:
+            return self.region[0]
 
 @dataclass
 class NewKeyLocation:
@@ -239,342 +312,80 @@ class CharacterLocation:
 
 MissionClearLocations = [
     MissionClearLocation(STAGE_WESTOPOLIS, MISSION_ALIGNMENT_DARK, 35, "Soldier"),
-    MissionClearLocation(STAGE_WESTOPOLIS, MISSION_ALIGNMENT_NEUTRAL, None, None).setDistribution(
-        {
-            REGION_INDICIES.WESTOPOLIS_CHECKPOINT_FIVE: 1
-        }
-    ),
+    MissionClearLocation(STAGE_WESTOPOLIS, MISSION_ALIGNMENT_NEUTRAL, None, "Goal Ring"),
     MissionClearLocation(STAGE_WESTOPOLIS, MISSION_ALIGNMENT_HERO, 45, "Alien"),
 
-    MissionClearLocation(STAGE_DIGITAL_CIRCUIT, MISSION_ALIGNMENT_DARK, None, None)
-    .setDistribution(
-        {
-            REGION_INDICIES.DIGITAL_CIRCUIT_CHECKPOINT_SEVEN: 1
-        }
-    ),
-    MissionClearLocation(STAGE_DIGITAL_CIRCUIT, MISSION_ALIGNMENT_HERO, None, None).setDistribution(
-        {
-            REGION_INDICIES.DIGITAL_CIRCUIT_CHECKPOINT_SIX: 1
-        }
-    ),
-    #MissionClearLocation(STAGE_DIGITAL_CIRCUIT, MISSION_ALIGNMENT_DARK, 1, "Core"),
-
-    MissionClearLocation(STAGE_GLYPHIC_CANYON, MISSION_ALIGNMENT_DARK, 5, "Temple").setDistribution(
-        {
-            0: 1,
-            REGION_INDICIES.GLYPHIC_CANYON_PULLEY: 4
-        }
-    ),
-    MissionClearLocation(STAGE_GLYPHIC_CANYON, MISSION_ALIGNMENT_NEUTRAL, None, None).setDistribution(
-        {
-            REGION_INDICIES.GLYPHIC_CANYON_PULLEY: 1
-        }
-        ),
+    MissionClearLocation(STAGE_DIGITAL_CIRCUIT, MISSION_ALIGNMENT_DARK, None, "Core"),
+    MissionClearLocation(STAGE_DIGITAL_CIRCUIT, MISSION_ALIGNMENT_HERO, None, "Goal Ring"),
+    MissionClearLocation(STAGE_GLYPHIC_CANYON, MISSION_ALIGNMENT_DARK, 5, "Temple"),
+    MissionClearLocation(STAGE_GLYPHIC_CANYON, MISSION_ALIGNMENT_NEUTRAL, None, "Goal Ring"),
     MissionClearLocation(STAGE_GLYPHIC_CANYON, MISSION_ALIGNMENT_HERO, 60, "Alien"),
-
-
-    MissionClearLocation(STAGE_LETHAL_HIGHWAY, MISSION_ALIGNMENT_DARK, None, None).setDistribution(
-        {
-            REGION_INDICIES.LETHAL_HIGHWAY_ROCKET: 1
-        }
-        ),
-    MissionClearLocation(STAGE_LETHAL_HIGHWAY, MISSION_ALIGNMENT_HERO, 1, "Tank").setDistribution(
-        {
-            REGION_INDICIES.LETHAL_HIGHWAY_ROCKET: 1
-        }
-        )
+    MissionClearLocation(STAGE_LETHAL_HIGHWAY, MISSION_ALIGNMENT_DARK, None, "Goal Ring"),
+    MissionClearLocation(STAGE_LETHAL_HIGHWAY, MISSION_ALIGNMENT_HERO, 1, "Tank")
         .setRequirement(REGION_RESTRICTION_TYPES.Gun)
         .setCraftRequirement(REGION_RESTRICTION_TYPES.ShadowRifle, Options.LogicLevel.option_easy),
 
-    MissionClearLocation(STAGE_CRYPTIC_CASTLE, MISSION_ALIGNMENT_DARK, 5, "Lantern")
-        .setDistribution(
-        {
-            REGION_INDICIES.CRYPTIC_CASTLE_TORCH: 2,
-            REGION_INDICIES.CRYPTIC_CASTLE_HAWK: 1,
-            REGION_INDICIES.CRYPTIC_CASTLE_BOMB_EASY_2: 1,
-            REGION_INDICIES.CRYPTIC_CASTLE_HAWK_2: 1
-        }
-        )
-        .setRequirement(REGION_RESTRICTION_TYPES.Torch),
-    MissionClearLocation(STAGE_CRYPTIC_CASTLE, MISSION_ALIGNMENT_NEUTRAL, None, None)
-        .setDistribution(
-        {
-            REGION_INDICIES.CRYPTIC_CASTLE_BOMB_EASY_2: 1,
-        }
-    ),
-    MissionClearLocation(STAGE_CRYPTIC_CASTLE, MISSION_ALIGNMENT_HERO, 2, "Cream")
-        .setDistribution(
-        {
-            REGION_INDICIES.CRYPTIC_CASTLE_BOMB_EASY_1: 1,
-            REGION_INDICIES.CRYPTIC_CASTLE_BOMB_EASY_2: 1
-        }
-    ),
-
+    MissionClearLocation(STAGE_CRYPTIC_CASTLE, MISSION_ALIGNMENT_DARK, 5, "Lantern"),
+    MissionClearLocation(STAGE_CRYPTIC_CASTLE, MISSION_ALIGNMENT_NEUTRAL, None, "Goal Ring"),
+    MissionClearLocation(STAGE_CRYPTIC_CASTLE, MISSION_ALIGNMENT_HERO, 2, "Cream"),
     MissionClearLocation(STAGE_PRISON_ISLAND, MISSION_ALIGNMENT_DARK, 40, "Soldier"),
-    MissionClearLocation(STAGE_PRISON_ISLAND, MISSION_ALIGNMENT_NEUTRAL, None, None)
-        .setDistribution(
-        {
-            REGION_INDICIES.PRISON_ISLAND_CHECKPOINT_FIVE: 1
-        }
-    ),
-
-    MissionClearLocation(STAGE_PRISON_ISLAND, MISSION_ALIGNMENT_HERO, 5, "Disc")
-        .setDistribution(
-        {
-            0: 1,
-            REGION_INDICIES.PRISON_ISLAND_PULLEY_EASY: 1,
-            REGION_INDICIES.PRISON_ISLAND_AIR_SAUCER: 3
-        }
-    ),
-
+    MissionClearLocation(STAGE_PRISON_ISLAND, MISSION_ALIGNMENT_NEUTRAL, None, "Goal Ring"),
+    MissionClearLocation(STAGE_PRISON_ISLAND, MISSION_ALIGNMENT_HERO, 5, "Disc"),
     MissionClearLocation(STAGE_CIRCUS_PARK, MISSION_ALIGNMENT_DARK, 20, "Soldier"),
-    MissionClearLocation(STAGE_CIRCUS_PARK, MISSION_ALIGNMENT_NEUTRAL, None, None)
-        .setDistribution(
-        {
-            REGION_INDICIES.CIRCUS_PARK_PULLEY: 1
-        }
-    ),
-    MissionClearLocation(STAGE_CIRCUS_PARK, MISSION_ALIGNMENT_HERO, None, None)
-        .setDistribution(
-        {
-            REGION_INDICIES.CIRCUS_PARK_HERO_GOAL: 1
-        }
-    ),
-
-    MissionClearLocation(STAGE_CENTRAL_CITY, MISSION_ALIGNMENT_DARK, 5, "Big Bomb")
-        .setDistribution(
-        {
-            0: 1,
-            REGION_INDICIES.CENTRAL_CITY_BOMB_OR_BAZOOKA: 2,
-            REGION_INDICIES.CENTRAL_CITY_TRAVERSE_EASY: 1,
-            REGION_INDICIES.CENTRAL_CITY_ROCKET_2: 1
-        }
-    ),
+    MissionClearLocation(STAGE_CIRCUS_PARK, MISSION_ALIGNMENT_NEUTRAL, None, "Goal Ring"),
+    MissionClearLocation(STAGE_CIRCUS_PARK, MISSION_ALIGNMENT_HERO, None, "Goal Ring"),
+    MissionClearLocation(STAGE_CENTRAL_CITY, MISSION_ALIGNMENT_DARK, 5, "Big Bomb"),
     MissionClearLocation(STAGE_CENTRAL_CITY, MISSION_ALIGNMENT_HERO, 20, "Little Bomb")
-        .setDistribution(
-            Objects.GetCentralCityBombDistribution()
-        )
-    .setRequirement(REGION_RESTRICTION_TYPES.Vacuum),
-
+        .setRequirement(REGION_RESTRICTION_TYPES.Vacuum),
     MissionClearLocation(STAGE_THE_DOOM, MISSION_ALIGNMENT_DARK, 60, "Soldier"),
-    MissionClearLocation(STAGE_THE_DOOM, MISSION_ALIGNMENT_NEUTRAL, None, None)
-        .setDistribution(
-        {
-            REGION_INDICIES.THE_DOOM_CHECKPOINT_SIX: 1
-        }
-        ),
+    MissionClearLocation(STAGE_THE_DOOM, MISSION_ALIGNMENT_NEUTRAL, None, "Goal Ring"),
     MissionClearLocation(STAGE_THE_DOOM, MISSION_ALIGNMENT_HERO, 10, "Researcher")
-        .setDistribution(
-        {
-            0: 3,
-            REGION_INDICIES.THE_DOOM_BOMBS: 5,
-            REGION_INDICIES.THE_DOOM_DOOR_1_SWITCH: 2,
-        }
-        )
         .setRequirement(REGION_RESTRICTION_TYPES.Heal),
-
     MissionClearLocation(STAGE_SKY_TROOPS, MISSION_ALIGNMENT_DARK, 5, "Egg Ship")
-        .setDistribution(
-        {
-            0: 1,
-            REGION_INDICIES.SKY_TROOPS_ROCKET_NORMAL: 1,
-            REGION_INDICIES.SKY_TROOPS_ROCKET: 2,
-            REGION_INDICIES.SKY_TROOPS_HAWK_OR_VOLT: 1
-        }
-        )
-    .setRequirement(REGION_RESTRICTION_TYPES.BlackArmsTurret),
-    MissionClearLocation(STAGE_SKY_TROOPS, MISSION_ALIGNMENT_NEUTRAL, None, None)
-        .setDistribution(
-        {
-            REGION_INDICIES.SKY_TROOPS_HAWK_OR_VOLT: 1
-        }
-    ),
-    MissionClearLocation(STAGE_SKY_TROOPS, MISSION_ALIGNMENT_HERO, 5, "Temple")
-        .setDistribution(
-        {
-            0: 1,
-            REGION_INDICIES.SKY_TROOPS_ROCKET_NORMAL: 1,
-            REGION_INDICIES.SKY_TROOPS_ROCKET: 2,
-            REGION_INDICIES.SKY_TROOPS_HAWK_OR_VOLT: 1
-        }
-    ),
-
-    MissionClearLocation(STAGE_MAD_MATRIX, MISSION_ALIGNMENT_DARK, 30, "Bomb")
-        .setDistribution(
-        {
-            REGION_INDICIES.MAD_MATRIX_CIRCUIT_ROOM: 30
-        }
-    ),
-    MissionClearLocation(STAGE_MAD_MATRIX, MISSION_ALIGNMENT_NEUTRAL, None, None)
-        .setDistribution(
-        {
-            REGION_INDICIES.MAD_MATRIX_RED_ENTRY: 1
-        }
-    ),
-
-    MissionClearLocation(STAGE_MAD_MATRIX, MISSION_ALIGNMENT_HERO, 4, "Terminal")
-        .setDistribution(
-        {
-            REGION_INDICIES.MAD_MATRIX_BLUE_TERMINAL: 1,
-            REGION_INDICIES.MAD_MATRIX_YELLOW_LIGHT_DASH: 1,
-            REGION_INDICIES.MAD_MATRIX_GREEN_PROGRESSION: 1,
-            REGION_INDICIES.MAD_MATRIX_RED_ENTRY: 1
-        }
-    ),
-
-    MissionClearLocation(STAGE_DEATH_RUINS, MISSION_ALIGNMENT_DARK, None, None)
-        .setDistribution(
-        {
-            REGION_INDICIES.DEATH_RUINS_WALLS: 1
-        }
-        ),
+        .setRequirement(REGION_RESTRICTION_TYPES.BlackArmsTurret),
+    MissionClearLocation(STAGE_SKY_TROOPS, MISSION_ALIGNMENT_NEUTRAL, None, "Goal Ring"),
+    MissionClearLocation(STAGE_SKY_TROOPS, MISSION_ALIGNMENT_HERO, 5, "Temple"),
+    MissionClearLocation(STAGE_MAD_MATRIX, MISSION_ALIGNMENT_DARK, 30, "Bomb"),
+    MissionClearLocation(STAGE_MAD_MATRIX, MISSION_ALIGNMENT_NEUTRAL, None, "Goal Ring"),
+    MissionClearLocation(STAGE_MAD_MATRIX, MISSION_ALIGNMENT_HERO, 4, "Terminal"),
+    MissionClearLocation(STAGE_DEATH_RUINS, MISSION_ALIGNMENT_DARK, None, "Goal Ring"),
     MissionClearLocation(STAGE_DEATH_RUINS, MISSION_ALIGNMENT_HERO, 50, "Alien"),
-
     MissionClearLocation(STAGE_THE_ARK, MISSION_ALIGNMENT_DARK, 4, "Defense Unit")
-        .setDistribution(
-        {
-            REGION_INDICIES.THE_ARK_BLACK_VOLT: 4
-        }
-        )
-    .setRequirement(REGION_RESTRICTION_TYPES.Gun),
-    MissionClearLocation(STAGE_THE_ARK, MISSION_ALIGNMENT_NEUTRAL, None, None)
-        .setDistribution(
-        {
-            REGION_INDICIES.THE_ARK_BLACK_VOLT: 1
-        }
-    ),
-
+        .setRequirement(REGION_RESTRICTION_TYPES.Gun),
+    MissionClearLocation(STAGE_THE_ARK, MISSION_ALIGNMENT_NEUTRAL, None, "Goal Ring"),
     MissionClearLocation(STAGE_AIR_FLEET, MISSION_ALIGNMENT_DARK, 1, "President Aircraft")
-        .setDistribution(
-        {
-            REGION_INDICIES.AIR_FLEET_PULLEY: 1
-        }
-        )
-    .setRequirement(REGION_RESTRICTION_TYPES.Gun)
-    .setCraftRequirement(REGION_RESTRICTION_TYPES.ShadowRifle, Options.LogicLevel.option_easy),
-    MissionClearLocation(STAGE_AIR_FLEET, MISSION_ALIGNMENT_NEUTRAL, None, None)
-        .setDistribution(
-        {
-            REGION_INDICIES.AIR_FLEET_PULLEY: 1
-        }
-        ),
-    MissionClearLocation(STAGE_AIR_FLEET, MISSION_ALIGNMENT_HERO, 35, "Alien"),
-
-    MissionClearLocation(STAGE_IRON_JUNGLE, MISSION_ALIGNMENT_DARK, 28, "Soldier"),
-    MissionClearLocation(STAGE_IRON_JUNGLE, MISSION_ALIGNMENT_NEUTRAL, None, None)
-        .setDistribution(
-        {
-            REGION_INDICIES.IRON_JUNGLE_CHECKPOINT_EIGHT: 1
-        }
-        ),
-    MissionClearLocation(STAGE_IRON_JUNGLE, MISSION_ALIGNMENT_HERO, 1, "Egg Balloon")
-        .setDistribution(
-        {
-            REGION_INDICIES.IRON_JUNGLE_CHECKPOINT_EIGHT: 1
-        }
-        )
         .setRequirement(REGION_RESTRICTION_TYPES.Gun)
         .setCraftRequirement(REGION_RESTRICTION_TYPES.ShadowRifle, Options.LogicLevel.option_easy),
-
+    MissionClearLocation(STAGE_AIR_FLEET, MISSION_ALIGNMENT_NEUTRAL, None, "Goal Ring"),
+    MissionClearLocation(STAGE_AIR_FLEET, MISSION_ALIGNMENT_HERO, 35, "Alien"),
+    MissionClearLocation(STAGE_IRON_JUNGLE, MISSION_ALIGNMENT_DARK, 28, "Soldier"),
+    MissionClearLocation(STAGE_IRON_JUNGLE, MISSION_ALIGNMENT_NEUTRAL, None, "Goal Ring"),
+    MissionClearLocation(STAGE_IRON_JUNGLE, MISSION_ALIGNMENT_HERO, 1, "Egg Balloon")
+        .setRequirement(REGION_RESTRICTION_TYPES.Gun)
+        .setCraftRequirement(REGION_RESTRICTION_TYPES.ShadowRifle, Options.LogicLevel.option_easy),
     MissionClearLocation(STAGE_SPACE_GADGET, MISSION_ALIGNMENT_DARK, 6, "Defense Unit")
-    .setDistribution(
-        {
-            0: 2,
-            REGION_INDICIES.SPACE_GADGET_AIR_SAUCER: 4
-        })
         .setRequirement(REGION_RESTRICTION_TYPES.Gun),
-    MissionClearLocation(STAGE_SPACE_GADGET, MISSION_ALIGNMENT_NEUTRAL, None, None)
-        .setDistribution(
-        {
-            REGION_INDICIES.SPACE_GADGET_AIR_SAUCER: 1
-        }),
-    MissionClearLocation(STAGE_SPACE_GADGET, MISSION_ALIGNMENT_HERO, None, None)
-        .setDistribution(
-        {
-            REGION_INDICIES.SPACE_GADGET_AIR_SAUCER: 1
-        }),
-    MissionClearLocation(STAGE_LOST_IMPACT, MISSION_ALIGNMENT_NEUTRAL, None, None)
-        .setDistribution(
-        {
-            REGION_INDICIES.LOST_IMPACT_GUN_LIFT: 1
-        }
-    ),
+    MissionClearLocation(STAGE_SPACE_GADGET, MISSION_ALIGNMENT_NEUTRAL, None, "Goal Ring"),
+    MissionClearLocation(STAGE_SPACE_GADGET, MISSION_ALIGNMENT_HERO, None, "Goal Ring"),
+    MissionClearLocation(STAGE_LOST_IMPACT, MISSION_ALIGNMENT_NEUTRAL, None, "Goal Ring"),
     MissionClearLocation(STAGE_LOST_IMPACT, MISSION_ALIGNMENT_HERO, 35, "Artificial Chaos"),
-
     MissionClearLocation(STAGE_GUN_FORTRESS, MISSION_ALIGNMENT_DARK, 3, "Computer")
-    .setRequirement(REGION_RESTRICTION_TYPES.ShootOrTurret)
-    .setDistribution(
-        {
-            REGION_INDICIES.GUN_FORTRESS_PULLEY: 1,
-            REGION_INDICIES.GUN_FORTRESS_ROCKET_NORMAL: 1,
-            REGION_INDICIES.GUN_FORTRESS_KEY_OR_ZIPLINE: 1,
-        }
-    ),
-    MissionClearLocation(STAGE_GUN_FORTRESS, MISSION_ALIGNMENT_HERO, None, None)
-    .setDistribution(
-        {
-            REGION_INDICIES.GUN_FORTRESS_KEY_OR_ZIPLINE: 1
-        }
-    ),
-
+    .setRequirement(REGION_RESTRICTION_TYPES.ShootOrTurret),
+    MissionClearLocation(STAGE_GUN_FORTRESS, MISSION_ALIGNMENT_HERO, None, "Goal Ring"),
     MissionClearLocation(STAGE_BLACK_COMET, MISSION_ALIGNMENT_DARK, 50, "Soldier"),
-    MissionClearLocation(STAGE_BLACK_COMET, MISSION_ALIGNMENT_HERO, None, None)
-        .setDistribution(
-        {
-            REGION_INDICIES.BLACK_COMET_CHECKPOINT_EIGHT: 1
-        }
-    ),
-
-    MissionClearLocation(STAGE_LAVA_SHELTER, MISSION_ALIGNMENT_DARK, 5, "Defense")
-        .setDistribution(
-        {
-            0: 1,
-            REGION_INDICIES.LAVA_SHELTER_PULLEY_OR_LAVA: 3,
-            REGION_INDICIES.LAVA_SHELTER_PULLEY_DARK: 1
-        }
-    ),
-    MissionClearLocation(STAGE_LAVA_SHELTER, MISSION_ALIGNMENT_HERO, None, None)
-        .setDistribution(
-        {
-            REGION_INDICIES.LAVA_SHELTER_PULLEY_OR_LAVA: 1
-        }
-    ),
-    MissionClearLocation(STAGE_COSMIC_FALL, MISSION_ALIGNMENT_DARK, None, None)
-        .setDistribution(
-        {
-            REGION_INDICIES.COSMIC_FALL_CHECKPOINT_FIVE: 1
-        }
-    ),
-    MissionClearLocation(STAGE_COSMIC_FALL, MISSION_ALIGNMENT_HERO, None, None)
-        .setDistribution(
-        {
-            REGION_INDICIES.COSMIC_FALL_CHECKPOINT_SEVEN: 1
-        }
-    ),
-    #MissionClearLocation(STAGE_COSMIC_FALL, MISSION_ALIGNMENT_HERO, 1, "Computer Room"),
-
-    MissionClearLocation(STAGE_FINAL_HAUNT, MISSION_ALIGNMENT_DARK, 4, "Shield")
-        .setDistribution(
-        {
-            REGION_INDICIES.FINAL_HAUNT_VACUUM: 1,
-            REGION_INDICIES.FINAL_HAUNT_SHIELD_COUNT_2: 1,
-            REGION_INDICIES.FINAL_HAUNT_SHIELD_COUNT_3: 2
-        }
-    ),
-    MissionClearLocation(STAGE_FINAL_HAUNT, MISSION_ALIGNMENT_HERO, None, None)
-        .setDistribution(
-        {
-            REGION_INDICIES.FINAL_HAUNT_LIGHT_DASH: 1
-        }
-    ),
-
+    MissionClearLocation(STAGE_BLACK_COMET, MISSION_ALIGNMENT_HERO, None, "Goal Ring"),
+    MissionClearLocation(STAGE_LAVA_SHELTER, MISSION_ALIGNMENT_DARK, 5, "Defense"),
+    MissionClearLocation(STAGE_LAVA_SHELTER, MISSION_ALIGNMENT_HERO, None, "Goal Ring"),
+    MissionClearLocation(STAGE_COSMIC_FALL, MISSION_ALIGNMENT_DARK, None, "Goal Ring"),
+    MissionClearLocation(STAGE_COSMIC_FALL, MISSION_ALIGNMENT_HERO, None, "Computer Room"),
+    MissionClearLocation(STAGE_FINAL_HAUNT, MISSION_ALIGNMENT_DARK, 4, "Shield"),
+    MissionClearLocation(STAGE_FINAL_HAUNT, MISSION_ALIGNMENT_HERO, None, "Goal Ring"),
     MissionClearLocation(STAGE_THE_LAST_WAY, MISSION_ALIGNMENT_NEUTRAL, None, None)
         .setDistribution(
         {
             REGION_INDICIES.THE_LAST_WAY_CHECKPOINT_SEVEN: 1
         }
     )
-
 ]
 
 BossClearLocations = \
@@ -777,16 +588,7 @@ def GetEnemySanityLocations():
 #    EnemySanityLocation(STAGE_FINAL_HAUNT, ENEMY_CLASS_ALIEN, 122, "Black Arm"),
 #]
 
-def HasCheckpointZero(stage):
-    stage_name = Levels.LEVEL_ID_TO_LEVEL[stage].replace(" ", "_")
-    checkpoint_keys = list([k for k in REGION_INDICIES.__dict__.items() if
-                            k[0].startswith(stage_name.upper()) and "CHECKPOINT_" in k[0] and
-                            "CHECKPOINT_ZERO" in k[0]])
-
-    #print("HC0", checkpoint_keys)
-
-    return len(checkpoint_keys) > 0
-
+# TODO, use other settings to determine if check 0 is backtracable on logic settings
 
 def GetCheckpointLocations():
     CheckLocations = []
@@ -804,396 +606,7 @@ def GetCheckpointLocations():
 
     return CheckLocations
 
-
-
 CheckpointLocations = GetCheckpointLocations()
-
-# \
-# [
-#     CheckpointLocation(STAGE_WESTOPOLIS, 6),
-#     CheckpointLocation(STAGE_DIGITAL_CIRCUIT, 7)
-#         .setDistribution(
-#         {
-#             0: [1,2,3,4,5,6],
-#             REGION_INDICIES.DIGITAL_CIRCUIT_DARK_WARP_HOLE: [7]
-#         }
-#     ),
-#     CheckpointLocation(STAGE_GLYPHIC_CANYON, 8)
-#         .setDistribution(
-#         {
-#             0: [1,2,3],
-#             REGION_INDICIES.GLYPHIC_CANYON_PULLEY: [4,5,6,7,8]
-#         }
-#     ),
-#     CheckpointLocation(STAGE_LETHAL_HIGHWAY, 5)
-#         .setDistribution(
-#         {
-#             0: [1,2],
-#             REGION_INDICIES.LETHAL_HIGHWAY_ROCKET: [3,4,5]
-#         }
-#     ),
-#
-#     CheckpointLocation(STAGE_CRYPTIC_CASTLE, 8)
-#         .setDistribution(
-#         {
-#             0: [1],
-#             REGION_INDICIES.CRYPTIC_CASTLE_TORCH: [2],
-#             REGION_INDICIES.CRYPTIC_CASTLE_HAWK: [3,4,5],
-#             REGION_INDICIES.CRYPTIC_CASTLE_BOMB_EASY_2: [6,8],
-#             REGION_INDICIES.CRYPTIC_CASTLE_HAWK_2: [7]
-#         }
-#     ),
-#     CheckpointLocation(STAGE_PRISON_ISLAND, 7)
-#         .setDistribution(
-#         {
-#             0: [1,2],
-#             REGION_INDICIES.PRISON_ISLAND_AIR_SAUCER: [3,4,5,6,7]
-#         }
-#     ),
-#     CheckpointLocation(STAGE_CIRCUS_PARK, 7)
-#         .setDistribution(
-#         {
-#             0: [1],
-#             REGION_INDICIES.CIRCUS_PARK_ZIP_WIRE: [2],
-#             REGION_INDICIES.CIRCUS_PARK_ROCKET_EASY: [3,4,5],
-#             REGION_INDICIES.CIRCUS_PARK_ROCKET: [6],
-#             REGION_INDICIES.CIRCUS_PARK_PULLEY: [7]
-#         }
-#     ),
-#     CheckpointLocation(STAGE_CENTRAL_CITY, 6)
-#         .setDistribution(
-#         {
-#             0: [2, 3],
-#             REGION_INDICIES.CENTRAL_CITY_BOMB_OR_BAZOOKA: [1],
-#             REGION_INDICIES.CENTRAL_CITY_BOMB_OR_BAZOOKA_2: [4],
-#             REGION_INDICIES.CENTRAL_CITY_ROCKET_2: [5,6]
-#         }
-#     ),
-#     CheckpointLocation(STAGE_THE_DOOM, 6)
-#         .setDistribution(
-#         {
-#             0: [1],
-#             REGION_INDICIES.THE_DOOM_BOMBS: [2,3],
-#             REGION_INDICIES.THE_DOOM_DOOR_1_SWITCH: [4,5,6]
-#         }
-#     ),
-#
-#     CheckpointLocation(STAGE_SKY_TROOPS, 8)
-#         .setDistribution(
-#         {
-#             0: [1,2],
-#             REGION_INDICIES.SKY_TROOPS_ROCKET_NORMAL: [3],
-#             REGION_INDICIES.SKY_TROOPS_ROCKET: [4,5,6],
-#             REGION_INDICIES.SKY_TROOPS_HAWK_OR_VOLT: [7,8]
-#         }
-#     ),
-#
-#     CheckpointLocation(STAGE_MAD_MATRIX, 6)
-#         .setDistribution(
-#         {
-#             0: [1],
-#             REGION_INDICIES.MAD_MATRIX_GUN: [2,4,6],
-#             REGION_INDICIES.MAD_MATRIX_YELLOW_ENTRY: [3],
-#             REGION_INDICIES.MAD_MATRIX_GREEN_ENTRY: [5]
-#         }
-#     ),
-#     CheckpointLocation(STAGE_DEATH_RUINS, 7)
-#         .setDistribution(
-#         {
-#             0: [1],
-#             REGION_INDICIES.DEATH_RUINS_PULLEY: [2,3,4,5],
-#             REGION_INDICIES.DEATH_RUINS_WALLS: [6,7]
-#         }
-#     ),
-#     CheckpointLocation(STAGE_THE_ARK, 8)
-#         .setDistribution(
-#         {
-#             0: [1],
-#             REGION_INDICIES.THE_ARK_BLACK_VOLT: [2,3,4,5,6,7,8]
-#         }
-#     ),
-#     CheckpointLocation(STAGE_AIR_FLEET, 8)
-#         .setDistribution(
-#         {
-#             REGION_INDICIES.AIR_FLEET_PULLEY: [1,2,3,4,5,6,7,8]
-#         }
-#     ),
-#     CheckpointLocation(STAGE_IRON_JUNGLE, 8)
-#         .setDistribution(
-#         {
-#             0: [1,2],
-#             REGION_INDICIES.IRON_JUNGLE_ROCKET: [3],
-#             REGION_INDICIES.IRON_JUNGLE_LIGHT_DASH: [4,5,6,8],
-#             REGION_INDICIES.IRON_JUNGLE_LIGHT_DASH_DARK: [7]
-#         }
-#     ),
-#     CheckpointLocation(STAGE_SPACE_GADGET, 8).
-#         setDistribution(
-#         {
-#             0: [1,2,3],
-#             REGION_INDICIES.SPACE_GADGET_ZIPWIRE: [6],
-#             REGION_INDICIES.SPACE_GADGET_AIR_SAUCER: [4,5,7,8]
-#         }
-#     ),
-#     CheckpointLocation(STAGE_LOST_IMPACT, 8)
-#         .setDistribution(
-#         {
-#             0: [1],
-#             REGION_INDICIES.LOST_IMPACT_GUN_LIFT: [2,3,4,5,6,7,8]
-#         }
-#     ),
-#     CheckpointLocation(STAGE_GUN_FORTRESS, 7)
-#         .setDistribution(
-#         {
-#             REGION_INDICIES.GUN_FORTRESS_CHECKPOINT_ONE: [1],
-#             REGION_INDICIES.GUN_FORTRESS_CHECKPOINT_TWO: [2],
-#             REGION_INDICIES.GUN_FORTRESS_CHECKPOINT_THREE: [3],
-#             REGION_INDICIES.GUN_FORTRESS_CHECKPOINT_FOUR: [4],
-#             REGION_INDICIES.GUN_FORTRESS_CHECKPOINT_FIVE: [5],
-#             REGION_INDICIES.GUN_FORTRESS_CHECKPOINT_SIX: [6],
-#             REGION_INDICIES.GUN_FORTRESS_CHECKPOINT_SEVEN: [7]
-#         }
-#     ),
-#     CheckpointLocation(STAGE_BLACK_COMET, 8)
-#         .setDistribution(
-#         {
-#             REGION_INDICIES.BLACK_COMET_CHECKPOINT_ONE: [1],
-#             REGION_INDICIES.BLACK_COMET_AIR_SAUCER: [2],
-#             REGION_INDICIES.BLACK_COMET_WARP_HOLE: [3,4,5,6],
-#             REGION_INDICIES.BLACK_COMET_FLOATING_ENEMY_WALL: [7,8]
-#         }
-#     ),
-#     CheckpointLocation(STAGE_LAVA_SHELTER, 8)
-#         .setDistribution(
-#         {
-#             0: [1,2],
-#             REGION_INDICIES.LAVA_SHELTER_PULLEY_OR_LAVA: [3, 4, 5, 7, 8],
-#             REGION_INDICIES.LAVA_SHELTER_PULLEY_DARK: [6]
-#         }
-#     ),
-#     CheckpointLocation(STAGE_COSMIC_FALL, 7)
-#         .setDistribution(
-#         {
-#             REGION_INDICIES.COSMIC_FALL_ZIPWIRE: [1],
-#             REGION_INDICIES.COSMIC_FALL_PULLEY_NORMAL: [2,3,4,5,6],
-#             REGION_INDICIES.COSMIC_FALL_COMPUTER_ROOM: [7]
-#         }
-#     ),
-#
-#     CheckpointLocation(STAGE_FINAL_HAUNT, 8)
-#         .setDistribution(
-#         {
-#             0: [1,2],
-#             REGION_INDICIES.FINAL_HAUNT_HARD_VACUUM_OR_BLACK_VOLT: [3],
-#             REGION_INDICIES.FINAL_HAUNT_ROCKET_NORMAL: [4, 5],
-#             REGION_INDICIES.FINAL_HAUNT_LIGHT_DASH: [6,7,8],
-#         }
-#     ),
-#
-#     CheckpointLocation(STAGE_THE_LAST_WAY, 7)
-#         .setDistribution(
-#         {
-#             REGION_INDICIES.THE_LAST_WAY_CHECKPOINT_ONE: [1],
-#             REGION_INDICIES.THE_LAST_WAY_CHECKPOINT_TWO: [2],
-#             REGION_INDICIES.THE_LAST_WAY_CHECKPOINT_THREE: [3],
-#             REGION_INDICIES.THE_LAST_WAY_CHECKPOINT_FOUR: [4],
-#             REGION_INDICIES.THE_LAST_WAY_CHECKPOINT_FIVE: [5],
-#             REGION_INDICIES.THE_LAST_WAY_CHECKPOINT_SIX: [6],
-#             REGION_INDICIES.THE_LAST_WAY_CHECKPOINT_SEVEN: [7],
-#         }
-#     )
-# ]
-
-# KeyLocations = \
-# [
-#     KeyLocation(STAGE_WESTOPOLIS)
-#         .setDistribution(
-#         {
-#             0: [1,3,4,5],
-#             REGION_INDICIES.WESTOPOLIS_PULLEY: [2]
-#         }
-#     ),
-#     KeyLocation(STAGE_DIGITAL_CIRCUIT)
-#         .setDistribution(
-#         {
-#             0: [1,2,3,4],
-#             REGION_INDICIES.DIGITAL_CIRCUIT_DARK_WARP_HOLE: [5]
-#         }
-#     ),
-#     KeyLocation(STAGE_GLYPHIC_CANYON)
-#         .setDistribution(
-#         {
-#             0: [1,2,3],
-#             REGION_INDICIES.GLYPHIC_CANYON_PULLEY: [4,5]
-#         }
-#     ),
-#     KeyLocation(STAGE_LETHAL_HIGHWAY)
-#         .setDistribution(
-#         {
-#             0: [1,2,3],
-#             REGION_INDICIES.LETHAL_HIGHWAY_ROCKET: [4],
-#             REGION_INDICIES.LETHAL_HIGHWAY_PULLEY: [5],
-#         }
-#     ),
-#     KeyLocation(STAGE_CRYPTIC_CASTLE)
-#         .setDistribution(
-#         {
-#             REGION_INDICIES.CRYPTIC_CASTLE_BALLOON: [1],
-#             REGION_INDICIES.CRYPTIC_CASTLE_HAWK: [2],
-#             REGION_INDICIES.CRYPTIC_CASTLE_BOMB_EASY_2: [3,4,5]
-#         }
-#     ),
-#     KeyLocation(STAGE_PRISON_ISLAND)
-#         .setDistribution(
-#         {
-#             0: [1],
-#             REGION_INDICIES.PRISON_ISLAND_AIR_SAUCER: [2,3,4,5],
-#         }
-#     ),
-#     KeyLocation(STAGE_CIRCUS_PARK)
-#         .setDistribution(
-#         {
-#             REGION_INDICIES.CIRCUS_PARK_ZIP_WIRE: [1],
-#             REGION_INDICIES.CIRCUS_PARK_ROCKET_EASY: [2,3],
-#             REGION_INDICIES.CIRCUS_PARK_ROCKET: [4],
-#             REGION_INDICIES.CIRCUS_PARK_PULLEY: [5]
-#         }
-#     ),
-#     KeyLocation(STAGE_CENTRAL_CITY)
-#         .setDistribution(
-#         {
-#             0: [2],
-#             REGION_INDICIES.CENTRAL_CITY_BOMB_OR_BAZOOKA: [1],
-#             REGION_INDICIES.CENTRAL_CITY_BOMB_OR_BAZOOKA_2: [3],
-#             REGION_INDICIES.CENTRAL_CITY_ROCKET_2: [4],
-#             REGION_INDICIES.CENTRAL_CITY_BOMB_OR_BAZOOKA_3: [5],
-#         }
-#     ),
-#     KeyLocation(STAGE_THE_DOOM)
-#         .setDistribution(
-#         {
-#             0: [1,2],
-#             REGION_INDICIES.THE_DOOM_BOMBS: [3,5],
-#             REGION_INDICIES.THE_DOOM_PULLEY_2: [4],
-#         }
-#     ),
-#     KeyLocation(STAGE_SKY_TROOPS)
-#         .setDistribution(
-#         {
-#             REGION_INDICIES.SKY_TROOPS_GUN_JUMPER_EASY: [1],
-#             REGION_INDICIES.SKY_TROOPS_ROCKET_NORMAL: [2],
-#             REGION_INDICIES.SKY_TROOPS_ROCKET: [3,4],
-#             REGION_INDICIES.SKY_TROOPS_HAWK_OR_VOLT: [5]
-#         }
-#     ),
-#     KeyLocation(STAGE_MAD_MATRIX)
-#         .setDistribution(
-#         {
-#             REGION_INDICIES.MAD_MATRIX_GUN: [1],
-#             REGION_INDICIES.MAD_MATRIX_YELLOW_ENTRY: [2],
-#             REGION_INDICIES.MAD_MATRIX_GREEN_PROGRESSION: [3],
-#             REGION_INDICIES.MAD_MATRIX_RED_ENTRY: [4,5],
-#         }
-#     ),
-#     KeyLocation(STAGE_DEATH_RUINS)
-#         .setDistribution(
-#         {
-#             REGION_INDICIES.DEATH_RUINS_PULLEY: [1,2],
-#             REGION_INDICIES.DEATH_RUINS_WALLS: [3,4,5]
-#         }
-#     ),
-#     KeyLocation(STAGE_THE_ARK)
-#         .setDistribution(
-#         {
-#             0: [1],
-#             REGION_INDICIES.THE_ARK_BLACK_VOLT: [2,3,4,5]
-#         }
-#     ),
-#     KeyLocation(STAGE_AIR_FLEET)
-#         .setDistribution(
-#         {
-#             REGION_INDICIES.AIR_FLEET_PULLEY: [1,2,3,4,5]
-#         }
-#     ),
-#     KeyLocation(STAGE_IRON_JUNGLE)
-#         .setDistribution(
-#         {
-#             REGION_INDICIES.IRON_JUNGLE_ROCKET: [1],
-#             REGION_INDICIES.IRON_JUNGLE_LIGHT_DASH: [2,3,5],
-#             REGION_INDICIES.IRON_JUNGLE_LIGHT_DASH_DARK: [4]
-#         }
-#     ),
-#     KeyLocation(STAGE_SPACE_GADGET)
-#         .setDistribution(
-#         {
-#             0: [1,2],
-#             REGION_INDICIES.SPACE_GADGET_AIR_SAUCER: [3,4,5]
-#         }
-#     ),
-#     KeyLocation(STAGE_LOST_IMPACT)
-#         .setDistribution(
-#         {
-#             0: [1],
-#             REGION_INDICIES.LOST_IMPACT_GUN_LIFT: [2,4],
-#             REGION_INDICIES.LOST_IMPACT_ROCKET: [3],
-#             REGION_INDICIES.LOST_IMPACT_BOMB_WALL: [5]
-#         }
-#     ),
-#     KeyLocation(STAGE_GUN_FORTRESS)
-#         .setDistribution(
-#         {
-#             0: [1],
-#             REGION_INDICIES.GUN_FORTRESS_ZIPWIRE_NORMAL: [2],
-#             REGION_INDICIES.GUN_FORTRESS_ZIPWIRE: [3],
-#             REGION_INDICIES.GUN_FORTRESS_ROCKET_NORMAL: [4, 5]
-#         }
-#     ),
-#     KeyLocation(STAGE_BLACK_COMET)
-#         .setDistribution(
-#         {
-#             REGION_INDICIES.BLACK_COMET_AIR_SAUCER: [1,2],
-#             REGION_INDICIES.BLACK_COMET_WARP_HOLE: [3],
-#             REGION_INDICIES.BLACK_COMET_FLOATING_ENEMY_WALL: [4,5]
-#         }
-#     ),
-#     KeyLocation(STAGE_LAVA_SHELTER)
-#         .setDistribution(
-#         {
-#             0: [1],
-#             REGION_INDICIES.LAVA_SHELTER_PULLEY: [2],
-#             REGION_INDICIES.LAVA_SHELTER_PULLEY_OR_LAVA: [3,5],
-#             REGION_INDICIES.LAVA_SHELTER_PULLEY_DARK: [4]
-#         }
-#     ),
-#     KeyLocation(STAGE_COSMIC_FALL)
-#         .setDistribution(
-#         {
-#             REGION_INDICIES.COSMIC_FALL_PULLEY_NORMAL: [1,2,3],
-#             REGION_INDICIES.COSMIC_FALL_GUN_JUMPER_PULLEY_HARD: [4],
-#             REGION_INDICIES.COSMIC_FALL_LD_OR_JUMPER: [5]
-#         }
-#     ),
-#     KeyLocation(STAGE_FINAL_HAUNT)
-#         .setDistribution(
-#         {
-#             0: [1],
-#             REGION_INDICIES.FINAL_HAUNT_VACUUM: [2],
-#             REGION_INDICIES.FINAL_HAUNT_ROCKET_NORMAL: [3],
-#             REGION_INDICIES.FINAL_HAUNT_BLACK_VOLT_2: [4],
-#             REGION_INDICIES.FINAL_HAUNT_LIGHT_DASH: [5]
-#         }
-#     ),
-#
-#     KeyLocation(STAGE_THE_LAST_WAY)
-#         .setDistribution(
-#         {
-#             0: [1],
-#             REGION_INDICIES.THE_LAST_WAY_BLACK_VOLT: [2,3,4],
-#             REGION_INDICIES.THE_LAST_WAY_VOLT_OR_WARP: [5]
-#         }
-#     ),
-#
-# ]
 
 def GetStageInformation(stageId):
     missions = [m for m in MissionClearLocations if m.stageId == stageId]
@@ -1211,6 +624,14 @@ def GetAlignmentsForStage(stageId):
 
     return missions
 
+locationCache = {}
+def GetActiveLocationInfo():
+    if "ActiveLocation" in locationCache:
+        return locationCache["ActiveLocation"]
+
+    info = GetAllLocationInfo()
+    locationCache["ActiveLocation"] = info
+    return info
 
 def GetAllLocationInfo():
     mission_clear_locations = []
@@ -1314,11 +735,11 @@ def GetAllLocationInfo():
             checkpointsanity_locations.append(info)
 
     char_index = 0
-    for character in CharacterToLevel.keys():
-        location_id, objective_location_name = GetCharacterLocationName(character,char_index)
+    for character in Names.Characters:
+        location_id, objective_location_name = GetCharacterLocationName(character.name,char_index)
         info = LocationInfo(LOCATION_TYPE_CHARACTER, location_id, objective_location_name,
                             stageId=None, alignmentId=None,
-                            count=None, total=None, other=character)
+                            count=None, total=None, other=character.name)
         charactersanity_locations.append(info)
         char_index+=1
 
@@ -1366,7 +787,7 @@ def GetAllLocationInfo():
 
 
 def GetLocationDict():
-    all_locations = GetAllLocationInfo()
+    all_locations = GetActiveLocationInfo()
 
     result = {}
     for location_type in all_locations:
@@ -1376,7 +797,7 @@ def GetLocationDict():
     return result
 
 def GetLocationInfoDict():
-    all_locations = GetAllLocationInfo()
+    all_locations = GetActiveLocationInfo()
 
     result = {}
     for location_type in all_locations:
@@ -1404,7 +825,7 @@ def GetDuplicateLocations():
 #GetDuplicateLocations()
 
 def GetLocationInfoDict():
-    all_locations = GetAllLocationInfo()
+    all_locations = GetActiveLocationInfo()
 
     result = {}
     for location_type in all_locations:
@@ -1469,7 +890,7 @@ def create_locations(world, regions: Dict[str, Region]):
     (clear_locations, mission_locations, end_location,
      enemysanity_locations, checkpointsanity_locations, charactersanity_locations,
      token_locations, keysanity_locations, weaponsanity_locations, boss_locations,
-     warp_locations, object_locations) = GetAllLocationInfo()
+     warp_locations, object_locations) = GetActiveLocationInfo()
 
     menu_region = regions["Menu"]
 
@@ -1643,8 +1064,12 @@ def create_locations(world, regions: Dict[str, Region]):
         if not goal_required:
             continue
 
-        default_region_index = Regions.GetDefaultCheckpointRegionForStage(world, token.stageId)
-        within_region = regions[Regions.stage_id_to_region(token.stageId, default_region_index)]
+        if token.stageId not in Levels.BOSS_STAGES:
+            default_region_index = Regions.GetDefaultCheckpointRegionForStage(world, token.stageId)
+            within_region = regions[Regions.stage_id_to_region(token.stageId, default_region_index)]
+        else:
+            within_region = regions[Regions.boss_stage_id_to_region(token.stageId)]
+
         token_location = ShadowTheHedgehogLocation(world.player, token.name, token.locationId,
                                                         within_region)
         within_region.locations.append(token_location)
@@ -1664,8 +1089,11 @@ def create_locations(world, regions: Dict[str, Region]):
         if warp.stageId not in world.available_story_levels:
             continue
 
-        default_region_index = Regions.GetDefaultCheckpointRegionForStage(world, warp.stageId)
-        within_region = regions[Regions.stage_id_to_region(warp.stageId, default_region_index)]
+        if warp.stageId in Levels.BOSS_STAGES:
+            within_region = regions[Regions.boss_stage_id_to_region(warp.stageId)]
+        else:
+            default_region_index = Regions.GetDefaultCheckpointRegionForStage(world, warp.stageId)
+            within_region = regions[Regions.stage_id_to_region(warp.stageId, default_region_index)]
         warp_location = ShadowTheHedgehogLocation(world.player, warp.name, warp.locationId,
                                                    within_region)
         within_region.locations.append(warp_location)
@@ -1815,7 +1243,11 @@ def create_locations(world, regions: Dict[str, Region]):
                     not world.options.include_last_way_shuffle:
                 continue
 
-            stage_region_name = Regions.stage_id_to_region(objective_location.stageId, objective_location.regionId)
+            if objective_location.stageId in Levels.BOSS_STAGES:
+                stage_region_name = Regions.boss_stage_id_to_region(objective_location.stageId, objective_location.regionId)
+            else:
+                stage_region_name = Regions.stage_id_to_region(objective_location.stageId, objective_location.regionId)
+
             stage_region = regions[stage_region_name]
             new_objective_location = ShadowTheHedgehogLocation(world.player, objective_location.name,
                                                            objective_location.locationId, stage_region)
@@ -1831,7 +1263,11 @@ def create_locations(world, regions: Dict[str, Region]):
                     not world.options.include_last_way_shuffle:
                 continue
 
-            stage_region_name = Regions.stage_id_to_region(objective_location.stageId, objective_location.regionId)
+            if objective_location.stageId in Levels.BOSS_STAGES:
+                stage_region_name = Regions.boss_stage_id_to_region(objective_location.stageId, objective_location.regionId)
+            else:
+                stage_region_name = Regions.stage_id_to_region(objective_location.stageId, objective_location.regionId)
+
             stage_region = regions[stage_region_name]
             new_objective_location = ShadowTheHedgehogLocation(world.player, objective_location.name,
                                                            objective_location.locationId, stage_region)
@@ -1886,7 +1322,7 @@ def count_locations(world):
      enemysanity_locations, checkpointsanity_locations,
      charactersanity_locations, token_locations, keysanity_locations,
      weaponsanity_locations, boss_locations, warp_locations,
-     object_locations) = GetAllLocationInfo()
+     object_locations) = GetActiveLocationInfo()
 
     mission_clear_locations = [ mc for mc in mission_clear_locations if mc.stageId
                                 in world.available_levels]
@@ -2151,7 +1587,7 @@ def getLocationGroups():
     (clear_locations, mission_locations, end_location,
      enemysanity_locations, checkpointsanity_locations, charactersanity_locations,
      token_locations, keysanity_locations, weaponsanity_locations, boss_locations,
-     warp_locations, object_locations) = GetAllLocationInfo()
+     warp_locations, object_locations) = GetActiveLocationInfo()
 
     groups = {
         "Mission Clears": [c.name for c in clear_locations],
@@ -2235,7 +1671,7 @@ def SetStoryClearEvents(world, player, regions):
             continue
 
         view_name = Names.GetMissionClearEventName(story.start_stage_id, story.alignment_id)
-        default_region_index = Regions.GetDefaultCheckpointRegionForStage(world, story.stageId)
+        default_region_index = Regions.GetDefaultCheckpointRegionForStage(world, story.start_stage_id)
         region_name = Regions.stage_id_to_region(story.start_stage_id, default_region_index)
         o_region = regions[region_name]
         story_clear_event = ShadowTheHedgehogLocation(player, view_name, None, o_region)
@@ -2267,13 +1703,15 @@ def SetRegionEvents(world, player, regions):
         if level not in world.available_levels:
             continue
 
-        view_name = Names.GetDistributionRegionEventName(level, 0)
-        region_name = Regions.stage_id_to_region(level, 0)
-        o_region = regions[region_name]
-        region_event = ShadowTheHedgehogLocation(player, view_name, None, o_region)
-        region_event.show_in_spoiler = False
-        region_event.progress_type = LocationProgressType.PRIORITY
-        o_region.locations.append(region_event)
+        has_check_zero = HasCheckpointZero(level)
+        if has_check_zero:
+            view_name = Names.GetDistributionRegionEventName(level, 0)
+            region_name = Regions.stage_id_to_region(level, 0)
+            o_region = regions[region_name]
+            region_event = ShadowTheHedgehogLocation(player, view_name, None, o_region)
+            region_event.show_in_spoiler = False
+            region_event.progress_type = LocationProgressType.PRIORITY
+            o_region.locations.append(region_event)
 
     for region in Levels.INDIVIDUAL_LEVEL_REGIONS:
         if region.stageId not in world.available_levels:

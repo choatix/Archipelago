@@ -1,6 +1,6 @@
 from . import Levels
 from .ObjectTypes import ObjectType, SETObject
-from .Names import REGION_INDICIES
+from .Names import REGION_INDICIES, Characters
 from .Weapons import WEAPONS
 
 DESIRABLE_OBJECTS_MAD_MATRIX  = [
@@ -192,6 +192,19 @@ SETObject(ObjectType.WARP_HOLE, Levels.STAGE_MAD_MATRIX, 105, 'Other Warp Hole',
     SETObject(ObjectType.ITEM_IN_BOX, Levels.STAGE_MAD_MATRIX, 501, '5 Ring Box In Red',
               region=REGION_INDICIES.MAD_MATRIX_CIRCUIT_ROOM),
     SETObject(ObjectType.ITEM_CAPSULE, Levels.STAGE_MAD_MATRIX, 204, 'Near Check 5',
-              region=REGION_INDICIES.MAD_MATRIX_CHECKPOINT_FIVE)
+              region=REGION_INDICIES.MAD_MATRIX_CHECKPOINT_FIVE),
 
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_MAD_MATRIX, 58, '1', count=1),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_MAD_MATRIX, 102, '2', count=2),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_MAD_MATRIX, 135, '3', count=3),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_MAD_MATRIX, 101, '4', count=4),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_MAD_MATRIX, 202, '5', count=5),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_MAD_MATRIX, 103, '6', count=6),
+
+    SETObject(ObjectType.PARTNER, Levels.STAGE_MAD_MATRIX, 605, 'Espio 1', character=Characters.Espio,
+              region=REGION_INDICIES.MAD_MATRIX_BEFORE_WALL),
+    SETObject(ObjectType.PARTNER, Levels.STAGE_MAD_MATRIX, 681, 'Espio 2', character=Characters.Espio,
+              region=REGION_INDICIES.MAD_MATRIX_BEFORE_ONE),
+    SETObject(ObjectType.PARTNER, Levels.STAGE_MAD_MATRIX, 607, 'Dooms Eye', character=Characters.Doom,
+              region=REGION_INDICIES.MAD_MATRIX_CIRCUIT_ROOM),
 ]

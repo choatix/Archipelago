@@ -1,6 +1,6 @@
 from . import Levels
 from .ObjectTypes import ObjectType, SETObject
-from .Names import REGION_INDICIES
+from .Names import REGION_INDICIES, Characters
 from .Weapons import WEAPONS
 
 DESIRABLE_OBJECTS_AIR_FLEET  = [
@@ -266,6 +266,25 @@ SETObject(ObjectType.ITEM_IN_BOX, Levels.STAGE_AIR_FLEET, 346, 'Secret Room 3B',
           region=REGION_INDICIES.AIR_FLEET_SECRET_3),
 SETObject(ObjectType.ITEM_IN_BOX, Levels.STAGE_AIR_FLEET, 343, 'Secret Room 3C',
           region=REGION_INDICIES.AIR_FLEET_SECRET_3),
+
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_AIR_FLEET, 64, '1', count=1),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_AIR_FLEET, 310, '2', count=2),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_AIR_FLEET, 3, '3', count=3),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_AIR_FLEET, 201, '4', count=4),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_AIR_FLEET, 20, '5', count=5),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_AIR_FLEET, 182, '6', count=6),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_AIR_FLEET, 225, '7', count=7),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_AIR_FLEET, 241, '8', count=8),
+
+    SETObject(ObjectType.PARTNER, Levels.STAGE_AIR_FLEET, 517, 'Tails 1', character=Characters.Tails,
+              region=REGION_INDICIES.AIR_FLEET_CHECKPOINT_ZERO),
+    SETObject(ObjectType.PARTNER, Levels.STAGE_AIR_FLEET, 520, 'Dooms Eye 1', character=Characters.Doom,
+              region=REGION_INDICIES.AIR_FLEET_CHECKPOINT_ONE),
+    SETObject(ObjectType.PARTNER, Levels.STAGE_AIR_FLEET, 521, 'Dooms Eye 2', character=Characters.Doom,
+              region=REGION_INDICIES.AIR_FLEET_CHECKPOINT_FOUR),
+    SETObject(ObjectType.PARTNER, Levels.STAGE_AIR_FLEET, 522, 'Tails 2', character=Characters.Tails,
+              region=REGION_INDICIES.AIR_FLEET_CHECKPOINT_FOUR)
+
 
 
 ]

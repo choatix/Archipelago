@@ -1,4 +1,6 @@
+
 from . import Levels
+from .Names import *
 from .ObjectTypes import ObjectType
 from .Objects_BlackComet import DESIRABLE_OBJECTS_BLACK_COMET
 from .Objects_CentralCity import DESIRABLE_OBJECTS_CENTRAL_CITY
@@ -29,6 +31,8 @@ from .Objects_Bosses import DESIRABLE_OBJECTS_BOSSES
 ENEMY_CLASS_ALIEN = 0
 ENEMY_CLASS_GUN = 1
 ENEMY_CLASS_EGG = 2
+
+
 
 LOCATION_ID_PLUS = 100068
 
@@ -83,7 +87,9 @@ def GetPlayableObjectTypes():
             ObjectType.ITEM_CAPSULE,
             ObjectType.BALLOON_ITEM,
             ObjectType.ITEM_IN_METAL_BOX,
-            ObjectType.ITEM_IN_BOX
+            ObjectType.ITEM_IN_BOX,
+            ObjectType.PARTNER,
+            ObjectType.CHECKPOINT
     ]
 
 def GetObjectChecks():
@@ -140,6 +146,25 @@ def GetStandardEnemyTypes():
 
     return types
 
+def GetDistributionInStageByBaseType(level, types):
+    if type(types) != list:
+        types = [types]
+
+    objects = [d for d in DESIRABLE_OBJECTS if d.stage == level and
+               d.object_type in types]
+
+    result = {}
+    for o in objects:
+        if o.region is None:
+            print("Error with enemy region:", o.stage, o.name, o.object_type)
+            continue
+
+        if o.region not in result:
+            result[o.region] = 0
+
+        result[o.region] += o.count
+
+    return result
 
 def GetEnemyDistributionInStageByBaseType(level, enemyType):
     types = []
@@ -156,21 +181,7 @@ def GetEnemyDistributionInStageByBaseType(level, enemyType):
     elif enemyType == ENEMY_CLASS_EGG:
         types = [ObjectType.EGG_CLOWN, ObjectType.EGG_PAWN, ObjectType.SHADOW_ANDROID ]
 
-    objects = [ d for d in DESIRABLE_OBJECTS if d.stage == level and
-      d.object_type in types]
-
-    result = {}
-    for o in objects:
-        if o.region is None:
-            print("Error with enemy region:", o.stage, o.name, o.object_type)
-            continue
-
-        if o.region not in result:
-            result[o.region] = 0
-
-        result[o.region]  += o.count
-
-    return result
+    return GetDistributionInStageByBaseType(level, types)
 
 
 def GetTypeId(objectType):
@@ -354,8 +365,8 @@ def GetTypeId(objectType):
     if objectType == ObjectType.FINAL_HAUNT_SHIELD:
         return 0x1900
 
-    #if objectType == ObjectType.PARTNER:
-    #    return 0x190
+    if objectType == ObjectType.PARTNER:
+        return 0x190
 
     if objectType == ObjectType.KEY:
         return 0x1D
@@ -395,6 +406,9 @@ def GetTypeId(objectType):
 
     if objectType == ObjectType.CLEAR_TRIGGER:
         return 0x2595
+
+    if objectType == ObjectType.CHECKPOINT:
+        return 0x05
 
     return None
 
@@ -498,6 +512,16 @@ def CheckVehicleAttributes(objectType, extra_bytes, index, link_id):
     if objectType == "Key":
         return "Key " + str(hex(link_id))
 
+    if objectType == "Partner":
+        character_bytes = extra_bytes[0:4]
+        character_id = int.from_bytes(character_bytes, byteorder='big')
+
+        try:
+            character_name = Characters(character_id)
+            return "Character: " + str(character_name)
+        except:
+            print("Error with bytes:", extra_bytes)
+            return "Character:" + str(character_id)
 
     return objectType
 
@@ -529,8 +553,16 @@ DESIRABLE_OBJECTS.extend(DESIRABLE_OBJECTS_FINAL_HAUNT)
 DESIRABLE_OBJECTS.extend(DESIRABLE_OBJECTS_THE_LAST_WAY)
 DESIRABLE_OBJECTS.extend(DESIRABLE_OBJECTS_BOSSES)
 
+DesirableCache = {}
+
 def GetDesirableObjectsForStage(stage):
-    return [ o for o in DESIRABLE_OBJECTS if o.stage == stage]
+
+    if stage in DesirableCache:
+        return DesirableCache[stage]
+
+    items = [ o for o in DESIRABLE_OBJECTS if o.stage == stage]
+    DesirableCache[stage] = items
+    return items
 
 
 def TypeToString(type):
@@ -1017,4 +1049,20 @@ def GetKeyLocations(stageId):
         k = NewKeyLocation(stageId, o_key.region, o_key.count)
         keys.append(k)
 
+
     return keys
+
+
+def GetCharacterSanityLocations():
+    partner_objects = [k for k in DESIRABLE_OBJECTS if k.object_type == ObjectType.PARTNER]
+
+    results = {}
+
+    for s in Characters:
+        results[s.name] = []
+        for o in [ p for p in partner_objects if p.character == s ]:
+            results[s.name].append((o.stage, o.region))
+
+    return results
+
+CharacterToLevel = GetCharacterSanityLocations()

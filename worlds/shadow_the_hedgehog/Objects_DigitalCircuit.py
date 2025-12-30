@@ -1,6 +1,6 @@
 from . import Levels
 from .ObjectTypes import ObjectType, SETObject
-from .Names import REGION_INDICIES
+from .Names import REGION_INDICIES, Characters
 from .Weapons import WEAPONS
 
 DESIRABLE_OBJECTS_DIGITAL_CIRCUIT  = [
@@ -209,6 +209,28 @@ SETObject(ObjectType.BALLOON_ITEM, Levels.STAGE_DIGITAL_CIRCUIT, 481, 'Key Circu
           region=REGION_INDICIES.DIGITAL_CIRCUIT_KEY_WARP_HOLE),
 SETObject(ObjectType.BALLOON_ITEM, Levels.STAGE_DIGITAL_CIRCUIT, 480, 'Key Circuit C',
           region=REGION_INDICIES.DIGITAL_CIRCUIT_KEY_WARP_HOLE),
+
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_DIGITAL_CIRCUIT, 66, '1', count=1),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_DIGITAL_CIRCUIT, 36, '2', count=2),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_DIGITAL_CIRCUIT, 65, '3', count=3),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_DIGITAL_CIRCUIT, 166, '4', count=4),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_DIGITAL_CIRCUIT, 222, '5', count=5),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_DIGITAL_CIRCUIT, 520, '6', count=6),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_DIGITAL_CIRCUIT, 368, '7', count=7),
+
+    SETObject(ObjectType.PARTNER, Levels.STAGE_DIGITAL_CIRCUIT, 619, 'Rouge 1', character=Characters.Rouge,
+              region=REGION_INDICIES.DIGITAL_CIRCUIT_CHECKPOINT_ONE),
+    SETObject(ObjectType.PARTNER, Levels.STAGE_DIGITAL_CIRCUIT, 623, 'Dooms Eye 1', character=Characters.Doom,
+              region=REGION_INDICIES.DIGITAL_CIRCUIT_CHECKPOINT_THREE),
+    SETObject(ObjectType.PARTNER, Levels.STAGE_DIGITAL_CIRCUIT, 624, 'Rouge 2', character=Characters.Rouge,
+              region=REGION_INDICIES.DIGITAL_CIRCUIT_CHECKPOINT_FOUR),
+    SETObject(ObjectType.PARTNER, Levels.STAGE_DIGITAL_CIRCUIT, 640, 'Dooms Eye 2', character=Characters.Doom,
+              region=REGION_INDICIES.DIGITAL_CIRCUIT_BEHIND_ONE),
+    SETObject(ObjectType.PARTNER, Levels.STAGE_DIGITAL_CIRCUIT, 648, 'Dooms Eye 3', character=Characters.Doom,
+              region=REGION_INDICIES.DIGITAL_CIRCUIT_CHECKPOINT_SEVEN),
+    SETObject(ObjectType.PARTNER, Levels.STAGE_DIGITAL_CIRCUIT, 653, 'Rouge 3', character=Characters.Rouge,
+              region=REGION_INDICIES.DIGITAL_CIRCUIT_CHECKPOINT_TWO)
+
 
 
 

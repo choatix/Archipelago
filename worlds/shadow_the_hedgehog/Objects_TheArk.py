@@ -1,6 +1,6 @@
 from . import Levels
 from .ObjectTypes import ObjectType, SETObject
-from .Names import REGION_INDICIES, REGION_RESTRICTION_TYPES
+from .Names import REGION_INDICIES, REGION_RESTRICTION_TYPES, Characters
 from .Weapons import WEAPONS
 
 DESIRABLE_OBJECTS_THE_ARK = [
@@ -154,7 +154,7 @@ DESIRABLE_OBJECTS_THE_ARK = [
     SETObject(ObjectType.GOLD_BEETLE, Levels.STAGE_THE_ARK, 354, 'Gold Beetle',
               region=REGION_INDICIES.THE_ARK_GOLD_BEETLE),
 
-    SETObject(ObjectType.KEY, Levels.STAGE_THE_ARK, 47, 'Key 1', region=0),
+    SETObject(ObjectType.KEY, Levels.STAGE_THE_ARK, 47, 'Key 1', region=REGION_INDICIES.THE_ARK_CHECKPOINT_ONE),
     SETObject(ObjectType.KEY, Levels.STAGE_THE_ARK, 133, 'Key 2', region=REGION_INDICIES.THE_ARK_CHECKPOINT_FOUR),
     SETObject(ObjectType.KEY, Levels.STAGE_THE_ARK, 143, 'Key 3', region=REGION_INDICIES.THE_ARK_FOUR_BLACK_VOLT),
     SETObject(ObjectType.KEY, Levels.STAGE_THE_ARK, 271, 'Key 4', region=REGION_INDICIES.THE_ARK_BEFORE_SIX),
@@ -168,7 +168,19 @@ DESIRABLE_OBJECTS_THE_ARK = [
     SETObject(ObjectType.ITEM_CAPSULE, Levels.STAGE_THE_ARK, 177, 'Key B',region=REGION_INDICIES.THE_ARK_KEY_DOOR),
     SETObject(ObjectType.ITEM_CAPSULE, Levels.STAGE_THE_ARK, 178, 'Key C',region=REGION_INDICIES.THE_ARK_KEY_DOOR),
 
-    SETObject(ObjectType.ITEM_CAPSULE, Levels.STAGE_THE_ARK, 269, 'Health 2', region=REGION_INDICIES.THE_ARK_SIX_BLACK_VOLT)
+    SETObject(ObjectType.ITEM_CAPSULE, Levels.STAGE_THE_ARK, 269, 'Health 2', region=REGION_INDICIES.THE_ARK_SIX_BLACK_VOLT),
+
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_THE_ARK, 5, '1', count=1),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_THE_ARK, 6, '2', count=2),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_THE_ARK, 7, '3', count=3),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_THE_ARK, 130, '4', count=4),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_THE_ARK, 11, '5', count=5),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_THE_ARK, 16, '6', count=6),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_THE_ARK, 19, '7', count=7),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_THE_ARK, 97, '8', count=8),
+
+    SETObject(ObjectType.PARTNER, Levels.STAGE_THE_ARK, 401, 'Dooms Eye', character=Characters.Doom,
+              region=REGION_INDICIES.THE_ARK_CHECKPOINT_ONE),
 
 
 

@@ -19,8 +19,22 @@ class WeaponInfo:
         self.power = power
         self.base_ammo = base_ammo
         self.name = "Weapon:"+name
-        self.available_stages = stages
         self.attributes = attributes
+
+        self.available_stages = []
+
+        # Temporary code before rewriting weapon accessibility overhaul
+        # TODO Change full weapon accessibility
+        for stage in stages:
+            if type(stage) is tuple:
+                self.available_stages.append(stage)
+            elif stage in Levels.BOSS_STAGES:
+                self.available_stages.append(stage)
+            elif not Levels.HasCheckpointZero(stage):
+                self.available_stages.append((stage, 1))
+            else:
+                self.available_stages.append(stage)
+
         
     
 class WeaponAttributes:
@@ -105,7 +119,10 @@ def GetRuleByWeaponRequirement(player, req, stage, regions):
     #print(stage, regions_use, matches)
 
     if len(matches) == 0:
+        print("Unable to find weapon match", stage, req, regions, regions_use)
+        #raise Exception("Invalid accessibility")
         return None
+        return lambda state: False
 
     return lambda state, reqs=matches: state.has_any([m for m in reqs],player)
 
@@ -190,7 +207,7 @@ WEAPON_INFO = [
                [WeaponAttributes.SHOT, WeaponAttributes.LONG_RANGE]),
     WeaponInfo(0x3, "Semi Automatic Rifle", 4, 20,
                [Levels.STAGE_LETHAL_HIGHWAY,
-                    Levels.STAGE_PRISON_ISLAND, (Levels.STAGE_CIRCUS_PARK,REGION_INDICIES.CIRCUS_PARK_ROCKET_EASY),
+                    Levels.STAGE_PRISON_ISLAND, (Levels.STAGE_CIRCUS_PARK,REGION_INDICIES.CIRCUS_PARK_CHECKPOINT_THREE),
                 Levels.STAGE_CENTRAL_CITY,
                     Levels.STAGE_THE_DOOM,
                 (Levels.STAGE_DEATH_RUINS, REGION_INDICIES.DEATH_RUINS_PULLEY),
@@ -254,8 +271,8 @@ WEAPON_INFO = [
                [WeaponAttributes.SHOT]),
     WeaponInfo(0xC, "Grenade Launcher", 4, 10,
                [Levels.STAGE_GLYPHIC_CANYON, (Levels.STAGE_THE_DOOM, REGION_INDICIES.THE_DOOM_BOMBS),
-                (Levels.STAGE_DEATH_RUINS, REGION_INDICIES.DEATH_RUINS_WALLS),
-                (Levels.STAGE_SPACE_GADGET,REGION_INDICIES.SPACE_GADGET_AIR_SAUCER),
+                (Levels.STAGE_DEATH_RUINS, REGION_INDICIES.DEATH_RUINS_SIX_WALLS),
+                (Levels.STAGE_SPACE_GADGET,REGION_INDICIES.SPACE_GADGET_AIR_SAUCER_HERO),
                 Levels.STAGE_LOST_IMPACT, Levels.BOSS_BLACK_DOOM_GF],
     [WeaponAttributes.NOT_AIMABLE, WeaponAttributes.EXPLOSION]),
     WeaponInfo(0xD, "Bazooka", 8, 5,
@@ -271,7 +288,7 @@ WEAPON_INFO = [
 [WeaponAttributes.NOT_AIMABLE, WeaponAttributes.EXPLOSION]),
     WeaponInfo(0xF, "Black Barrel", 4, 5,
                [(Levels.STAGE_SKY_TROOPS, REGION_INDICIES.SKY_TROOPS_ROCKET_NORMAL),
-                (Levels.STAGE_SPACE_GADGET, REGION_INDICIES.SPACE_GADGET_AIR_SAUCER),
+                (Levels.STAGE_SPACE_GADGET, REGION_INDICIES.SPACE_GADGET_AIR_SAUCER_HERO),
     (Levels.STAGE_BLACK_COMET,REGION_INDICIES.BLACK_COMET_BLACK_TURRET),
                 Levels.STAGE_FINAL_HAUNT,Levels.STAGE_THE_LAST_WAY],
 [WeaponAttributes.NOT_AIMABLE, WeaponAttributes.EXPLOSION]),
@@ -282,7 +299,7 @@ WEAPON_INFO = [
 [WeaponAttributes.NOT_AIMABLE, WeaponAttributes.EXPLOSION]),
     WeaponInfo(0x11, "Egg Bazooka", 8, 5,
                [(Levels.STAGE_CRYPTIC_CASTLE, REGION_INDICIES.CRYPTIC_CASTLE_TORCH),
-                (Levels.STAGE_CIRCUS_PARK, REGION_INDICIES.CIRCUS_PARK_ROCKET_EASY),
+                (Levels.STAGE_CIRCUS_PARK, REGION_INDICIES.CIRCUS_PARK_CHECKPOINT_THREE),
                 Levels.STAGE_SKY_TROOPS,
                 (Levels.STAGE_MAD_MATRIX,REGION_INDICIES.MAD_MATRIX_GUN),
                 Levels.STAGE_IRON_JUNGLE, Levels.STAGE_LAVA_SHELTER,
@@ -307,8 +324,8 @@ WEAPON_INFO = [
                [Levels.STAGE_DIGITAL_CIRCUIT,Levels.STAGE_GLYPHIC_CANYON,
                 (Levels.STAGE_PRISON_ISLAND,REGION_INDICIES.PRISON_ISLAND_AIR_SAUCER),
                 (Levels.STAGE_MAD_MATRIX, REGION_INDICIES.MAD_MATRIX_GUN),
-                (Levels.STAGE_DEATH_RUINS, REGION_INDICIES.DEATH_RUINS_WALLS),
-                (Levels.STAGE_SPACE_GADGET, REGION_INDICIES.SPACE_GADGET_AIR_SAUCER)],
+                (Levels.STAGE_DEATH_RUINS, REGION_INDICIES.DEATH_RUINS_SIX_WALLS),
+                (Levels.STAGE_SPACE_GADGET, REGION_INDICIES.SPACE_GADGET_AIR_SAUCER_HERO)],
 [WeaponAttributes.NOT_AIMABLE]),
     WeaponInfo(0x16, "Wide Worm Shooter", 8, 5,
                [(Levels.STAGE_MAD_MATRIX, REGION_INDICIES.MAD_MATRIX_YELLOW_ENTRY),
@@ -321,7 +338,7 @@ WEAPON_INFO = [
 [WeaponAttributes.NOT_AIMABLE]),
     WeaponInfo(0x18, "Vacuum Pod", None, 20,
                [Levels.STAGE_CENTRAL_CITY,
-                (Levels.STAGE_SPACE_GADGET,REGION_INDICIES.SPACE_GADGET_AIR_SAUCER),
+                (Levels.STAGE_SPACE_GADGET,REGION_INDICIES.SPACE_GADGET_AIR_SAUCER_HERO),
                 Levels.STAGE_FINAL_HAUNT],
 [WeaponAttributes.VACUUM]),
     WeaponInfo(0x19, "Laser Rifle", 3, 20,
@@ -329,7 +346,7 @@ WEAPON_INFO = [
 [WeaponAttributes.SHOT, WeaponAttributes.LONG_RANGE]),
     WeaponInfo(0x1A, "Splitter", 4, 20,
                [(Levels.STAGE_DEATH_RUINS,REGION_INDICIES.DEATH_RUINS_PULLEY), Levels.STAGE_AIR_FLEET,
-                (Levels.STAGE_SPACE_GADGET, REGION_INDICIES.SPACE_GADGET_AIR_SAUCER), Levels.STAGE_GUN_FORTRESS],
+                (Levels.STAGE_SPACE_GADGET, REGION_INDICIES.SPACE_GADGET_AIR_SAUCER_HERO), Levels.STAGE_GUN_FORTRESS],
 [WeaponAttributes.SHOT]),
     WeaponInfo(0x1B, "Refractor", 5, 20,
                [(Levels.STAGE_BLACK_COMET,REGION_INDICIES.BLACK_COMET_AIR_SAUCER),
@@ -379,7 +396,14 @@ WEAPON_INFO = [
 []),
 
     WeaponInfo(0x26, "Cryptic Torch",2, 4,
-               [(Levels.STAGE_CRYPTIC_CASTLE, REGION_INDICIES.CRYPTIC_CASTLE_BALLOON)],
+               [(Levels.STAGE_CRYPTIC_CASTLE, REGION_INDICIES.CRYPTIC_CASTLE_BALLOON),
+                    (Levels.STAGE_CRYPTIC_CASTLE, REGION_INDICIES.CRYPTIC_CASTLE_TWO_BALLOON),
+                    (Levels.STAGE_CRYPTIC_CASTLE, REGION_INDICIES.CRYPTIC_CASTLE_FIVE_BALLOON),
+                    (Levels.STAGE_CRYPTIC_CASTLE, REGION_INDICIES.CRYPTIC_CASTLE_BOMB_EASY_2),
+                    (Levels.STAGE_CRYPTIC_CASTLE, REGION_INDICIES.CRYPTIC_CASTLE_CHECKPOINT_SIX),
+                    (Levels.STAGE_CRYPTIC_CASTLE, REGION_INDICIES.CRYPTIC_CASTLE_CHECKPOINT_SEVEN)
+
+                ],
             [WeaponAttributes.TORCH]),
     WeaponInfo(0x27, "Prison Branch",2, 4,
                [Levels.STAGE_PRISON_ISLAND],

@@ -1,6 +1,6 @@
 from . import Levels
 from .ObjectTypes import ObjectType, SETObject
-from .Names import REGION_INDICIES
+from .Names import REGION_INDICIES, Characters
 
 DESIRABLE_OBJECTS_BOSSES  = [
 
@@ -439,6 +439,24 @@ DESIRABLE_OBJECTS_BOSSES  = [
     SETObject(ObjectType.ITEM_CAPSULE, Levels.BOSS_BLACK_BULL_DR, 4, "1",region=0),
     SETObject(ObjectType.ITEM_CAPSULE, Levels.BOSS_BLACK_BULL_DR, 5, "2",region=0),
     SETObject(ObjectType.ITEM_CAPSULE, Levels.BOSS_BLACK_BULL_DR, 7, "3",region=0),
-    SETObject(ObjectType.ITEM_CAPSULE, Levels.BOSS_BLACK_BULL_DR, 8, "4",region=0)
+    SETObject(ObjectType.ITEM_CAPSULE, Levels.BOSS_BLACK_BULL_DR, 8, "4",region=0),
+
+    SETObject(ObjectType.PARTNER, Levels.BOSS_BLACK_BULL_LH, 46, 'Sonic', character=Characters.Sonic),
+    SETObject(ObjectType.PARTNER, Levels.BOSS_EGG_BREAKER_CC, 9, 'Amy', character=Characters.Amy),
+    SETObject(ObjectType.PARTNER, Levels.BOSS_HEAVY_DOG, 4, 'Doom', character=Characters.Doom),
+    SETObject(ObjectType.PARTNER, Levels.BOSS_EGG_BREAKER_MM, 22, 'Espio', character=Characters.Espio),
+    SETObject(ObjectType.PARTNER, Levels.BOSS_BLACK_BULL_DR, 10, 'Rouge', character=Characters.Rouge),
+    SETObject(ObjectType.PARTNER, Levels.BOSS_BLUE_FALCON, 7, 'Doom', character=Characters.Doom),
+    SETObject(ObjectType.PARTNER, Levels.BOSS_EGG_BREAKER_IJ, 7, 'Omega', character=Characters.Omega),
+
+    SETObject(ObjectType.PARTNER, Levels.BOSS_BLACK_DOOM_GF, 9, 'Rouge', character=Characters.Rouge),
+    SETObject(ObjectType.PARTNER, Levels.BOSS_DIABLON_GF, 1, 'Doom', character=Characters.Doom),
+    SETObject(ObjectType.PARTNER, Levels.BOSS_EGG_DEALER_BC, 0, 'Knuckles', character=Characters.Knuckles),
+    SETObject(ObjectType.PARTNER, Levels.BOSS_DIABLON_BC, 1, 'Doom', character=Characters.Doom),
+    SETObject(ObjectType.PARTNER, Levels.BOSS_EGG_DEALER_LS, 5, 'Omega', character=Characters.Omega),
+    SETObject(ObjectType.PARTNER, Levels.BOSS_EGG_DEALER_CF, 0, 'Vector', character=Characters.Vector),
+    SETObject(ObjectType.PARTNER, Levels.BOSS_BLACK_DOOM_CF, 6, 'Vector', character=Characters.Vector),
+    SETObject(ObjectType.PARTNER, Levels.BOSS_BLACK_DOOM_FH, 7, 'Sonic', character=Characters.Sonic),
+    SETObject(ObjectType.PARTNER, Levels.BOSS_DIABLON_FH, 2, 'Doom', character=Characters.Doom)
 
 ]

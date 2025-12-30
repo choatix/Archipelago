@@ -1,13 +1,13 @@
 from . import Levels
 from .ObjectTypes import ObjectType, SETObject
-from .Names import REGION_INDICIES
+from .Names import REGION_INDICIES, Characters
 from .Weapons import WEAPONS
 
 DESIRABLE_OBJECTS_IRON_JUNGLE = [
 
     SETObject(ObjectType.VEHICLE, Levels.STAGE_IRON_JUNGLE, 19, "GUN Jumper 1",
               vehicle=ObjectType.ObjectTypeVehicle.GUN_JUMPER,
-              region=0),
+              region=REGION_INDICIES.IRON_JUNGLE_CHECKPOINT_ONE),
     SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_IRON_JUNGLE, 193, "Special Weapons Box 1",
               region=REGION_INDICIES.IRON_JUNGLE_CHECKPOINT_TWO, weapon=WEAPONS.EGG_GUN),
     SETObject(ObjectType.STANDARD_PULLEY, Levels.STAGE_IRON_JUNGLE, 40, "Pulley 1"),
@@ -143,6 +143,28 @@ DESIRABLE_OBJECTS_IRON_JUNGLE = [
               region=REGION_INDICIES.IRON_JUNGLE_CHECKPOINT_SEVEN),
     SETObject(ObjectType.ITEM_IN_BOX, Levels.STAGE_IRON_JUNGLE, 87, 'Dark Box B',
               region=REGION_INDICIES.IRON_JUNGLE_CHECKPOINT_SEVEN),
+
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_IRON_JUNGLE, 143, '1', count=1),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_IRON_JUNGLE, 33, '2', count=2),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_IRON_JUNGLE, 184, '3', count=3),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_IRON_JUNGLE, 61, '4', count=4),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_IRON_JUNGLE, 73, '5', count=5),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_IRON_JUNGLE, 103, '6', count=6),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_IRON_JUNGLE, 83, '7', count=7),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_IRON_JUNGLE, 129, '8', count=8),
+
+    SETObject(ObjectType.PARTNER, Levels.STAGE_IRON_JUNGLE, 288, 'Omega 1', character=Characters.Omega,
+              region=REGION_INDICIES.IRON_JUNGLE_ZERO_BACKTRACK),
+    SETObject(ObjectType.PARTNER, Levels.STAGE_IRON_JUNGLE, 289, 'Eggman 1', character=Characters.Eggman,
+              region=REGION_INDICIES.IRON_JUNGLE_CHECKPOINT_ZERO),
+    SETObject(ObjectType.PARTNER, Levels.STAGE_IRON_JUNGLE, 290, 'Omega 2', character=Characters.Omega,
+              region=REGION_INDICIES.IRON_JUNGLE_EARLY_JUMPER),
+    SETObject(ObjectType.PARTNER, Levels.STAGE_IRON_JUNGLE, 301, 'Eggman 2', character=Characters.Eggman,
+              region=REGION_INDICIES.IRON_JUNGLE_CHECKPOINT_SEVEN),
+    SETObject(ObjectType.PARTNER, Levels.STAGE_IRON_JUNGLE, 305, 'Eggman 3 Maybe', character=Characters.Eggman,
+              region=REGION_INDICIES.IRON_JUNGLE_ZERO_BACKTRACK),
+    SETObject(ObjectType.PARTNER, Levels.STAGE_IRON_JUNGLE, 309, 'Omega 3 Maybe', character=Characters.Omega,
+              region=REGION_INDICIES.IRON_JUNGLE_EARLY_JUMPER),
 
 
 

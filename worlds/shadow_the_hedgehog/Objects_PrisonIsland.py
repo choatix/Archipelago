@@ -1,6 +1,6 @@
 from . import Levels
 from .ObjectTypes import ObjectType, SETObject
-from .Names import REGION_INDICIES
+from .Names import REGION_INDICIES, Characters
 from .Weapons import WEAPONS
 
 DESIRABLE_OBJECTS_PRISON_ISLAND  = [
@@ -307,4 +307,29 @@ DESIRABLE_OBJECTS_PRISON_ISLAND  = [
               region=REGION_INDICIES.PRISON_ISLAND_FOUR_AIR_SAUCER),
     SETObject(ObjectType.ITEM_IN_METAL_BOX, Levels.STAGE_PRISON_ISLAND, 427, 'At Check 5',
               region=REGION_INDICIES.PRISON_ISLAND_CHECKPOINT_FIVE),
+
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_PRISON_ISLAND, 131, '1', count=1),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_PRISON_ISLAND, 7, '2', count=2),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_PRISON_ISLAND, 15, '3', count=3),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_PRISON_ISLAND, 112, '4', count=4),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_PRISON_ISLAND, 426, '5', count=5),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_PRISON_ISLAND, 430, '6', count=6),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_PRISON_ISLAND, 216, '7', count=7),
+
+    SETObject(ObjectType.PARTNER, Levels.STAGE_PRISON_ISLAND, 604, 'Dooms Eye 1', character=Characters.Doom,
+              region=REGION_INDICIES.PRISON_ISLAND_CHECKPOINT_ZERO),
+    SETObject(ObjectType.PARTNER, Levels.STAGE_PRISON_ISLAND, 605, 'Charmy 1', character=Characters.Charmy,
+              region=REGION_INDICIES.PRISON_ISLAND_CHECKPOINT_ONE),
+    SETObject(ObjectType.PARTNER, Levels.STAGE_PRISON_ISLAND, 611, 'Charmy 2', character=Characters.Charmy,
+              region=REGION_INDICIES.PRISON_ISLAND_CHECKPOINT_THREE),
+    SETObject(ObjectType.PARTNER, Levels.STAGE_PRISON_ISLAND, 612, 'Dooms Eye 2', character=Characters.Doom,
+              region=REGION_INDICIES.PRISON_ISLAND_CHECKPOINT_FOUR),
+    SETObject(ObjectType.PARTNER, Levels.STAGE_PRISON_ISLAND, 613, 'Dooms Eye 3', character=Characters.Doom,
+              region=REGION_INDICIES.PRISON_ISLAND_AIR_SAUCER),
+    SETObject(ObjectType.PARTNER, Levels.STAGE_PRISON_ISLAND, 614, 'Charmy 3', character=Characters.Charmy,
+              region=REGION_INDICIES.PRISON_ISLAND_CHECKPOINT_FIVE),
+
+
+
+
     ]

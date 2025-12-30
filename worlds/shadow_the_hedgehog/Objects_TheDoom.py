@@ -1,6 +1,6 @@
 from . import Levels
 from .ObjectTypes import ObjectType, SETObject
-from .Names import REGION_INDICIES, REGION_RESTRICTION_TYPES
+from .Names import REGION_INDICIES, REGION_RESTRICTION_TYPES, Characters
 from .Weapons import WEAPONS
 
 DESIRABLE_OBJECTS_THE_DOOM = [
@@ -183,7 +183,19 @@ DESIRABLE_OBJECTS_THE_DOOM = [
     SETObject(ObjectType.ITEM_CAPSULE, Levels.STAGE_THE_DOOM, 281, 'Blast Room C',
               region=REGION_INDICIES.THE_DOOM_WALL_ROOM),
     SETObject(ObjectType.ITEM_CAPSULE, Levels.STAGE_THE_DOOM, 282, 'Blast Room D',
-              region=REGION_INDICIES.THE_DOOM_WALL_ROOM)
+              region=REGION_INDICIES.THE_DOOM_WALL_ROOM),
+
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_THE_DOOM, 0, '1', count=1),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_THE_DOOM, 1, '2', count=2),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_THE_DOOM, 4, '3', count=3),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_THE_DOOM, 12, '4', count=4),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_THE_DOOM, 79, '5', count=5),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_THE_DOOM, 14, '6', count=6),
+
+    SETObject(ObjectType.PARTNER, Levels.STAGE_THE_DOOM, 417, 'Maria', character=Characters.Maria,
+              region=REGION_INDICIES.THE_DOOM_CHECKPOINT_ONE),
+    SETObject(ObjectType.PARTNER, Levels.STAGE_THE_DOOM, 445, 'Dooms Eye', character=Characters.Doom,
+              region=REGION_INDICIES.THE_DOOM_CHECKPOINT_ONE),
 
 
 

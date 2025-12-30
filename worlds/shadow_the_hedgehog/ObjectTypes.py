@@ -109,6 +109,7 @@ class ObjectType:
 
     BLACK_WING_LOTTERY = 86
     EGG_PAWN_LOTTERY = 87
+    CHECKPOINT = 88
 
 
 class SETObject:
@@ -120,9 +121,11 @@ class SETObject:
     restrictionType: int
     is_hard: bool
     weapon: int
+    character: int
 
     def __init__(self, object_type, stage, index, name,
-                 vehicle=None, region=None, count=1, restrictionType=10, is_hard=False, weapon=None):
+                 vehicle=None, region=None, count=1, restrictionType=10,
+                 is_hard=False, weapon=None, character=None):
         self.object_type = object_type
         self.stage = stage
         self.index = index
@@ -133,3 +136,4 @@ class SETObject:
         self.restrictionType = restrictionType
         self.is_hard = is_hard
         self.weapon = weapon
+        self.character = character

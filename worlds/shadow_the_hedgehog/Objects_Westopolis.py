@@ -1,6 +1,6 @@
 from . import Levels
 from .ObjectTypes import ObjectType, SETObject
-from .Names import REGION_INDICIES
+from .Names import REGION_INDICIES, Characters
 from .Weapons import WEAPONS
 
 DESIRABLE_OBJECTS_WESTOPOLIS  = [
@@ -120,5 +120,28 @@ SETObject(ObjectType.ITEM_CAPSULE, Levels.STAGE_WESTOPOLIS, 525, 'Slide By Goal 
 
 SETObject(ObjectType.BALLOON_ITEM, Levels.STAGE_WESTOPOLIS, 523, 'End Descend A',region=REGION_INDICIES.WESTOPOLIS_CHECKPOINT_FIVE),
 SETObject(ObjectType.BALLOON_ITEM, Levels.STAGE_WESTOPOLIS, 524, 'End Descend B',region=REGION_INDICIES.WESTOPOLIS_CHECKPOINT_FIVE),
-SETObject(ObjectType.ITEM_IN_METAL_BOX, Levels.STAGE_WESTOPOLIS, 455, 'Box at End',region=REGION_INDICIES.WESTOPOLIS_CHECKPOINT_SIX)
+SETObject(ObjectType.ITEM_IN_METAL_BOX, Levels.STAGE_WESTOPOLIS, 455, 'Box at End',region=REGION_INDICIES.WESTOPOLIS_CHECKPOINT_SIX),
+
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_WESTOPOLIS, 120, '1', count=1),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_WESTOPOLIS, 63, '2', count=2),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_WESTOPOLIS, 50, '3', count=3),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_WESTOPOLIS, 261, '4', count=4),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_WESTOPOLIS, 262, '5', count=5),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_WESTOPOLIS, 281, '6', count=6),
+
+    SETObject(ObjectType.PARTNER, Levels.STAGE_WESTOPOLIS, 542, 'Sonic 1', character=Characters.Sonic,
+          region=REGION_INDICIES.WESTOPOLIS_CHECKPOINT_ONE),
+    SETObject(ObjectType.PARTNER, Levels.STAGE_WESTOPOLIS, 543, 'Sonic 2', character=Characters.Sonic,
+          region=REGION_INDICIES.WESTOPOLIS_CHECKPOINT_ONE),
+    SETObject(ObjectType.PARTNER, Levels.STAGE_WESTOPOLIS, 551, 'Dooms Eye 1', character=Characters.Doom,
+          region=REGION_INDICIES.WESTOPOLIS_CHECKPOINT_ONE),
+    SETObject(ObjectType.PARTNER, Levels.STAGE_WESTOPOLIS, 554, 'Dooms Eye 2', character=Characters.Doom,
+          region=REGION_INDICIES.WESTOPOLIS_CHECKPOINT_TWO),
+    SETObject(ObjectType.PARTNER, Levels.STAGE_WESTOPOLIS, 557, 'Dooms Eye 3', character=Characters.Doom,
+          region=REGION_INDICIES.WESTOPOLIS_CHECKPOINT_TWO),
+    SETObject(ObjectType.PARTNER, Levels.STAGE_WESTOPOLIS, 565, 'Dooms Eye 4', character=Characters.Doom,
+          region=REGION_INDICIES.WESTOPOLIS_CHECKPOINT_THREE),
+    SETObject(ObjectType.PARTNER, Levels.STAGE_WESTOPOLIS, 568, 'Sonic 3', character=Characters.Sonic,
+          region=REGION_INDICIES.WESTOPOLIS_CHECKPOINT_FOUR)
+
 ]

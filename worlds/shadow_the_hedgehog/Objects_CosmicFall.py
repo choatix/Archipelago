@@ -1,6 +1,6 @@
 from . import Levels
 from .ObjectTypes import ObjectType, SETObject
-from .Names import REGION_INDICIES
+from .Names import REGION_INDICIES, Characters
 from .Weapons import WEAPONS
 
 DESIRABLE_OBJECTS_COSMIC_FALL  = [
@@ -130,6 +130,24 @@ SETObject(ObjectType.GOAL_RING, Levels.STAGE_COSMIC_FALL, 329, 'Goal Ring',regio
     SETObject(ObjectType.ITEM_CAPSULE, Levels.STAGE_COSMIC_FALL, 299, 'Final Section A',
               region=REGION_INDICIES.COSMIC_FALL_LD_OR_JUMPER),
     SETObject(ObjectType.ITEM_CAPSULE, Levels.STAGE_COSMIC_FALL, 300, 'Final Section B',
-              region=REGION_INDICIES.COSMIC_FALL_LD_OR_JUMPER)
+              region=REGION_INDICIES.COSMIC_FALL_LD_OR_JUMPER),
 
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_COSMIC_FALL, 0, '1', count=1),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_COSMIC_FALL, 1, '2', count=2),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_COSMIC_FALL, 41, '3', count=3),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_COSMIC_FALL, 38, '4', count=4),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_COSMIC_FALL, 8, '5', count=5),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_COSMIC_FALL, 9, '6', count=6),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_COSMIC_FALL, 10, '7', count=7),
+
+SETObject(ObjectType.PARTNER, Levels.STAGE_COSMIC_FALL, 301, 'Dooms Eye 1', character=Characters.Doom,
+          region=REGION_INDICIES.COSMIC_FALL_PULLEY_NORMAL),
+    SETObject(ObjectType.PARTNER, Levels.STAGE_COSMIC_FALL, 302, 'Vector 1', character=Characters.Vector,
+              region=REGION_INDICIES.COSMIC_FALL_CHECKPOINT_TWO),
+    SETObject(ObjectType.PARTNER, Levels.STAGE_COSMIC_FALL, 335, 'Dooms Eye 2', character=Characters.Doom,
+              region=REGION_INDICIES.COSMIC_FALL_CHECKPOINT_FIVE),
+    SETObject(ObjectType.PARTNER, Levels.STAGE_COSMIC_FALL, 336, 'Vector 2', character=Characters.Vector,
+              region=REGION_INDICIES.COSMIC_FALL_CHECKPOINT_FIVE),
+    SETObject(ObjectType.PARTNER, Levels.STAGE_COSMIC_FALL, 338, 'Dooms Eye 3', character=Characters.Doom,
+              region=REGION_INDICIES.COSMIC_FALL_PULLEY_NORMAL)
 ]

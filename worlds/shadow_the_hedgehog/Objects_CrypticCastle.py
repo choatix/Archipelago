@@ -1,6 +1,6 @@
 from . import Levels
 from .ObjectTypes import ObjectType, SETObject
-from .Names import REGION_INDICIES, REGION_RESTRICTION_TYPES
+from .Names import REGION_INDICIES, REGION_RESTRICTION_TYPES, Characters
 from .Weapons import WEAPONS
 
 DESIRABLE_OBJECTS_CRYPTIC_CASTLE  = [
@@ -172,4 +172,22 @@ SETObject(ObjectType.GOAL_RING, Levels.STAGE_CRYPTIC_CASTLE, 200, 'Goal Ring',re
               region=REGION_INDICIES.CRYPTIC_CASTLE_DARK_LIGHT_DASH),
     SETObject(ObjectType.BALLOON_ITEM, Levels.STAGE_CRYPTIC_CASTLE, 161, 'Balloon Above Last Lantern',
               region=REGION_INDICIES.CRYPTIC_CASTLE_HAWK_RIDE_2),
+
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_CRYPTIC_CASTLE, 10, '1', count=1),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_CRYPTIC_CASTLE, 33, '2', count=2),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_CRYPTIC_CASTLE, 65, '3', count=3),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_CRYPTIC_CASTLE, 362, '4', count=4),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_CRYPTIC_CASTLE, 74, '5', count=5),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_CRYPTIC_CASTLE, 189, '6', count=6),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_CRYPTIC_CASTLE, 186, '7', count=7),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_CRYPTIC_CASTLE, 201, '8', count=8),
+
+    SETObject(ObjectType.PARTNER, Levels.STAGE_CRYPTIC_CASTLE, 466, 'Amy 1', character=Characters.Amy,
+              region=REGION_INDICIES.CRYPTIC_CASTLE_CHECKPOINT_ZERO),
+    SETObject(ObjectType.PARTNER, Levels.STAGE_CRYPTIC_CASTLE, 467, 'Eggman 1', character=Characters.Eggman,
+              region=REGION_INDICIES.CRYPTIC_CASTLE_TORCH),
+    SETObject(ObjectType.PARTNER, Levels.STAGE_CRYPTIC_CASTLE, 484, 'Amy 2', character=Characters.Amy,
+              region=REGION_INDICIES.CRYPTIC_CASTLE_TWO_BALLOON),
+    SETObject(ObjectType.PARTNER, Levels.STAGE_CRYPTIC_CASTLE, 510, 'Eggman 2', character=Characters.Eggman,
+              region=REGION_INDICIES.CRYPTIC_CASTLE_CHECKPOINT_FIVE)
 ]

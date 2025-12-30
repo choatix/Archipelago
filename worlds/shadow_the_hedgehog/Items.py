@@ -217,7 +217,7 @@ def GetStageAlignmentObject(stageId, alignmentId):
         return None
 
     item = i[0]
-    if item.mission_object_name is None:
+    if item.mission_object_name is None or item.mission_object_name in ["Goal Ring", "Computer Room", "Core"]:
         return None
 
     return LEVEL_ID_TO_LEVEL[stageId] + " " + item.mission_object_name
@@ -941,9 +941,9 @@ def GetCheckpointItems():
     for checkpoint in CheckpointLocations:
         for check_count in range(0, checkpoint.total_count+1):
 
-            #if check_count == 0:
-            #    if not Locations.HasCheckpointZero(checkpoint.stageId):
-            #        continue
+            if check_count == 0:
+                if not Locations.HasCheckpointZero(checkpoint.stageId):
+                    continue
 
             # TODO Link Check 1 to Check 0 somewhere
 
@@ -1188,8 +1188,6 @@ def PopulateItemPool(world: World):
     if junk_count < 0:
         reverse_count = -junk_count
         junk_count = 0
-
-    print("LWS=", world.options.include_last_way_shuffle)
 
     if not world.options.include_last_way_shuffle:
         if not world.options.exclude_go_mode_items:

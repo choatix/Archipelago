@@ -175,6 +175,9 @@ class ShtHWorld(World):
             self.options.character_sanity:
             raise OptionError("Unable to play charactersanity outside of vanilla")
 
+        if self.options.shadow_mod.value != Options.ShadowMod.option_vanilla:
+            raise OptionError("Not currently supported. Will be worked on with additional demand")
+
         if self.options.shadow_mod.value == Options.ShadowMod.option_reloaded and \
             self.options.key_sanity:
             raise OptionError("Key/RSR sanity not supported in Reloaded at this time.")
@@ -621,7 +624,12 @@ class ShtHWorld(World):
                     self.options.checkpoint_shuffle = passthrough["checkpoint_shuffle"]
 
                 if "first_checkpoints" in passthrough:
-                    self.first_checkpoints = passthrough["first_checkpoints"]
+                    print("Read first checkpoints for UT")
+                    first_checkpoints = passthrough["first_checkpoints"]
+                    self.first_checkpoints = {}
+                    for stage_str, index in first_checkpoints.items():
+                        self.first_checkpoints[int(stage_str)] = index
+                    print(self.first_checkpoints)
 
         # Set maximum of levels required
         # Exclude missions listed in exclude_locations
@@ -638,37 +646,36 @@ class ShtHWorld(World):
             self.gates = Regions.DetermineGates(self)
             self.gate_requirements = {}
 
-        if not hasattr(self.multiworld, "re_gen_passthrough") and self.options.starting_level_method == Options.StartingLevelMethod.option_stage_and_item:
-            extra_items = Regions.FindStartingItems(self, required=False)
-            for item in extra_items:
-                self.starting_items.append(item)
-                self.multiworld.push_precollected(self.create_item(item))
+            if self.options.starting_level_method == Options.StartingLevelMethod.option_stage_and_item:
+                extra_items = Regions.FindStartingItems(self, required=False)
+                for item in extra_items:
+                    self.starting_items.append(item)
+                    self.multiworld.push_precollected(self.create_item(item))
 
-        if (not hasattr(self.multiworld, "re_gen_passthrough") and
-                self.options.checkpoint_shuffle == Options.CheckpointShuffle.option_start_and_unlock):
-            self.first_checkpoints = Regions.GenerateFirstCheckpoints(self)
+            if self.options.checkpoint_shuffle == Options.CheckpointShuffle.option_start_and_unlock:
+                self.first_checkpoints = Regions.GenerateFirstCheckpoints(self)
 
-        if self.options.level_progression != Options.LevelProgression.option_select and \
-            self.options.story_progression_balancing_passes > 0 and not hasattr(self.multiworld, "re_gen_passthrough"):
+            if self.options.level_progression != Options.LevelProgression.option_select and \
+                self.options.story_progression_balancing_passes > 0:
 
-            balancing_overrides = {}
-            for i in range(0, self.options.story_progression_balancing_passes):
-                story_spheres = Story.DecideStoryPath(self, self.shuffled_story_mode)
-                new_overrides, new_available_overrides = Story.AlterOverridesForStoryPath(story_spheres,self.options)
+                balancing_overrides = {}
+                for i in range(0, self.options.story_progression_balancing_passes):
+                    story_spheres = Story.DecideStoryPath(self, self.shuffled_story_mode)
+                    new_overrides, new_available_overrides = Story.AlterOverridesForStoryPath(story_spheres,self.options)
 
-                for override in new_overrides.items():
-                    if override[0] in balancing_overrides and balancing_overrides[override[0]] <= override[1]:
-                        continue
-                    balancing_overrides[override[0]] = override[1]
+                    for override in new_overrides.items():
+                        if override[0] in balancing_overrides and balancing_overrides[override[0]] <= override[1]:
+                            continue
+                        balancing_overrides[override[0]] = override[1]
 
-                for override in new_available_overrides.items():
-                    if override[0] in balancing_overrides and balancing_overrides[override[0]] >= override[1]:
-                        continue
+                    for override in new_available_overrides.items():
+                        if override[0] in balancing_overrides and balancing_overrides[override[0]] >= override[1]:
+                            continue
 
-                    balancing_overrides[override[0]] = override[1]
+                        balancing_overrides[override[0]] = override[1]
 
-            for override in balancing_overrides.items():
-                self.options.percent_overrides.value[override[0]] = override[1]
+                for override in balancing_overrides.items():
+                    self.options.percent_overrides.value[override[0]] = override[1]
 
         if not self.options.objective_sanity:
             self.calculate_non_objective_sanity_maximums()

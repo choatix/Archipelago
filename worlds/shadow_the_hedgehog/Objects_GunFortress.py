@@ -1,6 +1,6 @@
 from . import Levels
 from .ObjectTypes import ObjectType, SETObject
-from .Names import REGION_INDICIES, REGION_RESTRICTION_TYPES
+from .Names import REGION_INDICIES, REGION_RESTRICTION_TYPES, Characters
 from .Weapons import WEAPONS
 
 DESIRABLE_OBJECTS_GUN_FORTRESS = [
@@ -10,9 +10,9 @@ DESIRABLE_OBJECTS_GUN_FORTRESS = [
     SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_GUN_FORTRESS, 80, "Special Weapons Box 1",
               region=REGION_INDICIES.GUN_FORTRESS_CHECKPOINT_ZERO, weapon=WEAPONS.RPG),
     SETObject(ObjectType.VEHICLE, Levels.STAGE_GUN_FORTRESS, 115, "Gun Turret 1",
-              vehicle=ObjectType.ObjectTypeVehicle.GUN_TURRET, region=0),
+              vehicle=ObjectType.ObjectTypeVehicle.GUN_TURRET, region=REGION_INDICIES.GUN_FORTRESS_GUN_TURRET),
     SETObject(ObjectType.VEHICLE, Levels.STAGE_GUN_FORTRESS, 281, "Gun Turret 2",
-              vehicle=ObjectType.ObjectTypeVehicle.GUN_TURRET, region=0),
+              vehicle=ObjectType.ObjectTypeVehicle.GUN_TURRET, region=REGION_INDICIES.GUN_FORTRESS_GUN_TURRET),
     SETObject(ObjectType.GUN_ZIPWIRE, Levels.STAGE_GUN_FORTRESS, 63, "Zipwire 1"),
     SETObject(ObjectType.STANDARD_PULLEY, Levels.STAGE_GUN_FORTRESS, 49, "Tunnel 1 Pulley 1"),
     SETObject(ObjectType.STANDARD_PULLEY, Levels.STAGE_GUN_FORTRESS, 55, "Tunnel 1 Pulley 2"),
@@ -268,7 +268,27 @@ DESIRABLE_OBJECTS_GUN_FORTRESS = [
     SETObject(ObjectType.BALLOON_ITEM, Levels.STAGE_GUN_FORTRESS, 406, 'Circle Zipwire Ride C',
               region=REGION_INDICIES.GUN_FORTRESS_ZIPLINE_HARD),
 
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_GUN_FORTRESS, 325, '1', count=1),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_GUN_FORTRESS, 254, '2', count=2),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_GUN_FORTRESS, 40, '3', count=3),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_GUN_FORTRESS, 46, '4', count=4),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_GUN_FORTRESS, 94, '5', count=5),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_GUN_FORTRESS, 191, '6', count=6),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_GUN_FORTRESS, 276, '7', count=7),
 
-
+    SETObject(ObjectType.PARTNER, Levels.STAGE_GUN_FORTRESS, 420, 'Dooms Eye 1', character=Characters.Doom,
+              region=REGION_INDICIES.GUN_FORTRESS_CHECKPOINT_TWO),
+    SETObject(ObjectType.PARTNER, Levels.STAGE_GUN_FORTRESS, 437, 'Dooms Eye 2', character=Characters.Doom,
+              region=REGION_INDICIES.GUN_FORTRESS_COMPUTER_ROOM_TWO),
+    SETObject(ObjectType.PARTNER, Levels.STAGE_GUN_FORTRESS, 438, 'Dooms Eye 3', character=Characters.Doom,
+              region=REGION_INDICIES.GUN_FORTRESS_COMPUTER_ROOM_3),
+    SETObject(ObjectType.PARTNER, Levels.STAGE_GUN_FORTRESS, 439, 'Rouge 1', character=Characters.Rouge,
+              region=REGION_INDICIES.GUN_FORTRESS_CHECKPOINT_FOUR),
+    SETObject(ObjectType.PARTNER, Levels.STAGE_GUN_FORTRESS, 440, 'Rouge 2', character=Characters.Rouge,
+              region=REGION_INDICIES.GUN_FORTRESS_POST_ZIPLINE),
+    SETObject(ObjectType.PARTNER, Levels.STAGE_GUN_FORTRESS, 443, 'Rouge 3', character=Characters.Rouge,
+              region=REGION_INDICIES.GUN_FORTRESS_ZIPWIRE),
+    SETObject(ObjectType.PARTNER, Levels.STAGE_GUN_FORTRESS, 445, 'Dooms Eye 4', character=Characters.Doom,
+              region=REGION_INDICIES.GUN_FORTRESS_CHECKPOINT_ONE)
 
 ]

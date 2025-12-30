@@ -1,6 +1,6 @@
 from . import Levels
 from .ObjectTypes import ObjectType, SETObject
-from .Names import REGION_INDICIES
+from .Names import REGION_INDICIES, Characters
 from .Weapons import WEAPONS
 
 DESIRABLE_OBJECTS_BLACK_COMET = [
@@ -394,5 +394,19 @@ DESIRABLE_OBJECTS_BLACK_COMET = [
               region=REGION_INDICIES.BLACK_COMET_ONSLAUGHT_FLOATERS),
     SETObject(ObjectType.ITEM_IN_BOX, Levels.STAGE_BLACK_COMET, 426, 'Top Path Backtrack',
               region=REGION_INDICIES.BLACK_COMET_ONSLAUGHT_END),
+
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_BLACK_COMET, 52, '1', count=1),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_BLACK_COMET, 49, '2', count=2),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_BLACK_COMET, 68, '3', count=3),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_BLACK_COMET, 73, '4', count=4),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_BLACK_COMET, 123, '5', count=5),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_BLACK_COMET, 376, '6', count=6),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_BLACK_COMET, 331, '7', count=7),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_BLACK_COMET, 435, '8', count=8),
+
+    SETObject(ObjectType.PARTNER, Levels.STAGE_BLACK_COMET, 453, 'Knuckles', character=Characters.Knuckles,
+              region=REGION_INDICIES.BLACK_COMET_TWO_UP),
+    SETObject(ObjectType.PARTNER, Levels.STAGE_BLACK_COMET, 454, 'Dooms Eye', character=Characters.Doom,
+              region=REGION_INDICIES.BLACK_COMET_CHECKPOINT_ONE),
 
 ]

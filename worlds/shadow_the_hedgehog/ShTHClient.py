@@ -44,6 +44,7 @@ valid_game_bytes = [
 
 SAVE_VALUE_CHECK = False
 
+
 @dataclass
 class CharacterAddress:
     name: str
@@ -60,6 +61,7 @@ def GetGameAddress(ctx, base_address):
 
     return base_address
 
+OBJECT_SIZE = 0x2C
 
 class GAME_ADDRESSES:
     STORY_MODE_COUNTER = 0x80576988
@@ -124,6 +126,7 @@ class GAME_ADDRESSES:
     LEVEL_SPAWN_BASE = 0x8057AC64
     CHECKPOINT_ENABLE_DATA = 0x80575FE4
 
+    # TODO: Update this code to use the same baseline!
     CharacterAddresses = [
         CharacterAddress("Sonic", 0x8057D77B),
         CharacterAddress("Tails", 0x8057D77F),
@@ -464,7 +467,7 @@ class ShTHCommandProcessor(ClientCommandProcessor):
          enemysanity_locations, checkpointsanity_locations,
          charactersanity_locations, token_locations, keysanity_locations,
          weaponsanity_locations, boss_locations, warp_locations,
-         object_locations) = Locations.GetAllLocationInfo()
+         object_locations) = Locations.GetActiveLocationInfo()
 
         info = Items.GetItemLookupDict()
 
@@ -1338,6 +1341,7 @@ class ShTHContext(CommonContext):
         self.first_checkpoints = {}
         self.checkpoint_convenience = False
         self.checkpoint_shuffle = None
+        self.last_object_bytes = None
 
 
     async def disconnect(self, allow_autoreconnect: bool = False):
@@ -1425,7 +1429,7 @@ class ShTHContext(CommonContext):
         (mission_clear_locations, mission_locations, end_location, enemy_locations,
             checkpointsanity_locations, charactersanity_locations,
          token_locations, keysanity_locations, weaponsanity_locations, boss_locations,
-         warp_locations, object_locations) = Locations.GetAllLocationInfo()
+         warp_locations, object_locations) = Locations.GetActiveLocationInfo()
 
         if self.character_sanity:
             characters = []
@@ -1897,7 +1901,7 @@ async def check_save_loaded(ctx):
     mission_clear_locations, mission_locations, end_location, enemy_locations,\
         checkpointsanity_locations, charactersanity_locations,\
         token_locations, keysanity_locations, weaponsanity_locations, boss_locations,\
-        warp_locations, object_locations = Locations.GetAllLocationInfo()
+        warp_locations, object_locations = Locations.GetActiveLocationInfo()
 
     random_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.EXTRA_SAVE_DATA, 8)
     loaded_bytes = int.from_bytes(random_bytes, byteorder='big')
@@ -2550,7 +2554,7 @@ def CheckAutoWarps(ctx):
     (clear_locations, mission_locations, end_location,
      enemysanity_locations, checkpointsanity_locations, charactersanity_locations,
      token_locations, keysanity_locations, weaponsanity_locations, boss_locations,
-     warp_locations, object_locations) = Locations.GetAllLocationInfo()
+     warp_locations, object_locations) = Locations.GetActiveLocationInfo()
 
     story = ctx.shuffled_story_mode
     for path in story:
@@ -2606,7 +2610,7 @@ async def check_level_status(ctx):
     (clear_locations, mission_locations, end_location,
      enemysanity_locations, checkpointsanity_locations, charactersanity_locations,
      token_locations, keysanity_locations, weaponsanity_locations, boss_locations,
-     warp_locations, object_locations) = Locations.GetAllLocationInfo()
+     warp_locations, object_locations) = Locations.GetActiveLocationInfo()
 
     # Check mission clears and keys and clear checks from those not known to the server
     info = Items.GetItemLookupDict()
@@ -2727,6 +2731,7 @@ async def check_level_status(ctx):
             ctx.level_state = {}
             ctx.level_keys = []
             ctx.music = None
+            ctx.last_object_bytes = None
             print("Set music to None")
             ctx.key_restore_complete = False
             if ctx.auto_clear_missions:
@@ -2986,7 +2991,7 @@ async def check_weapons(ctx, current_level):
     mission_clear_locations, mission_locations, end_location, enemysanity_locations, \
         checkpointsanity_locations, charactersanity_locations, \
         token_locations, keysanity_locations, weaponsanity_locations, boss_locations,\
-        warp_locations, object_locations = Locations.GetAllLocationInfo()
+        warp_locations, object_locations = Locations.GetActiveLocationInfo()
 
     messages = []
 
@@ -3504,7 +3509,7 @@ async def check_junk(ctx, current_level, death):
                             mission_clear_locations, mission_locations, end_location, enemysanity_locations, \
                                 checkpointsanity_locations, charactersanity_locations, \
                                 token_locations, keysanity_locations, weaponsanity_locations, boss_locations, \
-                                warp_locations, object_locations = Locations.GetAllLocationInfo()
+                                warp_locations, object_locations = Locations.GetActiveLocationInfo()
 
                             # Check the check has been completed beforeadding to active
                             if ctx.checkpoint_sanity:
@@ -3747,10 +3752,8 @@ async def clearout_individual_enemies_by_percentage(ctx, stageId):
 
 
 async def handle_objects(ctx, current_level):
-
-    time = datetime.now()
-
     if ctx.level_state is None or len(ctx.level_state.keys()) == 0:
+        ctx.client_cache = {}
         return
 
     if "object_status" not in ctx.level_state:
@@ -3768,7 +3771,7 @@ async def handle_objects(ctx, current_level):
     mission_clear_locations, mission_locations, end_location, enemysanity_locations, \
         checkpointsanity_locations, charactersanity_locations, \
         token_locations, keysanity_locations, weaponsanity_locations, boss_locations, \
-        warp_locations, object_locations = Locations.GetAllLocationInfo()
+        warp_locations, object_locations = Locations.GetActiveLocationInfo()
 
     force_despawn = 0x04
     spawn_inform = 0x01
@@ -3817,6 +3820,24 @@ async def handle_objects(ctx, current_level):
     allowed_vehicles = [info[unlock[0].item] for unlock in ctx.items_to_handle if unlock[0].item in info and \
                        info[unlock[0].item].type == "Vehicle"]
 
+    object_despawn_present = ( (1 if allowed_pulley else 0) +
+                               (1 if allowed_zipwire else 0) +
+                               (1 if allowed_heal_units else 0) +
+                               (1 if allowed_bombs else 0) +
+                               (1 if allowed_rockets else 0) +
+                               (1 if allowed_light_dashes else 0) +
+                               (1 if allowed_warp_holes else 0) +
+                               len(allowed_vehicles) )
+
+    force_full_check = False
+    if "Objects" in ctx.client_cache:
+        value = ctx.client_cache["Objects"]
+        if value != object_despawn_present:
+            ctx.client_cache["Objects"] = object_despawn_present
+            force_full_check = True
+    else:
+        ctx.client_cache["Objects"] = object_despawn_present
+
     messages = []
 
     states_to_add = {}
@@ -3824,26 +3845,46 @@ async def handle_objects(ctx, current_level):
 
     max_index = max([ o.index for o in relevant_objects])
 
-    full_loaded_bytes = dolphin_memory_engine.read_bytes(start_address, (0x2C * (max_index+1)))
+    bytes_size = (OBJECT_SIZE * (max_index+1))
 
-    # TODO: Load all object data here in one read rather than within the FOR loop
+    full_loaded_bytes = dolphin_memory_engine.read_bytes(start_address, bytes_size)
 
-    for object in relevant_objects:
+    if ctx.last_object_bytes is not None and not force_full_check:
+        previous_bytes = ctx.last_object_bytes
+        mask = [1 if (previous_bytes[i] ^ full_loaded_bytes[i]) else 0 for i in range(bytes_size)]
+        obj_mask = {}
+
+        for obj_idx in range(max_index + 1):
+            start = obj_idx * OBJECT_SIZE
+            end = start + OBJECT_SIZE
+            obj_mask[obj_idx] = True if any(mask[start:end]) else False
+
+        changed_objects = [c for c in relevant_objects if obj_mask[c.index]]
+    else:
+        changed_objects = relevant_objects
+
+    ctx.last_object_bytes = full_loaded_bytes
+
+    for object in changed_objects:
         object_index = object.index
 
         spawn_data = start_address + (0x2C * object_index) + 0x20
         base_index = (0x2C * object_index) + 0x20
-
         spawn_address = spawn_data + 0x03
+
+        check_save_byte = base_index + 0x01
         spawn_base_byte = base_index + 0x03
 
         object_type_index = base_index + 0x08
-
         extra_data_pointer = spawn_data + 0x10
 
         loaded_bytes = [full_loaded_bytes[spawn_base_byte]]
+        loaded_check_bytes = [full_loaded_bytes[check_save_byte]]
         #loaded_bytes = dolphin_memory_engine.read_bytes(spawn_base_byte, 1)
         loaded_spawn_data = int.from_bytes(loaded_bytes, byteorder='big')
+        loaded_check_save_byte = int.from_bytes(loaded_check_bytes, byteorder='big')
+
+        use_spawn_for_completion = loaded_spawn_data
 
         loaded_bytes = full_loaded_bytes[object_type_index:object_type_index+2]
         #loaded_bytes = dolphin_memory_engine.read_bytes(object_type, 2)
@@ -4201,7 +4242,7 @@ async def handle_objects(ctx, current_level):
                     arch_location_complete = True
 
             if not arch_location_complete:
-                if loaded_spawn_data in object_values_complete:
+                if use_spawn_for_completion in object_values_complete:
                     ctx.level_state["object_status"][object.index] = 0x0B
                     messages.extend(related_locations)
 
@@ -4222,7 +4263,7 @@ async def handle_objects(ctx, current_level):
                     arch_location_complete = True
 
             if not arch_location_complete:
-                if loaded_spawn_data in (0x00, 0x08):
+                if use_spawn_for_completion in (0x00, 0x08):
                     ctx.level_state["object_status"][object.index] = 0x08
                     messages.extend(related_locations)
 
@@ -4237,16 +4278,7 @@ async def handle_objects(ctx, current_level):
                                            l not in ctx.handled
                                            and l not in ctx.checked_locations]) == 0
 
-            # TODO: Consider other options with the door, such as:
-            # Always open
-            # Open on N Key
-            # Open on Global Key
-            # Prevent opening animation
-            # etc.
-
-            door_status_address = spawn_data + 1
-            loaded_bytes = dolphin_memory_engine.read_bytes(door_status_address, 1)
-            current_door_status = int.from_bytes(loaded_bytes, byteorder='big')
+            use_spawn_for_completion = loaded_check_save_byte
 
             if object.index in ctx.level_state["object_status"]:
                 object_status = ctx.level_state["object_status"][object.index]
@@ -4254,9 +4286,18 @@ async def handle_objects(ctx, current_level):
                     arch_location_complete = True
 
             if not arch_location_complete:
-                if current_door_status == 0x40:
+                if use_spawn_for_completion == 0x40:
                     ctx.level_state["object_status"][object.index] = 0x00
                     messages.extend(related_locations)
+
+
+
+        if object.object_type == Objects.ObjectType.CHECKPOINT:
+            use_spawn_for_completion = loaded_check_save_byte
+
+            if use_spawn_for_completion == 0x40:
+                if object.count not in ctx.level_state["active_checkpoints"]:
+                    ctx.level_state["active_checkpoints"].append(object.count)
 
     if len(messages) > 0:
         message = [{"cmd": 'LocationChecks', "locations": messages}]
@@ -4414,6 +4455,7 @@ async def update_level_behaviour(ctx, current_level, death):
     # Set initial value (to level of value from server)
     # If higher than previous value, recognise as check and reduce by 1
 
+
     await handle_objects(ctx, current_level)
 
     await clearout_individual_enemies_by_percentage(ctx, current_level)
@@ -4428,7 +4470,7 @@ async def update_level_behaviour(ctx, current_level, death):
     mission_clear_locations, mission_locations, end_location, enemysanity_locations,\
         checkpointsanity_locations, charactersanity_locations,\
         token_locations, keysanity_locations, weaponsanity_locations, boss_locations,\
-        warp_locations, object_locations = Locations.GetAllLocationInfo()
+        warp_locations, object_locations = Locations.GetActiveLocationInfo()
 
     handle_count = 0
 
@@ -4472,6 +4514,7 @@ async def update_level_behaviour(ctx, current_level, death):
         ctx.level_state["checkpoint_zero_state"] = -1
         ctx.level_state["music_set"] = True
         ctx.checkpoint_trap_active = False
+        ctx.level_state["active_checkpoints"] = []
 
         ctx.checkpoint_snapshots = []
 
@@ -5035,46 +5078,10 @@ async def update_level_behaviour(ctx, current_level, death):
     # Check checkpoint flags and save the state when a new one is activated
     checkpoint_data_for_stage = [c for c in Locations.CheckpointLocations if c.stageId == current_level]
     if len(checkpoint_data_for_stage) > 0:
-        total_count = checkpoint_data_for_stage[0].total_count
-        max_checkpoint_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.CHECKPOINT_RESPAWN_ID, 1)
-        max_checkpoint = int.from_bytes(max_checkpoint_bytes, byteorder='big')
-
-        #if (max_checkpoint == 0 and len(ctx.level_state.keys()) > 0 and
-        #        len(ctx.checkpoint_snapshots) > 1):
-        #    if not ctx.checkpoint_trap_active:
-        #        if ctx.debug_logging:
-        #            logger.error("Detected a stage restart (CP)")
-        #        ctx.restart = True
-        #        ctx.level_state = {}
-        #        ctx.checkpoint_snapshots = []
-        #    else:
-        ##        first_addr = GAME_ADDRESSES.CHECKPOINT_FLAGS[0]
-        #        checkpoint_status_bytes = dolphin_memory_engine.read_bytes(first_addr, 1)
-        #        checkpoint_status = int.from_bytes(checkpoint_status_bytes, byteorder='big') == 1
-        #        if not checkpoint_status:
-        #            if ctx.debug_logging:
-        #                logger.error("Detected a stage restart (CP) (with checktrap)")
-        #            ctx.restart = True
-        #            ctx.level_state = {}
-        #            ctx.checkpoint_snapshots = []
-
-        active = []
-        new = []
-        for i in range(0, total_count):
-            addr = GAME_ADDRESSES.CHECKPOINT_FLAGS[i]
-            checkpoint_status_bytes = dolphin_memory_engine.read_bytes(addr, 1)
-            checkpoint_status = int.from_bytes(checkpoint_status_bytes, byteorder='big') == 1
-            if checkpoint_status:
-                active.append(i + 1)
-        max_active = max(active) if len(active) > 0 else 0
-        #if max_active != max_checkpoint:
-        #    if ctx.info_logging:
-        #        logger.error("Checkpoint data not valid %d %d", max_active, max_checkpoint)
-        #else:
+        active = ctx.level_state["active_checkpoints"]
         active_snapshots = [x[0] for x in ctx.checkpoint_snapshots]
         for a in active:
             if a not in active_snapshots:
-                new.append(a)
                 ctx.checkpoint_snapshots.append((a, deepcopy(ctx.level_state)))
                 if ctx.checkpoint_sanity:
                     locations = [c.locationId for c in checkpointsanity_locations if c.stageId == current_level and
@@ -5410,7 +5417,7 @@ async def check_charactersanity(ctx, level):
      enemysanity_locations, checkpointsanity_locations,
      charactersanity_locations, token_locations, keysanity_locations,
      weaponsanity_locations, boss_locations, warp_locations,
-     object_locations) = Locations.GetAllLocationInfo()
+     object_locations) = Locations.GetActiveLocationInfo()
 
     new_met_characters = []
 

@@ -13,8 +13,8 @@ from . import Items, Levels, Utils, Weapons, Regions, Vehicle, Options, Location
 #Names.REGION_RESTRICTION_TYPESGetEnemyLocationNameLevelRegion
 
 from .Items import ShadowTheHedgehogItem, GetLevelTokenItems
-from .Levels import BACKTRACKING_REGIONS
-from .Locations import MissionClearLocations, LocationInfo, BossClearLocations
+from .Levels import BACKTRACKING_REGIONS, INDIVIDUAL_LEVEL_REGIONS
+from .Locations import MissionClearLocations, LocationInfo, BossClearLocations, HasCheckpointZero
 from .Options import LevelProgression
 from .Regions import character_name_to_region, stage_id_to_region, region_name_for_character, weapon_name_to_region, \
     region_name_for_weapon
@@ -189,7 +189,9 @@ def handle_path_rules(options, player, additional_level_region, path_type):
 
         elif options.logic_level == Options.LogicLevel.option_normal:
             gb_rule = Weapons.GetRuleByWeaponRequirement(player, None, additional_level_region.stageId, additional_level_region.fromRegions)
-            rule = lambda state, r=rule: gb_rule(state) and r(state)
+
+            if gb_rule is not None:
+                rule = lambda state, r=rule: gb_rule(state) and r(state)
 
     if options.weapon_sanity_unlock and Levels.IsWeaponsanityRestriction(additional_level_region.restrictionTypes):
         if Names.REGION_RESTRICTION_TYPES.Torch in additional_level_region.restrictionTypes:
@@ -309,12 +311,19 @@ def handle_path_rules(options, player, additional_level_region, path_type):
 
     for regionAccess in [ a.value for a in additional_level_region.restrictionTypes if a.value > 100]:
         required_stage_region = regionAccess - 100
-        access_rule = lambda state: state.can_reach_region(
-            stage_id_to_region(additional_level_region.stageId, required_stage_region), player)
 
-        indirects.append(stage_id_to_region(additional_level_region.stageId, required_stage_region))
+        access_region = [ a for a in INDIVIDUAL_LEVEL_REGIONS if a.stageId == additional_level_region.stageId and \
+                           a.regionIndex == required_stage_region ][0]
 
-        rule = lambda state, r=rule: access_rule(state) and r(state)
+        if access_region.hardLogicOnly and options.logic_level != Options.LogicLevel.option_hard:
+            rule = lambda state: False
+        else:
+            access_rule = lambda state: state.can_reach_region(
+                stage_id_to_region(additional_level_region.stageId, required_stage_region), player)
+
+            indirects.append(stage_id_to_region(additional_level_region.stageId, required_stage_region))
+
+            rule = lambda state, r=rule: access_rule(state) and r(state)
 
     return rule, indirects
 
@@ -337,7 +346,7 @@ def lock_warp_items(multiworld, world, player):
     (clear_locations, mission_locations, end_location,
      enemysanity_locations, checkpointsanity_locations, charactersanity_locations,
      token_locations, keysanity_locations, weaponsanity_locations, boss_locations,
-     warp_locations, object_locations) = Locations.GetAllLocationInfo()
+     warp_locations, object_locations) = Locations.GetActiveLocationInfo()
 
     warpItemInfos = Items.PopulateLevelWarpPoints()
 
@@ -351,7 +360,12 @@ def lock_warp_items(multiworld, world, player):
         if warp.stageId not in world.available_story_levels:
             continue
 
-        warp_story_region = Regions.stage_id_to_story_region(warp.stageId)
+        if warp.stageId in Levels.BOSS_STAGES:
+            warp_story_region = Regions.boss_stage_id_to_story_region(warp.stageId)
+        else:
+            default_region_index = Regions.GetDefaultCheckpointRegionForStage(world, warp.stageId)
+            warp_story_region = Regions.stage_id_to_story_region(warp.stageId, default_region_index)
+
         location = multiworld.get_location(warp.name, player)
         i = [ w for w in warpItemInfos if w.stageId == warp.stageId][0]
         mw_token_item = ShadowTheHedgehogItem(i, player)
@@ -519,19 +533,16 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
         if stage not in world.available_levels:
             continue
 
-        view_name = Names.GetDistributionRegionEventName(stage, 0)
+        if HasCheckpointZero(stage):
+            view_name = Names.GetDistributionRegionEventName(stage, 0)
+            event_location = multiworld.get_location(view_name, player)
 
-        event_location = multiworld.get_location(view_name, player)
-
-        event_location.access_rule = lambda state, r=stage_id_to_region(stage,
+            event_location.access_rule = lambda state, r=stage_id_to_region(stage,
                                                                         0): \
-            state.can_reach_region(r, player)
+                state.can_reach_region(r, player)
 
-        event_location.place_locked_item(Item(view_name,
-                                              ItemClassification.progression_skip_balancing, None, player))
-
-
-
+            event_location.place_locked_item(Item(view_name,
+                                                  ItemClassification.progression_skip_balancing, None, player))
 
         #default_stage_index = Levels.GetDefaultCheckpointForStage(world, stage)
         #if default_stage_index != 0:
@@ -932,10 +943,11 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
             token_location.place_locked_item(
                 mw_token_item)
 
-    for character,stages in Levels.CharacterToLevel.items():
+    for character,stages in Objects.CharacterToLevel.items():
         if character in world.available_characters:
             region_name = character_name_to_region(character)
             region = world.get_region(region_name)
+            already_added = []
             for stage in stages:
                 region_index = 0
                 if type(stage) is tuple:
@@ -943,10 +955,19 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
                     stage = stage[0]
                     pass
 
+                if (stage, region_index) in already_added:
+                    continue
+
                 if stage not in world.available_levels:
                     continue
-                region_stage = world.get_region(stage_id_to_region(stage, region_index))
-                region_stage.connect(region, region_name_for_character(Levels.LEVEL_ID_TO_LEVEL[stage], character))
+
+                if stage in Levels.BOSS_STAGES:
+                    region_stage = world.get_region(Regions.boss_stage_id_to_region(stage))
+                else:
+                    region_stage = world.get_region(stage_id_to_region(stage, region_index))
+
+                region_stage.connect(region, region_name_for_character(Levels.LEVEL_ID_TO_LEVEL[stage], character, region_index))
+                already_added.append((stage, region_index))
 
 
     for weapon in Weapons.WEAPON_INFO:
@@ -970,7 +991,10 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
                     Weapons.WeaponAttributes.SPECIAL in weapon.attributes:
                         rule = Weapons.GetRuleByWeaponRequirement(player, weapon.name, None, None)
 
-                region_stage = world.get_region(stage_id_to_region(stage, region_index))
+                if stage in Levels.BOSS_STAGES:
+                    region_stage = world.get_region(Regions.boss_stage_id_to_region(stage, region_index))
+                else:
+                    region_stage = world.get_region(stage_id_to_region(stage, region_index))
                 region_stage.connect(region, region_name_for_weapon(Levels.LEVEL_ID_TO_LEVEL[stage], region_index, weapon.name),
                                      rule=rule)
 
@@ -1045,9 +1069,21 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
 
         menu_region = world.get_region("Menu")
 
+        handled_gate_items = []
+
         for gate_stage in gate_stages:
-            check_x1 = Regions.GetDefaultCheckpointRegionForStage(world, gate_stage)
-            base_region_name = stage_id_to_region(gate_stage, check_x1)
+
+            if (gate_no, gate_stage) in handled_gate_items:
+                print("As of yet unhandled dupe stages in gates")
+                continue
+
+            handled_gate_items.append((gate_no, gate_stage))
+
+            if gate_stage in Levels.BOSS_STAGES:
+                base_region_name = Regions.boss_stage_id_to_region(gate_stage)
+            else:
+                check_x1 = Regions.GetDefaultCheckpointRegionForStage(world, gate_stage)
+                base_region_name = stage_id_to_region(gate_stage, check_x1)
 
             rule = GetGateKeyRule(world, player, gate_no)
             if gate_stage in Levels.BOSS_STAGES and gate_stage not in Levels.LAST_STORY_STAGES and gate_stage not in Levels.FINAL_BOSSES:
@@ -1104,7 +1140,7 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
     if world.options.include_last_way_shuffle and world.options.level_progression != Options.LevelProgression.option_select:
 
         # handle requirement that DD must be found in the level shuffle!
-        devil_doom_story_region = Regions.stage_id_to_story_region(Levels.BOSS_DEVIL_DOOM)
+        devil_doom_story_region = Regions.boss_stage_id_to_story_region(Levels.BOSS_DEVIL_DOOM)
         devil_doom_region = multiworld.get_region(devil_doom_story_region, player)
 
         for entrance in devil_doom_region.entrances:
