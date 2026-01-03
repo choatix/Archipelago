@@ -1,6 +1,6 @@
 from . import Levels
 from .ObjectTypes import ObjectType, SETObject
-from .Names import REGION_INDICIES, Characters
+from .Names import REGION_INDICIES, Characters, REGION_RESTRICTION_TYPES
 from .Weapons import WEAPONS
 
 DESIRABLE_OBJECTS_LOST_IMPACT = [
@@ -220,9 +220,9 @@ DESIRABLE_OBJECTS_LOST_IMPACT = [
     SETObject(ObjectType.ITEM_CAPSULE, Levels.STAGE_LOST_IMPACT, 329, 'Lift Section 1C',
               region=REGION_INDICIES.LOST_IMPACT_GUN_LIFT),
     SETObject(ObjectType.ITEM_CAPSULE, Levels.STAGE_LOST_IMPACT, 161, 'Room After Lift A',
-              region=REGION_INDICIES.LOST_IMPACT_CHECKPOINT_TWO),
+              region=REGION_INDICIES.LOST_IMPACT_CHECKPOINT_TWO, restrictionType=REGION_RESTRICTION_TYPES.VacuumOrShot),
     SETObject(ObjectType.ITEM_CAPSULE, Levels.STAGE_LOST_IMPACT, 179, 'Room After Lift B',
-              region=REGION_INDICIES.LOST_IMPACT_CHECKPOINT_TWO),
+              region=REGION_INDICIES.LOST_IMPACT_CHECKPOINT_TWO, restrictionType=REGION_RESTRICTION_TYPES.VacuumOrShot),
 
     SETObject(ObjectType.ITEM_IN_METAL_BOX, Levels.STAGE_LOST_IMPACT, 214, '3 Right At Turn A',
               region=REGION_INDICIES.LOST_IMPACT_CHECKPOINT_THREE),
@@ -232,9 +232,9 @@ DESIRABLE_OBJECTS_LOST_IMPACT = [
               region=REGION_INDICIES.LOST_IMPACT_CHECKPOINT_THREE),
 
     SETObject(ObjectType.ITEM_IN_METAL_BOX, Levels.STAGE_LOST_IMPACT, 315, 'With Bomb Jump A',
-              region=REGION_INDICIES.LOST_IMPACT_CHECKPOINT_TWO),
+              region=REGION_INDICIES.LOST_IMPACT_CHECKPOINT_THREE),
     SETObject(ObjectType.ITEM_IN_METAL_BOX, Levels.STAGE_LOST_IMPACT, 132, 'With Bomb Jump B',
-              region=REGION_INDICIES.LOST_IMPACT_CHECKPOINT_TWO),
+              region=REGION_INDICIES.LOST_IMPACT_CHECKPOINT_THREE),
 
     SETObject(ObjectType.ITEM_IN_METAL_BOX, Levels.STAGE_LOST_IMPACT, 222, 'Left Way A',
               region=REGION_INDICIES.LOST_IMPACT_CHECKPOINT_THREE),
@@ -279,7 +279,7 @@ DESIRABLE_OBJECTS_LOST_IMPACT = [
     SETObject(ObjectType.CHECKPOINT, Levels.STAGE_LOST_IMPACT, 57, '7', count=7),
     SETObject(ObjectType.CHECKPOINT, Levels.STAGE_LOST_IMPACT, 335, '8', count=8),
 
-    SETObject(ObjectType.PARTNER, Levels.STAGE_BLACK_COMET, 357, 'Knuckles', character=Characters.Maria,
+    SETObject(ObjectType.PARTNER, Levels.STAGE_LOST_IMPACT, 357, 'Maria', character=Characters.Maria,
               region=REGION_INDICIES.LOST_IMPACT_CHECKPOINT_ZERO),
 
 

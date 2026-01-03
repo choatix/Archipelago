@@ -1,6 +1,6 @@
 from . import Levels
 from .ObjectTypes import ObjectType, SETObject
-from .Names import REGION_INDICIES, Characters
+from .Names import REGION_INDICIES, Characters, REGION_RESTRICTION_TYPES
 from .Weapons import WEAPONS
 
 DESIRABLE_OBJECTS_COSMIC_FALL  = [
@@ -89,7 +89,8 @@ SETObject(ObjectType.GUN_ROBOT, Levels.STAGE_COSMIC_FALL, 101, '24', region=REGI
 SETObject(ObjectType.ARTIFICIAL_CHAOS, Levels.STAGE_COSMIC_FALL, 215, '25', region=REGION_INDICIES.COSMIC_FALL_GUN_JUMPER),
 SETObject(ObjectType.STANDARD_PULLEY, Levels.STAGE_COSMIC_FALL, 252, '26', region=REGION_INDICIES.COSMIC_FALL_GUN_JUMPER),
 SETObject(ObjectType.VEHICLE, Levels.STAGE_COSMIC_FALL, 79, '26', region=REGION_INDICIES.COSMIC_FALL_GUN_JUMPER, vehicle=ObjectType.ObjectTypeVehicle.GUN_JUMPER),
-SETObject(ObjectType.ARTIFICIAL_CHAOS, Levels.STAGE_COSMIC_FALL, 200, '32', region=REGION_INDICIES.COSMIC_FALL_GUN_JUMPER_PULLEY_HARD),
+SETObject(ObjectType.ARTIFICIAL_CHAOS, Levels.STAGE_COSMIC_FALL, 200, '32', region=REGION_INDICIES.COSMIC_FALL_GUN_JUMPER_PULLEY_HARD,
+          restrictionType=REGION_RESTRICTION_TYPES.Gun),
 SETObject(ObjectType.ARTIFICIAL_CHAOS, Levels.STAGE_COSMIC_FALL, 217, '28', region=REGION_INDICIES.COSMIC_FALL_GUN_JUMPER),
 SETObject(ObjectType.ARTIFICIAL_CHAOS, Levels.STAGE_COSMIC_FALL, 216, '29', region=REGION_INDICIES.COSMIC_FALL_GUN_JUMPER),
 SETObject(ObjectType.ARTIFICIAL_CHAOS, Levels.STAGE_COSMIC_FALL, 295, '30', region=REGION_INDICIES.COSMIC_FALL_GUN_JUMPER_PULLEY_HARD),
@@ -150,4 +151,6 @@ SETObject(ObjectType.PARTNER, Levels.STAGE_COSMIC_FALL, 301, 'Dooms Eye 1', char
               region=REGION_INDICIES.COSMIC_FALL_CHECKPOINT_FIVE),
     SETObject(ObjectType.PARTNER, Levels.STAGE_COSMIC_FALL, 338, 'Dooms Eye 3', character=Characters.Doom,
               region=REGION_INDICIES.COSMIC_FALL_PULLEY_NORMAL)
+
+    # TODO: Vector jumps when warping to Computer Room, even though not one of these objects, unless check 5 is meant to be this
 ]

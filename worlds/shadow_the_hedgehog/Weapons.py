@@ -237,7 +237,7 @@ WEAPON_INFO = [
                 (Levels.STAGE_BLACK_COMET,REGION_INDICIES.BLACK_COMET_AIR_SAUCER)],
                [WeaponAttributes.SHOT, WeaponAttributes.LONG_RANGE]),
     WeaponInfo(0x7, "Egg Gun", 2, 20,
-               [(Levels.STAGE_CRYPTIC_CASTLE,1), Levels.STAGE_CIRCUS_PARK, Levels.STAGE_SKY_TROOPS,
+               [(Levels.STAGE_CRYPTIC_CASTLE, REGION_INDICIES.CRYPTIC_CASTLE_BALLOON), Levels.STAGE_CIRCUS_PARK, Levels.STAGE_SKY_TROOPS,
                 Levels.STAGE_MAD_MATRIX, Levels.STAGE_IRON_JUNGLE, Levels.STAGE_LAVA_SHELTER,
                 Levels.BOSS_EGG_BREAKER_CC, Levels.BOSS_EGG_BREAKER_MM,
                 Levels.BOSS_EGG_BREAKER_IJ, Levels.BOSS_EGG_DEALER_BC,

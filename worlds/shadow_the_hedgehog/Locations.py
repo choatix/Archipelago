@@ -743,11 +743,11 @@ def GetAllLocationInfo():
         charactersanity_locations.append(info)
         char_index+=1
 
-    for key_location in Objects.GetAllKeyLocations():
-        key_location_id, key_location_name = GetKeysanityLocationName(key_location.stageId, key_location.index)
-        info = LocationInfo(LOCATION_TYPE_KEY, key_location_id, key_location_name,
-                                    stageId=key_location.stageId, alignmentId=None, count=key_location.index, total=5, other=None)
-        keysanity_locations.append(info)
+    #for key_location in Objects.GetAllKeyLocations():
+    #    key_location_id, key_location_name = GetKeysanityLocationName(key_location.stageId, key_location.index)
+    #    info = LocationInfo(LOCATION_TYPE_KEY, key_location_id, key_location_name,
+    #                                stageId=key_location.stageId, alignmentId=None, count=key_location.index, total=5, other=None)
+    #    keysanity_locations.append(info)
 
     for weapon in Weapons.WEAPON_INFO:
         weapon_location_id, weapon_location_name = GetWeaponsanityLocationName(weapon.name, weapon.game_id)

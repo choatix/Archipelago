@@ -247,6 +247,7 @@ def handle_path_rules(options, player, additional_level_region, path_type):
             print("Unhandled errors")
             rule = lambda state: False
         elif w_rule is None:
+            print("Unknown w_rule here:", additional_level_region)
             rule = lambda state, r=rule: r(state)
         elif rule is None:
             rule = lambda state, w=w_rule: w(state)

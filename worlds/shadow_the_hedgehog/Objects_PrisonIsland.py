@@ -62,7 +62,7 @@ DESIRABLE_OBJECTS_PRISON_ISLAND  = [
               region=REGION_INDICIES.PRISON_ISLAND_CHECKPOINT_SIX, weapon=WEAPONS.RING_SHOT),
     SETObject(ObjectType.BLACK_WARRIOR, Levels.STAGE_PRISON_ISLAND,
               567, "Air Saucer 3 Enemy", vehicle=ObjectType.ObjectTypeVehicle.AIR_SAUCER,
-              region=REGION_INDICIES.PRISON_ISLAND_SIX_AIR_SAUCER),
+              region=REGION_INDICIES.PRISON_ISLAND_CHECKPOINT_SIX),
     SETObject(ObjectType.VEHICLE, Levels.STAGE_PRISON_ISLAND, 544, "Air Saucer 3 Despawn",
               vehicle=ObjectType.ObjectTypeVehicle.AIR_SAUCER),
     SETObject(ObjectType.VEHICLE, Levels.STAGE_PRISON_ISLAND, 520, "Air Saucer After 3",
@@ -273,7 +273,7 @@ DESIRABLE_OBJECTS_PRISON_ISLAND  = [
     SETObject(ObjectType.BLACK_WORM, Levels.STAGE_PRISON_ISLAND, 239, '97',
               region=REGION_INDICIES.PRISON_ISLAND_CHECKPOINT_SEVEN),
     SETObject(ObjectType.BLACK_WARRIOR, Levels.STAGE_PRISON_ISLAND, 400, '98',
-              region=REGION_INDICIES.PRISON_ISLAND_CHECKPOINT_SEVEN),
+              region=REGION_INDICIES.PRISON_ISLAND_FOUR_AIR_SAUCER),
 
     SETObject(ObjectType.KEY, Levels.STAGE_PRISON_ISLAND, 517, 'Key 1', region=REGION_INDICIES.PRISON_ISLAND_CHECKPOINT_ONE),
     SETObject(ObjectType.KEY, Levels.STAGE_PRISON_ISLAND, 258, 'Key 2', region=REGION_INDICIES.PRISON_ISLAND_AIR_SAUCER),

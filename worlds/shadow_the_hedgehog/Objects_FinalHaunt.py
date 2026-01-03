@@ -1,4 +1,4 @@
-from . import Levels
+from . import Levels, Names
 from .ObjectTypes import ObjectType, SETObject
 from .Names import REGION_INDICIES, Characters
 from .Weapons import WEAPONS
@@ -233,7 +233,7 @@ DESIRABLE_OBJECTS_FINAL_HAUNT = [
     SETObject(ObjectType.BLACK_ASSASSIN, Levels.STAGE_FINAL_HAUNT, 188, '77',
               region=REGION_INDICIES.FINAL_HAUNT_CHECKPOINT_FIVE),
     SETObject(ObjectType.BLACK_ASSASSIN, Levels.STAGE_FINAL_HAUNT, 200, '78',
-              region=REGION_INDICIES.FINAL_HAUNT_FIVE_VACUUM),
+              region=REGION_INDICIES.FINAL_HAUNT_FIVE_VACUUM, restrictionType= Names.REGION_RESTRICTION_TYPES.Gun),
     SETObject(ObjectType.BLACK_ASSASSIN, Levels.STAGE_FINAL_HAUNT, 203, '79',
               region=REGION_INDICIES.FINAL_HAUNT_FIVE_VACUUM),
     SETObject(ObjectType.BLACK_WARRIOR, Levels.STAGE_FINAL_HAUNT, 272, '80',

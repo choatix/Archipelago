@@ -175,7 +175,7 @@ SETObject(ObjectType.GOAL_RING, Levels.STAGE_CRYPTIC_CASTLE, 200, 'Goal Ring',re
 
     SETObject(ObjectType.CHECKPOINT, Levels.STAGE_CRYPTIC_CASTLE, 10, '1', count=1),
     SETObject(ObjectType.CHECKPOINT, Levels.STAGE_CRYPTIC_CASTLE, 33, '2', count=2),
-    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_CRYPTIC_CASTLE, 65, '3', count=3),
+    SETObject(ObjectType.CHECKPOINT, Levels.STAGE_CRYPTIC_CASTLE, 64, '3', count=3),
     SETObject(ObjectType.CHECKPOINT, Levels.STAGE_CRYPTIC_CASTLE, 362, '4', count=4),
     SETObject(ObjectType.CHECKPOINT, Levels.STAGE_CRYPTIC_CASTLE, 74, '5', count=5),
     SETObject(ObjectType.CHECKPOINT, Levels.STAGE_CRYPTIC_CASTLE, 189, '6', count=6),
