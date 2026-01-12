@@ -1,26 +1,26 @@
+from enum import IntEnum
 
-class ObjectType:
+
+class ObjectTypeVehicles(IntEnum):
+    STANDARD_CAR = 1
+    CONVERTIBLE = 2
+    ARMORED_CAR = 3
+    GUN_MOTORCYCLE = 4
+    GUN_JUMPER = 5
+    GUN_CANNON = 6
+    AIR_SAUCER = 7
+    BLACK_HAWK = 8
+    BLACK_VOLT = 9
+    GUN_TURRET = 10
+    BLACK_TURRET = 11
+    GUN_LIFT = 12
+    GUN_LIFT_FAST = 13
+
+class ObjectType(IntEnum):
     SHADOW_BOX = 1
-
     VEHICLE = 2
 
-    class ObjectTypeVehicle:
-        STANDARD_CAR = 1
-        CONVERTIBLE = 2
-        ARMORED_CAR = 3
-        GUN_MOTORCYCLE = 4
-        GUN_JUMPER = 5
-        GUN_CANNON = 6
-        AIR_SAUCER = 7
-        BLACK_HAWK = 8
-        BLACK_VOLT = 9
-        GUN_TURRET = 10
-        BLACK_TURRET = 11
-        GUN_LIFT = 12
-        GUN_LIFT_FAST = 13
-
     ENERGY_CORE = 4
-
     LIGHT_DASH_TRAIL = 5
 
     STANDARD_PULLEY = 6
@@ -112,6 +112,14 @@ class ObjectType:
     CHECKPOINT = 88
 
 
+    WEAPON_BOX = 89
+    WEAPON_WOODEN_BOX = 90
+    WEAPON_METAL_BOX = 91
+
+    ENVIRONMENT_WEAPON = 92
+    FLOOR_WEAPON = 93
+    WEAPON_BOX_UNHANDLED = 94
+
 class SETObject:
     object_type: int
     stage: int
@@ -122,10 +130,11 @@ class SETObject:
     is_hard: bool
     weapon: int
     character: int
+    old_name: str
 
     def __init__(self, object_type, stage, index, name,
                  vehicle=None, region=None, count=1, restrictionType=10,
-                 is_hard=False, weapon=None, character=None):
+                 is_hard=False, weapon=None, character=None, old_name=None):
         self.object_type = object_type
         self.stage = stage
         self.index = index
@@ -137,3 +146,4 @@ class SETObject:
         self.is_hard = is_hard
         self.weapon = weapon
         self.character = character
+        self.old_name = old_name

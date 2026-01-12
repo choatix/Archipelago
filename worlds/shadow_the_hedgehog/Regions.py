@@ -5,7 +5,7 @@ from typing import Dict
 from BaseClasses import Region, Entrance, MultiWorld, Item, ItemClassification
 from Options import OptionError
 from . import Levels, Items, Weapons, Story, Locations, Options, Names, Utils as ShadowUtils, Objects
-from .Names import STAGE_THE_LAST_WAY, REGION_INDICIES
+from .Names import STAGE_THE_LAST_WAY, REGION_INDICES
 from .Options import LevelProgression
 from .Story import PathInfo
 

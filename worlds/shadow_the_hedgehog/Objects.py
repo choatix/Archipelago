@@ -1,5 +1,5 @@
 
-from . import Levels
+from . import Levels, Weapons
 from .Names import *
 from .ObjectTypes import ObjectType
 from .Objects_BlackComet import DESIRABLE_OBJECTS_BLACK_COMET
@@ -410,9 +410,24 @@ def GetTypeId(objectType):
     if objectType == ObjectType.CHECKPOINT:
         return 0x05
 
+    if objectType == ObjectType.ENVIRONMENT_WEAPON:
+        return 0x12C
+
+    if objectType == ObjectType.FLOOR_WEAPON:
+        return 0x20
+
+    if objectType == ObjectType.WEAPON_BOX:
+        return 0x0C
+
+    if objectType == ObjectType.WEAPON_METAL_BOX:
+        return 0xA
+
+    if objectType == ObjectType.WEAPON_WOODEN_BOX:
+        return 0x9
+
     return None
 
-def CheckVehicleAttributes(objectType, extra_bytes, index, link_id):
+def CheckVehicleAttributes(objectType, extra_bytes, index, link_id, address):
 
     if objectType == "Server":
         byte = extra_bytes[3]
@@ -480,9 +495,10 @@ def CheckVehicleAttributes(objectType, extra_bytes, index, link_id):
 
         box_type = extra_bytes[0:4]
         box_item_bytes = extra_bytes[4:8]
-        capsule_type = extra_bytes[8:12]
-        weapon_type = extra_bytes[12:16]
-        core_type = extra_bytes[16:20]
+        base_item_type = extra_bytes[8:12]
+        #capsule_type = extra_bytes[12:16]
+        #weapon_type = extra_bytes[16:20]
+        #core_type = extra_bytes[20:24]
 
         box_item = int.from_bytes(box_item_bytes, byteorder='big')
 
@@ -492,7 +508,13 @@ def CheckVehicleAttributes(objectType, extra_bytes, index, link_id):
         elif box_item == 0x01:
             type_name = "Item In "+objectType
         elif box_item == 0x02:
-            type_name = "Weapon In "+objectType
+            box_weapon = int.from_bytes(base_item_type, byteorder='big')
+            w_name = [w.name for w in Weapons.WEAPON_INFO if w.game_id == box_weapon]
+            if len(w_name) == 0:
+                return "Unknown Weapon Wood/Metal Box:" + str(box_weapon) + str(address)
+            else:
+                return "Weapon " + objectType + " : " + w_name[0]
+
         elif box_item == 0x03:
             type_name = "Rings In "+objectType
         elif box_item == 0x04:
@@ -507,6 +529,15 @@ def CheckVehicleAttributes(objectType, extra_bytes, index, link_id):
     elif objectType == "Weapon Box":
         box_type = extra_bytes[0:4]
         box_weapon_bytes = extra_bytes[4:8]
+
+        box_item = int.from_bytes(box_weapon_bytes, byteorder='big')
+
+        w_name = [ w.name for w in Weapons.WEAPON_INFO if w.game_id == box_item ]
+        if len(w_name) == 0:
+            return "Unknown Weapon Box:" + str(box_item)
+        else:
+            return "Weapon Box: " + w_name[0]
+
         return "Weapon Box"
 
     if objectType == "Key":
@@ -822,7 +853,7 @@ def PrintSETChange(address, index, type, previous, new, additional_bytes, link_i
     #    return
 
     typeString = TypeToString(type)
-    typeString = CheckVehicleAttributes(typeString, additional_bytes, index, link_id)
+    typeString = CheckVehicleAttributes(typeString, additional_bytes, index, link_id, address)
 
     found = False
     for v in ObjectType.__dict__.items():
@@ -838,9 +869,12 @@ def PrintSETChange(address, index, type, previous, new, additional_bytes, link_i
     handle_types = []
     unhandled_types = ["Destructible",
                        "City Laser", "Rings", "Box", "Empty Wood Box", "Empty Metal Box",
-                       "Weapon In Wood Box", "Weapon In Metal Box", "Rings In Wood Box", "Rings In Metal Box",
-                       "Black Wing", "Gun Beetle",
-                       "Heal Unit In Metal Box", "Heal Unit In Wooden Box", "Weapon Box"]
+                       #"Weapon In Wood Box",
+                       #"Weapon In Metal Box", #"Weapon Box",
+
+                       "Rings In Wood Box", "Rings In Metal Box",
+                       #"Black Wing", "Gun Beetle",
+                       "Heal Unit In Metal Box", "Heal Unit In Wooden Box" ]
 
     if len(handle_types) > 0 and typeString not in handle_types:
         return []

@@ -127,7 +127,7 @@ def getLastStoryNames():
 def GetCheckpointWarpName(stage, index):
     return f"{stage}_CHECKPOINT_WARP_{index}"
 
-class REGION_INDICIES:
+class REGION_INDICES:
     WESTOPOLIS_CHECKPOINT_ONE = 1
     WESTOPOLIS_CHECKPOINT_TWO = 2
     WESTOPOLIS_PULLEY = 3
@@ -720,7 +720,7 @@ def GetMissionClearEventName(stageId, alignmentId):
 def GetRegionName(stageId, index):
     stage_name = LEVEL_ID_TO_LEVEL[stageId]
 
-    for name,lookup_index in REGION_INDICIES.__dict__.items():
+    for name,lookup_index in REGION_INDICES.__dict__.items():
         if name.startswith(stage_name.upper().replace(" ","_")) and \
             index == lookup_index :
             return name
@@ -755,9 +755,9 @@ def GetBossClearEventName(stageId, from_id, alignment_id):
     .replace(" ", "_").upper()
     return view_name
 
-def ObjectTypeToName(type):
-    value_to_name = {v: k for k, v in ObjectType.__dict__.items() if not k.startswith('__') and not callable(v)}
-    return value_to_name.get(type).replace("_", " ").title()
+def ObjectTypeToName(type: int):
+    value_to_name = str(ObjectType(type).name).replace("_", " ").title()
+    return value_to_name
 
 
 def GetObjectLocationName(object: SETObject):
@@ -784,7 +784,7 @@ def GetRegionEntranceName(base_region_name, new_region_name, restrictionTypes):
 def GetNameForVehicle(baseName):
     return f"Vehicle:{baseName}"
 
-class REGION_RESTRICTION_TYPES(Enum):
+class REGION_RESTRICTION_TYPES(IntEnum):
     KeyDoor = 1
     BlackHawk = 2
     BlackVolt = 3

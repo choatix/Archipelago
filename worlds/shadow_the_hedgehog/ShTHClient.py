@@ -13,6 +13,7 @@ import Utils
 from BaseClasses import ItemClassification
 from CommonClient import ClientCommandProcessor, CommonContext, get_base_parser, gui_enabled, logger, server_loop
 from NetUtils import ClientStatus
+from worlds.shadow_the_hedgehog.ObjectTypes import ObjectTypeVehicles
 from .Options import WeaponsanityHold
 from . import Levels, Items, Locations, Utils as ShadowUtils, Weapons, Story, Objects, Names, Checkpoints
 from .Levels import *
@@ -44,6 +45,7 @@ valid_game_bytes = [
 
 SAVE_VALUE_CHECK = False
 
+SHOW_SET_CHANGES = True
 
 @dataclass
 class CharacterAddress:
@@ -205,7 +207,7 @@ def GetCheckpointEnableAddresses():
 
 last_level = None
 memory_data = {}
-def ShowSETChanges(current_level):
+async def ShowSETChanges(current_level, ctx):
     global memory_data
     global last_level
 
@@ -213,7 +215,9 @@ def ShowSETChanges(current_level):
         memory_data = {}
         return
 
+    weapon_check = False
     if last_level != current_level:
+        weapon_check = True
         last_level = current_level
         memory_data = {}
 
@@ -229,10 +233,35 @@ def ShowSETChanges(current_level):
     show_known = False
     known_objects = [ s.index for s in Objects.GetDesirableObjectsForStage(current_level) ]
 
+    force_full_check = False
+
+    bytes_size = (OBJECT_SIZE * (set_item_count + 1))
+    full_loaded_bytes = dolphin_memory_engine.read_bytes(start_address, (0x2C * (set_item_count + 1)))
+
+    if ctx.last_object_bytes is not None and not force_full_check:
+        previous_bytes = ctx.last_object_bytes
+        mask = [1 if (previous_bytes[i] ^ full_loaded_bytes[i]) else 0 for i in range(bytes_size)]
+        obj_mask = {}
+
+        for obj_idx in range(set_item_count + 1):
+            start = obj_idx * OBJECT_SIZE
+            end = start + OBJECT_SIZE
+            obj_mask[obj_idx] = True if any(mask[start:end]) else False
+
+        changed_indexes = [c for c in range(0, set_item_count) if obj_mask[c]]
+    else:
+        changed_indexes = range(0, set_item_count)
+
     new_outputs = []
+
+    full_object_change_data = []
+
     for i in range(0, set_item_count):
 
-        if not show_known and i in known_objects:
+        if not weapon_check and not show_known and i in known_objects:
+            continue
+
+        if i not in changed_indexes:
             continue
 
         spawn_data = start_address  + (0x2C * i) + 0x20
@@ -265,7 +294,10 @@ def ShowSETChanges(current_level):
 
         loaded_from_extra_pointer_bytes = dolphin_memory_engine.read_bytes(loaded_extra_pointer, 100)
 
-        if last_known_spawn != loaded_spawn_data:
+        full_object_change_data.append((spawn_data, i, loaded_object_type, last_known_spawn, loaded_spawn_data,
+                                   loaded_from_extra_pointer_bytes, link_id))
+
+        if last_known_spawn != loaded_spawn_data and i not in known_objects:
             outputs = Objects.PrintSETChange(spawn_data, i, loaded_object_type, last_known_spawn, loaded_spawn_data,
                                    loaded_from_extra_pointer_bytes, link_id)
             memory_data[spawn_data] = [loaded_spawn_data, loaded_object_type]
@@ -281,6 +313,9 @@ def ShowSETChanges(current_level):
 
         for line in new_outputs:
             logger.info(line)
+
+    if weapon_check:
+        await handle_missing_set_weapons(current_level, ctx, full_object_change_data)
 
 
 def f1():
@@ -3329,17 +3364,14 @@ async def check_junk(ctx, current_level, death):
     newly_handled.extend([f[0] for f in filler_nothing])
 
     if len(ammo_traps) > 0:
-        print("add ammo traps")
         ctx.ammo_traps += len(ammo_traps)
         newly_handled.extend([u[0] for u in ammo_traps])
 
     if len(poison_traps) > 0:
-        print("add poison traps")
         ctx.poison_traps += len(poison_traps)
         newly_handled.extend([u[0] for u in poison_traps])
 
     if len(checkpoint_traps) > 0:
-        print("add check traps")
         ctx.checkpoint_traps += len(checkpoint_traps)
         newly_handled.extend([u[0] for u in checkpoint_traps])
 
@@ -3481,13 +3513,10 @@ async def check_junk(ctx, current_level, death):
 
     if ctx.checkpoint_traps > 0:
         current_check_choice = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.CHECKPOINT_RESPAWN_ID, 4)
-        print("current check choice is", current_check_choice)
         if current_check_choice not in [0, 1]:
             checkpoint_data_for_stage = [c for c in Locations.CheckpointLocations if c.stageId == current_level]
-            print("checks", checkpoint_data_for_stage)
             active = None
             if len(checkpoint_data_for_stage) > 0:
-                print("available level checks")
                 total_count = checkpoint_data_for_stage[0].total_count
 
                 check_zero_addr = GAME_ADDRESSES.CHECKPOINT_FLAGS[0]
@@ -3499,13 +3528,10 @@ async def check_junk(ctx, current_level, death):
 
                 if checkpoint_zero_status:
                     for i in range(1, total_count):
-                        print("count=", i)
                         addr = GAME_ADDRESSES.CHECKPOINT_FLAGS[i]
                         checkpoint_status_bytes = dolphin_memory_engine.read_bytes(addr, 1)
                         checkpoint_status = int.from_bytes(checkpoint_status_bytes, byteorder='big') == 1
-                        print("check status=", checkpoint_status)
                         if checkpoint_status:
-                            print("Yes check status", i)
                             mission_clear_locations, mission_locations, end_location, enemysanity_locations, \
                                 checkpointsanity_locations, charactersanity_locations, \
                                 token_locations, keysanity_locations, weaponsanity_locations, boss_locations, \
@@ -3518,17 +3544,15 @@ async def check_junk(ctx, current_level, death):
                                              c.count == (i+1)]
 
                                 checked_locations = [ c for c in ctx.checked_locations if c in locations ]
-                                print("locs=", locations, checked_locations, ctx.checked_locations)
 
                                 if len(checked_locations) > 0:
-                                    print("active enabled")
                                     active = addr
                             else:
                                 print("force active enabled")
                                 active = addr
 
             if active is not None:
-                print("Activate checkpoint trap")
+                #print("Activate checkpoint trap")
                 ctx.checkpoint_trap_active = True
                 new_respawn_id = 0
                 new_bytes = new_respawn_id.to_bytes(4, byteorder='big')
@@ -3538,37 +3562,36 @@ async def check_junk(ctx, current_level, death):
 
             pass
     if ctx.poison_traps > 0:
-        print("Poison Traps ==", ctx.poison_traps)
+        #print("Poison Traps ==", ctx.poison_traps)
         current_rings_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.RINGS_ADDRESS, 4)
         current_rings = int.from_bytes(current_rings_bytes, byteorder="big")
 
         if current_rings > 0:
-            print("Poisons, rings > 0")
+            #print("Poisons, rings > 0")
             new_rings = current_rings - math.floor(pow(current_rings, 0.3))
             new_bytes = new_rings.to_bytes(4, byteorder='big')
             writeBytes(GAME_ADDRESSES.RINGS_ADDRESS, new_bytes)
             r = random.random()
             if r < (1 / current_rings):
-                print("Poison reduce", r)
+                #print("Poison reduce", r)
                 ctx.poison_traps -= 1
         elif current_rings == 1:
-            print("Poisons, rings == 1")
+            #print("Poisons, rings == 1")
             new_rings = current_rings - 1
             new_bytes = new_rings.to_bytes(4, byteorder='big')
             writeBytes(GAME_ADDRESSES.RINGS_ADDRESS, new_bytes)
             ctx.poison_traps -= 1
-        else:
-            print("Not doing anything ith poison trap")
+        #else:
+        #    print("Not doing anything ith poison trap")
 
     if ctx.ammo_traps > 0:
-        print("Ammo Traps ==", ctx.ammo_traps)
+        #print("Ammo Traps ==", ctx.ammo_traps)
         current_ammo_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.CURRENT_AMMO_ADDRESS, 4)
         current_ammo = int.from_bytes(current_ammo_bytes, byteorder="big")
 
         # TODO: Consider numbers based on the weapon held
 
         if current_ammo % 10 > 1:
-            print("Activate ammo trap")
             if current_ammo > 50:
                 new_ammo = 41
             elif current_ammo > 30:
@@ -3578,8 +3601,6 @@ async def check_junk(ctx, current_level, death):
             new_bytes = new_ammo.to_bytes(4, byteorder='big')
             writeBytes(GAME_ADDRESSES.CURRENT_AMMO_ADDRESS, new_bytes)
             ctx.ammo_traps -= 1
-        else:
-            print("Not doing anything ith ammo trap")
 
     remove = []
     for r in newly_handled:
@@ -3751,6 +3772,269 @@ async def clearout_individual_enemies_by_percentage(ctx, stageId):
         await ctx.send_msgs(message)
 
 
+async def handle_missing_set_weapons(current_level, ctx, new_outputs):
+
+    print("Call HMSW")
+    objects = Objects.GetDesirableObjectsForStage(current_level)
+    enemy_types = Objects.GetStandardEnemyTypes()
+
+    enemy_objects_for_stage = [ o for o in objects if o.object_type in enemy_types ]
+
+    #for x in new_outputs:
+    #    print("Output data", x[1], x)
+
+    #spawn_data, i, loaded_object_type, last_known_spawn, loaded_spawn_data,
+                                   #loaded_from_extra_pointer_bytes, link_id
+
+    NO_WEAPONS = [ObjectType.BLACK_LARVAE, ObjectType.BLACK_HAWK, ObjectType.BLACK_VOLT,
+                  ObjectType.BLACK_WING, ObjectType.ARTIFICIAL_CHAOS]
+
+    new_enemies = []
+
+    for enemy in enemy_objects_for_stage:
+        if enemy.weapon is not None:
+            continue
+        loaded_info = [ s for s in new_outputs if s[1] == enemy.index ]
+        if len(loaded_info) == 0:
+            print("Could not find info:", enemy.index, new_outputs)
+            return
+        else:
+            byte_info = loaded_info[0]
+            weapon_reference_bytes = byte_info[5]
+
+            reference = "None"
+            type = None
+            weapon_id = None
+
+            if enemy.object_type == ObjectType.GUN_BEETLE:
+                type = "GUN BEETLE"
+                reference = int.from_bytes(weapon_reference_bytes[60:64], byteorder='big')
+                if reference == 0:
+                    reference = "RIFLE"
+                    weapon_id = Weapons.WEAPONS.SUB_MACHINE_GUN
+                elif reference == 1:
+                    reference = "ROCKET 4"
+                    weapon_id = Weapons.WEAPONS.FOUR_SHOT_RPG
+                elif reference == 2:
+                    reference = "BOMB"
+                    #weapon_id = Weapons.WEAPONS.
+                elif reference == 3:
+                    reference = "MACHINEGUN"
+                    weapon_id = Weapons.WEAPONS.SEMI_AUTOMATIC_RIFLE
+                elif reference == 4:
+                    reference = "NONE"
+
+            if enemy.object_type == ObjectType.GUN_ROBOT:
+                type = "GUN ROBOT"
+                reference = int.from_bytes(weapon_reference_bytes[32:36], byteorder='big')
+                if reference == 0:
+                    reference = "AUTORIFLE"
+                    weapon_id = Weapons.WEAPONS.SEMI_AUTOMATIC_RIFLE
+                elif reference == 1:
+                    reference = "AIRCRAFTRIFLE"
+                    weapon_id = Weapons.WEAPONS.HEAVY_MACHINE_GUN
+                elif reference == 2:
+                    reference = "BAZOOKA"
+                    weapon_id = Weapons.WEAPONS.BAZOOKA
+                elif reference == 3:
+                    reference = "ROCKET4"
+                    weapon_id = Weapons.WEAPONS.FOUR_SHOT_RPG
+                elif reference == 4:
+                    reference = "ROCKET8"
+                    weapon_id = Weapons.WEAPONS.EIGHT_SHOT_RPG
+                elif reference == 5:
+                    reference = "LASERRIFLE"
+                    weapon_id = Weapons.WEAPONS.LASER_RIFLE
+
+
+            if enemy.object_type == ObjectType.BLACK_WARRIOR:
+                type = "BLACK WARRIOR"
+                reference = int.from_bytes(weapon_reference_bytes[32:36], byteorder='big')
+                if reference == 0:
+                    reference = "NONE"
+                elif reference == 1:
+                    reference = "BLACKSWORD"
+                    weapon_id = Weapons.WEAPONS.BLACK_SWORD
+                elif reference == 2:
+                    reference = "LIGHTSHOT"
+                    weapon_id = Weapons.WEAPONS.LIGHT_SHOT
+                elif reference == 3:
+                    reference = "FLASHSHOT"
+                    weapon_id = Weapons.WEAPONS.FLASH_SHOT
+                elif reference == 4:
+                    reference = "BLACKBARREL"
+                    weapon_id = Weapons.WEAPONS.BLACK_BARREL
+                elif reference == 5:
+                    reference = "SPLITTER"
+                    weapon_id = Weapons.WEAPONS.SPLITTER
+                elif reference == 6:
+                    reference = "VACUUMPOD"
+                    weapon_id = Weapons.WEAPONS.VACUUM_POD
+                elif reference == 7:
+                    reference = "HEAVYSHOT"
+                    weapon_id = Weapons.WEAPONS.HEAVY_SHOT
+                elif reference == 8:
+                    reference = "RINGSHOT"
+                    weapon_id = Weapons.WEAPONS.RING_SHOT
+
+
+            if enemy.object_type == ObjectType.BLACK_WORM:
+                type = "BLACK WORM"
+                reference = int.from_bytes(weapon_reference_bytes[28:32], byteorder='big')
+                if reference == 0:
+                    reference = "BLACK"
+                    weapon_id = Weapons.WEAPONS.WORM_SHOOTER
+                elif reference == 1:
+                    reference = "BLUE"
+                    weapon_id = Weapons.WEAPONS.BIG_WORM_SHOOTER
+                elif reference == 2:
+                    reference = "GOLD"
+                    weapon_id = Weapons.WEAPONS.WIDE_WORM_SHOOTER
+
+            if enemy.object_type == ObjectType.GUN_SOLDIER:
+                type = "GUN SOLDER"
+                reference = int.from_bytes(weapon_reference_bytes[32:36], byteorder='big')
+                if reference == 0:
+                    reference = "NONE"
+                elif reference == 1:
+                    reference = "KNIFE"
+                    weapon_id = Weapons.WEAPONS.SURVIVAL_KNIFE
+                elif reference == 2:
+                    reference = "GUN"
+                    weapon_id = Weapons.WEAPONS.PISTOL
+                elif reference == 3:
+                    reference = "MACHINEGUN"
+                    weapon_id = Weapons.WEAPONS.SUB_MACHINE_GUN
+                elif reference == 4:
+                    reference = "RIFLE"
+                    weapon_id = Weapons.WEAPONS.SEMI_AUTOMATIC_RIFLE
+                elif reference == 5:
+                    reference = "GRENADE"
+                    weapon_id = Weapons.WEAPONS.GRENADE_LAUNCHER
+                elif reference == 6:
+                    reference = "MISSILE"
+                    weapon_id = Weapons.WEAPONS.EIGHT_SHOT_RPG
+
+            if enemy.object_type == ObjectType.BIG_FOOT:
+                type = "BIG FOOT"
+                reference = int.from_bytes(weapon_reference_bytes[32:36], byteorder='big')
+                if reference == 0:
+                    reference = "VULCAN"
+                    weapon_id = Weapons.WEAPONS.GATLING_GUN
+                elif reference == 1:
+                    reference = "MISSILE"
+                    weapon_id = Weapons.WEAPONS.EIGHT_SHOT_RPG
+
+            if enemy.object_type == ObjectType.EGG_PAWN:
+                type = "EGG PAWN"
+                reference = int.from_bytes(weapon_reference_bytes[32:36], byteorder='big')
+                if reference == 0:
+                    reference = "NONE"
+                elif reference == 1:
+                    reference = "PISTOL"
+                    weapon_id = Weapons.WEAPONS.EGG_GUN
+                elif reference == 2:
+                    reference = "BAZOOKA"
+                    weapon_id = Weapons.WEAPONS.EGG_BAZOOKA
+                elif reference == 3:
+                    reference = "LANCE"
+                    weapon_id = Weapons.WEAPONS.EGG_SPEAR
+
+            if enemy.object_type == ObjectType.BLACK_OAK:
+                type = "BLACK OAK"
+                reference = int.from_bytes(weapon_reference_bytes[32:36], byteorder='big')
+                if reference == 0:
+                    reference = "SWORD"
+                    weapon_id = Weapons.WEAPONS.BLACK_SWORD
+                elif reference == 1:
+                    reference = "HAMMER"
+                    weapon_id = Weapons.WEAPONS.DARK_HAMMER
+                elif reference == 2:
+                    reference = "BARREL"
+                    weapon_id = Weapons.WEAPONS.BIG_BARREL
+
+            if enemy.object_type == ObjectType.BLACK_ASSASSIN:
+                type = "BLACK ASSASSIN"
+                reference = "REFRACTOR"
+                weapon_id = Weapons.WEAPONS.REFRACTOR
+
+            #if type is not None:
+            #    print("Enemy weapon index is", type, enemy.index, enemy.name, reference)
+            if type is None and enemy.object_type not in NO_WEAPONS:
+                print("Unhandled type:", enemy.object_type)
+
+
+
+
+        new_enemy = SETObject(enemy.object_type, enemy.stage, enemy.index, enemy.name,
+                              region=enemy.region, weapon=weapon_id, is_hard=enemy.is_hard,
+                              vehicle=enemy.vehicle)
+        new_enemies.append(new_enemy)
+
+    pathing_order = []
+    for enemy in new_enemies:
+        if enemy.region not in pathing_order:
+            pathing_order.append(enemy.region)
+
+    new_enemy_order = []
+
+    counting_index = 0
+    for path in pathing_order:
+        region_enemies = [ e for e in new_enemies if e.region == path ]
+
+        for i in region_enemies:
+            counting_index += 1
+            try:
+                int_value = int(i.name)
+                if str(int_value) == i.name:
+                    i.old_name = i.name
+                    i.name = str(counting_index)
+            except:
+                pass
+
+            try:
+                float_value = float(i.name)
+                if str(float_value) == i.name:
+                    i.old_name = i.name
+                    i.name = str(counting_index)
+            except:
+                pass
+
+
+            new_enemy_order.append(i)
+
+    for enemy in new_enemy_order:
+        out = EnemyToCodeString(enemy)
+        print(out)
+
+
+    pass
+
+def EnemyToCodeString(enemy):
+    current_level = enemy.stage
+    output = (f"SETObject(ObjectType.{ObjectType(enemy.object_type).name}, "
+              f"Levels.STAGE_{Levels.LEVEL_ID_TO_LEVEL[current_level].upper().replace(' ', '_')}, {enemy.index}, \"{enemy.name}\", "
+              f"region={('REGION_INDICES.' + GetStageRegionName(current_level, enemy.region)) if enemy.region is not None else 'None'}"
+              f"{(', weapon=Weapons.WEAPONS.' + Weapons.WEAPONS(enemy.weapon).name) if enemy.weapon is not None else ''}"
+              f"{(', old_name=' + enemy.old_name) if enemy.old_name is not None else ''}"
+              f"{(', vehicle=ObjectTypeVehicles.' + ObjectTypeVehicles(enemy.vehicle).name) if enemy.vehicle is not None else ''}"
+              f"{', is_hard=True' if enemy.is_hard else ''}"
+              f"{(', restrictionType=' +  REGION_RESTRICTION_TYPES(enemy.restrictionType).name) if enemy.restrictionType is not None and enemy.restrictionType != REGION_RESTRICTION_TYPES.NoRestriction else ''}"
+              f"{(', count=' + str(enemy.count)) if enemy.count > 1 else ''}"
+
+              "),")
+
+    return output
+
+def GetStageRegionName(stage_id, region_id):
+    if region_id is None:
+        return None
+    stage_name = Names.LEVEL_ID_TO_LEVEL[stage_id].upper().replace(" ", "_")
+    result = [ l[0] for l in REGION_INDICES.__dict__.items() if l[0].startswith(stage_name) and l[1] == region_id]
+    if len(result) == 0:
+        return "Unknown"
+    return result[0]
+
 async def handle_objects(ctx, current_level):
     if ctx.level_state is None or len(ctx.level_state.keys()) == 0:
         ctx.client_cache = {}
@@ -3843,7 +4127,10 @@ async def handle_objects(ctx, current_level):
     states_to_add = {}
     states_to_remove = []
 
-    max_index = max([ o.index for o in relevant_objects])
+    if SHOW_SET_CHANGES:
+        max_index = length + 1
+    else:
+        max_index = max([o.index for o in relevant_objects])
 
     bytes_size = (OBJECT_SIZE * (max_index+1))
 
@@ -3877,6 +4164,10 @@ async def handle_objects(ctx, current_level):
 
         object_type_index = base_index + 0x08
         extra_data_pointer = spawn_data + 0x10
+
+        if spawn_base_byte >= len(full_loaded_bytes):
+            print("Error, expected bytes", spawn_base_byte, object.index)
+            return
 
         loaded_bytes = [full_loaded_bytes[spawn_base_byte]]
         loaded_check_bytes = [full_loaded_bytes[check_save_byte]]
@@ -4044,30 +4335,30 @@ async def handle_objects(ctx, current_level):
         elif vehicle_sanity and object.object_type == Objects.ObjectType.VEHICLE:
             spawn = False
             spawn_name = None
-            if object.vehicle == Objects.ObjectType.ObjectTypeVehicle.GUN_LIFT or \
-                object.vehicle == Objects.ObjectType.ObjectTypeVehicle.GUN_LIFT_FAST  :
+            if object.vehicle == ObjectTypeVehicles.GUN_LIFT or \
+                object.vehicle == ObjectTypeVehicles.GUN_LIFT_FAST  :
                 spawn_name = "Gun Lift"
-            elif object.vehicle == Objects.ObjectType.ObjectTypeVehicle.AIR_SAUCER:
+            elif object.vehicle == ObjectTypeVehicles.AIR_SAUCER:
                 spawn_name = "Air Saucer"
-            elif object.vehicle == Objects.ObjectType.ObjectTypeVehicle.ARMORED_CAR:
+            elif object.vehicle == ObjectTypeVehicles.ARMORED_CAR:
                 spawn_name = "Armored Car"
-            elif object.vehicle == Objects.ObjectType.ObjectTypeVehicle.BLACK_VOLT:
+            elif object.vehicle == ObjectTypeVehicles.BLACK_VOLT:
                 spawn_name = "Black Volt"
-            elif object.vehicle == Objects.ObjectType.ObjectTypeVehicle.BLACK_TURRET:
+            elif object.vehicle == ObjectTypeVehicles.BLACK_TURRET:
                 spawn_name = "Black Turret"
-            elif object.vehicle == Objects.ObjectType.ObjectTypeVehicle.BLACK_HAWK:
+            elif object.vehicle == ObjectTypeVehicles.BLACK_HAWK:
                 spawn_name = "Black Hawk"
-            elif object.vehicle == Objects.ObjectType.ObjectTypeVehicle.CONVERTIBLE:
+            elif object.vehicle == ObjectTypeVehicles.CONVERTIBLE:
                 spawn_name = "Convertible"
-            elif object.vehicle == Objects.ObjectType.ObjectTypeVehicle.GUN_CANNON:
+            elif object.vehicle == ObjectTypeVehicles.GUN_CANNON:
                 spawn_name = "Gun Cannon"
-            elif object.vehicle == Objects.ObjectType.ObjectTypeVehicle.GUN_JUMPER:
+            elif object.vehicle == ObjectTypeVehicles.GUN_JUMPER:
                 spawn_name = "Gun Jumper"
-            elif object.vehicle == Objects.ObjectType.ObjectTypeVehicle.GUN_MOTORCYCLE:
+            elif object.vehicle == ObjectTypeVehicles.GUN_MOTORCYCLE:
                 spawn_name = "Gun Motorcycle"
-            elif object.vehicle == Objects.ObjectType.ObjectTypeVehicle.GUN_TURRET:
+            elif object.vehicle == ObjectTypeVehicles.GUN_TURRET:
                 spawn_name = "Gun Turret"
-            elif object.vehicle == Objects.ObjectType.ObjectTypeVehicle.STANDARD_CAR:
+            elif object.vehicle == ObjectTypeVehicles.STANDARD_CAR:
                 spawn_name = "Standard Car"
 
             if spawn_name is None:
@@ -4084,7 +4375,7 @@ async def handle_objects(ctx, current_level):
                         states_to_remove.append(spawn_name)
 
         elif vehicle_sanity and object.object_type == Objects.ObjectType.BLACK_WARRIOR and \
-                object.vehicle == Objects.ObjectType.ObjectTypeVehicle.AIR_SAUCER:
+                object.vehicle == ObjectTypeVehicles.AIR_SAUCER:
             OnAirSaucerBytesDiff = 0x5C
             OnAirSaucerBytesAddress = loaded_extra_pointer + OnAirSaucerBytesDiff
 
@@ -4102,7 +4393,7 @@ async def handle_objects(ctx, current_level):
                     writeBytes(OnAirSaucerBytesAddress, on_air_saucer_bytes)
 
         elif vehicle_sanity and object.object_type == Objects.ObjectType.BLACK_VOLT and \
-                object.vehicle == Objects.ObjectType.ObjectTypeVehicle.BLACK_VOLT:
+                object.vehicle == ObjectTypeVehicles.BLACK_VOLT:
             OnAirSaucerBytesDiff = 0x38
             OnAirSaucerBytesAddress = loaded_extra_pointer + OnAirSaucerBytesDiff
 
@@ -4121,7 +4412,7 @@ async def handle_objects(ctx, current_level):
                     writeBytes(OnAirSaucerBytesAddress, spawn_on_kill_bytes)
 
         elif vehicle_sanity and object.object_type == Objects.ObjectType.BLACK_HAWK and \
-                object.vehicle == Objects.ObjectType.ObjectTypeVehicle.BLACK_HAWK:
+                object.vehicle == ObjectTypeVehicles.BLACK_HAWK:
 
             OnAirSaucerBytesDiff = 0x38
             OnAirSaucerBytesAddress = loaded_extra_pointer + OnAirSaucerBytesDiff
@@ -4141,7 +4432,7 @@ async def handle_objects(ctx, current_level):
                     writeBytes(OnAirSaucerBytesAddress, spawn_on_kill_bytes)
 
         elif vehicle_sanity and object.object_type == Objects.ObjectType.BLACK_ASSASSIN and \
-                object.vehicle == Objects.ObjectType.ObjectTypeVehicle.AIR_SAUCER:
+                object.vehicle == ObjectTypeVehicles.AIR_SAUCER:
             OnAirSaucerBytesDiff = 0x1C
             OnAirSaucerBytesAddress = loaded_extra_pointer + OnAirSaucerBytesDiff
 
@@ -4455,12 +4746,14 @@ async def update_level_behaviour(ctx, current_level, death):
     # Set initial value (to level of value from server)
     # If higher than previous value, recognise as check and reduce by 1
 
+    if SHOW_SET_CHANGES:
+        await ShowSETChanges(current_level, ctx)
 
     await handle_objects(ctx, current_level)
 
     await clearout_individual_enemies_by_percentage(ctx, current_level)
 
-    #ShowSETChanges(current_level)
+
 
     #DisplayMessages(ctx)
 

@@ -102,7 +102,7 @@ class MissionClearLocation:
                 self.distribution = Objects.GetDistributionInStageByBaseType(self.stageId, ObjectType.SKY_TROOPS_TEMPLE)
         elif self.mission_object_name == "Tank":
             return {
-                REGION_INDICIES.LETHAL_HIGHWAY_KEY_DOOR: 1
+                REGION_INDICES.LETHAL_HIGHWAY_KEY_DOOR: 1
             }
             self.distribution = Objects.GetDistributionInStageByBaseType(self.stageId, ObjectType.LETHAL_HIGHWAY_TANK)
         elif self.mission_object_name == "Lantern":
@@ -130,12 +130,12 @@ class MissionClearLocation:
                 self.distribution = Objects.GetDistributionInStageByBaseType(self.stageId, ObjectType.SPACE_GADGET_DEFENSE_UNIT)
         elif self.mission_object_name == "President Aircraft":
             return {
-                REGION_INDICIES.AIR_FLEET_KEY_DOOR: 1
+                REGION_INDICES.AIR_FLEET_KEY_DOOR: 1
             }
             self.distribution = Objects.GetDistributionInStageByBaseType(self.stageId, ObjectType.AIR_FLEET_PRESIDENT_POD)
         elif self.mission_object_name == "Egg Balloon":
             return {
-                REGION_INDICIES.IRON_JUNGLE_KEY_DOOR: 1
+                REGION_INDICES.IRON_JUNGLE_KEY_DOOR: 1
             }
             self.distribution = Objects.GetDistributionInStageByBaseType(self.stageId, ObjectType.IRON_JUNGLE_EGG_BALLOON)
         elif self.mission_object_name == "Computer":
@@ -383,7 +383,7 @@ MissionClearLocations = [
     MissionClearLocation(STAGE_THE_LAST_WAY, MISSION_ALIGNMENT_NEUTRAL, None, None)
         .setDistribution(
         {
-            REGION_INDICIES.THE_LAST_WAY_CHECKPOINT_SEVEN: 1
+            REGION_INDICES.THE_LAST_WAY_CHECKPOINT_SEVEN: 1
         }
     )
 ]
@@ -594,7 +594,7 @@ def GetCheckpointLocations():
     CheckLocations = []
     for stage in [ l for l in Levels.ALL_STAGES if l not in Levels.BOSS_STAGES]:
         stage_name = Levels.LEVEL_ID_TO_LEVEL[stage].replace(" ", "_")
-        checkpoint_keys = list([k for k in REGION_INDICIES.__dict__.items() if k[0].startswith(stage_name.upper()) and "CHECKPOINT_" in k[0] and
+        checkpoint_keys = list([k for k in REGION_INDICES.__dict__.items() if k[0].startswith(stage_name.upper()) and "CHECKPOINT_" in k[0] and
                            "CHECKPOINT_ZERO" not in k[0]])
         check = CheckpointLocation(stage, len(checkpoint_keys))
         index = 0
