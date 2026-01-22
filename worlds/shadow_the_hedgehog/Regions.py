@@ -10,22 +10,6 @@ from .Options import LevelProgression
 from .Story import PathInfo
 
 
-
-def stage_id_to_region(level_id: int, region_id) -> str:
-    if level_id in Levels.BOSS_STAGES:
-        raise Exception("Wrong function called" + str(level_id))
-    #level_name = Levels.LEVEL_ID_TO_LEVEL[level_id]
-    region_name_base = Names.GetRegionName(level_id, region_id)
-    region_name = "REGION_" + region_name_base
-    return region_name
-
-def boss_stage_id_to_region(level_id: int, region_id=0) -> str:
-    if level_id not in Levels.BOSS_STAGES:
-        raise Exception("Wrong function called" + str(level_id))
-    level_name = Levels.LEVEL_ID_TO_LEVEL[level_id]
-    region_name = "BOSS_REGION_" + level_name + "_" + str(region_id)
-    return region_name
-
 def boss_stage_id_to_story_region(level_id: int, region_id=0) -> str:
     if level_id not in Levels.BOSS_STAGES:
         raise Exception("Wrong function called" + str(level_id))
@@ -361,9 +345,9 @@ def create_regions(world) -> Dict[str, Region]:
             continue
 
         if level_id in Levels.BOSS_STAGES:
-            base_region_name = boss_stage_id_to_region(level_id)
+            base_region_name = Levels.boss_stage_id_to_region(level_id)
         else:
-            base_region_name = stage_id_to_region(level_id, 0)
+            base_region_name = Levels.stage_id_to_region(level_id, 0)
         new_region = Region(base_region_name, world.player, world.multiworld)
         regions[base_region_name] = new_region
 
@@ -384,7 +368,7 @@ def create_regions(world) -> Dict[str, Region]:
             if additional_region.regionIndex == 0:
                 continue
 
-            new_region_name = stage_id_to_region(level_id, additional_region.regionIndex)
+            new_region_name = Levels.stage_id_to_region(level_id, additional_region.regionIndex)
             new_additional_region = Region(new_region_name, world.player, world.multiworld)
             regions[new_region_name] = new_additional_region
 
@@ -405,7 +389,7 @@ def create_regions(world) -> Dict[str, Region]:
                 story_region_name = boss_stage_id_to_story_region(level_id)
             else:
                 story_region_name = stage_id_to_story_region(level_id, default_region_index)
-                connect_region_name = stage_id_to_region(level_id, default_region_index)
+                connect_region_name = Levels.stage_id_to_region(level_id, default_region_index)
                 connect_region = regions[connect_region_name]
 
             new_story_region = Region(story_region_name, world.player, world.multiworld)
@@ -563,7 +547,7 @@ def connect_by_story_mode(multiworld: MultiWorld, world, player: int, order: typ
         invalid_boss = False
         if path.boss is not None:
             if path.boss in world.available_story_levels: # and path.end_stage_id is not None:
-                boss_base_region_name = boss_stage_id_to_region(path.boss)
+                boss_base_region_name = Levels.boss_stage_id_to_region(path.boss)
                 boss_base_region = world.get_region(boss_base_region_name)
 
                 boss_region_name = boss_stage_id_to_story_region(path.boss)
@@ -624,7 +608,7 @@ def connect_by_story_mode(multiworld: MultiWorld, world, player: int, order: typ
 
                 multiworld.register_indirect_condition(start_region, boss_end_entrance)
                 default_region_index = GetDefaultCheckpointRegionForStage(world, path.start_stage_id)
-                base_region_name = stage_id_to_region(path.start_stage_id, default_region_index)
+                base_region_name = Levels.stage_id_to_region(path.start_stage_id, default_region_index)
                 base_story_region_name = stage_id_to_story_region(path.start_stage_id, default_region_index)
                 base_region = world.get_region(base_region_name)
                 base_story_region = world.get_region(base_story_region_name)
@@ -637,7 +621,7 @@ def connect_by_story_mode(multiworld: MultiWorld, world, player: int, order: typ
                     if region.hardLogicOnly and \
                             world.options.logic_level != Options.LogicLevel.option_hard:
                         continue
-                    level_region_name = stage_id_to_region(region.stageId, region.regionIndex)
+                    level_region_name = Levels.stage_id_to_region(region.stageId, region.regionIndex)
                     region_to_add = world.get_region(level_region_name)
                     if boss_end_entrance is not None:
                         multiworld.register_indirect_condition(region_to_add, boss_end_entrance)
@@ -692,7 +676,7 @@ def connect_by_story_mode(multiworld: MultiWorld, world, player: int, order: typ
                     start_region, boss_region, rule=boss_base_rule)
             multiworld.register_indirect_condition(start_region, boss_entrance)
             default_region_index = GetDefaultCheckpointRegionForStage(world, path.start_stage_id)
-            base_region_name = stage_id_to_region(path.start_stage_id, default_region_index)
+            base_region_name = Levels.stage_id_to_region(path.start_stage_id, default_region_index)
             base_region = world.get_region(base_region_name)
             multiworld.register_indirect_condition(base_region, boss_entrance)
 
@@ -715,7 +699,7 @@ def connect_by_story_mode(multiworld: MultiWorld, world, player: int, order: typ
             if region.hardLogicOnly and \
                     world.options.logic_level != Options.LogicLevel.option_hard:
                 continue
-            level_region_name = stage_id_to_region(region.stageId, region.regionIndex)
+            level_region_name = Levels.stage_id_to_region(region.stageId, region.regionIndex)
             region_to_add = world.get_region(level_region_name)
             multiworld.register_indirect_condition(region_to_add, new_entrance)
             if boss_entrance is not None:
@@ -857,12 +841,22 @@ def GetDefaultCheckpointRegionForStage(world, stage):
 
 def GenerateFirstCheckpoints(world):
     first_checkpoints = {}
+
     for level in world.available_levels:
         if level in Levels.BOSS_STAGES:
             continue
 
-        c = [l for l in Locations.CheckpointLocations if l.stageId == level][0]
-        first = world.random.choice(range(0, c.total_count + 1))
-        first_checkpoints[level] = first
+        if Levels.LEVEL_ID_TO_LEVEL[level] in world.options.plando_checkpoint_spawns:
+            first_checkpoints[level] = world.options.plando_checkpoint_spawns[Levels.LEVEL_ID_TO_LEVEL[level]]
+        else:
+            c = [l for l in Locations.CheckpointLocations if l.stageId == level][0]
+
+            # Exclude 0 for stages without a Checkpoint Zero!
+            base_check = 1
+            if Levels.HasCheckpointZero(level):
+                base_check = 0
+
+            first = world.random.choice(range(base_check, c.total_count + 1))
+            first_checkpoints[level] = first
 
     return first_checkpoints

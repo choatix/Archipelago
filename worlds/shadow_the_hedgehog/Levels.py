@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from . import Options
+from . import Options, Names
 from .Names import *
 
 MISSION_ALIGNMENT_DARK = 0
@@ -121,6 +121,7 @@ class BacktrackRegion:
         self.backtrackToRegion = toRegion
         self.backtrackFromRegion = fromRegion
         self.logicType = logicType
+        self.hardLogicOnly = False
 
         if type(restrictionTypes) != list:
             self.restrictionTypes = [restrictionTypes]
@@ -322,16 +323,16 @@ INDIVIDUAL_LEVEL_REGIONS = \
     LevelRegion(STAGE_WESTOPOLIS, REGION_INDICES.WESTOPOLIS_PULLEY,
                 [REGION_RESTRICTION_TYPES.Pulley])
     .setLogicType(Options.LogicLevel.option_hard),
-    LevelRegion(STAGE_WESTOPOLIS, REGION_INDICES.WESTOPOLIS_CHECKPOINT_THREE,
-            REGION_RESTRICTION_TYPES.NoRestriction)
-        .setFromRegion(REGION_INDICES.WESTOPOLIS_CHECKPOINT_TWO),
-LevelRegion(STAGE_WESTOPOLIS, REGION_INDICES.WESTOPOLIS_WEAPON,
-                REGION_RESTRICTION_TYPES.LongRangeGun),
     LevelRegion(STAGE_WESTOPOLIS, REGION_INDICES.WESTOPOLIS_BEHIND_THREE,
                 REGION_RESTRICTION_TYPES.NoRestriction)
-        .setFromRegion(REGION_INDICES.WESTOPOLIS_CHECKPOINT_THREE),
-    LevelRegion(STAGE_WESTOPOLIS, REGION_INDICES.WESTOPOLIS_CHECKPOINT_FOUR,
+    .setFromRegion(REGION_INDICES.WESTOPOLIS_CHECKPOINT_TWO),
+    LevelRegion(STAGE_WESTOPOLIS, REGION_INDICES.WESTOPOLIS_CHECKPOINT_THREE,
             REGION_RESTRICTION_TYPES.NoRestriction),
+    LevelRegion(STAGE_WESTOPOLIS, REGION_INDICES.WESTOPOLIS_WEAPON,
+                REGION_RESTRICTION_TYPES.LongRangeGun),
+    LevelRegion(STAGE_WESTOPOLIS, REGION_INDICES.WESTOPOLIS_CHECKPOINT_FOUR,
+            REGION_RESTRICTION_TYPES.NoRestriction)
+        .setFromRegion(REGION_INDICES.WESTOPOLIS_CHECKPOINT_THREE),
     LevelRegion(STAGE_WESTOPOLIS, REGION_INDICES.WESTOPOLIS_KEY_DOOR,
             REGION_RESTRICTION_TYPES.KeyDoor),
     LevelRegion(STAGE_WESTOPOLIS, REGION_INDICES.WESTOPOLIS_CHECKPOINT_FIVE,
@@ -841,13 +842,13 @@ LevelRegion(STAGE_DEATH_RUINS, REGION_INDICES.DEATH_RUINS_CHECKPOINT_THREE,
                     REGION_RESTRICTION_TYPES.NoRestriction),
 LevelRegion(STAGE_DEATH_RUINS, REGION_INDICES.DEATH_RUINS_RAIL_SECTION,
                     REGION_RESTRICTION_TYPES.NoRestriction),
-LevelRegion(STAGE_DEATH_RUINS, REGION_INDICES.DEATH_RUINS_CHECKPOINT_FOUR,
-                    REGION_RESTRICTION_TYPES.NoRestriction),
 LevelRegion(STAGE_DEATH_RUINS, REGION_INDICES.DEATH_RUINS_GOLD_BEETLE,
             REGION_RESTRICTION_TYPES.GoldBeetle),
+LevelRegion(STAGE_DEATH_RUINS, REGION_INDICES.DEATH_RUINS_CHECKPOINT_FOUR,
+                    REGION_RESTRICTION_TYPES.NoRestriction)
+    .setFromRegion(REGION_INDICES.DEATH_RUINS_RAIL_SECTION),
 LevelRegion(STAGE_DEATH_RUINS, REGION_INDICES.DEATH_RUINS_KEY_DOOR,
-                    REGION_RESTRICTION_TYPES.KeyDoor)
-    .setFromRegion(REGION_INDICES.DEATH_RUINS_CHECKPOINT_FOUR),
+                    REGION_RESTRICTION_TYPES.KeyDoor),
 LevelRegion(STAGE_DEATH_RUINS, REGION_INDICES.DEATH_RUINS_KEY_WARP,
                     REGION_RESTRICTION_TYPES.WarpHole),
 LevelRegion(STAGE_DEATH_RUINS, REGION_INDICES.DEATH_RUINS_CHECKPOINT_FIVE,
@@ -977,7 +978,8 @@ LevelRegion(STAGE_AIR_FLEET, REGION_INDICES.AIR_FLEET_SECRET_3,
                     [REGION_RESTRICTION_TYPES.Region6]
             ).setLogicType(Options.LogicLevel.option_hard),
 LevelRegion(STAGE_AIR_FLEET, REGION_INDICES.AIR_FLEET_CHECKPOINT_SEVEN,
-                    REGION_RESTRICTION_TYPES.NoRestriction),
+                    REGION_RESTRICTION_TYPES.NoRestriction)
+    .setFromRegion(REGION_INDICES.AIR_FLEET_CHECKPOINT_SIX),
 LevelRegion(STAGE_AIR_FLEET, REGION_INDICES.AIR_FLEET_SEVEN_DESCEND,
                     REGION_RESTRICTION_TYPES.VacuumOrShot),
 LevelRegion(STAGE_AIR_FLEET, REGION_INDICES.AIR_FLEET_CHECKPOINT_EIGHT,
@@ -1344,13 +1346,15 @@ LevelRegion(STAGE_BLACK_COMET, REGION_INDICES.BLACK_COMET_BLACK_TURRET,
                     REGION_RESTRICTION_TYPES.BlackArmsTurret)
     .setFromRegion(REGION_INDICES.BLACK_COMET_CHECKPOINT_FOUR),
 LevelRegion(STAGE_BLACK_COMET, REGION_INDICES.BLACK_COMET_FOUR_AIR_SAUCER,
-                    REGION_RESTRICTION_TYPES.AirSaucer),
+                    REGION_RESTRICTION_TYPES.AirSaucer)
+    .setFromRegion(REGION_INDICES.BLACK_COMET_CHECKPOINT_FOUR),
 LevelRegion(STAGE_BLACK_COMET, REGION_INDICES.BLACK_COMET_FOUR_WORMS,
                     REGION_RESTRICTION_TYPES.VacuumOrShot),
 
 LevelRegion(STAGE_BLACK_COMET, REGION_INDICES.BLACK_COMET_FOUR_GUN_PATH,
                     REGION_RESTRICTION_TYPES.AirSaucer)
-    .setLogicType(Options.LogicLevel.option_hard),
+    .setLogicType(Options.LogicLevel.option_hard)
+    .setFromRegion(REGION_INDICES.BLACK_COMET_FOUR_AIR_SAUCER),
 LevelRegion(STAGE_BLACK_COMET, REGION_INDICES.BLACK_COMET_BLACK_TURRET_2,
                     REGION_RESTRICTION_TYPES.BlackArmsTurret),
 LevelRegion(STAGE_BLACK_COMET, REGION_INDICES.BLACK_COMET_WARP_HOLE_2,
@@ -1469,10 +1473,10 @@ LevelRegion(STAGE_LAVA_SHELTER, REGION_INDICES.LAVA_SHELTER_CHECKPOINT_FIVE,
                     REGION_RESTRICTION_TYPES.Pulley)
     .setLogicType(Options.LogicLevel.option_normal, Options.ChaosControlLogicLevel.option_easy),
 LevelRegion(STAGE_LAVA_SHELTER, REGION_INDICES.LAVA_SHELTER_CHECKPOINT_SIX,
+                    REGION_RESTRICTION_TYPES.NoRestriction),
+LevelRegion(STAGE_LAVA_SHELTER, REGION_INDICES.LAVA_SHELTER_CHECKPOINT_SEVEN,
                     REGION_RESTRICTION_TYPES.NoRestriction)
     .setFromRegion(REGION_INDICES.LAVA_SHELTER_CHECKPOINT_FIVE),
-LevelRegion(STAGE_LAVA_SHELTER, REGION_INDICES.LAVA_SHELTER_CHECKPOINT_SEVEN,
-                    REGION_RESTRICTION_TYPES.NoRestriction),
 LevelRegion(STAGE_LAVA_SHELTER, REGION_INDICES.LAVA_SHELTER_WIND,
                     REGION_RESTRICTION_TYPES.NoRestriction),
 LevelRegion(STAGE_LAVA_SHELTER, REGION_INDICES.LAVA_SHELTER_CHECKPOINT_EIGHT,
@@ -1828,9 +1832,11 @@ BACKTRACKING_REGIONS = [
     BacktrackRegion(STAGE_LETHAL_HIGHWAY, REGION_INDICES.LETHAL_HIGHWAY_CHECKPOINT_FOUR,
                     REGION_INDICES.LETHAL_HIGHWAY_THREE_FALL_2, Options.LogicLevel.option_easy,
                     REGION_RESTRICTION_TYPES.NoBacktracking),
+
     BacktrackRegion(STAGE_LETHAL_HIGHWAY, REGION_INDICES.LETHAL_HIGHWAY_THREE_FALL_2,
                     REGION_INDICES.LETHAL_HIGHWAY_THREE_FALL, Options.LogicLevel.option_normal,
                     REGION_RESTRICTION_TYPES.NoRestriction).setHardLogicOnly(),
+
     BacktrackRegion(STAGE_LETHAL_HIGHWAY, REGION_INDICES.LETHAL_HIGHWAY_CHECKPOINT_FIVE,
                     REGION_INDICES.LETHAL_HIGHWAY_CHECKPOINT_FOUR, Options.LogicLevel.option_normal,
                     REGION_RESTRICTION_TYPES.NoRestriction).setHardLogicOnly(),
@@ -1857,8 +1863,8 @@ BACKTRACKING_REGIONS = [
                     REGION_INDICES.CRYPTIC_CASTLE_WIND_BOTTOM, Options.LogicLevel.option_easy,
                     REGION_RESTRICTION_TYPES.NoBacktracking),
     BacktrackRegion(STAGE_CRYPTIC_CASTLE, REGION_INDICES.CRYPTIC_CASTLE_WIND_BOTTOM,
-                    REGION_INDICES.CRYPTIC_CASTLE_FIVE_BALLOON, Options.LogicLevel.option_hard,
-                    REGION_RESTRICTION_TYPES.Torch),
+                    REGION_INDICES.CRYPTIC_CASTLE_FIVE_BALLOON, Options.LogicLevel.option_normal,
+                    REGION_RESTRICTION_TYPES.Torch).setHardLogicOnly(),
     BacktrackRegion(STAGE_CRYPTIC_CASTLE, REGION_INDICES.CRYPTIC_CASTLE_CHECKPOINT_SEVEN,
                     REGION_INDICES.CRYPTIC_CASTLE_END_HAWK_2_ITEM, Options.LogicLevel.option_normal,
                     REGION_RESTRICTION_TYPES.NoRestriction).setHardLogicOnly(),
@@ -1956,6 +1962,12 @@ BACKTRACKING_REGIONS = [
     BacktrackRegion(STAGE_MAD_MATRIX, REGION_INDICES.MAD_MATRIX_YELLOW_LIGHT_DASH,
                     REGION_INDICES.MAD_MATRIX_CIRCUIT_ROOM, Options.LogicLevel.option_easy,
                     REGION_RESTRICTION_TYPES.NoBacktracking),
+    BacktrackRegion(STAGE_MAD_MATRIX, REGION_INDICES.MAD_MATRIX_CIRCUIT_ROOM,
+                    REGION_INDICES.MAD_MATRIX_CHECKPOINT_TWO, Options.LogicLevel.option_normal,
+                    REGION_RESTRICTION_TYPES.NoRestriction),
+    BacktrackRegion(STAGE_MAD_MATRIX, REGION_INDICES.MAD_MATRIX_CIRCUIT_ROOM,
+                    REGION_INDICES.MAD_MATRIX_CHECKPOINT_FOUR, Options.LogicLevel.option_normal,
+                    REGION_RESTRICTION_TYPES.NoRestriction),
 
     BacktrackRegion(STAGE_DEATH_RUINS, REGION_INDICES.DEATH_RUINS_CHECKPOINT_TWO,
                     REGION_INDICES.DEATH_RUINS_CHECKPOINT_ONE, Options.LogicLevel.option_easy,
@@ -2098,13 +2110,16 @@ BACKTRACKING_REGIONS = [
                     REGION_INDICES.LAVA_SHELTER_PULLEY_OR_LAVA, Options.LogicLevel.option_easy,
                     REGION_RESTRICTION_TYPES.NoBacktracking),
     BacktrackRegion(STAGE_LAVA_SHELTER, REGION_INDICES.LAVA_SHELTER_CHECKPOINT_FOUR,
-                    REGION_INDICES.LAVA_SHELTER_CHECKPOINT_THREE, Options.LogicLevel.option_hard,
-                    REGION_RESTRICTION_TYPES.NoBacktracking),
+                    REGION_INDICES.LAVA_SHELTER_CHECKPOINT_THREE, Options.LogicLevel.option_normal,
+                    REGION_RESTRICTION_TYPES.NoBacktracking).setHardLogicOnly(),
     BacktrackRegion(STAGE_LAVA_SHELTER, REGION_INDICES.LAVA_SHELTER_CHECKPOINT_FIVE,
                     REGION_INDICES.LAVA_SHELTER_CHECKPOINT_FOUR, Options.LogicLevel.option_easy,
                     REGION_RESTRICTION_TYPES.NoBacktracking),
     BacktrackRegion(STAGE_LAVA_SHELTER, REGION_INDICES.LAVA_SHELTER_CHECKPOINT_SEVEN,
                     REGION_INDICES.LAVA_SHELTER_CHECKPOINT_FIVE, Options.LogicLevel.option_easy,
+                    REGION_RESTRICTION_TYPES.NoBacktracking),
+    BacktrackRegion(STAGE_LAVA_SHELTER, REGION_INDICES.LAVA_SHELTER_CHECKPOINT_SIX,
+                    REGION_INDICES.LAVA_SHELTER_PULLEY_DARK, Options.LogicLevel.option_easy,
                     REGION_RESTRICTION_TYPES.NoBacktracking),
     BacktrackRegion(STAGE_LAVA_SHELTER, REGION_INDICES.LAVA_SHELTER_CHECKPOINT_SIX,
                     REGION_INDICES.LAVA_SHELTER_CHECKPOINT_FIVE, Options.LogicLevel.option_easy,
@@ -2171,3 +2186,18 @@ def HasCheckpointZero(stage):
     #print("HC0", checkpoint_keys)
 
     return len(checkpoint_keys) > 0
+
+def stage_id_to_region(level_id: int, region_id) -> str:
+    if level_id in BOSS_STAGES:
+        raise Exception("Wrong function called" + str(level_id))
+    region_name_base = Names.GetRegionName(level_id, region_id)
+    region_name = "REGION_" + region_name_base
+    return region_name
+
+def boss_stage_id_to_region(level_id: int, region_id=0) -> str:
+    if level_id not in BOSS_STAGES:
+        raise Exception("Wrong function called" + str(level_id))
+    level_name = LEVEL_ID_TO_LEVEL[level_id]
+    region_name = "BOSS_REGION_" + level_name + "_" + str(region_id)
+    return region_name
+

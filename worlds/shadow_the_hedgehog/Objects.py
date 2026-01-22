@@ -1,5 +1,5 @@
 
-from . import Levels, Weapons
+from . import Levels, Weapons, Names
 from .Names import *
 from .ObjectTypes import ObjectType
 from .Objects_BlackComet import DESIRABLE_OBJECTS_BLACK_COMET
@@ -89,7 +89,10 @@ def GetPlayableObjectTypes():
             ObjectType.ITEM_IN_METAL_BOX,
             ObjectType.ITEM_IN_BOX,
             ObjectType.PARTNER,
-            ObjectType.CHECKPOINT
+            ObjectType.CHECKPOINT,
+            ObjectType.WEAPON_BOX,
+            ObjectType.WEAPON_METAL_BOX,
+            ObjectType.WEAPON_WOODEN_BOX
     ]
 
 def GetObjectChecks():
@@ -392,8 +395,8 @@ def GetTypeId(objectType):
     #if objectType == ObjectType.POISON_GAS:
     #    return 0x35
 
-    if objectType == ObjectType.DARK_SPIN_ENTRY:
-        return 0x61
+    #if objectType == ObjectType.DARK_SPIN_ENTRY:
+    #    return 0x61
 
     if objectType == ObjectType.DEFENSE_PROGRAM:
         return 0x7D4
@@ -491,6 +494,7 @@ def CheckVehicleAttributes(objectType, extra_bytes, index, link_id, address):
         group_count = extra_bytes[(7*4)+3]
         return f"Black Larvae ({group_count})"
 
+
     if objectType in ("Wood Box", "Metal Box"):
 
         box_type = extra_bytes[0:4]
@@ -509,7 +513,7 @@ def CheckVehicleAttributes(objectType, extra_bytes, index, link_id, address):
             type_name = "Item In "+objectType
         elif box_item == 0x02:
             box_weapon = int.from_bytes(base_item_type, byteorder='big')
-            w_name = [w.name for w in Weapons.WEAPON_INFO if w.game_id == box_weapon]
+            w_name = Names.WEAPONS(box_weapon).name
             if len(w_name) == 0:
                 return "Unknown Weapon Wood/Metal Box:" + str(box_weapon) + str(address)
             else:
@@ -531,14 +535,34 @@ def CheckVehicleAttributes(objectType, extra_bytes, index, link_id, address):
         box_weapon_bytes = extra_bytes[4:8]
 
         box_item = int.from_bytes(box_weapon_bytes, byteorder='big')
-
-        w_name = [ w.name for w in Weapons.WEAPON_INFO if w.game_id == box_item ]
-        if len(w_name) == 0:
-            return "Unknown Weapon Box:" + str(box_item)
-        else:
-            return "Weapon Box: " + w_name[0]
+        try:
+            if box_item == 6:
+                return "Unused Egg Weapon 6 In Weapon Box"
+            w_name = Names.WEAPONS(box_item).name
+            if len(w_name) == 0:
+                return "Unknown Weapon Box:" + str(box_item)
+            else:
+                return "Weapon Box: " + w_name
+        except Exception as e:
+            print("Weapon exception:", e, box_item)
+            return "Unused weapon box:"+ str(box_item)
 
         return "Weapon Box"
+
+    elif objectType == "Weapon":
+        weapon_bytes = extra_bytes[0:4]
+        box_item = int.from_bytes(weapon_bytes, byteorder='big')
+        try:
+            if box_item == 6:
+                return "Unused Egg Weapon 6 Raw"
+            w_name = Names.WEAPONS(box_item).name
+            if len(w_name) == 0:
+                return "Unknown Weapon Raw:" + str(box_item)
+            else:
+                return "Weapon Raw: " + w_name
+        except Exception as e:
+            print("Weapon exception:", e, box_item)
+            return "Unused weapon raw:" + str(box_item)
 
     if objectType == "Key":
         return "Key " + str(hex(link_id))

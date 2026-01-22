@@ -44,7 +44,6 @@ valid_game_bytes = [
 ]
 
 SAVE_VALUE_CHECK = False
-
 SHOW_SET_CHANGES = True
 
 @dataclass
@@ -937,7 +936,8 @@ class ShTHCommandProcessor(ClientCommandProcessor):
         """Prints the current sanities to the client."""
         if isinstance(self.ctx, ShTHContext):
             arguments = self.parse_args(args)
-            #print(arguments)
+
+            #print("CMDS-", arguments)
 
             stage = None
             if "s" in arguments:
@@ -961,43 +961,46 @@ class ShTHCommandProcessor(ClientCommandProcessor):
                                 stageId = level_by_name[stage]
                 stages = [stageId]
 
-                stages = []
-                for stageId in stages:
-                    if stageId is not None:
-                        valid_types = ['dark', 'hero', 'gun', 'egg', 'alien', 'darkclear', 'heroclear']
-                        enemy_sanities = ['gun', 'alien', 'egg']
-                        objective_sanities = ['dark', 'hero']
-                        for valid_type in valid_types:
-                            if (valid_type in arguments.keys() or
-                                    len(arguments) == 0 or
-                                    (len(arguments) == 1 and stageId != self.ctx.last_level) ):
-                                if valid_type in enemy_sanities and not self.ctx.enemy_sanity:
-                                    break
-                                if valid_type in objective_sanities and not self.ctx.objective_sanity:
-                                    break
-                                details = self.get_required_and_active_count(self.ctx, stageId, valid_type)
-                                if details is None:
-                                    continue
-                                location_total_required = details[0]
-                                location_reached_total = details[1]
-                                current_count = details[2]
-                                freq_or_avail = details[3]
-                                complete = details[4]
-                                if location_total_required > 0:
-                                    if "clear" in valid_type and current_count is not None:
-                                        logger.info("%s sanity is %d/%d %s(%d available)", valid_type.capitalize(),
-                                                    current_count, location_total_required,
-                                                    "(Complete) " if complete else "",
-                                                    freq_or_avail)
-                                    elif current_count is not None:
-                                        logger.info("%s sanity is %d/%d (Current: %d) (Frequency %d)", valid_type.capitalize(),
-                                                    location_reached_total, location_total_required, current_count,freq_or_avail)
-                                    elif "clear" in valid_type:
-                                        pass
-                                    else:
-                                        pass
-                    else:
-                        logger.error("Invalid level provided")
+            for stageId in stages:
+                if stageId is not None:
+                    valid_types = ['dark', 'hero', 'gun', 'egg', 'alien', 'darkclear', 'heroclear']
+                    enemy_sanities = ['gun', 'alien', 'egg']
+                    objective_sanities = ['dark', 'hero']
+                    for valid_type in valid_types:
+                        if (valid_type in arguments.keys() or
+                                len(arguments) == 0 or
+                                (len(arguments) == 1 and stageId != self.ctx.last_level) ):
+                            if valid_type in enemy_sanities and not self.ctx.enemy_sanity:
+                                break
+                            if valid_type in objective_sanities and not self.ctx.objective_sanity:
+                                break
+                            details = self.get_required_and_active_count(self.ctx, stageId, valid_type)
+                            if details is None:
+                                continue
+                            location_total_required = details[0]
+                            location_reached_total = details[1]
+                            current_count = details[2]
+                            freq_or_avail = details[3]
+                            complete = details[4]
+                            #print("CMDS-", details)
+                            if location_total_required > 0:
+                                if "clear" in valid_type and current_count is not None:
+                                    logger.info("%s sanity for %s is %d/%d %s(%d available)",
+                                                Levels.LEVEL_ID_TO_LEVEL[stageId],
+                                                valid_type.capitalize(),
+                                                current_count, location_total_required,
+                                                "(Complete) " if complete else "",
+                                                freq_or_avail)
+                                elif current_count is not None:
+                                    logger.info("%s sanity for %s is %d/%d (Current: %d) (Frequency %d)",
+                                                Levels.LEVEL_ID_TO_LEVEL[stageId], valid_type.capitalize(),
+                                                location_reached_total, location_total_required, current_count,freq_or_avail)
+                                elif "clear" in valid_type:
+                                    pass
+                                else:
+                                    pass
+                else:
+                    logger.error("Invalid level provided")
 
 
 @dataclass
@@ -1377,6 +1380,7 @@ class ShTHContext(CommonContext):
         self.checkpoint_convenience = False
         self.checkpoint_shuffle = None
         self.last_object_bytes = None
+        self.music_shuffle = True
 
 
     async def disconnect(self, allow_autoreconnect: bool = False):
@@ -1727,6 +1731,9 @@ class ShTHContext(CommonContext):
 
             if "checkpoint_convenience" in slot_data:
                 self.checkpoint_convenience = slot_data["checkpoint_convenience"]
+
+            if "music_shuffle" in slot_data:
+                self.music_shuffle = slot_data["music_shuffle"]
 
             self.restoreState()
             self.awaiting_server = False
@@ -3787,13 +3794,15 @@ async def handle_missing_set_weapons(current_level, ctx, new_outputs):
                                    #loaded_from_extra_pointer_bytes, link_id
 
     NO_WEAPONS = [ObjectType.BLACK_LARVAE, ObjectType.BLACK_HAWK, ObjectType.BLACK_VOLT,
-                  ObjectType.BLACK_WING, ObjectType.ARTIFICIAL_CHAOS]
+                  ObjectType.BLACK_WING, ObjectType.ARTIFICIAL_CHAOS, ObjectType.SHADOW_ANDROID,
+                  ObjectType.EGG_CLOWN]
 
     new_enemies = []
 
+    PRINT_ENEMY_WITH_WEAPON_INFO = False
+
     for enemy in enemy_objects_for_stage:
-        if enemy.weapon is not None:
-            continue
+
         loaded_info = [ s for s in new_outputs if s[1] == enemy.index ]
         if len(loaded_info) == 0:
             print("Could not find info:", enemy.index, new_outputs)
@@ -3811,16 +3820,16 @@ async def handle_missing_set_weapons(current_level, ctx, new_outputs):
                 reference = int.from_bytes(weapon_reference_bytes[60:64], byteorder='big')
                 if reference == 0:
                     reference = "RIFLE"
-                    weapon_id = Weapons.WEAPONS.SUB_MACHINE_GUN
+                    weapon_id = WEAPONS.SEMI_AUTOMATIC_RIFLE
                 elif reference == 1:
                     reference = "ROCKET 4"
-                    weapon_id = Weapons.WEAPONS.FOUR_SHOT_RPG
+                    weapon_id = WEAPONS.FOUR_SHOT_RPG
                 elif reference == 2:
                     reference = "BOMB"
-                    #weapon_id = Weapons.WEAPONS.
+                    #weapon_id = WEAPONS.
                 elif reference == 3:
                     reference = "MACHINEGUN"
-                    weapon_id = Weapons.WEAPONS.SEMI_AUTOMATIC_RIFLE
+                    weapon_id = WEAPONS.SUB_MACHINE_GUN
                 elif reference == 4:
                     reference = "NONE"
 
@@ -3829,22 +3838,22 @@ async def handle_missing_set_weapons(current_level, ctx, new_outputs):
                 reference = int.from_bytes(weapon_reference_bytes[32:36], byteorder='big')
                 if reference == 0:
                     reference = "AUTORIFLE"
-                    weapon_id = Weapons.WEAPONS.SEMI_AUTOMATIC_RIFLE
+                    weapon_id = WEAPONS.SEMI_AUTOMATIC_RIFLE
                 elif reference == 1:
                     reference = "AIRCRAFTRIFLE"
-                    weapon_id = Weapons.WEAPONS.HEAVY_MACHINE_GUN
+                    weapon_id = WEAPONS.HEAVY_MACHINE_GUN
                 elif reference == 2:
                     reference = "BAZOOKA"
-                    weapon_id = Weapons.WEAPONS.BAZOOKA
+                    weapon_id = WEAPONS.BAZOOKA
                 elif reference == 3:
                     reference = "ROCKET4"
-                    weapon_id = Weapons.WEAPONS.FOUR_SHOT_RPG
+                    weapon_id = WEAPONS.FOUR_SHOT_RPG
                 elif reference == 4:
                     reference = "ROCKET8"
-                    weapon_id = Weapons.WEAPONS.EIGHT_SHOT_RPG
+                    weapon_id = WEAPONS.EIGHT_SHOT_RPG
                 elif reference == 5:
                     reference = "LASERRIFLE"
-                    weapon_id = Weapons.WEAPONS.LASER_RIFLE
+                    weapon_id = WEAPONS.LASER_RIFLE
 
 
             if enemy.object_type == ObjectType.BLACK_WARRIOR:
@@ -3854,28 +3863,28 @@ async def handle_missing_set_weapons(current_level, ctx, new_outputs):
                     reference = "NONE"
                 elif reference == 1:
                     reference = "BLACKSWORD"
-                    weapon_id = Weapons.WEAPONS.BLACK_SWORD
+                    weapon_id = WEAPONS.BLACK_SWORD
                 elif reference == 2:
                     reference = "LIGHTSHOT"
-                    weapon_id = Weapons.WEAPONS.LIGHT_SHOT
+                    weapon_id = WEAPONS.LIGHT_SHOT
                 elif reference == 3:
                     reference = "FLASHSHOT"
-                    weapon_id = Weapons.WEAPONS.FLASH_SHOT
+                    weapon_id = WEAPONS.FLASH_SHOT
                 elif reference == 4:
                     reference = "BLACKBARREL"
-                    weapon_id = Weapons.WEAPONS.BLACK_BARREL
+                    weapon_id = WEAPONS.BLACK_BARREL
                 elif reference == 5:
                     reference = "SPLITTER"
-                    weapon_id = Weapons.WEAPONS.SPLITTER
+                    weapon_id = WEAPONS.SPLITTER
                 elif reference == 6:
                     reference = "VACUUMPOD"
-                    weapon_id = Weapons.WEAPONS.VACUUM_POD
+                    weapon_id = WEAPONS.VACUUM_POD
                 elif reference == 7:
                     reference = "HEAVYSHOT"
-                    weapon_id = Weapons.WEAPONS.HEAVY_SHOT
+                    weapon_id = WEAPONS.HEAVY_SHOT
                 elif reference == 8:
                     reference = "RINGSHOT"
-                    weapon_id = Weapons.WEAPONS.RING_SHOT
+                    weapon_id = WEAPONS.RING_SHOT
 
 
             if enemy.object_type == ObjectType.BLACK_WORM:
@@ -3883,13 +3892,13 @@ async def handle_missing_set_weapons(current_level, ctx, new_outputs):
                 reference = int.from_bytes(weapon_reference_bytes[28:32], byteorder='big')
                 if reference == 0:
                     reference = "BLACK"
-                    weapon_id = Weapons.WEAPONS.WORM_SHOOTER
+                    weapon_id = WEAPONS.WORM_SHOOTER
                 elif reference == 1:
                     reference = "BLUE"
-                    weapon_id = Weapons.WEAPONS.BIG_WORM_SHOOTER
+                    weapon_id = WEAPONS.BIG_WORM_SHOOTER
                 elif reference == 2:
                     reference = "GOLD"
-                    weapon_id = Weapons.WEAPONS.WIDE_WORM_SHOOTER
+                    weapon_id = WEAPONS.WIDE_WORM_SHOOTER
 
             if enemy.object_type == ObjectType.GUN_SOLDIER:
                 type = "GUN SOLDER"
@@ -3898,32 +3907,32 @@ async def handle_missing_set_weapons(current_level, ctx, new_outputs):
                     reference = "NONE"
                 elif reference == 1:
                     reference = "KNIFE"
-                    weapon_id = Weapons.WEAPONS.SURVIVAL_KNIFE
+                    weapon_id = WEAPONS.SURVIVAL_KNIFE
                 elif reference == 2:
                     reference = "GUN"
-                    weapon_id = Weapons.WEAPONS.PISTOL
+                    weapon_id = WEAPONS.PISTOL
                 elif reference == 3:
                     reference = "MACHINEGUN"
-                    weapon_id = Weapons.WEAPONS.SUB_MACHINE_GUN
+                    weapon_id = WEAPONS.SUB_MACHINE_GUN
                 elif reference == 4:
                     reference = "RIFLE"
-                    weapon_id = Weapons.WEAPONS.SEMI_AUTOMATIC_RIFLE
+                    weapon_id = WEAPONS.SEMI_AUTOMATIC_RIFLE
                 elif reference == 5:
                     reference = "GRENADE"
-                    weapon_id = Weapons.WEAPONS.GRENADE_LAUNCHER
+                    weapon_id = WEAPONS.GRENADE_LAUNCHER
                 elif reference == 6:
                     reference = "MISSILE"
-                    weapon_id = Weapons.WEAPONS.EIGHT_SHOT_RPG
+                    weapon_id = WEAPONS.EIGHT_SHOT_RPG
 
             if enemy.object_type == ObjectType.BIG_FOOT:
                 type = "BIG FOOT"
                 reference = int.from_bytes(weapon_reference_bytes[32:36], byteorder='big')
                 if reference == 0:
                     reference = "VULCAN"
-                    weapon_id = Weapons.WEAPONS.GATLING_GUN
+                    weapon_id = WEAPONS.GATLING_GUN
                 elif reference == 1:
                     reference = "MISSILE"
-                    weapon_id = Weapons.WEAPONS.EIGHT_SHOT_RPG
+                    weapon_id = WEAPONS.EIGHT_SHOT_RPG
 
             if enemy.object_type == ObjectType.EGG_PAWN:
                 type = "EGG PAWN"
@@ -3932,96 +3941,105 @@ async def handle_missing_set_weapons(current_level, ctx, new_outputs):
                     reference = "NONE"
                 elif reference == 1:
                     reference = "PISTOL"
-                    weapon_id = Weapons.WEAPONS.EGG_GUN
+                    weapon_id = WEAPONS.EGG_GUN
                 elif reference == 2:
                     reference = "BAZOOKA"
-                    weapon_id = Weapons.WEAPONS.EGG_BAZOOKA
+                    weapon_id = WEAPONS.EGG_BAZOOKA
                 elif reference == 3:
                     reference = "LANCE"
-                    weapon_id = Weapons.WEAPONS.EGG_SPEAR
+                    weapon_id = WEAPONS.EGG_SPEAR
 
             if enemy.object_type == ObjectType.BLACK_OAK:
                 type = "BLACK OAK"
                 reference = int.from_bytes(weapon_reference_bytes[32:36], byteorder='big')
                 if reference == 0:
                     reference = "SWORD"
-                    weapon_id = Weapons.WEAPONS.BLACK_SWORD
+                    weapon_id = WEAPONS.BLACK_SWORD
                 elif reference == 1:
                     reference = "HAMMER"
-                    weapon_id = Weapons.WEAPONS.DARK_HAMMER
+                    weapon_id = WEAPONS.DARK_HAMMER
                 elif reference == 2:
                     reference = "BARREL"
-                    weapon_id = Weapons.WEAPONS.BIG_BARREL
+                    weapon_id = WEAPONS.BIG_BARREL
 
             if enemy.object_type == ObjectType.BLACK_ASSASSIN:
                 type = "BLACK ASSASSIN"
                 reference = "REFRACTOR"
-                weapon_id = Weapons.WEAPONS.REFRACTOR
+                weapon_id = WEAPONS.REFRACTOR
+
+            if weapon_id is not None and enemy.weapon is not None:
+                if weapon_id != enemy.weapon:
+                    print("Weapon Error::", enemy.weapon, weapon_id, enemy.index)
 
             #if type is not None:
             #    print("Enemy weapon index is", type, enemy.index, enemy.name, reference)
             if type is None and enemy.object_type not in NO_WEAPONS:
                 print("Unhandled type:", enemy.object_type)
 
-
-
-
         new_enemy = SETObject(enemy.object_type, enemy.stage, enemy.index, enemy.name,
                               region=enemy.region, weapon=weapon_id, is_hard=enemy.is_hard,
-                              vehicle=enemy.vehicle)
+                              vehicle=enemy.vehicle, count=enemy.count,
+                              restrictionType=enemy.restrictionType)
         new_enemies.append(new_enemy)
 
-    pathing_order = []
-    for enemy in new_enemies:
-        if enemy.region not in pathing_order:
-            pathing_order.append(enemy.region)
+    if PRINT_ENEMY_WITH_WEAPON_INFO:
+        pathing_order = []
+        for enemy in new_enemies:
+            if enemy.region not in pathing_order:
+                pathing_order.append(enemy.region)
 
-    new_enemy_order = []
+        new_enemy_order = []
 
-    counting_index = 0
-    for path in pathing_order:
-        region_enemies = [ e for e in new_enemies if e.region == path ]
+        counting_index = 0
+        for path in pathing_order:
+            region_enemies = [ e for e in new_enemies if e.region == path ]
 
-        for i in region_enemies:
-            counting_index += 1
-            try:
-                int_value = int(i.name)
-                if str(int_value) == i.name:
-                    i.old_name = i.name
-                    i.name = str(counting_index)
-            except:
-                pass
+            for i in region_enemies:
+                counting_index += 1
+                try:
+                    int_value = int(i.name)
+                    if str(int_value) == i.name:
+                        i.old_name = i.name
+                        i.name = str(counting_index)
+                except:
+                    pass
 
-            try:
-                float_value = float(i.name)
-                if str(float_value) == i.name:
-                    i.old_name = i.name
-                    i.name = str(counting_index)
-            except:
-                pass
+                try:
+                    float_value = float(i.name)
+                    if str(float_value) == i.name:
+                        i.old_name = i.name
+                        i.name = str(counting_index)
+                except:
+                    pass
 
 
-            new_enemy_order.append(i)
+                new_enemy_order.append(i)
 
-    for enemy in new_enemy_order:
-        out = EnemyToCodeString(enemy)
-        print(out)
+        for enemy in new_enemy_order:
+            out = EnemyToCodeString(enemy)
+            print(out)
 
 
     pass
 
+def GetOldName(enemy):
+    if enemy.old_name is None:
+        return ''
+
+    return ', old_name=' + "\"" + enemy.old_name + "\""
+
 def EnemyToCodeString(enemy):
     current_level = enemy.stage
-    output = (f"SETObject(ObjectType.{ObjectType(enemy.object_type).name}, "
+    output = (f"\tSETObject(ObjectType.{ObjectType(enemy.object_type).name}, "
               f"Levels.STAGE_{Levels.LEVEL_ID_TO_LEVEL[current_level].upper().replace(' ', '_')}, {enemy.index}, \"{enemy.name}\", "
+              '\r\n\t\t'
               f"region={('REGION_INDICES.' + GetStageRegionName(current_level, enemy.region)) if enemy.region is not None else 'None'}"
-              f"{(', weapon=Weapons.WEAPONS.' + Weapons.WEAPONS(enemy.weapon).name) if enemy.weapon is not None else ''}"
-              f"{(', old_name=' + enemy.old_name) if enemy.old_name is not None else ''}"
+              f"{(', weapon=WEAPONS.' + enemy.weapon.name) if enemy.weapon is not None else ''}"
+              f"{GetOldName(enemy)}"
               f"{(', vehicle=ObjectTypeVehicles.' + ObjectTypeVehicles(enemy.vehicle).name) if enemy.vehicle is not None else ''}"
               f"{', is_hard=True' if enemy.is_hard else ''}"
               f"{(', restrictionType=' +  REGION_RESTRICTION_TYPES(enemy.restrictionType).name) if enemy.restrictionType is not None and enemy.restrictionType != REGION_RESTRICTION_TYPES.NoRestriction else ''}"
               f"{(', count=' + str(enemy.count)) if enemy.count > 1 else ''}"
-
               "),")
 
     return output
@@ -5552,7 +5570,7 @@ async def check_death(ctx: ShTHContext):
         ctx.dead = True
         return True
 
-    if level_status_value == LevelStatusOptions.Restarting:
+    if level_status_value == LevelStatusOptions.Restarting and not ctx.restart:
         logger.info("Detected a stage restart")
         ctx.restart = True
 
@@ -5622,8 +5640,6 @@ def resetGameState(ctx):
         ctx.select_initialised = False
 
 music_files = [
-"sng_Battle1.adx",
-"sng_Battle2.adx",
 "sng_E1001.adx",
 "sng_E4101.adx",
 "sng_E4201.adx",
@@ -5683,6 +5699,12 @@ def GetStageSong():
 
 async def set_music(ctx, level):
     if level is None:
+        return
+
+    if ctx.restart:
+        return
+
+    if not ctx.music_shuffle:
         return
 
     set_state = False

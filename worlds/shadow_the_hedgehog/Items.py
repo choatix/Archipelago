@@ -1184,7 +1184,7 @@ def PopulateItemPool(world: World):
     # If required, replace all TLW checks with junk items in the pool, start inventory will get amended
 
     junk_count = (location_count - item_count - len(mw_useful_items))
-    #print("Junk count is", location_count, junk_count)
+    print("Junk count is", location_count, junk_count)
     reverse_count = 0
 
     if junk_count < 0:
@@ -1196,9 +1196,9 @@ def PopulateItemPool(world: World):
             tlw_locations = count_last_way_locations(world)
         else:
             tlw_locations = 1
-        if junk_count < tlw_locations:
-            reverse_count += tlw_locations
-            junk_count += tlw_locations
+        #if junk_count < tlw_locations:
+        #    reverse_count += tlw_locations
+        #    junk_count += tlw_locations
 
     if junk_count > 0:
         mw_junk_items = [ShadowTheHedgehogItem(i, world.player) for i in

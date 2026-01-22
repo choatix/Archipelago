@@ -74,7 +74,7 @@ class MissionClearLocation:
     craftLogicType: Optional[int]
 
     def __init__(self, stageId, alignmentId, requirement_count,
-                 mission_object_name):
+                 mission_object_name, character=None):
         self.stageId = stageId
         self.alignmentId = alignmentId
         self.requirement_count = requirement_count
@@ -83,6 +83,7 @@ class MissionClearLocation:
         self.craft_requirements = None
         self.craftLogicType = None
         self.setAutoDistribution()
+        self.character = character
 
     def setAutoDistribution(self):
         if self.mission_object_name == "Soldier":
@@ -311,76 +312,132 @@ class CharacterLocation:
     name: str
 
 MissionClearLocations = [
-    MissionClearLocation(STAGE_WESTOPOLIS, MISSION_ALIGNMENT_DARK, 35, "Soldier"),
-    MissionClearLocation(STAGE_WESTOPOLIS, MISSION_ALIGNMENT_NEUTRAL, None, "Goal Ring"),
-    MissionClearLocation(STAGE_WESTOPOLIS, MISSION_ALIGNMENT_HERO, 45, "Alien"),
+    MissionClearLocation(STAGE_WESTOPOLIS, MISSION_ALIGNMENT_DARK, 35,
+                         "Soldier", character=Characters.Doom),
+    MissionClearLocation(STAGE_WESTOPOLIS, MISSION_ALIGNMENT_NEUTRAL, None,
+                         "Goal Ring"),
+    MissionClearLocation(STAGE_WESTOPOLIS, MISSION_ALIGNMENT_HERO, 45,
+                         "Alien", character=Characters.Sonic),
 
-    MissionClearLocation(STAGE_DIGITAL_CIRCUIT, MISSION_ALIGNMENT_DARK, None, "Core"),
-    MissionClearLocation(STAGE_DIGITAL_CIRCUIT, MISSION_ALIGNMENT_HERO, None, "Goal Ring"),
-    MissionClearLocation(STAGE_GLYPHIC_CANYON, MISSION_ALIGNMENT_DARK, 5, "Temple"),
-    MissionClearLocation(STAGE_GLYPHIC_CANYON, MISSION_ALIGNMENT_NEUTRAL, None, "Goal Ring"),
-    MissionClearLocation(STAGE_GLYPHIC_CANYON, MISSION_ALIGNMENT_HERO, 60, "Alien"),
-    MissionClearLocation(STAGE_LETHAL_HIGHWAY, MISSION_ALIGNMENT_DARK, None, "Goal Ring"),
-    MissionClearLocation(STAGE_LETHAL_HIGHWAY, MISSION_ALIGNMENT_HERO, 1, "Tank")
+    MissionClearLocation(STAGE_DIGITAL_CIRCUIT, MISSION_ALIGNMENT_DARK, None,
+                         "Core", character=Characters.Doom),
+    MissionClearLocation(STAGE_DIGITAL_CIRCUIT, MISSION_ALIGNMENT_HERO, None,
+                         "Goal Ring", character=Characters.Rouge),
+    MissionClearLocation(STAGE_GLYPHIC_CANYON, MISSION_ALIGNMENT_DARK, 5,
+                         "Temple", character=Characters.Doom),
+    MissionClearLocation(STAGE_GLYPHIC_CANYON, MISSION_ALIGNMENT_NEUTRAL, None,
+                         "Goal Ring"),
+    MissionClearLocation(STAGE_GLYPHIC_CANYON, MISSION_ALIGNMENT_HERO, 60,
+                         "Alien", character=Characters.Knuckles),
+    MissionClearLocation(STAGE_LETHAL_HIGHWAY, MISSION_ALIGNMENT_DARK, None,
+                         "Goal Ring", character=Characters.Doom),
+    MissionClearLocation(STAGE_LETHAL_HIGHWAY, MISSION_ALIGNMENT_HERO, 1,
+                         "Tank", character=Characters.Sonic)
         .setRequirement(REGION_RESTRICTION_TYPES.Gun)
         .setCraftRequirement(REGION_RESTRICTION_TYPES.ShadowRifle, Options.LogicLevel.option_easy),
 
-    MissionClearLocation(STAGE_CRYPTIC_CASTLE, MISSION_ALIGNMENT_DARK, 5, "Lantern"),
-    MissionClearLocation(STAGE_CRYPTIC_CASTLE, MISSION_ALIGNMENT_NEUTRAL, None, "Goal Ring"),
-    MissionClearLocation(STAGE_CRYPTIC_CASTLE, MISSION_ALIGNMENT_HERO, 2, "Cream"),
-    MissionClearLocation(STAGE_PRISON_ISLAND, MISSION_ALIGNMENT_DARK, 40, "Soldier"),
-    MissionClearLocation(STAGE_PRISON_ISLAND, MISSION_ALIGNMENT_NEUTRAL, None, "Goal Ring"),
-    MissionClearLocation(STAGE_PRISON_ISLAND, MISSION_ALIGNMENT_HERO, 5, "Disc"),
-    MissionClearLocation(STAGE_CIRCUS_PARK, MISSION_ALIGNMENT_DARK, 20, "Soldier"),
-    MissionClearLocation(STAGE_CIRCUS_PARK, MISSION_ALIGNMENT_NEUTRAL, None, "Goal Ring"),
-    MissionClearLocation(STAGE_CIRCUS_PARK, MISSION_ALIGNMENT_HERO, None, "Goal Ring"),
-    MissionClearLocation(STAGE_CENTRAL_CITY, MISSION_ALIGNMENT_DARK, 5, "Big Bomb"),
-    MissionClearLocation(STAGE_CENTRAL_CITY, MISSION_ALIGNMENT_HERO, 20, "Little Bomb")
+    MissionClearLocation(STAGE_CRYPTIC_CASTLE, MISSION_ALIGNMENT_DARK, 5,
+                         "Lantern", character=Characters.Eggman),
+    MissionClearLocation(STAGE_CRYPTIC_CASTLE, MISSION_ALIGNMENT_NEUTRAL, None,
+                         "Goal Ring"),
+    MissionClearLocation(STAGE_CRYPTIC_CASTLE, MISSION_ALIGNMENT_HERO, 2,
+                         "Cream", character=Characters.Amy),
+    MissionClearLocation(STAGE_PRISON_ISLAND, MISSION_ALIGNMENT_DARK, 40,
+                         "Soldier", character=Characters.Doom),
+    MissionClearLocation(STAGE_PRISON_ISLAND, MISSION_ALIGNMENT_NEUTRAL, None,
+                         "Goal Ring"),
+    MissionClearLocation(STAGE_PRISON_ISLAND, MISSION_ALIGNMENT_HERO, 5,
+                         "Disc", character=Characters.Charmy),
+    MissionClearLocation(STAGE_CIRCUS_PARK, MISSION_ALIGNMENT_DARK, 20,
+                         "Soldier", character=Characters.Eggman),
+    MissionClearLocation(STAGE_CIRCUS_PARK, MISSION_ALIGNMENT_NEUTRAL, None,
+                         "Goal Ring"),
+    MissionClearLocation(STAGE_CIRCUS_PARK, MISSION_ALIGNMENT_HERO, None,
+                         "Goal Ring"),
+    MissionClearLocation(STAGE_CENTRAL_CITY, MISSION_ALIGNMENT_DARK, 5,
+                         "Big Bomb", character=Characters.Doom),
+    MissionClearLocation(STAGE_CENTRAL_CITY, MISSION_ALIGNMENT_HERO, 20,
+                         "Little Bomb", character=Characters.Knuckles)
         .setRequirement(REGION_RESTRICTION_TYPES.Vacuum),
-    MissionClearLocation(STAGE_THE_DOOM, MISSION_ALIGNMENT_DARK, 60, "Soldier"),
-    MissionClearLocation(STAGE_THE_DOOM, MISSION_ALIGNMENT_NEUTRAL, None, "Goal Ring"),
-    MissionClearLocation(STAGE_THE_DOOM, MISSION_ALIGNMENT_HERO, 10, "Researcher")
+    MissionClearLocation(STAGE_THE_DOOM, MISSION_ALIGNMENT_DARK, 60,
+                         "Soldier", character=Characters.Doom),
+    MissionClearLocation(STAGE_THE_DOOM, MISSION_ALIGNMENT_NEUTRAL, None,
+                         "Goal Ring"),
+    MissionClearLocation(STAGE_THE_DOOM, MISSION_ALIGNMENT_HERO, 10,
+                         "Researcher", character=Characters.Maria)
         .setRequirement(REGION_RESTRICTION_TYPES.Heal),
-    MissionClearLocation(STAGE_SKY_TROOPS, MISSION_ALIGNMENT_DARK, 5, "Egg Ship")
+    MissionClearLocation(STAGE_SKY_TROOPS, MISSION_ALIGNMENT_DARK, 5,
+                         "Egg Ship", character=Characters.Doom)
         .setRequirement(REGION_RESTRICTION_TYPES.BlackArmsTurret),
-    MissionClearLocation(STAGE_SKY_TROOPS, MISSION_ALIGNMENT_NEUTRAL, None, "Goal Ring"),
-    MissionClearLocation(STAGE_SKY_TROOPS, MISSION_ALIGNMENT_HERO, 5, "Temple"),
-    MissionClearLocation(STAGE_MAD_MATRIX, MISSION_ALIGNMENT_DARK, 30, "Bomb"),
-    MissionClearLocation(STAGE_MAD_MATRIX, MISSION_ALIGNMENT_NEUTRAL, None, "Goal Ring"),
-    MissionClearLocation(STAGE_MAD_MATRIX, MISSION_ALIGNMENT_HERO, 4, "Terminal"),
-    MissionClearLocation(STAGE_DEATH_RUINS, MISSION_ALIGNMENT_DARK, None, "Goal Ring"),
-    MissionClearLocation(STAGE_DEATH_RUINS, MISSION_ALIGNMENT_HERO, 50, "Alien"),
-    MissionClearLocation(STAGE_THE_ARK, MISSION_ALIGNMENT_DARK, 4, "Defense Unit")
+    MissionClearLocation(STAGE_SKY_TROOPS, MISSION_ALIGNMENT_NEUTRAL, None,
+                         "Goal Ring"),
+    MissionClearLocation(STAGE_SKY_TROOPS, MISSION_ALIGNMENT_HERO, 5,
+                         "Temple", character=Characters.Eggman),
+    MissionClearLocation(STAGE_MAD_MATRIX, MISSION_ALIGNMENT_DARK, 30,
+                         "Bomb", character=Characters.Doom),
+    MissionClearLocation(STAGE_MAD_MATRIX, MISSION_ALIGNMENT_NEUTRAL, None,
+                         "Goal Ring"),
+    MissionClearLocation(STAGE_MAD_MATRIX, MISSION_ALIGNMENT_HERO, 4,
+                         "Terminal", character=Characters.Espio),
+    MissionClearLocation(STAGE_DEATH_RUINS, MISSION_ALIGNMENT_DARK, None,
+                         "Goal Ring", character=Characters.Doom),
+    MissionClearLocation(STAGE_DEATH_RUINS, MISSION_ALIGNMENT_HERO, 50,
+                         "Alien", character=Characters.Rouge),
+    MissionClearLocation(STAGE_THE_ARK, MISSION_ALIGNMENT_DARK, 4,
+                         "Defense Unit", character=Characters.Doom)
         .setRequirement(REGION_RESTRICTION_TYPES.Gun),
-    MissionClearLocation(STAGE_THE_ARK, MISSION_ALIGNMENT_NEUTRAL, None, "Goal Ring"),
-    MissionClearLocation(STAGE_AIR_FLEET, MISSION_ALIGNMENT_DARK, 1, "President Aircraft")
+    MissionClearLocation(STAGE_THE_ARK, MISSION_ALIGNMENT_NEUTRAL, None,
+                         "Goal Ring"),
+    MissionClearLocation(STAGE_AIR_FLEET, MISSION_ALIGNMENT_DARK, 1,
+                         "President Aircraft", character=Characters.Doom)
         .setRequirement(REGION_RESTRICTION_TYPES.Gun)
         .setCraftRequirement(REGION_RESTRICTION_TYPES.ShadowRifle, Options.LogicLevel.option_easy),
-    MissionClearLocation(STAGE_AIR_FLEET, MISSION_ALIGNMENT_NEUTRAL, None, "Goal Ring"),
-    MissionClearLocation(STAGE_AIR_FLEET, MISSION_ALIGNMENT_HERO, 35, "Alien"),
-    MissionClearLocation(STAGE_IRON_JUNGLE, MISSION_ALIGNMENT_DARK, 28, "Soldier"),
-    MissionClearLocation(STAGE_IRON_JUNGLE, MISSION_ALIGNMENT_NEUTRAL, None, "Goal Ring"),
-    MissionClearLocation(STAGE_IRON_JUNGLE, MISSION_ALIGNMENT_HERO, 1, "Egg Balloon")
+    MissionClearLocation(STAGE_AIR_FLEET, MISSION_ALIGNMENT_NEUTRAL, None,
+                         "Goal Ring"),
+    MissionClearLocation(STAGE_AIR_FLEET, MISSION_ALIGNMENT_HERO, 35,
+                         "Alien", character=Characters.Tails),
+    MissionClearLocation(STAGE_IRON_JUNGLE, MISSION_ALIGNMENT_DARK, 28,
+                         "Soldier", character=Characters.Eggman),
+    MissionClearLocation(STAGE_IRON_JUNGLE, MISSION_ALIGNMENT_NEUTRAL, None,
+                         "Goal Ring"),
+    MissionClearLocation(STAGE_IRON_JUNGLE, MISSION_ALIGNMENT_HERO, 1,
+                         "Egg Balloon", character=Characters.Omega)
         .setRequirement(REGION_RESTRICTION_TYPES.Gun)
         .setCraftRequirement(REGION_RESTRICTION_TYPES.ShadowRifle, Options.LogicLevel.option_easy),
-    MissionClearLocation(STAGE_SPACE_GADGET, MISSION_ALIGNMENT_DARK, 6, "Defense Unit")
+    MissionClearLocation(STAGE_SPACE_GADGET, MISSION_ALIGNMENT_DARK, 6,
+                         "Defense Unit", character=Characters.Doom)
         .setRequirement(REGION_RESTRICTION_TYPES.Gun),
-    MissionClearLocation(STAGE_SPACE_GADGET, MISSION_ALIGNMENT_NEUTRAL, None, "Goal Ring"),
-    MissionClearLocation(STAGE_SPACE_GADGET, MISSION_ALIGNMENT_HERO, None, "Goal Ring"),
-    MissionClearLocation(STAGE_LOST_IMPACT, MISSION_ALIGNMENT_NEUTRAL, None, "Goal Ring"),
-    MissionClearLocation(STAGE_LOST_IMPACT, MISSION_ALIGNMENT_HERO, 35, "Artificial Chaos"),
-    MissionClearLocation(STAGE_GUN_FORTRESS, MISSION_ALIGNMENT_DARK, 3, "Computer")
+    MissionClearLocation(STAGE_SPACE_GADGET, MISSION_ALIGNMENT_NEUTRAL, None,
+                         "Goal Ring"),
+    MissionClearLocation(STAGE_SPACE_GADGET, MISSION_ALIGNMENT_HERO, None,
+                         "Goal Ring"),
+    MissionClearLocation(STAGE_LOST_IMPACT, MISSION_ALIGNMENT_NEUTRAL, None,
+                         "Goal Ring"),
+    MissionClearLocation(STAGE_LOST_IMPACT, MISSION_ALIGNMENT_HERO, 35,
+                         "Artificial Chaos", character=Characters.Maria),
+    MissionClearLocation(STAGE_GUN_FORTRESS, MISSION_ALIGNMENT_DARK, 3,
+                         "Computer", character=Characters.Doom)
     .setRequirement(REGION_RESTRICTION_TYPES.ShootOrTurret),
-    MissionClearLocation(STAGE_GUN_FORTRESS, MISSION_ALIGNMENT_HERO, None, "Goal Ring"),
-    MissionClearLocation(STAGE_BLACK_COMET, MISSION_ALIGNMENT_DARK, 50, "Soldier"),
-    MissionClearLocation(STAGE_BLACK_COMET, MISSION_ALIGNMENT_HERO, None, "Goal Ring"),
-    MissionClearLocation(STAGE_LAVA_SHELTER, MISSION_ALIGNMENT_DARK, 5, "Defense"),
-    MissionClearLocation(STAGE_LAVA_SHELTER, MISSION_ALIGNMENT_HERO, None, "Goal Ring"),
-    MissionClearLocation(STAGE_COSMIC_FALL, MISSION_ALIGNMENT_DARK, None, "Goal Ring"),
-    MissionClearLocation(STAGE_COSMIC_FALL, MISSION_ALIGNMENT_HERO, None, "Computer Room"),
-    MissionClearLocation(STAGE_FINAL_HAUNT, MISSION_ALIGNMENT_DARK, 4, "Shield"),
-    MissionClearLocation(STAGE_FINAL_HAUNT, MISSION_ALIGNMENT_HERO, None, "Goal Ring"),
-    MissionClearLocation(STAGE_THE_LAST_WAY, MISSION_ALIGNMENT_NEUTRAL, None, None)
+    MissionClearLocation(STAGE_GUN_FORTRESS, MISSION_ALIGNMENT_HERO, None,
+                         "Goal Ring"),
+    MissionClearLocation(STAGE_BLACK_COMET, MISSION_ALIGNMENT_DARK, 50,
+                         "Soldier", character=Characters.Doom),
+    MissionClearLocation(STAGE_BLACK_COMET, MISSION_ALIGNMENT_HERO, None,
+                         "Goal Ring"),
+    MissionClearLocation(STAGE_LAVA_SHELTER, MISSION_ALIGNMENT_DARK, 5,
+                         "Defense", character=Characters.Eggman),
+    MissionClearLocation(STAGE_LAVA_SHELTER, MISSION_ALIGNMENT_HERO, None,
+                         "Goal Ring"),
+    MissionClearLocation(STAGE_COSMIC_FALL, MISSION_ALIGNMENT_DARK, None,
+                         "Goal Ring", character=Characters.Doom),
+    MissionClearLocation(STAGE_COSMIC_FALL, MISSION_ALIGNMENT_HERO, None,
+                         "Computer Room", character=Characters.Vector),
+    MissionClearLocation(STAGE_FINAL_HAUNT, MISSION_ALIGNMENT_DARK, 4,
+                         "Shield", character=Characters.Doom),
+    MissionClearLocation(STAGE_FINAL_HAUNT, MISSION_ALIGNMENT_HERO, None,
+                         "Goal Ring"),
+    MissionClearLocation(STAGE_THE_LAST_WAY, MISSION_ALIGNMENT_NEUTRAL, None,
+                         None)
         .setDistribution(
         {
             REGION_INDICES.THE_LAST_WAY_CHECKPOINT_SEVEN: 1
@@ -442,7 +499,7 @@ BossClearLocations = \
 
 def GetEnemyLocationName(stageId, enemyClass, objectName, i):
     id_name = int(str(LOCATION_ID_PLUS) + str(1) + str(stageId) + str(enemyClass) + str(i) + "3")
-    objective_location_name = "Enemysanity:" + (LEVEL_ID_TO_LEVEL[stageId] + " " + objectName + " (" + str(i) + ")")
+    objective_location_name = "Enemysanity Count:" + (LEVEL_ID_TO_LEVEL[stageId] + " " + objectName + " (" + str(i) + ")")
 
     return id_name, objective_location_name
 
@@ -905,7 +962,7 @@ def create_locations(world, regions: Dict[str, Region]):
             world.options.exclude_locations.value.add(location.name)
 
         default_region_index = Regions.GetDefaultCheckpointRegionForStage(world, location.stageId)
-        within_region = regions[Regions.stage_id_to_region(location.stageId, default_region_index)]
+        within_region = regions[Levels.stage_id_to_region(location.stageId, default_region_index)]
         completion_location = ShadowTheHedgehogLocation(world.player, location.name, location.locationId, within_region)
 
         within_region.locations.append(completion_location)
@@ -955,7 +1012,7 @@ def create_locations(world, regions: Dict[str, Region]):
                     # TODO: handling here for which region it's actually meant to end up in
                     # especially with checkpoint shuffle
                     default_region_index = Regions.GetDefaultCheckpointRegionForStage(world, location.stageId)
-                    within_region = regions[Regions.stage_id_to_region(location.stageId, default_region_index)]
+                    within_region = regions[Levels.stage_id_to_region(location.stageId, default_region_index)]
                     completion_location = ShadowTheHedgehogLocation(world.player, location.name, location.locationId, within_region)
                     within_region.locations.append(completion_location)
                     #print("Add location", within_region.name, completion_location.name)
@@ -967,6 +1024,9 @@ def create_locations(world, regions: Dict[str, Region]):
 
             if world.options.exclude_go_mode_items and enemy.stageId == STAGE_THE_LAST_WAY and \
                     not world.options.include_last_way_shuffle:
+                continue
+
+            if not world.options.last_way_enemysanity and enemy.stageId == STAGE_THE_LAST_WAY:
                 continue
 
             max_required = ShadowUtils.getMaxRequired(
@@ -986,7 +1046,7 @@ def create_locations(world, regions: Dict[str, Region]):
             if enemy.count <= max_required:
                 if enemy.count % frequency_required == 0 or max_required == enemy.count:
                     default_region_index = Regions.GetDefaultCheckpointRegionForStage(world, enemy.stageId)
-                    within_region = regions[Regions.stage_id_to_region(enemy.stageId, default_region_index)]
+                    within_region = regions[Levels.stage_id_to_region(enemy.stageId, default_region_index)]
                     #within_region = regions[Regions.get_max_stage_region_id(enemy.stageId)]
                     completion_location = ShadowTheHedgehogLocation(world.player, enemy.name, enemy.locationId, within_region)
                     within_region.locations.append(completion_location)
@@ -1002,7 +1062,7 @@ def create_locations(world, regions: Dict[str, Region]):
 
             found_check_level_info = [ c for c in CheckpointLocations if c.stageId == checkpoint.stageId ][0]
             region_index = found_check_level_info.getRegion(checkpoint.count)
-            within_region = regions[Regions.stage_id_to_region(checkpoint.stageId, region_index)]
+            within_region = regions[Levels.stage_id_to_region(checkpoint.stageId, region_index)]
             completion_location = ShadowTheHedgehogLocation(world.player, checkpoint.name, checkpoint.locationId, within_region)
             within_region.locations.append(completion_location)
 
@@ -1017,14 +1077,14 @@ def create_locations(world, regions: Dict[str, Region]):
 #
 #            found_key_level_info = [c for c in KeyLocations if c.stageId == key.stageId][0]
 #            region_index = found_key_level_info.getRegion(key.count)
-#            within_region = regions[Regions.stage_id_to_region(key.stageId, region_index)]
+#            within_region = regions[Levels.stage_id_to_region(key.stageId, region_index)]
 #            completion_location = ShadowTheHedgehogLocation(world.player, key.name, key.locationId, within_region)
 #            within_region.locations.append(completion_location)
 
     for boss in boss_locations:
         if boss.stageId not in world.available_levels:
             continue
-        region_name = Regions.boss_stage_id_to_region(boss.stageId)
+        region_name = Levels.boss_stage_id_to_region(boss.stageId)
         if region_name not in regions:
             continue
         if boss.stageId == BOSS_DEVIL_DOOM:
@@ -1066,9 +1126,9 @@ def create_locations(world, regions: Dict[str, Region]):
 
         if token.stageId not in Levels.BOSS_STAGES:
             default_region_index = Regions.GetDefaultCheckpointRegionForStage(world, token.stageId)
-            within_region = regions[Regions.stage_id_to_region(token.stageId, default_region_index)]
+            within_region = regions[Levels.stage_id_to_region(token.stageId, default_region_index)]
         else:
-            within_region = regions[Regions.boss_stage_id_to_region(token.stageId)]
+            within_region = regions[Levels.boss_stage_id_to_region(token.stageId)]
 
         token_location = ShadowTheHedgehogLocation(world.player, token.name, token.locationId,
                                                         within_region)
@@ -1090,10 +1150,10 @@ def create_locations(world, regions: Dict[str, Region]):
             continue
 
         if warp.stageId in Levels.BOSS_STAGES:
-            within_region = regions[Regions.boss_stage_id_to_region(warp.stageId)]
+            within_region = regions[Levels.boss_stage_id_to_region(warp.stageId)]
         else:
             default_region_index = Regions.GetDefaultCheckpointRegionForStage(world, warp.stageId)
-            within_region = regions[Regions.stage_id_to_region(warp.stageId, default_region_index)]
+            within_region = regions[Levels.stage_id_to_region(warp.stageId, default_region_index)]
         warp_location = ShadowTheHedgehogLocation(world.player, warp.name, warp.locationId,
                                                    within_region)
         within_region.locations.append(warp_location)
@@ -1109,7 +1169,7 @@ def create_locations(world, regions: Dict[str, Region]):
             if world.options.exclude_go_mode_items and box_location.stageId == STAGE_THE_LAST_WAY and \
                     not world.options.include_last_way_shuffle:
                 continue
-            stage_region_name = Regions.stage_id_to_region(box_location.stageId, box_location.regionId)
+            stage_region_name = Levels.stage_id_to_region(box_location.stageId, box_location.regionId)
             stage_region = regions[stage_region_name]
             box_location = ShadowTheHedgehogLocation(world.player, box_location.name,
                                                        box_location.locationId, stage_region)
@@ -1126,7 +1186,7 @@ def create_locations(world, regions: Dict[str, Region]):
                 continue
 
             if core_location.regionId is not None:
-                stage_region_name = Regions.stage_id_to_region(core_location.stageId, core_location.regionId)
+                stage_region_name = Levels.stage_id_to_region(core_location.stageId, core_location.regionId)
                 stage_region = regions[stage_region_name]
                 core_location = ShadowTheHedgehogLocation(world.player, core_location.name,
                                                            core_location.locationId, stage_region)
@@ -1143,7 +1203,7 @@ def create_locations(world, regions: Dict[str, Region]):
                     not world.options.include_last_way_shuffle:
                 continue
 
-            stage_region_name = Regions.stage_id_to_region(door_location.stageId, door_location.regionId)
+            stage_region_name = Levels.stage_id_to_region(door_location.stageId, door_location.regionId)
             stage_region = regions[stage_region_name]
             door_location = ShadowTheHedgehogLocation(world.player, door_location.name,
                                                        door_location.locationId, stage_region)
@@ -1158,7 +1218,7 @@ def create_locations(world, regions: Dict[str, Region]):
                     not world.options.include_last_way_shuffle:
                 continue
 
-            stage_region_name = Regions.stage_id_to_region(beetle_location.stageId, beetle_location.regionId)
+            stage_region_name = Levels.stage_id_to_region(beetle_location.stageId, beetle_location.regionId)
             stage_region = regions[stage_region_name]
             beetle_location = ShadowTheHedgehogLocation(world.player, beetle_location.name,
                                                        beetle_location.locationId, stage_region)
@@ -1173,7 +1233,7 @@ def create_locations(world, regions: Dict[str, Region]):
                     not world.options.include_last_way_shuffle:
                 continue
 
-            stage_region_name = Regions.stage_id_to_region(key_location.stageId, key_location.regionId)
+            stage_region_name = Levels.stage_id_to_region(key_location.stageId, key_location.regionId)
             stage_region = regions[stage_region_name]
             key_location = ShadowTheHedgehogLocation(world.player, key_location.name,
                                                        key_location.locationId, stage_region)
@@ -1222,7 +1282,7 @@ def create_locations(world, regions: Dict[str, Region]):
                     if (objective_location.stageId, objective_location.regionId) in NON_OBJECTIVESANITY_REGIONS:
                         continue
 
-                    stage_region_name = Regions.stage_id_to_region(objective_location.stageId, objective_location.regionId)
+                    stage_region_name = Levels.stage_id_to_region(objective_location.stageId, objective_location.regionId)
                     stage_region = regions[stage_region_name]
                     new_objective_location = ShadowTheHedgehogLocation(world.player, objective_location.name,
                                                                 objective_location.locationId, stage_region)
@@ -1243,10 +1303,13 @@ def create_locations(world, regions: Dict[str, Region]):
                     not world.options.include_last_way_shuffle:
                 continue
 
+            if not world.options.last_way_enemysanity and objective_location.stageId == STAGE_THE_LAST_WAY:
+                continue
+
             if objective_location.stageId in Levels.BOSS_STAGES:
-                stage_region_name = Regions.boss_stage_id_to_region(objective_location.stageId, objective_location.regionId)
+                stage_region_name = Levels.boss_stage_id_to_region(objective_location.stageId, objective_location.regionId)
             else:
-                stage_region_name = Regions.stage_id_to_region(objective_location.stageId, objective_location.regionId)
+                stage_region_name = Levels.stage_id_to_region(objective_location.stageId, objective_location.regionId)
 
             stage_region = regions[stage_region_name]
             new_objective_location = ShadowTheHedgehogLocation(world.player, objective_location.name,
@@ -1264,9 +1327,9 @@ def create_locations(world, regions: Dict[str, Region]):
                 continue
 
             if objective_location.stageId in Levels.BOSS_STAGES:
-                stage_region_name = Regions.boss_stage_id_to_region(objective_location.stageId, objective_location.regionId)
+                stage_region_name = Levels.boss_stage_id_to_region(objective_location.stageId, objective_location.regionId)
             else:
-                stage_region_name = Regions.stage_id_to_region(objective_location.stageId, objective_location.regionId)
+                stage_region_name = Levels.stage_id_to_region(objective_location.stageId, objective_location.regionId)
 
             stage_region = regions[stage_region_name]
             new_objective_location = ShadowTheHedgehogLocation(world.player, objective_location.name,
@@ -1279,7 +1342,7 @@ def create_locations(world, regions: Dict[str, Region]):
 
     SetRegionEvents(world, world.player, regions)
 
-    end_region = regions[Regions.boss_stage_id_to_region(Levels.BOSS_DEVIL_DOOM)]
+    end_region = regions[Levels.boss_stage_id_to_region(Levels.BOSS_DEVIL_DOOM)]
     devil_doom_location = ShadowTheHedgehogLocation(world.player, end_location[0].name, end_location[0].locationId, end_region)
     end_region.locations.append(devil_doom_location)
 
@@ -1503,6 +1566,11 @@ def count_locations(world):
                                       (not world.options.exclude_go_mode_items or x.stageId != STAGE_THE_LAST_WAY or
                                        world.options.include_last_way_shuffle)]
 
+        if not world.options.last_way_enemysanity:
+            banned_enemy_sanity_object_checks = [ x for x in enemy_sanity_object_checks if x.stageId == STAGE_THE_LAST_WAY]
+            for i in banned_enemy_sanity_object_checks:
+                enemy_sanity_object_checks.remove(i)
+
         count = increment_location_count(count, len(enemy_sanity_object_checks), "oe")
 
     if world.options.item_sanity:
@@ -1672,7 +1740,7 @@ def SetStoryClearEvents(world, player, regions):
 
         view_name = Names.GetMissionClearEventName(story.start_stage_id, story.alignment_id)
         default_region_index = Regions.GetDefaultCheckpointRegionForStage(world, story.start_stage_id)
-        region_name = Regions.stage_id_to_region(story.start_stage_id, default_region_index)
+        region_name = Levels.stage_id_to_region(story.start_stage_id, default_region_index)
         o_region = regions[region_name]
         story_clear_event = ShadowTheHedgehogLocation(player, view_name, None, o_region)
         story_clear_event.show_in_spoiler = True
@@ -1685,7 +1753,7 @@ def SetStoryClearEvents(world, player, regions):
               and (l.end_stage_id is not None and l.end_stage_id in world.available_levels)]:
         view_name = Names.GetBossClearEventName(w.boss, w.start_stage_id, w.alignment_id)
         default_region_index = Regions.GetDefaultCheckpointRegionForStage(world, w.start_stage_id)
-        region_name = Regions.stage_id_to_region(w.start_stage_id, default_region_index)
+        region_name = Levels.stage_id_to_region(w.start_stage_id, default_region_index)
         o_region = regions[region_name]
         story_clear_event = ShadowTheHedgehogLocation(player, view_name, None, o_region)
         story_clear_event.show_in_spoiler = True
@@ -1706,7 +1774,7 @@ def SetRegionEvents(world, player, regions):
         has_check_zero = HasCheckpointZero(level)
         if has_check_zero:
             view_name = Names.GetDistributionRegionEventName(level, 0)
-            region_name = Regions.stage_id_to_region(level, 0)
+            region_name = Levels.stage_id_to_region(level, 0)
             o_region = regions[region_name]
             region_event = ShadowTheHedgehogLocation(player, view_name, None, o_region)
             region_event.show_in_spoiler = False
@@ -1725,7 +1793,7 @@ def SetRegionEvents(world, player, regions):
             continue
 
         view_name = Names.GetDistributionRegionEventName(region.stageId, region.regionIndex)
-        region_name = Regions.stage_id_to_region(region.stageId, region.regionIndex)
+        region_name = Levels.stage_id_to_region(region.stageId, region.regionIndex)
         o_region = regions[region_name]
         region_event = ShadowTheHedgehogLocation(player, view_name, None, o_region)
         region_event.show_in_spoiler = False

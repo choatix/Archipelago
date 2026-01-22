@@ -102,9 +102,7 @@ class ShtHWorld(World):
 
         super(ShtHWorld, self).__init__(*args, **kwargs)
 
-    def set_rules(self):
-        Rules.set_rules(self.multiworld, self, self.player)
-
+    def emergency_sphere_one_handler(self):
         sphere_one_useful = []
         if not hasattr(self.multiworld, "re_gen_passthrough"):
             while len(sphere_one_useful) == 0:
@@ -114,11 +112,11 @@ class ShtHWorld(World):
                 if len(sphere_one_useful) > 0:
                     break
 
-                locked_items = [ c for c in sphere_one_locs if c.locked and c not in self.starting_items]
+                locked_items = [c for c in sphere_one_locs if c.locked and c not in self.starting_items]
                 for item in locked_items:
                     print("Locked item given:", item.item.name)
                     self.starting_items.append(item)
-                    item = Item(item.item.name,ItemClassification.progression, None, self.player)
+                    item = Item(item.item.name, ItemClassification.progression, None, self.player)
                     self.multiworld.push_precollected(item)
 
                 if len(locked_items) != 0:
@@ -133,16 +131,19 @@ class ShtHWorld(World):
         # Test here
 
         locs = self.get_locations()
-        l_count = len([ l for l in locs if not l.locked ])
+        l_count = len([l for l in locs if not l.locked])
         l_x = Locations.count_locations(self)
 
         if l_count != l_x:
             print("Invalid location counting")
 
-        player_items = [ a for a in self.multiworld.itempool if a.player == self.player ]
+        player_items = [a for a in self.multiworld.itempool if a.player == self.player]
         if len(player_items) not in [l_count, l_x]:
             print("Invalid item pool vs locations")
 
+    def set_rules(self):
+        Rules.set_rules(self.multiworld, self, self.player)
+        #self.emergency_sphere_one_handler()
 
     def check_invalid_configurations(self):
 
@@ -631,6 +632,9 @@ class ShtHWorld(World):
                         self.first_checkpoints[int(stage_str)] = index
                     print(self.first_checkpoints)
 
+                if "last_way_enemysanity" in passthrough:
+                    self.options.last_way_enemysanity = passthrough["last_way_enemysanity"]
+
         # Set maximum of levels required
         # Exclude missions listed in exclude_locations
         maximum_force_missions = self.options.force_objective_sanity_max.value
@@ -924,7 +928,9 @@ class ShtHWorld(World):
             "item_sanity": self.options.item_sanity.value,
             "checkpoint_shuffle": self.options.checkpoint_shuffle.value,
             "first_checkpoints": self.first_checkpoints,
-            "checkpoint_convenience": self.options.checkpoint_convenience.value
+            "checkpoint_convenience": self.options.checkpoint_convenience.value,
+            "music_shuffle": self.options.music_shuffle.value,
+            "last_way_enemysanity": self.options.last_way_enemysanity.value
         }
 
         return slot_data

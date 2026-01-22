@@ -472,6 +472,13 @@ class PercentOverrides(OptionDict):
     valid_keys = Names.getValidPercentOverrides()
     default = {}
 
+class MusicShuffle(Toggle):
+    """
+        Toggle for shuffling the stage music upon entering a stage
+    """
+    display_name = "Music Shuffle"
+
+
 class WeaponGroups(OptionSet):
     """
     Group together confirmed sets of weapon items to unlock them in given batches.
@@ -866,6 +873,21 @@ class TrapFillPercentage(Range):
     range_end = 100
     default = 5
 
+
+class PlandoCheckpointSpawns(OptionDict):
+    """
+        Advanced YAML setting to provide keys to dictate percentage based overrides.
+        Read the setup_en.yaml for more information.
+    """
+    display_name = "Plando Checkpoint Spawns"
+    default = {}
+
+class LastWayEnemysanity(DefaultOnToggle):
+    """
+        Toggle to disable enemy sanity for last way. Only applicable when enemysanity is enabled.
+    """
+    display_name = "Last Way Enemysanity"
+
 @dataclass
 class ShadowTheHedgehogOptions(PerGameCommonOptions):
     #goal: Goal
@@ -968,6 +990,10 @@ class ShadowTheHedgehogOptions(PerGameCommonOptions):
     checkpoint_trap_enabled: CheckpointTraps
     poison_trap_enabled: PoisonTraps
     trap_fill_percentage: TrapFillPercentage
+
+    plando_checkpoint_spawns: PlandoCheckpointSpawns
+    music_shuffle: MusicShuffle
+    last_way_enemysanity: LastWayEnemysanity
 
 
 shadow_option_groups = [

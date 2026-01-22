@@ -4,12 +4,17 @@ import pkgutil
 import sys
 import time
 
-from . import Levels, Names, ShTHClient, Objects
+from BaseClasses import MultiWorld
+from . import Levels, Names, ShTHClient, Objects, ShtHWorld, Options
 from .Items import GetAllItemInfo
+from .Levels import INDIVIDUAL_LEVEL_REGIONS
 from .Locations import GetAllLocationInfo
+from .Names import REGION_INDICES, REGION_RESTRICTION_TYPES
 from .Objects import DESIRABLE_OBJECTS
 from .Objects_AirFleet import DESIRABLE_OBJECTS_AIR_FLEET
 from .Objects_GlyphicCanyon import DESIRABLE_OBJECTS_GLYPHIC_CANYON
+from .Objects_PrisonIsland import DESIRABLE_OBJECTS_PRISON_ISLAND
+from .Options import ShadowTheHedgehogOptions
 
 
 def LoadSetSummary():
@@ -136,7 +141,7 @@ def LoadSetSummary():
 
                 if len(found) == 0:
                     s = (f"SETObject(ObjectType.{type_string}, Levels.STAGE_{current_level}, {index_value}, \'{index_value}\', "
-                         f"\r\n\tregion=REGION_INDICES.{other_data_to_show}, weapon=Weapons.WEAPONS.{secondary_type_string}),")
+                         f"\r\n\tregion=REGION_INDICES.{other_data_to_show}, weapon=WEAPONS.{secondary_type_string}),")
                     print(s)
             else:
                 print("No key for:", current_level, current_level_lookup, inverted)
@@ -151,8 +156,95 @@ def LoadSetSummary():
     #for l in info_for_unknown_types:
     #    print(l)
 
-LoadSetSummary()
-sys.exit(1)
+#LoadSetSummary()
+#sys.exit(1)
+
+def TestCheckpointPathing():
+    CheckLocations = []
+    all_region_names = REGION_INDICES.__dict__.items()
+
+    LevelRegions = Levels.INDIVIDUAL_LEVEL_REGIONS
+
+    for stage in [l for l in Levels.ALL_STAGES if l not in Levels.BOSS_STAGES]:
+        stage_name = Levels.LEVEL_ID_TO_LEVEL[stage].replace(" ", "_")
+        checkpoint_keys = list([k for k in all_region_names if
+                                k[0].startswith(stage_name.upper()) and "CHECKPOINT_" in k[0]])
+
+        checkpoint_indexes = [ c[1] for c in checkpoint_keys ]
+
+        index_keys = list([k for k in all_region_names if
+                           k[0].startswith(stage_name.upper())])
+
+
+
+        for key in [ k for k in index_keys if k not in checkpoint_keys ]:
+            regionsAfter = None
+            free = False
+            inescapable = False
+            iterator = key[1]
+            while regionsAfter is None or (not free and not inescapable):
+                regionsAfter = [ l for l in LevelRegions if l.stageId == stage and iterator in l.fromRegions]
+                if any([x for x in regionsAfter if x.regionIndex in checkpoint_indexes and  REGION_RESTRICTION_TYPES.NoRestriction in x.restrictionTypes]):
+
+                    free = True
+                    break
+                elif len(regionsAfter) == 0:
+
+                    if iterator != max([ i[1] for i in index_keys]):
+                        # Is a diversion route, by default, able to go straight back to its from region?
+                        print("diversion route", key)
+                        break
+
+                    inescapable = True
+                elif len(regionsAfter) == 1 and REGION_RESTRICTION_TYPES.NoRestriction in regionsAfter[0].restrictionTypes:
+                    iterator = regionsAfter[0].regionIndex
+                    continue
+                else:
+                    print("TODO, find path from", key)
+                    break
+
+            if free:
+                print("Free path from", key)
+            elif inescapable:
+                print("No path from", key)
+            #else:
+            #    print("Shouldn't get here")
+
+
+
+
+
+
+
+
+
+    return CheckLocations
+
+
+def TestRegionIndicies():
+    regions = INDIVIDUAL_LEVEL_REGIONS
+
+    errors = 0
+
+    previous = None
+    previousStage = None
+    print(len(regions))
+    for region in regions:
+
+        if previous is not None and previousStage is not None:
+            if previousStage != region.stageId:
+                pass
+                #print("Change to level", region.stageId, region.regionIndex)
+            else:
+                if region.regionIndex < previous:
+                    print("Error with", region.stageId, region.regionIndex)
+                    errors += 1
+
+        previous = region.regionIndex
+        previousStage = region.stageId
+
+    return errors
+
 
 def TestItemIds():
     items = GetAllItemInfo()
@@ -199,29 +291,6 @@ def TestLocationIds():
 
     return error_count
 
-def TestLevelRegions():
-    print("TLR")
-    region_definitions = Levels.INDIVIDUAL_LEVEL_REGIONS
-
-    last_region = None
-    for region in region_definitions:
-        if last_region is None:
-            last_region = region
-            continue
-
-        if region.stageId != last_region.stageId:
-            last_region = region
-            continue
-
-        if region.regionIndex != (last_region.regionIndex + 1):
-            print("Error with", region)
-
-        last_region = region
-
-    region_indicies = Names.REGION_INDICES
-
-
-    pass
 
 previous_stage = None
 enemy_for_stage = None
@@ -247,13 +316,39 @@ for item in DESIRABLE_OBJECTS:
         if enemy_for_stage:
             enemy_for_stage = False
 
-for item in DESIRABLE_OBJECTS_GLYPHIC_CANYON:
-    o = ShTHClient.EnemyToCodeString(item)
+
+def TestSlotData():
+    mw = MultiWorld(1)
+    world = ShtHWorld(mw, 1)
+
+    o = ShadowTheHedgehogOptions.__dict__
     print(o)
 
-errors =  TestItemIds()
+    slot_data = ShtHWorld.fill_slot_data(world)
+
+
+    for option in world.options.__dict__:
+        print(option)
+
+
+#for item in DESIRABLE_OBJECTS_PRISON_ISLAND:
+#    o = ShTHClient.EnemyToCodeString(item)
+#    print(o)
+
+errors = 0
+
+#errors = TestSlotData()
+#TestCheckpointPathing()
+
+errors +=  TestItemIds()
 errors += TestLocationIds()
 errors += TestLocationStageReference()
+errors += TestRegionIndicies()
+
+
+print("ERROR count is", errors)
 
 if errors > 0:
     sys.exit(1)
+
+
