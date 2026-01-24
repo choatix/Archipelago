@@ -222,7 +222,7 @@ class KeyCollectionMethod(Choice):
     option_both = 2
     default = option_arch
 
-class Checkpointsanity(DefaultOnToggle):
+class Checkpointsanity(Toggle):
     """
         Determines whether checkpoint sanity is enabled.
         This only adds checks and does not add anything to the pool.
@@ -238,7 +238,7 @@ class CheckpointShuffle(Choice):
     option_off = 0
     option_unlocks_only = 1
     option_start_and_unlock = 2
-    default = option_unlocks_only
+    default = option_off
 
 class CheckpointConvenience(DefaultOnToggle):
     """
