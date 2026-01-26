@@ -26,8 +26,8 @@ def GetKeyRule(options, stage, player):
 
     if options.key_collection_method in [Options.KeyCollectionMethod.option_local, Options.KeyCollectionMethod.option_both]:
         relevant_keys_base = Objects.GetKeyLocations(stage)
-        #relevant_key_base = [k for k in Locations.KeyLocations if k.stageId == stage]
-        key_regions = relevant_keys_base[0].region
+        key_regions = [ k.region for k in relevant_keys_base ]
+
         region_items = [Names.GetDistributionRegionEventName(stage, k) for k in key_regions]
         region_names = list(set([Levels.stage_id_to_region(stage, k) for k in key_regions]))
         region_list.extend(region_items)
@@ -70,6 +70,11 @@ def handle_path_rules(options, player, additional_level_region, path_type):
     if additional_level_region.hardLogicOnly:
         if options.logic_level != Options.LogicLevel.option_hard:
             #print("Path denied", additional_level_region)
+            rule = lambda state: False
+            return rule, indirects
+
+    if additional_level_region.iccLogicOnly:
+        if options.chaos_control_logic_level not in [ Options.ChaosControlLogicLevel.option_hard, Options.ChaosControlLogicLevel.option_intermediate]:
             rule = lambda state: False
             return rule, indirects
 
@@ -187,6 +192,9 @@ def handle_path_rules(options, player, additional_level_region, path_type):
         if Names.REGION_RESTRICTION_TYPES.Torch in additional_level_region.restrictionTypes:
             rule = Weapons.GetRuleByWeaponRequirement(player, Weapons.WeaponAttributes.TORCH,
                                                       additional_level_region)
+
+            if rule is None:
+                raise Exception("Invalid rules")
 
         w_rule = lambda state: True
         if Names.REGION_RESTRICTION_TYPES.VacuumOrShot in additional_level_region.restrictionTypes:
@@ -377,9 +385,11 @@ def CalculateObjectiveValueForGate(value, max_gates, gate_no, gate_density, rate
     return expected_result
 
 
-
 def GetGateKeyRule(world, player, gate_no):
     # Add weapon unlocks as gate requirement
+
+    if int(gate_no) == 0:
+        return lambda state: True
 
     gate_density = world.options.gate_density
     reqs = {}
@@ -425,7 +435,9 @@ def GetGateKeyRule(world, player, gate_no):
 
             world.gate_requirements[gate_no] = reqs
         elif world.options.gate_unlock_requirement == Options.GateUnlockRequirement.option_chaos_emeralds:
-            if gate_no == 1:
+            if gate_no == 0:
+                reqs = {}
+            elif gate_no == 1:
                 reqs = {
                     "Green Chaos Emerald": 1
                 }
@@ -453,6 +465,12 @@ def GetGateKeyRule(world, player, gate_no):
                 reqs = {
                     "Red Chaos Emerald": 1
                 }
+            else:
+                print("Invalid data found for gate/type:", gate_no)
+                raise Exception("Invalid gate count for this mode")
+
+            world.gate_requirements[gate_no] = reqs
+
         else:
             print("Unknown requirements:", reqs)
 
@@ -580,6 +598,11 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
     if world.options.logic_level != Options.LogicLevel.option_hard:
         hard_only = [ r for r in Levels.INDIVIDUAL_LEVEL_REGIONS if r.hardLogicOnly]
         skip_regions.extend([ (h.stageId, h.regionIndex) for h in hard_only])
+
+    if world.options.chaos_control_logic_level not in [
+        Options.ChaosControlLogicLevel.option_hard, Options.ChaosControlLogicLevel.option_intermediate]:
+        icc_only = [ r for r in Levels.INDIVIDUAL_LEVEL_REGIONS if r.iccLogicOnly ]
+        skip_regions.extend([ (h.stageId, h.regionIndex) for h in icc_only])
 
     for additional_level_region in Levels.INDIVIDUAL_LEVEL_REGIONS:
         if additional_level_region.stageId not in world.available_levels:
@@ -1148,7 +1171,8 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
 
     e_rule = lambda state, g_has=goal_has: check_final_rule(state, player, goal_has)
 
-    if world.options.include_last_way_shuffle and world.options.level_progression != Options.LevelProgression.option_select:
+    if world.options.include_last_way_shuffle and world.options.level_progression != Options.LevelProgression.option_select\
+            and world.options.story_shuffle != Options.StoryShuffle.option_off:
 
         # handle requirement that DD must be found in the level shuffle!
         devil_doom_story_region = Regions.boss_stage_id_to_story_region(Levels.BOSS_DEVIL_DOOM)
@@ -1160,8 +1184,13 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
     else:
         default_region_index = Regions.GetDefaultCheckpointRegionForStage(world, Levels.STAGE_THE_LAST_WAY)
         last_way_region = multiworld.get_region(Levels.stage_id_to_region(Levels.STAGE_THE_LAST_WAY, default_region_index), player)
+
+        #if not world.options.include_last_way_shuffle:
         lw_entrance = connect(world.player, 'LastStoryToLastWay', multiworld.get_region("Menu", player),
-                last_way_region, rule=e_rule)
+            last_way_region, rule=e_rule)
+        multiworld.register_indirect_condition(
+            last_way_region, lw_entrance)
+
         # Ensure TLW is beatable
         tlw_location_id, tlw_location_name = Levels.GetLevelCompletionNames(Levels.STAGE_THE_LAST_WAY, Levels.MISSION_ALIGNMENT_NEUTRAL)
         last_way_rule = lambda state: state.can_reach_location(tlw_location_name, player)
@@ -1172,8 +1201,7 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
         entrance.access_rule = lambda state, lw_rule=last_way_rule, er=e_rule: er(state) and lw_rule(state)
         multiworld.register_indirect_condition(
             last_way_region,entrance)
-        multiworld.register_indirect_condition(
-            last_way_region, lw_entrance)
+
         multiworld.register_indirect_condition(
             dd_region, entrance)
 

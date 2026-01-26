@@ -2109,7 +2109,11 @@ async def check_save_loaded(ctx):
         if (not ctx.expected_version_check and
                 ctx.required_client_version is not None and
                 expected_version != ctx.required_client_version):
-            logger.error("Unexpected version from generation and runtime. Client errors on older versions are likely to occur.")
+            logger.error("Unexpected version from generation and runtime. "
+                         " Generated version: %s"
+                         " Player version: %s "
+                         " Client errors on older versions are likely to occur.",
+                         ctx.required_client_version, expected_version)
             ctx.expected_version_check = True
 
         # Check for mission completes
@@ -5601,6 +5605,7 @@ def CheckGateConditions(ctx: ShTHContext):
     current_items = [ info[i.item].name for i in ctx.items_received ]
 
     max_gate = 0
+
     for item in required_items.items():
         gate_no = item[0]
         gate_reqs = item[1]

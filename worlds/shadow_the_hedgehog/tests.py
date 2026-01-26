@@ -338,7 +338,7 @@ def TestSlotData():
 errors = 0
 
 #errors = TestSlotData()
-#TestCheckpointPathing()
+TestCheckpointPathing()
 
 errors +=  TestItemIds()
 errors += TestLocationIds()

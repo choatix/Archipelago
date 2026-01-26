@@ -92,7 +92,9 @@ def GetPlayableObjectTypes():
             ObjectType.CHECKPOINT,
             ObjectType.WEAPON_BOX,
             ObjectType.WEAPON_METAL_BOX,
-            ObjectType.WEAPON_WOODEN_BOX
+            ObjectType.WEAPON_WOODEN_BOX,
+            ObjectType.ENVIRONMENT_WEAPON,
+            ObjectType.FLOOR_WEAPON
     ]
 
 def GetObjectChecks():

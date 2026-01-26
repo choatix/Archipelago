@@ -1347,6 +1347,7 @@ def create_locations(world, regions: Dict[str, Region]):
     end_region.locations.append(devil_doom_location)
 
 def increment_location_count(count, plus, t):
+    #print("ILC", count, plus, t)
     return count + plus
 
 def count_last_way_locations(world):
@@ -1458,6 +1459,9 @@ def count_locations(world):
 
     if world.options.enemy_sanity and world.options.objective_sanity_system != Options.ObjectiveSanitySystem.option_individual:
         for enemy in enemysanity_locations:
+
+            if enemy.stageId == Levels.STAGE_THE_LAST_WAY and not world.options.last_way_enemysanity:
+                continue
 
             frequency_required = ShadowUtils.getMaxRequired(
                 ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_ENEMY_FREQUENCY,
@@ -1790,6 +1794,10 @@ def SetRegionEvents(world, player, regions):
             continue
 
         if region.regionIndex == 0:
+            continue
+
+        if (region.iccLogicOnly and world.options.chaos_control_logic_level not in
+                [ Options.ChaosControlLogicLevel.option_hard, Options.ChaosControlLogicLevel.option_intermediate]):
             continue
 
         view_name = Names.GetDistributionRegionEventName(region.stageId, region.regionIndex)

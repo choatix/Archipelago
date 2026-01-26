@@ -198,11 +198,20 @@ def early_region_checks(world):
     # TODO: Recall why story sorted order is used rather than randomly
     story_sorted_stages = Story.StoryToOrder(world.shuffled_story_mode)
 
+
+
     last_way_required = (not world.options.include_last_way_shuffle or
-                           world.options.level_progression == Options.LevelProgression.option_select)
+                           world.options.story_shuffle == Options.StoryShuffle.option_off)
 
     if last_way_required:
         story_sorted_stages.append(Levels.STAGE_THE_LAST_WAY)
+
+    # Future can make this an option based on goal
+    devil_doom_required = True
+    if Levels.BOSS_DEVIL_DOOM in story_sorted_stages:
+        devil_doom_required = False
+
+    if devil_doom_required:
         story_sorted_stages.append(Levels.BOSS_DEVIL_DOOM)
 
 
@@ -267,10 +276,8 @@ def early_region_checks(world):
         if level == Levels.STAGE_THE_LAST_WAY and last_way_required:
             world.available_levels.append(level)
 
-        if level == Levels.BOSS_DEVIL_DOOM and last_way_required:
+        if level == Levels.BOSS_DEVIL_DOOM and devil_doom_required:
             world.available_levels.append(level)
-
-
 
     world.available_story_levels = available_story_stages
 
@@ -365,6 +372,10 @@ def create_regions(world) -> Dict[str, Region]:
                 world.options.logic_level != Options.LogicLevel.option_hard:
                 continue
 
+            if (additional_region.iccLogicOnly and world.options.chaos_control_logic_level not in
+                    [ Options.ChaosControlLogicLevel.option_hard, Options.ChaosControlLogicLevel.option_intermediate]):
+                continue
+
             if additional_region.regionIndex == 0:
                 continue
 
@@ -414,7 +425,10 @@ def create_regions(world) -> Dict[str, Region]:
             boss_stage_requirement = None
 
             if stage_id in Levels.LAST_STORY_STAGES:
-                continue
+                if stage_id == Levels.STAGE_THE_LAST_WAY and not world.options.include_last_way_shuffle:
+                    continue
+                if stage_id == Levels.BOSS_DEVIL_DOOM:
+                    continue
             if stage_id in Levels.BOSS_STAGES:
                 if stage_id not in Levels.LAST_STORY_STAGES and stage_id not in Levels.FINAL_BOSSES:
                     boss_stage_requirement = Story.GetVanillaBossStage(stage_id)
@@ -621,6 +635,11 @@ def connect_by_story_mode(multiworld: MultiWorld, world, player: int, order: typ
                     if region.hardLogicOnly and \
                             world.options.logic_level != Options.LogicLevel.option_hard:
                         continue
+
+                    if region.iccLogicOnly and world.options.chaos_control_logic_level not in [
+                        Options.ChaosControlLogicLevel.option_hard, Options.ChaosControlLogicLevel.option_intermediate]:
+                        continue
+
                     level_region_name = Levels.stage_id_to_region(region.stageId, region.regionIndex)
                     region_to_add = world.get_region(level_region_name)
                     if boss_end_entrance is not None:
@@ -699,6 +718,11 @@ def connect_by_story_mode(multiworld: MultiWorld, world, player: int, order: typ
             if region.hardLogicOnly and \
                     world.options.logic_level != Options.LogicLevel.option_hard:
                 continue
+
+            if (region.iccLogicOnly and world.options.chaos_control_logic_level
+                    not in [ Options.ChaosControlLogicLevel.option_hard, Options.ChaosControlLogicLevel.option_intermediate]):
+                continue
+
             level_region_name = Levels.stage_id_to_region(region.stageId, region.regionIndex)
             region_to_add = world.get_region(level_region_name)
             multiworld.register_indirect_condition(region_to_add, new_entrance)

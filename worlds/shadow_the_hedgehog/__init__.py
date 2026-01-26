@@ -65,7 +65,6 @@ class ShtHWorld(World):
     item_name_to_id: ClassVar[typing.Dict[str, int]] = Items.GetItemDict()
     location_name_to_id: ClassVar[typing.Dict[str, int]] = Locations.GetLocationDict()
 
-    required_client_version: Tuple[int, int, int] = (0, 5, 1)
     web = ShtHWebWorld()
 
     options_dataclass = Options.ShadowTheHedgehogOptions
@@ -213,18 +212,18 @@ class ShtHWorld(World):
             self.options.select_percentage != 100:
             self.options.select_percentage = Options.SelectPercentage(100)
 
-        if self.options.level_progression != Options.LevelProgression.option_select and not self.options.story_shuffle\
-            and "Westopolis" in self.options.excluded_stages:
+        if (self.options.level_progression != Options.LevelProgression.option_select and
+                self.options.story_shuffle == Options.StoryShuffle.option_off and "Westopolis" in self.options.excluded_stages):
             raise OptionError("Westopolis stage cannot be excluded on story without shuffle enabled.")
 
-        if self.options.level_progression == Options.LevelProgression.option_select or \
-            not self.options.include_last_way_shuffle:
+        if (self.options.level_progression == Options.LevelProgression.option_select or \
+            not self.options.include_last_way_shuffle or self.options.story_shuffle == Options.StoryShuffle.option_off):
             if "The Last Way" in self.options.excluded_stages.value:
+                print("You cannot exclude The Last Way when it's required to reach the goal")
                 self.options.excluded_stages.value.remove("The Last Way")
 
-        if self.options.chaos_control_logic_level != Options.ChaosControlLogicLevel.option_off and \
+        if self.options.chaos_control_logic_level in [ Options.ChaosControlLogicLevel.option_hard, Options.ChaosControlLogicLevel.option_intermediate] and\
             self.options.logic_level != Options.LogicLevel.option_hard:
-                # TODO Handle expert? here in future:
             self.options.chaos_control_logic_level = Options.ChaosControlLogicLevel(Options.ChaosControlLogicLevel.option_off)
 
         if not self.options.enemy_objective_sanity and self.options.enemy_sanity:
@@ -236,6 +235,13 @@ class ShtHWorld(World):
 
         if self.options.level_progression == Options.LevelProgression.option_story:
             self.options.select_gates = Options.SelectGates(Options.SelectGates.option_off)
+
+            if not self.options.story_shuffle:
+                self.options.include_last_way_shuffle = Options.IncludeLastStoryShuffle(False)
+
+        if (self.options.gate_unlock_requirement == Options.GateUnlockRequirement.option_chaos_emeralds and
+                self.options.select_gates_count != 7):
+            self.options.select_gates_count = Options.SelectGatesCount(7)
 
     def calculate_non_objective_sanity_maximums(self):
         relevant_mission_clears =  [m for m in Locations.MissionClearLocations if
@@ -625,12 +631,12 @@ class ShtHWorld(World):
                     self.options.checkpoint_shuffle = passthrough["checkpoint_shuffle"]
 
                 if "first_checkpoints" in passthrough:
-                    print("Read first checkpoints for UT")
+                    #print("Read first checkpoints for UT")
                     first_checkpoints = passthrough["first_checkpoints"]
                     self.first_checkpoints = {}
                     for stage_str, index in first_checkpoints.items():
                         self.first_checkpoints[int(stage_str)] = index
-                    print(self.first_checkpoints)
+                    #print(self.first_checkpoints)
 
                 if "last_way_enemysanity" in passthrough:
                     self.options.last_way_enemysanity = passthrough["last_way_enemysanity"]
@@ -688,17 +694,17 @@ class ShtHWorld(World):
         location_count = Locations.count_locations(self)
 
         if self.options.exceeding_items_filler != Options.ExceedingItemsFiller.option_off:
-            if item_count > location_count:
-                #print("item_count=", item_count, "location_count=", location_count)
-                potential_downgrades, removals = Items.GetPotentialDowngradeItems(self)
-                if len(potential_downgrades) < item_count - location_count - len(removals):
-                    c = item_count - location_count - len(potential_downgrades)
-                    print("Issue with counts", item_count, location_count, len(potential_downgrades),
-                          len(removals), c)
-
-                    # Throw random items into start inventory, if disabled, throw an error
-                    if not self.options.start_inventory_excess_items:
-                        raise OptionError("Not enough locations to fill even with downgrades::"+str(c))
+            # if item_count > location_count:
+            #     #print("item_count=", item_count, "location_count=", location_count)
+            #     potential_downgrades, removals = Items.GetPotentialDowngradeItems(self)
+            #     if len(potential_downgrades) < item_count - location_count - len(removals):
+            #         c = item_count - location_count - len(potential_downgrades)
+            #         print("Issue with counts", item_count, location_count, len(potential_downgrades),
+            #               len(removals), c)
+            #
+            #         # Throw random items into start inventory, if disabled, throw an error
+            #         if not self.options.start_inventory_excess_items:
+            #             raise OptionError("Not enough locations to fill even with downgrades::"+str(c))
 
                 self.excess_item_count = item_count - location_count
 

@@ -113,6 +113,7 @@ class BacktrackRegion:
     backtrackFromRegion: int
     logicType: int
     hardLogicOnly: bool
+    iccLogicOnly: bool
     restrictionTypes: list[REGION_RESTRICTION_TYPES]
 
     def __init__(self, stageId, fromRegion, toRegion,
@@ -122,6 +123,7 @@ class BacktrackRegion:
         self.backtrackFromRegion = fromRegion
         self.logicType = logicType
         self.hardLogicOnly = False
+        self.iccLogicOnly = False
 
         if type(restrictionTypes) != list:
             self.restrictionTypes = [restrictionTypes]
@@ -143,6 +145,7 @@ class LevelRegion:
     chaosControlLogicType: int
     fromRegions: list
     hardLogicOnly: bool = False
+    iccLogicOnly: bool = False
 
     def __init__(self, stageId, regionIndex,
                  restrictionTypes: list[REGION_RESTRICTION_TYPES] | REGION_RESTRICTION_TYPES):
@@ -163,6 +166,10 @@ class LevelRegion:
 
     def setHardLogicOnly(self):
         self.hardLogicOnly = True
+        return self
+
+    def setICCLogicOnly(self):
+        self.iccLogicOnly = True
         return self
 
     def setLogicType(self, logicLevel,
@@ -1545,15 +1552,17 @@ LevelRegion(STAGE_COSMIC_FALL, REGION_INDICES.COSMIC_FALL_LD_OR_JUMPER,
     .setFromRegion([REGION_INDICES.COSMIC_FALL_GUN_JUMPER,
                     REGION_INDICES.COSMIC_FALL_LIGHT_DASH]),
 
-
 LevelRegion(STAGE_COSMIC_FALL, REGION_INDICES.COSMIC_FALL_COMPUTER_ROOM_1,
                     REGION_RESTRICTION_TYPES.Rocket)
     .setLogicType(Options.LogicLevel.option_normal, Options.ChaosControlLogicLevel.option_hard),
 
+# If CC intermediate is on
+# You need Zipwire, Check 6 and Pulley Core regions
+
 LevelRegion(STAGE_COSMIC_FALL, REGION_INDICES.COSMIC_FALL_COMPUTER_ROOM_2,
-                    REGION_RESTRICTION_TYPES.Impassable)
-    .setFromRegion(REGION_INDICES.COSMIC_FALL_PULLEY_CORE)
-    .setLogicType(Options.LogicLevel.option_normal, Options.ChaosControlLogicLevel.option_intermediate),
+                    [REGION_RESTRICTION_TYPES.Zipwire, REGION_RESTRICTION_TYPES.Region7])
+    .setFromRegion(REGION_INDICES.COSMIC_FALL_CHECKPOINT_SIX)
+    .setICCLogicOnly(),
 
 LevelRegion(STAGE_COSMIC_FALL, REGION_INDICES.COSMIC_FALL_CHECKPOINT_SEVEN,
             REGION_RESTRICTION_TYPES.NoRestriction)

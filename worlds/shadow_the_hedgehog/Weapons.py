@@ -54,6 +54,9 @@ class WeaponAttributes:
 
 def GetRuleByWeaponRequirement(player, req, regionInfo: LevelRegion):
 
+    if req is None or req == Names.REGION_RESTRICTION_TYPES.NoRestriction:
+        return lambda state: True
+
     if regionInfo is None:
         region_to_use = None
     else:
@@ -578,7 +581,8 @@ def GenerateWeaponInfo():
 
         special_cases = [ s for s in NON_OBJECT_WEAPONS if s[1] == weapon_id ]
         for case in special_cases:
-            found_weapon.available_stages.append((case[0], case[2]))
+            if (case[0], case[2]) not in found_weapon.available_stages:
+                found_weapon.available_stages.append((case[0], case[2]))
 
         weapon_info.append(found_weapon)
 
