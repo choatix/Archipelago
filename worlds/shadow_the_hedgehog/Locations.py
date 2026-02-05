@@ -1769,8 +1769,8 @@ def SetStoryClearEvents(world, player, regions):
 def SetRegionEvents(world, player, regions):
     region_events = []
     for level in Levels.ALL_STAGES:
-        if level in BOSS_STAGES:
-            continue
+        #if level in BOSS_STAGES:
+        #    continue
 
         if level not in world.available_levels:
             continue
@@ -1778,6 +1778,15 @@ def SetRegionEvents(world, player, regions):
         has_check_zero = HasCheckpointZero(level)
         if has_check_zero:
             view_name = Names.GetDistributionRegionEventName(level, 0)
+            region_name = Levels.stage_id_to_region(level, 0)
+            o_region = regions[region_name]
+            region_event = ShadowTheHedgehogLocation(player, view_name, None, o_region)
+            region_event.show_in_spoiler = False
+            region_event.progress_type = LocationProgressType.PRIORITY
+            o_region.locations.append(region_event)
+
+            # Always make them even if they aren't used?
+            view_name = Names.GetDistributionEscapeRegionEventName(level, 0)
             region_name = Levels.stage_id_to_region(level, 0)
             o_region = regions[region_name]
             region_event = ShadowTheHedgehogLocation(player, view_name, None, o_region)
@@ -1801,7 +1810,25 @@ def SetRegionEvents(world, player, regions):
             continue
 
         view_name = Names.GetDistributionRegionEventName(region.stageId, region.regionIndex)
-        region_name = Levels.stage_id_to_region(region.stageId, region.regionIndex)
+
+        if region.stageId in Levels.BOSS_STAGES:
+            region_name = Levels.boss_stage_id_to_region(region.stageId, region.regionIndex)
+        else:
+            region_name = Levels.stage_id_to_region(region.stageId, region.regionIndex)
+
+        o_region = regions[region_name]
+        region_event = ShadowTheHedgehogLocation(player, view_name, None, o_region)
+        region_event.show_in_spoiler = False
+        region_event.progress_type = LocationProgressType.PRIORITY
+        o_region.locations.append(region_event)
+
+        view_name = Names.GetDistributionEscapeRegionEventName(region.stageId, region.regionIndex)
+
+        if region.stageId in Levels.BOSS_STAGES:
+            region_name = Levels.boss_stage_id_to_region(region.stageId, region.regionIndex)
+        else:
+            region_name = Levels.stage_id_to_region(region.stageId, region.regionIndex)
+
         o_region = regions[region_name]
         region_event = ShadowTheHedgehogLocation(player, view_name, None, o_region)
         region_event.show_in_spoiler = False

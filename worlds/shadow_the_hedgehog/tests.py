@@ -1,3 +1,5 @@
+
+
 import importlib
 import os
 import pkgutil
@@ -5,9 +7,9 @@ import sys
 import time
 
 from BaseClasses import MultiWorld
-from . import Levels, Names, ShTHClient, Objects, ShtHWorld, Options
+from . import Levels, Names, ShTHClient, Objects, ShtHWorld, Options, Rules
 from .Items import GetAllItemInfo
-from .Levels import INDIVIDUAL_LEVEL_REGIONS
+from .Levels import INDIVIDUAL_LEVEL_REGIONS, BACKTRACKING_REGIONS
 from .Locations import GetAllLocationInfo
 from .Names import REGION_INDICES, REGION_RESTRICTION_TYPES
 from .Objects import DESIRABLE_OBJECTS
@@ -15,6 +17,56 @@ from .Objects_AirFleet import DESIRABLE_OBJECTS_AIR_FLEET
 from .Objects_GlyphicCanyon import DESIRABLE_OBJECTS_GLYPHIC_CANYON
 from .Objects_PrisonIsland import DESIRABLE_OBJECTS_PRISON_ISLAND
 from .Options import ShadowTheHedgehogOptions
+
+
+def TestA():
+    dir = "C:\\Users\\Alex\\Downloads\\SHADOWTEST"
+
+    inis = {}
+
+    files = os.listdir(dir)
+    for f in files:
+        f2 = open(dir+"/"+f)
+        data = f2.readlines()
+        dic = {
+
+        }
+
+        section = "SectionError"
+        for line in data:
+            line = line.strip()
+            if line.startswith("["):
+                section = line
+            else:
+                s = line.split("=")
+                if len(s) > 1:
+                    dic[section+ "-" + s[0]] = s[1]
+
+        inis[f] = dic
+
+        f2.close()
+
+    base = "Choatix.ini"
+
+    mine = inis[base]
+    for key in mine:
+        my_value = mine[key]
+        for i in inis.keys():
+            if i == base:
+                continue
+
+            d = inis[i]
+
+            if key not in d:
+                print("Missing key from base:", key, i)
+            else:
+                their_value = d[key]
+                if their_value != my_value:
+                    print("Different key from base", i, key, my_value, their_value)
+
+
+#TestA()
+#sys.exit(1)
 
 
 def LoadSetSummary():
@@ -156,69 +208,61 @@ def LoadSetSummary():
     #for l in info_for_unknown_types:
     #    print(l)
 
-#LoadSetSummary()
-#sys.exit(1)
 
 def TestCheckpointPathing():
-    CheckLocations = []
-    all_region_names = REGION_INDICES.__dict__.items()
+    escapes = Levels.RegionEscapes
 
-    LevelRegions = Levels.INDIVIDUAL_LEVEL_REGIONS
+    errors = 0
 
-    for stage in [l for l in Levels.ALL_STAGES if l not in Levels.BOSS_STAGES]:
-        stage_name = Levels.LEVEL_ID_TO_LEVEL[stage].replace(" ", "_")
-        checkpoint_keys = list([k for k in all_region_names if
-                                k[0].startswith(stage_name.upper()) and "CHECKPOINT_" in k[0]])
+    options = ShadowTheHedgehogOptions.__new__(ShadowTheHedgehogOptions)
+    options.logic_level = Options.LogicLevel.option_normal
+    options.start_inventory = {}
+    options.object_unlocks = True
+    options.object_pulleys = True
+    options.object_ziplines = True
+    options.object_units = True
+    options.object_rockets = True
+    options.object_light_dashes = True
+    options.object_warp_holes = True
 
-        checkpoint_indexes = [ c[1] for c in checkpoint_keys ]
+    options.weapon_sanity_unlock = True
+    options.vehicle_logic = True
+    options.keys_required_for_doors = 5
+    options.key_collection_method = Options.KeyCollectionMethod.option_arch
+    options.chaos_control_logic_level = Options.ChaosControlLogicLevel.option_off
 
-        index_keys = list([k for k in all_region_names if
-                           k[0].startswith(stage_name.upper())])
+    all_results = Rules.GetAllCheckpointEscapes(options)
+    print(all_results)
 
+    CheckRules = Rules.CHECKPOINT_ESCAPE_GROUPS
 
+    for stage,results in all_results.items():
+        stuck_regions = results[0]
+        inescapable_regions = results[1]
 
-        for key in [ k for k in index_keys if k not in checkpoint_keys ]:
-            regionsAfter = None
-            free = False
-            inescapable = False
-            iterator = key[1]
-            while regionsAfter is None or (not free and not inescapable):
-                regionsAfter = [ l for l in LevelRegions if l.stageId == stage and iterator in l.fromRegions]
-                if any([x for x in regionsAfter if x.regionIndex in checkpoint_indexes and  REGION_RESTRICTION_TYPES.NoRestriction in x.restrictionTypes]):
+        if stage not in CheckRules:
+            if len(stuck_regions) + len(inescapable_regions) > 0 :
+                print("Stage not found in groups", stage, stuck_regions, inescapable_regions)
+                errors += 1
+        else:
+            groups = CheckRules[stage]
+            known_groups = []
 
-                    free = True
-                    break
-                elif len(regionsAfter) == 0:
+            for g in groups.values():
+                known_groups.extend(g)
 
-                    if iterator != max([ i[1] for i in index_keys]):
-                        # Is a diversion route, by default, able to go straight back to its from region?
-                        print("diversion route", key)
-                        break
+            for item in stuck_regions:
+                if item not in known_groups:
+                    print("Region not found in groups", stage,item)
+                    errors += 1
 
-                    inescapable = True
-                elif len(regionsAfter) == 1 and REGION_RESTRICTION_TYPES.NoRestriction in regionsAfter[0].restrictionTypes:
-                    iterator = regionsAfter[0].regionIndex
-                    continue
-                else:
-                    print("TODO, find path from", key)
-                    break
-
-            if free:
-                print("Free path from", key)
-            elif inescapable:
-                print("No path from", key)
-            #else:
-            #    print("Shouldn't get here")
-
-
-
+            for item in inescapable_regions:
+                if item not in known_groups:
+                    print("Region not found in groups", stage, item)
+                    errors += 1
 
 
-
-
-
-
-    return CheckLocations
+    return errors
 
 
 def TestRegionIndicies():
@@ -338,7 +382,7 @@ def TestSlotData():
 errors = 0
 
 #errors = TestSlotData()
-TestCheckpointPathing()
+errors += TestCheckpointPathing()
 
 errors +=  TestItemIds()
 errors += TestLocationIds()

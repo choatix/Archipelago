@@ -379,7 +379,11 @@ def create_regions(world) -> Dict[str, Region]:
             if additional_region.regionIndex == 0:
                 continue
 
-            new_region_name = Levels.stage_id_to_region(level_id, additional_region.regionIndex)
+            if level_id in Levels.BOSS_STAGES:
+                new_region_name = Levels.boss_stage_id_to_region(level_id, additional_region.regionIndex)
+            else:
+                new_region_name = Levels.stage_id_to_region(level_id, additional_region.regionIndex)
+
             new_additional_region = Region(new_region_name, world.player, world.multiworld)
             regions[new_region_name] = new_additional_region
 

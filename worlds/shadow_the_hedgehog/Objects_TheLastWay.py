@@ -11,7 +11,7 @@ DESIRABLE_OBJECTS_THE_LAST_WAY = [
               26, "Secret Door", region=REGION_INDICES.THE_LAST_WAY_KEY_DOOR),
     SETObject(ObjectType.VEHICLE, Levels.STAGE_THE_LAST_WAY,
               142, "Black Turret", vehicle=ObjectTypeVehicles.BLACK_TURRET,
-              region=REGION_INDICES.THE_LAST_WAY_BLACK_VOLT),
+              region=REGION_INDICES.THE_LAST_WAY_TURRET, weapon=WEAPONS.BLACK_BARREL),
     SETObject(ObjectType.WARP_HOLE, Levels.STAGE_THE_LAST_WAY,
               14, "Warp Hole"),
     SETObject(ObjectType.WARP_HOLE, Levels.STAGE_THE_LAST_WAY,

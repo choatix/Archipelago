@@ -38,7 +38,7 @@ DESIRABLE_OBJECTS_CENTRAL_CITY  = [
 
     SETObject(ObjectType.VEHICLE, Levels.STAGE_CENTRAL_CITY, 603, "Gun Turret 1",
               vehicle=ObjectTypeVehicles.GUN_TURRET,
-              region=REGION_INDICES.CENTRAL_CITY_BOMB_OR_BAZOOKA_2),
+              region=REGION_INDICES.CENTRAL_CITY_GUN_TURRET, weapon=WEAPONS.HEAVY_MACHINE_GUN),
     SETObject(ObjectType.ROCKET, Levels.STAGE_CENTRAL_CITY, 345, "Rocket 3"),
     SETObject(ObjectType.VEHICLE, Levels.STAGE_CENTRAL_CITY, 356, "Car 3",
               vehicle=ObjectTypeVehicles.STANDARD_CAR,
@@ -46,7 +46,7 @@ DESIRABLE_OBJECTS_CENTRAL_CITY  = [
     SETObject(ObjectType.ROCKET, Levels.STAGE_CENTRAL_CITY, 374, "Rocket 4"),
     SETObject(ObjectType.VEHICLE, Levels.STAGE_CENTRAL_CITY, 673, "Gun Turret 2",
               vehicle=ObjectTypeVehicles.GUN_TURRET,
-              region=REGION_INDICES.CENTRAL_CITY_ROCKET_2),
+              region=REGION_INDICES.CENTRAL_CITY_GUN_TURRET_2, weapon=WEAPONS.HEAVY_MACHINE_GUN),
     SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_CENTRAL_CITY, 400, "Special Weapons Box 2",
               region=REGION_INDICES.CENTRAL_CITY_BEHIND_SIX, weapon=WEAPONS.HEAVY_MACHINE_GUN),
 

@@ -92,9 +92,11 @@ DESIRABLE_OBJECTS_BOSSES  = [
               region=0, weapon=WEAPONS.SUB_MACHINE_GUN),
 
     SETObject(ObjectType.VEHICLE, Levels.BOSS_EGG_BREAKER_IJ, 0, "1",
-              vehicle=ObjectTypeVehicles.GUN_TURRET),
+              vehicle=ObjectTypeVehicles.GUN_TURRET, weapon=WEAPONS.HEAVY_MACHINE_GUN,
+              region=REGION_INDICES.EGG_BREAKER_IRON_JUNGLE_TURRET),
     SETObject(ObjectType.VEHICLE, Levels.BOSS_EGG_BREAKER_IJ, 1, "2",
-              vehicle=ObjectTypeVehicles.GUN_TURRET),
+              vehicle=ObjectTypeVehicles.GUN_TURRET, weapon=WEAPONS.HEAVY_MACHINE_GUN,
+              region=REGION_INDICES.EGG_BREAKER_IRON_JUNGLE_TURRET),
     SETObject(ObjectType.ROCKET, Levels.BOSS_EGG_BREAKER_IJ, 5, "1",region=0),
     SETObject(ObjectType.ROCKET, Levels.BOSS_EGG_BREAKER_IJ, 6, "2",region=0),
 
