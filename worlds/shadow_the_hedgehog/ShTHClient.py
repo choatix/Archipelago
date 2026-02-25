@@ -15,7 +15,7 @@ from CommonClient import ClientCommandProcessor, CommonContext, get_base_parser,
 from NetUtils import ClientStatus
 from worlds.shadow_the_hedgehog.ObjectTypes import ObjectTypeVehicles
 from .Options import WeaponsanityHold
-from . import Levels, Items, Locations, Utils as ShadowUtils, Weapons, Story, Objects, Names, Checkpoints
+from . import Levels, Items, Locations, Utils as ShadowUtils, Weapons, Story, Objects, Names, Checkpoints, ObjectTypes
 from .Levels import *
 from .Locations import GetStageInformation, GetAlignmentsForStage, \
     GetStageEnemysanityInformation, MissionClearLocations
@@ -1313,12 +1313,13 @@ class ShTHContext(CommonContext):
         self.tokens = []
         self.emeralds = []
         self.restart = False
+        self.death_flag = False
 
         self.game_tags = []
         self.previous_rings = None
         self.ring_link_rings = 0
         self.instance_id = time.time()
-        self.debug_logging = False
+        self.debug_logging = True
         self.error_logging = True
         self.info_logging = True
         self.last_level = None
@@ -1994,11 +1995,10 @@ async def check_save_loaded(ctx):
             # TODO: Handle auto boss clears and completion based on time
 
             if current_status == 1:
-                if first_game_load:
-                    pass
-                    #ctx.save_rejected = True
-                    #logger.error("Game has preloaded but has clear data. Please start from a new save.")
-                    #break
+                if first_game_load and SAVE_VALUE_CHECK:
+                    ctx.save_rejected = True
+                    logger.error("Game has preloaded but has clear data. Please start from a new save.")
+                    break
 
                 if time_data[0] == 99 and time_data[1] == 59 and time_data[2] == 99:
                     continue
@@ -2259,8 +2259,18 @@ def is_level_accessible(ctx, stageId, story=False):
                        for m in mission_locations if m.alignmentId == lead.alignment_id and m.stageId == lead.start_stage_id]
 
                 ml_id, ml_name = ml[0]
+
                 if ml_id in ctx.checked_locations:
-                    checking.append(lead.start_stage_id)
+                    valid = True
+                    if lead.boss != first and lead.boss is not None:
+                        boss = [ b for b in Locations.BossClearLocations if b.stageId == lead.boss][0]
+                        boss_location_id, boss_location_name = Locations.GetBossLocationName(boss.name, lead.boss)
+
+                        if boss_location_id not in ctx.checked_locations:
+                            valid = False
+
+                    if valid:
+                        checking.append(lead.start_stage_id)
 
         return success
 
@@ -3638,12 +3648,15 @@ async def clearout_individual_enemies_by_percentage(ctx, stageId):
 
     relevant_objects = [r for r in known_objects if r.object_type in enemy_types]
 
+    all_playable_types = [ x for x in Objects.GetPlayableObjectTypes() if x not in enemy_types ]
+    relevant_objective_objects = [ l for l in known_objects if l.object_type in all_playable_types]
+
     is_objective = False
 
     checks_to_autoclear = []
 
     if ctx.enemy_objective_sanity and (stageId, MISSION_ALIGNMENT_DARK) in Objects.STAGE_OBJECT_ITEMS:
-        dark_objects = [ d for d in relevant_objects if d.object_type in Objects.STAGE_OBJECT_ITEMS[(stageId, MISSION_ALIGNMENT_DARK)] ]
+        dark_objects = [ d for d in relevant_objects if d.object_type in Objects.STAGE_OBJECT_ITEMS[(stageId, MISSION_ALIGNMENT_DARK)][0] ]
         if len(dark_objects) > 0:
             dark_subtract = 0
             dark_subtract += sum([ d.count-1 for d in dark_objects if d.count > 1])
@@ -3663,8 +3676,7 @@ async def clearout_individual_enemies_by_percentage(ctx, stageId):
 
 
     if ctx.enemy_objective_sanity and (stageId, MISSION_ALIGNMENT_HERO) in Objects.STAGE_OBJECT_ITEMS:
-        hero_objects = [d for d in relevant_objects if
-                        d.object_type in Objects.STAGE_OBJECT_ITEMS[(stageId, MISSION_ALIGNMENT_HERO)]]
+        hero_objects = [ d for d in relevant_objects if d.object_type in Objects.STAGE_OBJECT_ITEMS[(stageId, MISSION_ALIGNMENT_HERO)][0] ]
         if len(hero_objects) > 0:
 
             mission = \
@@ -3699,7 +3711,7 @@ async def clearout_individual_enemies_by_percentage(ctx, stageId):
 
                 egg_subtract = 0
                 if ctx.difficult_enemy_sanity is not None and not ctx.difficult_enemy_sanity:
-                    egg_subtract += len([d for d in egg_objects if d.is_hard])
+                    egg_subtract += len([d for d in egg_objects if ObjectTypes.ObjectFlags.HardLogic in d.flags])
 
                 egg_subtract += sum([d.count - 1 for d in egg_objects if d.count > 1])
 
@@ -3727,7 +3739,7 @@ async def clearout_individual_enemies_by_percentage(ctx, stageId):
 
                 alien_subtract = 0
                 if ctx.difficult_enemy_sanity is not None and not ctx.difficult_enemy_sanity:
-                    alien_subtract += len([d for d in alien_objects if d.is_hard])
+                    alien_subtract += len([d for d in alien_objects if ObjectTypes.ObjectFlags.HardLogic in d.flags])
 
                 alien_subtract += sum([d.count - 1 for d in alien_objects if d.count > 1])
 
@@ -3759,7 +3771,7 @@ async def clearout_individual_enemies_by_percentage(ctx, stageId):
 
                 gun_subtract = 0
                 if ctx.difficult_enemy_sanity is not None and not ctx.difficult_enemy_sanity:
-                    gun_subtract += len([d for d in gun_objects if d.is_hard])
+                    gun_subtract += len([d for d in gun_objects if ObjectTypes.ObjectFlags.HardLogic in d.flags])
 
                 gun_subtract += sum([d.count - 1 for d in gun_objects if d.count > 1])
 
@@ -3777,15 +3789,68 @@ async def clearout_individual_enemies_by_percentage(ctx, stageId):
                     checks_to_autoclear.extend(incompleted_gun_objects)
 
 
+    if ctx.objective_sanity:
+        if (stageId, MISSION_ALIGNMENT_DARK) in Objects.STAGE_OBJECT_ITEMS:
+            alignment_object = Items.GetStageAlignmentObject(stageId, MISSION_ALIGNMENT_DARK)
+
+            mission_dark = \
+            [m for m in MissionClearLocations if m.stageId == stageId and m.alignmentId == MISSION_ALIGNMENT_DARK][0]
+            dark_options = Objects.STAGE_OBJECT_ITEMS[(stageId, MISSION_ALIGNMENT_DARK)]
+
+            dark_items = [d for d in relevant_objective_objects if
+                             d.object_type in dark_options]
+
+            if alignment_object is not None and len(dark_items) > 0:
+                required_count = ShadowUtils.getMaxRequired(
+                    ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_OBJECTIVE,
+                                                              mission_dark.mission_object_name, ctx,
+                                                              mission_dark.stageId, mission_dark.alignmentId,
+                                                              ctx.override_settings),
+                    mission_dark.requirement_count, mission_dark.stageId, mission_dark.alignmentId,
+                    ctx.override_settings)
+
+                completed_stage_objects = [o for o in dark_items if GetObjectLocationName(o)[0] in ctx.checked_locations]
+                if len(completed_stage_objects) >= required_count:
+                    incompleted_stage_objects = [GetObjectLocationName(o)[0] for o in dark_items if
+                                               GetObjectLocationName(o)[0] in ctx.missing_locations]
+                    checks_to_autoclear.extend(incompleted_stage_objects)
+
+        if (stageId, MISSION_ALIGNMENT_HERO) in Objects.STAGE_OBJECT_ITEMS:
+
+            alignment_object = Items.GetStageAlignmentObject(stageId, MISSION_ALIGNMENT_HERO)
+
+            mission_hero = \
+                [m for m in MissionClearLocations if m.stageId == stageId and m.alignmentId == MISSION_ALIGNMENT_HERO][
+                    0]
+            hero_options = Objects.STAGE_OBJECT_ITEMS[(stageId, MISSION_ALIGNMENT_HERO)]
+
+            hero_items = [d for d in relevant_objective_objects if
+                          d.object_type in hero_options]
+
+            if alignment_object is not None and len(hero_items) > 0:
+                required_count = ShadowUtils.getMaxRequired(
+                    ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_OBJECTIVE,
+                                                              mission_hero.mission_object_name, ctx,
+                                                              mission_hero.stageId, mission_hero.alignmentId,
+                                                              ctx.override_settings),
+                    mission_hero.requirement_count, mission_hero.stageId, mission_hero.alignmentId,
+                    ctx.override_settings)
+
+                completed_stage_objects = [o for o in hero_items if
+                                           GetObjectLocationName(o)[0] in ctx.checked_locations]
+                if len(completed_stage_objects) >= required_count:
+                    incompleted_stage_objects = [GetObjectLocationName(o)[0] for o in hero_items if
+                                                 GetObjectLocationName(o)[0] in ctx.missing_locations]
+                    checks_to_autoclear.extend(incompleted_stage_objects)
+
+
     if len(checks_to_autoclear) > 0:
-        logger.error("Autoclear enemies")
+        logger.error("Autoclear")
         message = [{"cmd": 'LocationChecks', "locations": checks_to_autoclear}]
         await ctx.send_msgs(message)
 
 
 async def handle_missing_set_weapons(current_level, ctx, new_outputs):
-
-    print("Call HMSW")
     objects = Objects.GetDesirableObjectsForStage(current_level)
     enemy_types = Objects.GetStandardEnemyTypes()
 
@@ -3899,10 +3964,10 @@ async def handle_missing_set_weapons(current_level, ctx, new_outputs):
                     weapon_id = WEAPONS.WORM_SHOOTER
                 elif reference == 1:
                     reference = "BLUE"
-                    weapon_id = WEAPONS.BIG_WORM_SHOOTER
+                    weapon_id = WEAPONS.WIDE_WORM_SHOOTER
                 elif reference == 2:
                     reference = "GOLD"
-                    weapon_id = WEAPONS.WIDE_WORM_SHOOTER
+                    weapon_id = WEAPONS.BIG_WORM_SHOOTER
 
             if enemy.object_type == ObjectType.GUN_SOLDIER:
                 type = "GUN SOLDER"
@@ -3926,7 +3991,7 @@ async def handle_missing_set_weapons(current_level, ctx, new_outputs):
                     weapon_id = WEAPONS.GRENADE_LAUNCHER
                 elif reference == 6:
                     reference = "MISSILE"
-                    weapon_id = WEAPONS.EIGHT_SHOT_RPG
+                    weapon_id = WEAPONS.RPG
 
             if enemy.object_type == ObjectType.BIG_FOOT:
                 type = "BIG FOOT"
@@ -3981,7 +4046,7 @@ async def handle_missing_set_weapons(current_level, ctx, new_outputs):
                 print("Unhandled type:", enemy.object_type)
 
         new_enemy = SETObject(enemy.object_type, enemy.stage, enemy.index, enemy.name,
-                              region=enemy.region, weapon=weapon_id, is_hard=enemy.is_hard,
+                              region=enemy.region, weapon=weapon_id, is_hard=ObjectTypes.ObjectFlags.HardLogic in enemy.flags,
                               vehicle=enemy.vehicle, count=enemy.count,
                               restrictionType=enemy.restrictionType)
         new_enemies.append(new_enemy)
@@ -4796,10 +4861,13 @@ async def update_level_behaviour(ctx, current_level, death):
         if len(ctx.checkpoint_snapshots) > 0 and not ctx.restart:
             last_snapshot = ctx.checkpoint_snapshots[-1][1]
             ctx.level_state = deepcopy(last_snapshot)
+            ctx.key_restore_complete = False
         else:
             ctx.level_state = {}
+            ctx.key_restore_complete = False
 
         ctx.restart = False
+        ctx.death_flag = True
 
         return
 
@@ -4977,6 +5045,7 @@ async def update_level_behaviour(ctx, current_level, death):
 
     extra_increase = 100
 
+    manual_decrease = False
     if heroInfo is not None and heroInfo.requirement_count is not None:
         hero_count = ctx.level_state["hero_count"]
 
@@ -5008,13 +5077,18 @@ async def update_level_behaviour(ctx, current_level, death):
 
         hero_write = hero_count
 
+        #if ctx.level_state["hero_completable"] == COMPLETE_FLAG_ON_MANUAL:
+        #    hero_write =
+
         if (ctx.objective_sanity and ctx.objective_sanity_behaviour == Options.ObjectiveSanityBehaviour.option_base_clear
-                and result_sanity):
+                and result_sanity) or ctx.level_state["hero_completable"] == COMPLETE_FLAG_ON_MANUAL:
             hero_write = ctx.level_state["hero_progress"]
 
         if ctx.objective_sanity and ctx.objective_sanity_behaviour != Options.ObjectiveSanityBehaviour.option_base_clear\
                 and result_sanity:
             restore_hero = True
+
+
 
         set_max_up = False
         hero_completable = ctx.level_state["hero_completable"]
@@ -5043,9 +5117,14 @@ async def update_level_behaviour(ctx, current_level, death):
                 ctx.objective_sanity_behaviour == Options.ObjectiveSanityBehaviour.option_base_clear:
                 ctx.level_state["hero_completable"] = COMPLETE_FLAG_ON_MANUAL
                 hero_write = ctx.level_state["hero_progress"]
+                manual_decrease = True
             else:
                 ctx.level_state["hero_completable"] = COMPLETE_FLAG_ON_SET
             handle_count = True
+        elif (hero_completable == COMPLETE_FLAG_OFF_SET and
+                  ctx.death_flag and ctx.objective_sanity_behaviour == Options.ObjectiveSanityBehaviour.option_manual_clear):
+            set_max_up = True
+            hero_count_max = heroMaxAvailable + extra_increase
         else:
             set_max_up = False
             hero_count_max = 255
@@ -5096,7 +5175,7 @@ async def update_level_behaviour(ctx, current_level, death):
         set_max_up = False
         dark_write = dark_count
         if (ctx.objective_sanity and ctx.objective_sanity_behaviour == Options.ObjectiveSanityBehaviour.option_base_clear
-                and result_sanity):
+                and result_sanity) or ctx.level_state["dark_completable"] == COMPLETE_FLAG_ON_MANUAL:
             dark_write = ctx.level_state["dark_progress"]
 
         if ctx.objective_sanity and ctx.objective_sanity_behaviour != Options.ObjectiveSanityBehaviour.option_base_clear\
@@ -5130,9 +5209,13 @@ async def update_level_behaviour(ctx, current_level, death):
                 ctx.level_state["dark_completable"] = COMPLETE_FLAG_ON_MANUAL
                 dark_write = ctx.level_state["dark_progress"]
                 handle_count = True
+                manual_decrease = True
             else:
                 ctx.level_state["dark_completable"] = COMPLETE_FLAG_ON_SET
-
+        elif (dark_completable == COMPLETE_FLAG_OFF_SET and
+              ctx.death_flag and ctx.objective_sanity_behaviour == Options.ObjectiveSanityBehaviour.option_manual_clear):
+            set_max_up = True
+            dark_count_max = darkMaxAvailable + extra_increase
         else:
             set_max_up = False
             dark_count_max = 255
@@ -5184,7 +5267,7 @@ async def update_level_behaviour(ctx, current_level, death):
         current_count = int.from_bytes(current_bytes, byteorder='big', signed=True)
 
         if current_count is not None and expected_hero_value is not None and current_count < expected_hero_value:
-            if not death and ctx.level_state["hero_progress"] != 0:
+            if not manual_decrease and not death and ctx.level_state["hero_progress"] != 0:
                 logger.info("Detected decrease in hero count")
                 ctx.level_state["hero_progress"] -= 1
 
@@ -5231,7 +5314,7 @@ async def update_level_behaviour(ctx, current_level, death):
         current_count = int.from_bytes(current_bytes, byteorder='big', signed=True)
 
         if current_count is not None and expected_dark_value is not None and current_count < expected_dark_value:
-            if not death and ctx.level_state["dark_progress"] != 0:
+            if not manual_decrease and not death and ctx.level_state["dark_progress"] != 0:
                 logger.info("Detected decrease in dark count")
                 ctx.level_state["dark_progress"] -= 1
 
@@ -5403,7 +5486,9 @@ async def update_level_behaviour(ctx, current_level, death):
                                  c.count == a]
                     messages.extend(locations)
 
-    if ctx.key_sanity and current_level in KEY_IDENTIFIER_BY_STAGE:
+    if (ctx.key_sanity or
+        ctx.key_collection_method != Options.KeyCollectionMethod.option_local or
+        ctx.keys_required_for_doors != 5) and current_level in KEY_IDENTIFIER_BY_STAGE:
         key_addresses = GetKeysanityAddresses()
         if "key_index" in ctx.level_state:
             state_key_index = ctx.level_state["key_index"]
@@ -5562,6 +5647,8 @@ async def update_level_behaviour(ctx, current_level, death):
         message = [{"cmd": 'LocationChecks', "locations": messages}]
         await ctx.send_msgs(message)
 
+    ctx.death_flag = False
+
 
 
 async def check_death(ctx: ShTHContext):
@@ -5604,25 +5691,35 @@ def CheckGateConditions(ctx: ShTHContext):
     info = Items.GetItemLookupDict()
     current_items = [ info[i.item].name for i in ctx.items_received ]
 
-    max_gate = 0
+    open_gates = []
 
     for item in required_items.items():
         gate_no = item[0]
         gate_reqs = item[1]
         enough = True
+        total = 0
+        required = None
+
         for gate_req in gate_reqs.items():
             item_name = gate_req[0]
             count = gate_req[1]
-            if current_items.count(item_name) < count:
-                enough = False
-                break
+
+            if item_name == "Count":
+                required = count
+            else:
+                total += current_items.count(item_name)
+                if current_items.count(item_name) < count:
+                    enough = False
+                    break
 
         if enough:
-            max_gate = gate_no
+            if required is None or total >= required:
+                open_gates.append(int(gate_no))
 
     for gate in ctx.gates.items():
-        if int(gate[0]) > int(max_gate):
-            continue
+        if int(gate[0]) != 0:
+            if int(gate[0]) not in open_gates:
+                continue
 
         opening = False
 
@@ -5631,10 +5728,8 @@ def CheckGateConditions(ctx: ShTHContext):
             if stage not in ctx.available_levels:
                 if not opening:
                     logger.info(f"Gate {gate[0]} is open!")
-                    logger.info("")
                     opening = True
 
-                print("Stage is available by gate", stage)
                 ctx.available_levels.append(stage)
 
 def resetGameState(ctx):
@@ -5752,7 +5847,7 @@ async def check_charactersanity(ctx, level):
         check = True
         set_state = True
 
-    if ctx.character_sanity:
+    if ctx.character_sanity and level != Levels.STAGE_THE_LAST_WAY:
         for character in GAME_ADDRESSES.CharacterAddresses:
             if character.name in ctx.characters_met:
                 continue

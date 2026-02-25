@@ -543,10 +543,11 @@ class CraftLogicLevel(Choice):
         in logic for crafts in Iron Jungle, Lethal Highway and Air Fleet
     """
     display_name = "Craft Logic Level"
-    option_easy = 0  # Logic adds in easier elements for completion
-    #option_normal = 1  # Standard logic
-    option_hard = 2  # Requires skips to traverse regions.
-    default = option_easy
+    option_shadow_rifle = 0
+    option_easier = 1
+    option_normal = 2
+    option_harder = 3
+    default = option_normal
 
 class AllowDangerousPercentage(Toggle):
     """

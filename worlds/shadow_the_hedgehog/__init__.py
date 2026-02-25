@@ -953,7 +953,10 @@ class ShtHWorld(World):
         if spoiler_handle is not None:
             spoiler_handle.write(f"{self.multiworld.get_player_name(self.player)}'s Gate Unlocks\n")
             for gate_number, gate_stages in gates.items():
-                spoiler_handle.write(f"Gate {gate_number} = {gate_stages}\n")
+
+                gate_stages_string = ", ".join([ Levels.LEVEL_ID_TO_LEVEL[x] for x in gate_stages])
+
+                spoiler_handle.write(f"Gate {gate_number} = {gate_stages_string}\n")
 
             spoiler_handle.write("\n")
 

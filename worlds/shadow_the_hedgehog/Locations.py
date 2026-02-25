@@ -3,7 +3,7 @@ import copy
 from typing import Dict, Optional
 
 from BaseClasses import Location, Region, LocationProgressType
-from . import Regions, Levels, Weapons, Objects, Names
+from . import Regions, Levels, Weapons, Objects, Names, ObjectTypes
 from .Levels import *
 from . import Utils as ShadowUtils
 from .ObjectTypes import ObjectType
@@ -69,9 +69,8 @@ class MissionClearLocation:
     mission_object_name: Optional[str]
     distribution = None
     requirements = None
-    craft_requirements = None
     logicType: int
-    craftLogicType: Optional[int]
+    is_craft: bool
 
     def __init__(self, stageId, alignmentId, requirement_count,
                  mission_object_name, character=None):
@@ -84,8 +83,14 @@ class MissionClearLocation:
         self.craftLogicType = None
         self.setAutoDistribution()
         self.character = character
+        self.is_craft = False
 
     def setAutoDistribution(self):
+        if self.stageId == Levels.STAGE_THE_LAST_WAY:
+            self.distribution = {
+             REGION_INDICES.THE_LAST_WAY_CHECKPOINT_SEVEN: 1
+            }
+            return
         if self.mission_object_name == "Soldier":
             self.distribution = GetEnemyDistributionInStageByBaseType(self.stageId, ENEMY_CLASS_GUN)
         elif self.mission_object_name == "Alien":
@@ -102,10 +107,9 @@ class MissionClearLocation:
             if self.stageId == Levels.STAGE_SKY_TROOPS:
                 self.distribution = Objects.GetDistributionInStageByBaseType(self.stageId, ObjectType.SKY_TROOPS_TEMPLE)
         elif self.mission_object_name == "Tank":
-            return {
-                REGION_INDICES.LETHAL_HIGHWAY_KEY_DOOR: 1
+            self.distribution = {
+                REGION_INDICES.LETHAL_HIGHWAY_DEFEATED_CRAFT: 1
             }
-            self.distribution = Objects.GetDistributionInStageByBaseType(self.stageId, ObjectType.LETHAL_HIGHWAY_TANK)
         elif self.mission_object_name == "Lantern":
             self.distribution = Objects.GetDistributionInStageByBaseType(self.stageId, ObjectType.CRYPTIC_CASTLE_LANTERN)
         elif self.mission_object_name == "Cream":
@@ -130,15 +134,13 @@ class MissionClearLocation:
             elif self.stageId == Levels.STAGE_SPACE_GADGET:
                 self.distribution = Objects.GetDistributionInStageByBaseType(self.stageId, ObjectType.SPACE_GADGET_DEFENSE_UNIT)
         elif self.mission_object_name == "President Aircraft":
-            return {
-                REGION_INDICES.AIR_FLEET_KEY_DOOR: 1
+            self.distribution = {
+                REGION_INDICES.AIR_FLEET_DEFEATED_CRAFT: 1
             }
-            self.distribution = Objects.GetDistributionInStageByBaseType(self.stageId, ObjectType.AIR_FLEET_PRESIDENT_POD)
         elif self.mission_object_name == "Egg Balloon":
-            return {
-                REGION_INDICES.IRON_JUNGLE_KEY_DOOR: 1
+            self.distribution = {
+                REGION_INDICES.IRON_JUNGLE_DEFEATED_CRAFT: 1
             }
-            self.distribution = Objects.GetDistributionInStageByBaseType(self.stageId, ObjectType.IRON_JUNGLE_EGG_BALLOON)
         elif self.mission_object_name == "Computer":
             self.distribution = Objects.GetDistributionInStageByBaseType(self.stageId, ObjectType.GUN_FORTRESS_COMPUTER)
         elif self.mission_object_name == "Defense":
@@ -147,25 +149,15 @@ class MissionClearLocation:
             self.distribution = Objects.GetDistributionInStageByBaseType(self.stageId, ObjectType.COSMIC_FALL_COMPUTER_ROOM)
         elif self.mission_object_name == "Shield":
             self.distribution = Objects.GetDistributionInStageByBaseType(self.stageId, ObjectType.FINAL_HAUNT_SHIELD)
+        elif self.mission_object_name == "400 Rings":
+            self.distribution = {
+                REGION_INDICES.CIRCUS_PARK_RINGS_COLLECTED: 1
+            }
         else:
-            if self.stageId in [Levels.STAGE_THE_LAST_WAY]:
-                pass
-            else:
-                raise Exception(f"Unhandled exception with auto distribution type:{self.stageId}/{self.mission_object_name}")
+            raise Exception(f"Unhandled exception with auto distribution type:{self.stageId}/{self.mission_object_name}")
 
         if self.distribution is None:
-            if self.stageId in [Levels.STAGE_THE_LAST_WAY]:
-                pass
-            else:
-                raise Exception(f"Unhandled exception lack of"
-                            f" type:{self.stageId}/{self.mission_object_name}")
-
-    def setDistribution(self, dist):
-        if self.distribution is not None:
-            raise Exception("Invalid distribution")
-
-        self.distribution = dist
-        return self
+            raise Exception(f"Unhandled exception lack of type:{self.stageId}/{self.mission_object_name}")
 
     def getDistribution(self):
         if self.distribution is not None:
@@ -179,11 +171,8 @@ class MissionClearLocation:
         self.requirements = reqs
         return self
 
-    def setCraftRequirement(self, reqs, level):
-        if type(reqs) is not list:
-            reqs = [reqs]
-        self.craft_requirements = reqs
-        self.craftLogicType = level
+    def setCraftRequirement(self):
+        self.is_craft = True
         return self
 
     def setLogicLevel(self, level):
@@ -334,10 +323,11 @@ MissionClearLocations = [
     MissionClearLocation(STAGE_LETHAL_HIGHWAY, MISSION_ALIGNMENT_HERO, 1,
                          "Tank", character=Characters.Sonic)
         .setRequirement(REGION_RESTRICTION_TYPES.Gun)
-        .setCraftRequirement(REGION_RESTRICTION_TYPES.ShadowRifle, Options.LogicLevel.option_easy),
+        .setCraftRequirement(),
 
     MissionClearLocation(STAGE_CRYPTIC_CASTLE, MISSION_ALIGNMENT_DARK, 5,
-                         "Lantern", character=Characters.Eggman),
+                         "Lantern", character=Characters.Eggman)
+        .setRequirement(REGION_RESTRICTION_TYPES.Torch),
     MissionClearLocation(STAGE_CRYPTIC_CASTLE, MISSION_ALIGNMENT_NEUTRAL, None,
                          "Goal Ring"),
     MissionClearLocation(STAGE_CRYPTIC_CASTLE, MISSION_ALIGNMENT_HERO, 2,
@@ -353,7 +343,7 @@ MissionClearLocations = [
     MissionClearLocation(STAGE_CIRCUS_PARK, MISSION_ALIGNMENT_NEUTRAL, None,
                          "Goal Ring"),
     MissionClearLocation(STAGE_CIRCUS_PARK, MISSION_ALIGNMENT_HERO, None,
-                         "Goal Ring"),
+                         "400 Rings"),
     MissionClearLocation(STAGE_CENTRAL_CITY, MISSION_ALIGNMENT_DARK, 5,
                          "Big Bomb", character=Characters.Doom),
     MissionClearLocation(STAGE_CENTRAL_CITY, MISSION_ALIGNMENT_HERO, 20,
@@ -391,7 +381,7 @@ MissionClearLocations = [
     MissionClearLocation(STAGE_AIR_FLEET, MISSION_ALIGNMENT_DARK, 1,
                          "President Aircraft", character=Characters.Doom)
         .setRequirement(REGION_RESTRICTION_TYPES.Gun)
-        .setCraftRequirement(REGION_RESTRICTION_TYPES.ShadowRifle, Options.LogicLevel.option_easy),
+        .setCraftRequirement(),
     MissionClearLocation(STAGE_AIR_FLEET, MISSION_ALIGNMENT_NEUTRAL, None,
                          "Goal Ring"),
     MissionClearLocation(STAGE_AIR_FLEET, MISSION_ALIGNMENT_HERO, 35,
@@ -403,7 +393,7 @@ MissionClearLocations = [
     MissionClearLocation(STAGE_IRON_JUNGLE, MISSION_ALIGNMENT_HERO, 1,
                          "Egg Balloon", character=Characters.Omega)
         .setRequirement(REGION_RESTRICTION_TYPES.Gun)
-        .setCraftRequirement(REGION_RESTRICTION_TYPES.ShadowRifle, Options.LogicLevel.option_easy),
+        .setCraftRequirement(),
     MissionClearLocation(STAGE_SPACE_GADGET, MISSION_ALIGNMENT_DARK, 6,
                          "Defense Unit", character=Characters.Doom)
         .setRequirement(REGION_RESTRICTION_TYPES.Gun),
@@ -438,11 +428,6 @@ MissionClearLocations = [
                          "Goal Ring"),
     MissionClearLocation(STAGE_THE_LAST_WAY, MISSION_ALIGNMENT_NEUTRAL, None,
                          None)
-        .setDistribution(
-        {
-            REGION_INDICES.THE_LAST_WAY_CHECKPOINT_SEVEN: 1
-        }
-    )
 ]
 
 BossClearLocations = \
@@ -714,7 +699,7 @@ def GetAllLocationInfo():
         location_id, entry_location_name = Names.GetObjectLocationName(object)
         info = LocationInfo(LOCATION_TYPE_OBJECT, location_id, entry_location_name,
                             stageId=object.stage, alignmentId=None, count=None, total=None,
-                            other=object.object_type, regionId=object.region, flag=object.is_hard)
+                            other=object.object_type, regionId=object.region, flag=ObjectTypes.ObjectFlags.HardLogic in object.flags)
         object_locations.append(info)
 
     for location in MissionClearLocations:
@@ -1537,6 +1522,7 @@ def count_locations(world):
             if item_type_data is None:
                 print("Check enemy sanity values instead if possible")
             if type(item_type_data) is not list:
+                print("Phase this out")
                 item_types = [item_type_data]
             else:
                 item_types = item_type_data

@@ -147,7 +147,7 @@ DESIRABLE_OBJECTS_MAD_MATRIX  = [
     SETObject(ObjectType.BLACK_WING, Levels.STAGE_MAD_MATRIX, 455, "24",
               region=REGION_INDICES.MAD_MATRIX_CIRCUIT_ROOM, old_name="24", is_hard=True),
     SETObject(ObjectType.BLACK_WORM, Levels.STAGE_MAD_MATRIX, 117, "25",
-              region=REGION_INDICES.MAD_MATRIX_YELLOW_START, weapon=WEAPONS.BIG_WORM_SHOOTER, old_name="25"),
+              region=REGION_INDICES.MAD_MATRIX_YELLOW_START, weapon=WEAPONS.WIDE_WORM_SHOOTER, old_name="25"),
     SETObject(ObjectType.EGG_PAWN, Levels.STAGE_MAD_MATRIX, 119, "26",
               region=REGION_INDICES.MAD_MATRIX_YELLOW_START, weapon=WEAPONS.EGG_GUN, old_name="26"),
     SETObject(ObjectType.EGG_PAWN, Levels.STAGE_MAD_MATRIX, 120, "27",

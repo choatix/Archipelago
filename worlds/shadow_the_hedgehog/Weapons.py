@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from BaseClasses import ItemClassification
-from . import Levels, Options, Objects, Names
+from . import Levels, Options, Objects, Names, Items, ObjectTypes
 from .Levels import LevelRegion
 from .Names import REGION_INDICES, WEAPONS
 from .ObjectTypes import ObjectType
@@ -50,62 +50,108 @@ class WeaponAttributes:
     SHADOW_RIFLE = 128
     EXPLOSION = 256
     LOCKON = 512
+    CRAFT = 1024
 
 
-def GetRuleByWeaponRequirement(player, req, regionInfo: LevelRegion):
+def DoMaxThing(stage_id, region_id):
 
-    if req is None or req == Names.REGION_RESTRICTION_TYPES.NoRestriction:
+    # Get all regions for the stage
+    # get rule by weapon requirement
+
+    pass
+
+def GetRuleByWeaponRequirement(player, req, stageId: int, fromRegion: int|None, as_weapon: bool = False):
+
+    if req == Names.REGION_RESTRICTION_TYPES.NoRestriction:
         return lambda state: True
 
-    if regionInfo is None:
+    if fromRegion is None:
         region_to_use = None
     else:
-        region_to_use = regionInfo.regionIndex
+        region_to_use = fromRegion
 
     if region_to_use is None:
         region_to_use = 0
 
-    if regionInfo is not None:
-        matches_items = [ item for item in WEAPON_INFO if (regionInfo.stageId, region_to_use) in item.available_stages
+    other_weapons = []
+    if stageId is not None:
+        matches_items = [ item for item in WEAPON_INFO if (stageId, region_to_use) in item.available_stages
                           and (req in item.attributes or req is None) ]
+        other_weapons = [item for item in WEAPON_INFO if stageId in
+                         [stage[0] for stage in item.available_stages if req in item.attributes or req is None] and
+                         item not in matches_items]
     else:
         matches_items = [ item for item in WEAPON_INFO if item.name == req ]
 
-    accessibility_rule = None
+    matches_groups = [group[0] for group in WeaponGroups.items() if len([x for x in group[1] if x in
+                                                                         [m.game_id for m in matches_items]]) > 0]
 
-    if len(matches_items) == 0:
-        matches_items = [item for item in WEAPON_INFO if regionInfo.stageId in
-                         [ stage[0] for stage in item.available_stages if req in item.attributes ]]
+    weapon_dict = GetWeaponDictById()
+    weapon_name_dict = GetWeaponDict()
 
-        if len(matches_items) != 0:
-            built_rule = lambda state: True
-            for item in matches_items:
-                possibilities = [ c[1] for c in item.available_stages if c[0] == regionInfo.stageId]
-                for p in possibilities:
-                    built_rule = lambda state, br=built_rule: (br(state) or
-                                                               state.can_reach_region(Levels.stage_id_to_region(p[0], p[1])))
+    base_matches = []
+    base_matches.extend([x.name for x in matches_items])
+    base_matches.extend(matches_groups)
 
-            accessibility_rule = built_rule
-
-    matches_groups = [ group[0] for group in WeaponGroups.items() if len([ x for x in group[1] if x in
-                                                                           [m.game_id for m in matches_items]]) > 0]
-    matches = []
-    matches.extend([ x.name for x in matches_items])
-    matches.extend(matches_groups)
-
-    #print(stage, regions_use, matches)
-
-    if len(matches) == 0:
-        print("Unable to find weapon match", regionInfo.stageId, req, regionInfo.regionIndex)
+    if len(base_matches) == 0 and len(other_weapons) == 0:
+        print("Unable to find weapon match", stageId, req, fromRegion)
         #raise Exception("Invalid accessibility")
         return None
-        return lambda state: False
 
-    weapon_rule = lambda state, reqs=matches: state.has_any([m for m in reqs],player)
-    if accessibility_rule is not None:
-        weapon_rule = lambda state, a_rule=accessibility_rule, w_rule=weapon_rule: a_rule(state) and w_rule(state)
+    individual_weapon_rules = []
+    base_rule = None
+    if len(base_matches) > 0:
+        base_rule = lambda state, em=base_matches: state.has_any(em, player)
+        if as_weapon:
+            for weapon in base_matches:
+                i_rule = lambda state, m=weapon: state.has(m, player)
+                if weapon in weapon_name_dict:
+                    individual_weapon_rules.append((weapon_name_dict[weapon], i_rule))
 
-    return weapon_rule
+    secondary_rule = None
+    if len(other_weapons) > 0:
+        options = {}
+        for other in other_weapons:
+            options[other.game_id] = [ o[1] for o in other.available_stages if o[0] == stageId ]
+
+        for option in options.items():
+            weapon_id = option[0]
+            weapon = weapon_dict[weapon_id]
+            weapon_regions = option[1]
+
+            #weapon_group = [group[0] for group in WeaponGroups.items() if
+            #                  len([x for x in group[1] if x == weapon.game_id]) > 0]
+
+            matches = [weapon.name]
+            #matches.extend(weapon_group)
+
+            region_escapes = [ Levels.GetDistributionEscapeRegionEventName(stageId, l) for l in weapon_regions ]
+
+            secondary_new_rule = lambda state, re=region_escapes, m=matches: (
+                    state.has_any(m, player) and state.has_any(re, player))
+
+            if as_weapon:
+                individual_weapon_rules.append((weapon, secondary_new_rule))
+
+            if secondary_rule is None:
+                secondary_rule = secondary_new_rule
+            else:
+                secondary_rule = lambda state, sr=secondary_rule, nr=secondary_new_rule: nr(state) or sr(state)
+
+
+    if base_rule is None and secondary_rule is None:
+        raise Exception("Invalid base/secondary weapon rule")
+    elif base_rule is None:
+        rule = secondary_rule
+    elif secondary_rule is None:
+        rule = base_rule
+    else:
+        rule = lambda state, br=base_rule, sr=secondary_rule: br(state) or sr(state)
+
+    if as_weapon:
+        return individual_weapon_rules
+    else:
+        return rule
 
 BASE_WEAPON_INFO = [
     WeaponInfo(WEAPONS.PISTOL, "Pistol", 2, 10,
@@ -113,7 +159,7 @@ BASE_WEAPON_INFO = [
                 Levels.STAGE_CENTRAL_CITY, Levels.STAGE_THE_DOOM,
                 (Levels.STAGE_DEATH_RUINS, REGION_INDICES.DEATH_RUINS_PULLEY),
                 Levels.STAGE_LOST_IMPACT, Levels.BOSS_BLACK_BULL_DR, Levels.BOSS_DIABLON_GF],
-               [WeaponAttributes.SHOT]),
+               [WeaponAttributes.SHOT, WeaponAttributes.CRAFT]),
     WeaponInfo(WEAPONS.SUB_MACHINE_GUN, "Sub Machine Gun", 2, 20,
                [Levels.STAGE_WESTOPOLIS,
                 Levels.STAGE_DIGITAL_CIRCUIT,Levels.STAGE_GLYPHIC_CANYON,Levels.STAGE_LETHAL_HIGHWAY,
@@ -124,7 +170,7 @@ BASE_WEAPON_INFO = [
                 Levels.STAGE_LOST_IMPACT,
                 Levels.BOSS_BLUE_FALCON,
                 Levels.BOSS_BLACK_DOOM_GF, Levels.BOSS_BLACK_DOOM_CF],
-               [WeaponAttributes.SHOT, WeaponAttributes.LONG_RANGE]),
+               [WeaponAttributes.SHOT, WeaponAttributes.LONG_RANGE, WeaponAttributes.CRAFT]),
     WeaponInfo(WEAPONS.SEMI_AUTOMATIC_RIFLE, "Semi Automatic Rifle", 4, 20,
                [Levels.STAGE_LETHAL_HIGHWAY,
                     Levels.STAGE_PRISON_ISLAND, (Levels.STAGE_CIRCUS_PARK,REGION_INDICES.CIRCUS_PARK_CHECKPOINT_THREE),
@@ -136,7 +182,7 @@ BASE_WEAPON_INFO = [
                 Levels.STAGE_SPACE_GADGET, Levels.STAGE_LOST_IMPACT,
                 Levels.STAGE_GUN_FORTRESS, (Levels.STAGE_COSMIC_FALL, REGION_INDICES.COSMIC_FALL_ZIPWIRE),
                 Levels.BOSS_BLACK_DOOM_CF],
-               [WeaponAttributes.SHOT, WeaponAttributes.LONG_RANGE]),
+               [WeaponAttributes.SHOT, WeaponAttributes.LONG_RANGE, WeaponAttributes.CRAFT]),
     WeaponInfo(WEAPONS.HEAVY_MACHINE_GUN, "Heavy Machine Gun", 6, 30,
                [(Levels.STAGE_CIRCUS_PARK, REGION_INDICES.CIRCUS_PARK_GUN_TURRET),
                 (Levels.STAGE_CENTRAL_CITY,REGION_INDICES.CENTRAL_CITY_GUN_TURRET),
@@ -149,20 +195,20 @@ BASE_WEAPON_INFO = [
                 (Levels.STAGE_BLACK_COMET,REGION_INDICES.BLACK_COMET_WARP_HOLE),
                 (Levels.STAGE_COSMIC_FALL, REGION_INDICES.COSMIC_FALL_PULLEY_NORMAL),
                 Levels.BOSS_EGG_BREAKER_IJ],
-               [WeaponAttributes.SHOT, WeaponAttributes.LONG_RANGE]),
+               [WeaponAttributes.SHOT, WeaponAttributes.LONG_RANGE, WeaponAttributes.CRAFT]),
     WeaponInfo(WEAPONS.GATLING_GUN, "Gatling Gun", 6, 40,
                [(Levels.STAGE_LETHAL_HIGHWAY, REGION_INDICES.LETHAL_HIGHWAY_KEY_DOOR),
                    (Levels.STAGE_THE_ARK,REGION_INDICES.THE_ARK_BLACK_VOLT),
                 (Levels.STAGE_IRON_JUNGLE, REGION_INDICES.IRON_JUNGLE_ROCKET), Levels.STAGE_GUN_FORTRESS,
                 (Levels.STAGE_BLACK_COMET,REGION_INDICES.BLACK_COMET_AIR_SAUCER)],
-               [WeaponAttributes.SHOT, WeaponAttributes.LONG_RANGE]),
+               [WeaponAttributes.SHOT, WeaponAttributes.LONG_RANGE, WeaponAttributes.CRAFT]),
     WeaponInfo(WEAPONS.EGG_GUN, "Egg Gun", 2, 20,
                [(Levels.STAGE_CRYPTIC_CASTLE, REGION_INDICES.CRYPTIC_CASTLE_BALLOON), Levels.STAGE_CIRCUS_PARK, Levels.STAGE_SKY_TROOPS,
                 Levels.STAGE_MAD_MATRIX, Levels.STAGE_IRON_JUNGLE, Levels.STAGE_LAVA_SHELTER,
                 Levels.BOSS_EGG_BREAKER_CC, Levels.BOSS_EGG_BREAKER_MM,
                 Levels.BOSS_EGG_BREAKER_IJ, Levels.BOSS_EGG_DEALER_BC,
                 Levels.BOSS_EGG_DEALER_LS, Levels.BOSS_EGG_DEALER_CF],
-        [WeaponAttributes.SHOT, WeaponAttributes.LONG_RANGE]),
+        [WeaponAttributes.SHOT, WeaponAttributes.LONG_RANGE, WeaponAttributes.CRAFT]),
     WeaponInfo(WEAPONS.LIGHT_SHOT, "Light Shot", 2, 20,
                 [Levels.STAGE_WESTOPOLIS,
                 Levels.STAGE_DIGITAL_CIRCUIT,Levels.STAGE_LETHAL_HIGHWAY,
@@ -170,7 +216,7 @@ BASE_WEAPON_INFO = [
                 Levels.STAGE_CENTRAL_CITY, Levels.STAGE_DEATH_RUINS,
                  (Levels.STAGE_SPACE_GADGET, REGION_INDICES.SPACE_GADGET_ZIPWIRE),
                  Levels.BOSS_BLACK_BULL_LH, Levels.BOSS_BLACK_BULL_DR, Levels.BOSS_DIABLON_BC],
-            [WeaponAttributes.SHOT]),
+            [WeaponAttributes.SHOT, WeaponAttributes.CRAFT]),
     WeaponInfo(WEAPONS.FLASH_SHOT, "Flash Shot", 2, 20,
                [Levels.STAGE_WESTOPOLIS, Levels.STAGE_GLYPHIC_CANYON,
                 Levels.STAGE_LETHAL_HIGHWAY, (Levels.STAGE_CRYPTIC_CASTLE,REGION_INDICES.CRYPTIC_CASTLE_HAWK),
@@ -178,7 +224,7 @@ BASE_WEAPON_INFO = [
                 Levels.STAGE_DEATH_RUINS, Levels.STAGE_SPACE_GADGET,
                 Levels.STAGE_BLACK_COMET, Levels.BOSS_DIABLON_BC, Levels.BOSS_BLACK_BULL_LH,
                Levels.BOSS_DIABLON_FH, Levels.BOSS_BLACK_DOOM_FH],
-               [WeaponAttributes.SHOT]),
+               [WeaponAttributes.SHOT, WeaponAttributes.CRAFT]),
     WeaponInfo(WEAPONS.RING_SHOT, "Ring Shot", 4, 20,
            [Levels.STAGE_SKY_TROOPS, Levels.STAGE_SPACE_GADGET,
                 Levels.STAGE_FINAL_HAUNT, Levels.BOSS_DIABLON_BC,
@@ -200,23 +246,23 @@ BASE_WEAPON_INFO = [
                 (Levels.STAGE_BLACK_COMET, REGION_INDICES.BLACK_COMET_AIR_SAUCER), #
                 (Levels.STAGE_COSMIC_FALL, REGION_INDICES.COSMIC_FALL_PULLEY_NORMAL),
                 Levels.BOSS_BLACK_DOOM_CF],
-[WeaponAttributes.NOT_AIMABLE, WeaponAttributes.EXPLOSION]),
+[WeaponAttributes.NOT_AIMABLE, WeaponAttributes.EXPLOSION, WeaponAttributes.CRAFT]),
     WeaponInfo(WEAPONS.TANK_CANNON, "Tank Cannon", 16, 5,
                [(Levels.STAGE_PRISON_ISLAND, REGION_INDICES.PRISON_ISLAND_KEY_DOOR),
                 (Levels.STAGE_IRON_JUNGLE,REGION_INDICES.IRON_JUNGLE_KEY_DOOR),
                 (Levels.STAGE_BLACK_COMET, REGION_INDICES.BLACK_COMET_BEHIND_KEY_DOOR)],
-[WeaponAttributes.NOT_AIMABLE, WeaponAttributes.EXPLOSION]),
+[WeaponAttributes.NOT_AIMABLE, WeaponAttributes.EXPLOSION, WeaponAttributes.CRAFT]),
     WeaponInfo(WEAPONS.BLACK_BARREL, "Black Barrel", 4, 5,
                [(Levels.STAGE_SKY_TROOPS, REGION_INDICES.SKY_TROOPS_ROCKET_NORMAL),
                 (Levels.STAGE_SPACE_GADGET, REGION_INDICES.SPACE_GADGET_AIR_SAUCER_HERO),
     (Levels.STAGE_BLACK_COMET,REGION_INDICES.BLACK_COMET_BLACK_TURRET),
                 Levels.STAGE_FINAL_HAUNT,Levels.STAGE_THE_LAST_WAY],
-[WeaponAttributes.NOT_AIMABLE, WeaponAttributes.EXPLOSION]),
+[WeaponAttributes.NOT_AIMABLE, WeaponAttributes.EXPLOSION, WeaponAttributes.CRAFT]),
     WeaponInfo(WEAPONS.BIG_BARREL, "Big Barrel", 8, 5,
                [(Levels.STAGE_COSMIC_FALL, REGION_INDICES.COSMIC_FALL_PULLEY_NORMAL),
                 Levels.STAGE_FINAL_HAUNT,
                 Levels.BOSS_BLACK_DOOM_FH,Levels.STAGE_THE_LAST_WAY],
-[WeaponAttributes.NOT_AIMABLE, WeaponAttributes.EXPLOSION]),
+[WeaponAttributes.NOT_AIMABLE, WeaponAttributes.EXPLOSION, WeaponAttributes.CRAFT]),
     WeaponInfo(WEAPONS.EGG_BAZOOKA, "Egg Bazooka", 8, 5,
                [(Levels.STAGE_CRYPTIC_CASTLE, REGION_INDICES.CRYPTIC_CASTLE_TORCH),
                 (Levels.STAGE_CIRCUS_PARK, REGION_INDICES.CIRCUS_PARK_CHECKPOINT_THREE),
@@ -225,7 +271,7 @@ BASE_WEAPON_INFO = [
                 Levels.STAGE_IRON_JUNGLE, Levels.STAGE_LAVA_SHELTER,
                 Levels.BOSS_EGG_BREAKER_MM, Levels.BOSS_EGG_BREAKER_IJ,
                 Levels.BOSS_EGG_DEALER_BC, Levels.BOSS_EGG_DEALER_LS, Levels.BOSS_EGG_DEALER_CF],
-[WeaponAttributes.NOT_AIMABLE, WeaponAttributes.EXPLOSION]),
+[WeaponAttributes.NOT_AIMABLE, WeaponAttributes.EXPLOSION, WeaponAttributes.CRAFT]),
     WeaponInfo(WEAPONS.RPG, "RPG", 6, 10,
                [(Levels.STAGE_THE_DOOM, REGION_INDICES.THE_DOOM_BOMBS),
                 Levels.STAGE_THE_ARK,
@@ -263,11 +309,11 @@ BASE_WEAPON_INFO = [
 [WeaponAttributes.VACUUM]),
     WeaponInfo(WEAPONS.LASER_RIFLE, "Laser Rifle", 3, 20,
                [(Levels.STAGE_BLACK_COMET,REGION_INDICES.BLACK_COMET_AIR_SAUCER)],
-[WeaponAttributes.SHOT, WeaponAttributes.LONG_RANGE]),
+[WeaponAttributes.SHOT, WeaponAttributes.LONG_RANGE, WeaponAttributes.CRAFT]),
     WeaponInfo(WEAPONS.SPLITTER, "Splitter", 4, 20,
                [(Levels.STAGE_DEATH_RUINS,REGION_INDICES.DEATH_RUINS_PULLEY), Levels.STAGE_AIR_FLEET,
                 (Levels.STAGE_SPACE_GADGET, REGION_INDICES.SPACE_GADGET_AIR_SAUCER_HERO), Levels.STAGE_GUN_FORTRESS],
-[WeaponAttributes.SHOT]),
+[WeaponAttributes.SHOT, WeaponAttributes.CRAFT]),
     WeaponInfo(WEAPONS.REFRACTOR, "Refractor", 5, 20,
                [(Levels.STAGE_BLACK_COMET,REGION_INDICES.BLACK_COMET_AIR_SAUCER),
                 #(Levels.STAGE_BLACK_COMET,REGION_INDICES.BLACK_COMET_END_WORMS),
@@ -277,7 +323,7 @@ BASE_WEAPON_INFO = [
 
                 Levels.STAGE_FINAL_HAUNT,
                 Levels.BOSS_BLACK_DOOM_FH, Levels.STAGE_THE_LAST_WAY],
-[WeaponAttributes.SHOT, WeaponAttributes.LONG_RANGE]),
+[WeaponAttributes.SHOT, WeaponAttributes.LONG_RANGE, WeaponAttributes.CRAFT]),
     WeaponInfo(WEAPONS.SURVIVAL_KNIFE, "Survival Knife", 2, 5,
                [Levels.STAGE_THE_DOOM],
 []),
@@ -389,13 +435,14 @@ BASE_WEAPON_INFO = [
 [WeaponAttributes.SPECIAL, WeaponAttributes.VACUUM]),
     WeaponInfo(0x40, "Omochao Gun", 10, 10,
                [],
-[WeaponAttributes.SPECIAL, WeaponAttributes.SHOT, WeaponAttributes.LONG_RANGE]),
+[WeaponAttributes.SPECIAL, WeaponAttributes.SHOT, WeaponAttributes.LONG_RANGE, WeaponAttributes.CRAFT]),
     WeaponInfo(0x42, "Heal Cannon", None, 10,
                [],
 [WeaponAttributes.SPECIAL, WeaponAttributes.HEAL]),
     WeaponInfo(0x43, "Shadow Rifle", 32, 20,
                [],
-[WeaponAttributes.SPECIAL, WeaponAttributes.SHOT, WeaponAttributes.LONG_RANGE, WeaponAttributes.SHADOW_RIFLE])
+[WeaponAttributes.SPECIAL, WeaponAttributes.SHOT, WeaponAttributes.LONG_RANGE,
+ WeaponAttributes.SHADOW_RIFLE, WeaponAttributes.CRAFT])
 ]
 
 
@@ -546,7 +593,7 @@ def GenerateWeaponInfo():
 
     shadow_box_info = [w for w in Objects.DESIRABLE_OBJECTS if w.object_type == ObjectType.SHADOW_BOX]
     stage_info = [ w for w in Objects.DESIRABLE_OBJECTS if w.weapon is not None and w.object_type !=  ObjectType.SHADOW_BOX
-                   and w.object_type in Objects.GetPlayableObjectTypes()]
+                   and w.object_type in Objects.GetPlayableObjectTypes() and ObjectTypes.ObjectFlags.Floater not in w.flags]
 
     for weapon_id in Names.WEAPONS:
         found_weapon = [ i for i in BASE_WEAPON_INFO if i.game_id == weapon_id ][0]

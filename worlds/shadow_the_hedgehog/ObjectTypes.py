@@ -1,5 +1,9 @@
 from enum import IntEnum
 
+class ObjectFlags(IntEnum):
+    HardLogic = 0
+    Floater = 1
+
 
 class ObjectTypeVehicles(IntEnum):
     STANDARD_CAR = 1
@@ -127,14 +131,16 @@ class SETObject:
     name: str
     vehicle: int
     restrictionType: int
-    is_hard: bool
+    #is_hard: bool
     weapon: int
     character: int
     old_name: str
+    flags = None
 
     def __init__(self, object_type, stage, index, name,
                  vehicle=None, region=None, count=1, restrictionType=10,
-                 is_hard=False, weapon=None, character=None, old_name=None):
+                 is_hard=False, weapon=None, character=None, old_name=None,
+                 floater=False):
         self.object_type = object_type
         self.stage = stage
         self.index = index
@@ -143,7 +149,12 @@ class SETObject:
         self.region = region
         self.count = count
         self.restrictionType = restrictionType
-        self.is_hard = is_hard
+        #self.is_hard = is_hard
         self.weapon = weapon
         self.character = character
         self.old_name = old_name
+        self.flags = []
+        if is_hard:
+            self.flags.append(ObjectFlags.HardLogic)
+        if floater:
+            self.flags.append(ObjectFlags.Floater)

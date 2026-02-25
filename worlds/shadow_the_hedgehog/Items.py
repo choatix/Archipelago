@@ -219,7 +219,7 @@ def GetStageAlignmentObject(stageId, alignmentId):
         return None
 
     item = i[0]
-    if item.mission_object_name is None or item.mission_object_name in ["Goal Ring", "Computer Room", "Core"]:
+    if item.mission_object_name is None or item.mission_object_name in ["Goal Ring", "Computer Room", "Core", "400 Rings"]:
         return None
 
     return LEVEL_ID_TO_LEVEL[stageId] + " " + item.mission_object_name
