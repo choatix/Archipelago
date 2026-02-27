@@ -60,7 +60,21 @@ def DoMaxThing(stage_id, region_id):
 
     pass
 
+WeaponRuleCache = {}
+
 def GetRuleByWeaponRequirement(player, req, stageId: int, fromRegion: int|None, as_weapon: bool = False):
+
+    arg_key = (player, req, stageId, fromRegion, as_weapon)
+
+    if arg_key in WeaponRuleCache:
+        return WeaponRuleCache[arg_key]
+
+    rule_result = GetRuleByWeaponRequirementData(player, req, stageId, fromRegion, as_weapon)
+    WeaponRuleCache[arg_key] = rule_result
+    return rule_result
+
+
+def GetRuleByWeaponRequirementData(player, req, stageId: int, fromRegion: int|None, as_weapon: bool = False):
 
     if req == Names.REGION_RESTRICTION_TYPES.NoRestriction:
         return lambda state: True

@@ -1,5 +1,6 @@
 from dataclasses import dataclass
-from Options import PerGameCommonOptions, Choice, DefaultOnToggle, Toggle, Range, OptionSet, OptionDict, OptionGroup
+from Options import PerGameCommonOptions, Choice, DefaultOnToggle, Toggle, Range, OptionSet, OptionDict, OptionGroup, \
+    NamedRange
 from . import Names
 
 
@@ -108,7 +109,6 @@ class ObjectiveSanityBehaviour(Choice):
             (Must handle early accessible / update to current value detected in the stage)
         Base Clear: You do not need to collect items to progress stages, but as objectivesanity is on,
             required to still press Z to avoid inability to get checks.
-
     """
 
     option_default = 0
@@ -205,7 +205,7 @@ class Keysanity(Toggle):
 
 class KeysRequiredForDoors(Range):
     """
-        Determines how many keys are required to open doors.
+        Determines how many keys are required to open doors. This works by providing fake keys to the player.
     """
     display_name = "Keys Required For Doors"
     range_start = 0
@@ -215,24 +215,35 @@ class KeysRequiredForDoors(Range):
 class KeyCollectionMethod(Choice):
     """
         Determines how keys can be collected.
+        Local: Only the player collecting keys locally will collect keys for opening key doors.
+            If keysanity is enabled, you will keep these keys when re-entering stages,
+            but if disabled, you need to collect each time. Rare logic will require this.
+        Arch: All keys must be obtained as archipelago items.
+        Both: Arch items are included and local accessible keys also contribute to the key count.
     """
     display_name = "Key Collection Method"
     option_local = 0
     option_arch = 1
     option_both = 2
-    default = option_arch
+    default = option_local
 
-class Checkpointsanity(Toggle):
+class Checkpointsanity(DefaultOnToggle):
     """
         Determines whether checkpoint sanity is enabled.
         This only adds checks and does not add anything to the pool.
     """
     display_name = "Checkpoint Sanity"
 
+
 class CheckpointShuffle(Choice):
     """
         Determines whether checkpoint shuffle is enabled.
-        This only adds checks and does not add anything to the pool.
+        Off: Checkpoint behaviour acts as normal.
+        Unlocks Only: All checkpoints are added as items into the multiworld,
+            allowing you to jump to later in the stage when unlocking.
+        Start And Unlock: Checkpoints spawns for stages are randomised to be other checkpoints.
+            To access Checkpoint 0 when unlocked, for relevant stages,
+            You must pause and press Y then restart the stage.
     """
     display_name = "Checkpoint Shuffle"
     option_off = 0
@@ -244,7 +255,7 @@ class CheckpointConvenience(DefaultOnToggle):
     """
         Determines whether checkpoint convenience is enabled, allowing warping back to a checkpoint
         On re-entering a stage if it has been enabled before.
-        Requires Checkpoint sanity.
+        Requires Checkpoint sanity to function.
     """
     display_name = "Checkpoint Convenience"
 
@@ -343,7 +354,7 @@ class SelectGatesCount(Range):
     display_name = "Select Gates"
     range_start = 1
     range_end = 10
-    default = 2
+    default = 5
 
 
 
@@ -361,7 +372,7 @@ class GateUnlockRequirement(Choice):
 
 class GateDensity(Range):
     """
-    Determines the density of items required for gates
+    Determines the density of items required for gates as per gate formula.
     """
     display_name = "Gate Density"
     range_start = 0
@@ -446,9 +457,14 @@ class AutoClearMissions(DefaultOnToggle):
 class LevelProgression(Choice):
     """
         Which type of logic to use for progression through the game.
-        Select will provide stage unlock items to unlock stages via the Select screen.
-        Story will require the user to play through story mode.
-        Select mode can still be used, but recommended to complete missions in story mode where possible.
+        Select will ignore story mode progression, and accessibility to stages will be given by items, based on gate options.
+            See gates options for more information on gates.
+
+        Story progression takes the story path and unlocks stages after clearing previous stages in story mode.
+        Story mode stages will be available in select mode, and clearing in select mode
+            will automatically follow the story path, sometimes leading to bosses blocking further stages.
+            Use the /story command to see what stages are available in story and
+            /story /s{stage} to set the story progression to where it needs to be.
     """
     display_name = "Level Progression"
     option_select = 0  # All stages will be unlocked through unlocks to Select Mode
@@ -459,7 +475,8 @@ class LevelProgression(Choice):
 class SelectBosses(DefaultOnToggle):
     """
         Whether bosses can be unlocked via select mode.
-        Note that mid-bosses require the ability to access the main stage in order to enter them.
+        Note that mid-bosses require the ability to access the main stage
+            in order to enter them but may be unlocked before they can be entered.
     """
     display_name = "Select Bosses"
 
@@ -515,8 +532,10 @@ class LogicLevel(Choice):
 class ChaosControlLogicLevel(Choice):
     """
         Determines the chaos control logic level for play-through.
+        Note: This functionality may not work quite as intended yet with checkpoint shuffle.
         Off: Chaos Control is never required to make progress.
         Easy: Stages where the player will naturally have chaos control are included.
+        Intermediate: Stages with workarounds that are not extremely complicated are included.
         Hard: Requires the player to work out building up and handling gauge.
     """
     display_name = "Chaos Control Logic Level"
@@ -530,6 +549,7 @@ class BossLogicLevel(Choice):
     """
         Determines the boss logic level for playthrough.
         Easy boss logic ensures the player has access to one of the weapons within the stage in order to beat it.
+        All bosses can be beaten without any progression otherwise, apart from Iron Jungle Egg Breaker.
     """
     display_name = "Boss Logic Level"
     option_easy = 0  # Logic adds in easier elements for completion
@@ -537,33 +557,31 @@ class BossLogicLevel(Choice):
     option_hard = 2  # Requires skips to traverse regions.
     default = option_easy
 
-class CraftLogicLevel(Choice):
+class CraftLogicLevel(NamedRange):
     """
         Determines the craft logic level for playthrough - distinguishing a difference
         in logic for crafts in Iron Jungle, Lethal Highway and Air Fleet
+
+        A divider for calculating amount of hits required to take down a craft.
+        Option Shadow Rifle: Use lowest setting but explicitly require the Shadow Rifle
+        Option Impossible: Logic does not take into consideration any multiplier
+            The maximum hits (may) require infinite ammo
+        Other:
+            Apply reduction by that value to the total number of hits on the craft
+
     """
     display_name = "Craft Logic Level"
     option_shadow_rifle = 0
-    option_easier = 1
-    option_normal = 2
-    option_harder = 3
-    default = option_normal
-
-class AllowDangerousPercentage(Toggle):
-    """
-        Allows setting dangerous logic for percentages for objectives.
-        Do not enable this unless you are very sure about what you are setting!
-    """
-    display_name = "Dangerous Percentage"
-    option_off = 0
-    option_on = 1
-    default = option_off
-
-class BossChecks(Toggle):
-    """
-        Determines if bosses provide checks. On vanilla story mode, bosses will still have to be fought to progress.
-    """
-    display_name = "Boss Checks"
+    default = 6
+    range_start = 0
+    range_end = 10
+    special_range_names = {
+        "shadow_rifle": 0,
+        "impossible": 1,
+        "hard": 3,
+        "normal": 6,
+        "easy": 8
+    }
 
 class StoryShuffle(Choice):
     """
@@ -580,19 +598,27 @@ class StoryShuffle(Choice):
 
 class IncludeLastStoryShuffle(Toggle):
     """
-        Determines whether to include Last Way / Devil Doom in the story shuffle.
+        Determines whether to include Last Way accessibility in the seed.
+
+        In story mode:
         By enabling this, Devil Doom (the final fight) will be hidden in story mode and must be found
         in order to clear the game.
         Last Way goes to a random stage at the end, hence why Devil Doom MUST be shuffled in this way.
-        Note, if you are in the Devil Doom stage without the goal unlocked, you will be unable to complete it,
-        and must come back when unlocked.
+
+        In Select mode:
+        Last Story will unlock early once the stage is unlocked via item or gate. Entering here plays as
+        normal end game would,  and would lead to Devil Doom afterwards.
+
+        Note, if you are in the Devil Doom stage without the required goal items unlocked, you will be unable to complete it,
+        Shadow will run out of rings on a loop and the stage must be exited and returned to later.
+
     """
     display_name = "Include Last Story"
 
 
 class SecretStoryProgression(Toggle):
     """
-        When using trackers, hide the progress of stages until the player has found them in the story mode.
+        When using UT, hide the progress of stages until the player has found them in the story mode.
     """
     display_name = "Secret Story Progression"
 
@@ -947,7 +973,6 @@ class ShadowTheHedgehogOptions(PerGameCommonOptions):
     boss_logic_level: BossLogicLevel
     craft_logic_level: CraftLogicLevel
     chaos_control_logic_level: ChaosControlLogicLevel
-    allow_dangerous_settings: AllowDangerousPercentage
     story_shuffle: StoryShuffle
     include_last_way_shuffle: IncludeLastStoryShuffle
     secret_story_progression: SecretStoryProgression
@@ -981,9 +1006,7 @@ class ShadowTheHedgehogOptions(PerGameCommonOptions):
     story_and_select_start_together: StoryAndSelectStartTogether
     select_percentage: SelectPercentage
     gate_density: GateDensity
-
     exceeding_items_filler: ExceedingItemsFiller
-    exceeding_items_filler_random: ExceedingItemsFillerRandom
     start_inventory_excess_items: StartInventoryExcessItems
     exclude_go_mode_items: ExcludeGoModeItems
     enable_traps: EnableTraps
@@ -998,28 +1021,57 @@ class ShadowTheHedgehogOptions(PerGameCommonOptions):
 
 
 shadow_option_groups = [
-    OptionGroup("Goal",
-        [GoalChaosEmeralds, GoalMissions, GoalFinalMissions,
-         GoalHeroMissions, GoalDarkMissions, GoalObjectiveMissions,
-         GoalBosses]),
+
     OptionGroup("Sanities", [ObjectiveSanity, EnemyObjectiveSanity,
-                             CharacterSanity, Enemysanity, Keysanity,
-                             Checkpointsanity, WeaponsanityUnlock, WeaponsanityHold,
-                             WeaponGroups, SelectBosses,
-                             VehicleLogic]),
-    OptionGroup("Sanity Config", [LogicLevel, ObjectivePercentage, EnemyObjectivePercentage,
-                                  ObjectiveCompletionPercentage, ObjectiveCompletionEnemyPercentage,
-                                  ObjectiveItemPercentageAvailable, ObjectiveItemEnemyPercentageAvailable,
-                                  EnemySanityPercentage, PercentOverrides,
-                                  MinimumRank, EnemyFrequency, EnemyObjectiveFrequency,
-                                  ObjectiveFrequency, BossLogicLevel, CraftLogicLevel], True),
-    OptionGroup("Story", [LevelProgression, IncludeLastStoryShuffle, SecretStoryProgression,
-                          StoryBossCount, StartingLevelMethod,
-                          SingleDiablon, SingleBlackDoom, SingleEggDealer,
-                          StoryProgressionBalancing ]),
-    OptionGroup("Junk", [ExceedingItemsFiller, GaugeFiller], True),
-    OptionGroup("Other", [StartingStages, ForceObjectiveSanityChance, ForceObjectiveSanityMax,
-                          ForceObjectiveSanityMaxCounter, ExcludedStages,
-                          AutoClearMissions, AllowDangerousPercentage,
-                          RifleComponents], True)
+                             CharacterSanity, Checkpointsanity,
+                             Keysanity, Enemysanity,
+                             WeaponsanityUnlock, WeaponsanityHold,
+                             VehicleLogic, ObjectUnlocks,
+                             ShadowBoxes, EnergyCores, GoldBeetleSanity,
+                             DoorSanity, KeyCollectionMethod, Itemsanity,
+                             CheckpointShuffle]),
+
+    OptionGroup("Progression", [StartingStages, LevelProgression, SelectGates,
+                                SelectGatesCount, GateUnlockRequirement,
+                                GateDensity, SelectBosses, StoryShuffle,
+                                SelectPercentage, StoryBossCount,
+                                IncludeLastStoryShuffle,
+                                ExcludeGoModeItems]),
+
+    OptionGroup("Difficulty", [LogicLevel, BossLogicLevel, CraftLogicLevel,
+                               ChaosControlLogicLevel]),
+
+    OptionGroup("Goal", [GoalChaosEmeralds, GoalMissions,
+                         GoalObjectiveMissions, GoalFinalMissions,
+                         GoalHeroMissions, GoalDarkMissions,
+                         GoalBosses, GoalFinalBosses]),
+
+    OptionGroup("Objective Configuration", [
+        ObjectiveSanitySystem, ObjectiveSanityBehaviour, KeysRequiredForDoors,
+        ObjectivePercentage, ObjectiveCompletionPercentage, ObjectiveItemPercentageAvailable, ObjectiveFrequency,
+        EnemyObjectivePercentage, ObjectiveCompletionEnemyPercentage, ObjectiveItemEnemyPercentageAvailable, EnemyObjectiveFrequency,
+        EnemySanityPercentage, EnemyFrequency, PercentOverrides
+        ]),
+
+    OptionGroup("Configuration", [
+        RifleComponents, ExcludedStages,
+        ObjectZiplines, ObjectPulleys, ObjectRockets, ObjectUnits, ObjectWarpHoles, ObjectLightDashes,
+        SingleDiablon, SingleBlackDoom, SingleEggDealer,
+        BossEnemysanity, DifficultEnemysanity, LastWayEnemysanity,
+        StoryAndSelectStartTogether, StoryProgressionBalancing, StoryProgressionBalancingPasses,
+        ForceObjectiveSanityChance, ForceObjectiveSanityMax, ForceObjectiveSanityMaxCounter,
+        StartingLevelMethod, SecretStoryProgression, CheckpointConvenience, MinimumRank, AutoClearMissions,
+        StartInventoryExcessItems
+
+    ]),
+
+    OptionGroup("Extra Items", [RingFiller, GaugeFiller, AmmoBoostFiller,
+                                EnableTraps, TrapFillPercentage,
+                                PoisonTraps, AmmoTraps, CheckpointTraps,
+                                WeaponSanityMinAvailable, WeaponSanityMaxAvailable, WeaponGroups]),
+
+    OptionGroup("Other", [RingLink, MusicShuffle, ShadowMod, ExceedingItemsFiller]),
+
+    OptionGroup("Plando", [PlandoStartingStages, PlandoCheckpointSpawns])
+
 ]

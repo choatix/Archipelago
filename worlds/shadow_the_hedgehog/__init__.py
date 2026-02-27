@@ -243,6 +243,22 @@ class ShtHWorld(World):
                 self.options.select_gates_count != 7):
             self.options.select_gates_count = Options.SelectGatesCount(7)
 
+        if self.options.gate_unlock_requirement == Options.GateUnlockRequirement.option_objective and \
+                not self.options.objective_sanity:
+            raise OptionError("Cannot use Objective gate unlock when not playing objectivesanity")
+
+        if self.options.gate_unlock_requirement == Options.GateUnlockRequirement.option_objective_available and \
+                not self.options.objective_sanity:
+            raise OptionError("Cannot use Objective Available gate unlock when not playing objectivesanity")
+
+        if self.options.objective_sanity_behaviour == Options.ObjectiveSanityBehaviour.option_base_clear and \
+                self.options.gate_unlock_requirement == Options.GateUnlockRequirement.option_objective:
+            raise OptionError("Cannot have gate unlock be objective when playing Base Clear")
+
+        if self.options.objective_sanity_behaviour == Options.ObjectiveSanityBehaviour.option_base_clear and \
+                self.options.gate_unlock_requirement == Options.GateUnlockRequirement.option_objective_available:
+            raise OptionError("Cannot have gate unlock be objective available when playing Base Clear")
+
     def calculate_non_objective_sanity_maximums(self):
         relevant_mission_clears =  [m for m in Locations.MissionClearLocations if
                                     (m.stageId, m.alignmentId) in [ (n[0], n[1]) for n in Locations.MINIMUM_STAGE_REQUIREMENTS ]
@@ -724,7 +740,7 @@ class ShtHWorld(World):
                 missionClear.requirement_count, missionClear.stageId, missionClear.alignmentId,
                 self.options.percent_overrides)
 
-            if max_required_objective > missionClear.requirement_count and not self.options.allow_dangerous_settings:
+            if max_required_objective > missionClear.requirement_count:
                 raise OptionError("Dangerous objective value set!")
 
         for enemy in Locations.GetEnemySanityLocations():
@@ -734,7 +750,7 @@ class ShtHWorld(World):
                                                           enemy.stageId, enemy.enemyClass, self.options.percent_overrides),
                 enemy.total_count, enemy.stageId, enemy.enemyClass, self.options.percent_overrides)
 
-            if max_required_enemy > enemy.total_count and not self.options.allow_dangerous_settings:
+            if max_required_enemy > enemy.total_count:
                 raise OptionError("Dangerous enemy value set!")
 
         if not self.options.objective_sanity and self.options.enemy_sanity:

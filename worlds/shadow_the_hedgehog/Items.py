@@ -460,7 +460,17 @@ def GetJunkItemInfo():
     return junk_items
 
 
+ItemCache = None
+
 def GetAllItemInfo():
+    global ItemCache
+
+    if ItemCache is None:
+        ItemCache = GetAllItemInfoData()
+
+    return ItemCache
+
+def GetAllItemInfoData():
     level_unlocks_item_table: List[ItemInfo] = PopulateLevelUnlockItems()
     level_warp_item_table = PopulateLevelWarpPoints()
 

@@ -119,15 +119,10 @@ def CraftCalculation(options, state, player, stage_id, craft_info, region_data):
 
     logic_level = options.craft_logic_level
     if logic_level == Options.CraftLogicLevel.option_shadow_rifle:
-        additional_rule = lambda state: state.has("Weapon:Shadow Rifle")
-    elif logic_level == Options.CraftLogicLevel.option_easier:
+        additional_rule = lambda state: state.has("Weapon:Shadow Rifle", player)
         multiplier = 0.1
-    elif logic_level == Options.CraftLogicLevel.option_normal:
-        multiplier = 0.25
-    elif logic_level == Options.CraftLogicLevel.option_harder:
-        multiplier = 0.35
     else:
-        print("Invalid multiplier", multiplier, logic_level)
+        multiplier = logic_level / 10
 
     if additional_rule is not None:
         if not additional_rule(state):
@@ -283,8 +278,8 @@ def handle_path_rules(options, player, from_region_id, additional_level_region, 
             explosion_rule = lambda state, wr=weapon_rule, br=bomb_rule: wr(state) or br(state)
         elif not weapon_available and options.object_unlocks and options.object_units:
             explosion_rule = bomb_rule
-        else:
-            print("No conditions")
+        #else:
+        #    print("No conditions")
 
         rule = lambda state,rx=rule, e=explosion_rule: e(state) and rx(state)
         outputs.append("Explosion")
@@ -661,7 +656,10 @@ def GetGateKeyRule(world, player, gate_no):
             count_options.append(r[0])
 
     if len(solid_requirements) == 0 and count_requirements is None:
-        print("Invalid gate options")
+        # Happens when there are no available options in the game
+        # Such as objective enemy sanity being disabled and only these stages being available, so just be open
+        world.gate_requirements[gate_no] = {}
+        return lambda state: True
     elif len(solid_requirements) > 0 and count_requirements is None:
         return lambda state, sr=solid_requirements, : state.has_all_counts(sr, player)
     elif count_requirements is not None:
@@ -748,7 +746,7 @@ def CountRegionAccessibilityNew(options, state, player, stage_id, ix, stage_regi
     for region in stage_regions:
         count_in_region = count_data[region]
         if count_in_region > 0:
-            has_escape_path = HasEscapePath(stage_id, region, options)
+            has_escape_path = HasEscapePath(stage_id, region, options, player)
 
             if (stage_id, region) in given_keys:
                 required = given_keys[(stage_id, region)]
@@ -757,7 +755,7 @@ def CountRegionAccessibilityNew(options, state, player, stage_id, ix, stage_regi
             safe = state.has(required, player)
 
             if safe and has_escape_path:
-                if HasInescapablePath(stage_id, region, options):
+                if HasInescapablePath(stage_id, region, options, player):
                     count_options[region] = count_data[region]
                     safe = False
                 else:
@@ -1594,16 +1592,16 @@ def GetEscapePathRule(options, player, stage_id, region_id):
     if stage_id in Levels.BOSS_STAGES:
         return lambda state: state.can_reach_region(Levels.boss_stage_id_to_region(stage_id, region_id), player)
 
-    if not HasEscapePath(stage_id, region_id, options):
+    if not HasEscapePath(stage_id, region_id, options, player):
         return lambda state: state.can_reach_region(Levels.stage_id_to_region(stage_id, region_id), player)
 
-    if HasInescapablePath(stage_id, region_id, options):
+    if HasInescapablePath(stage_id, region_id, options, player):
         final_item = Items.GetFinalItem()
         return lambda state: state.has(final_item.name, player) and state.can_reach_region(Levels.stage_id_to_region(stage_id, region_id), player)
         # Do not use this one
         return lambda state: False
 
-    results = GetCheckpointEscapesWithCache(options)
+    results = GetCheckpointEscapesWithCache(options, player)
     simplified_regions = results[stage_id][2][region_id]
 
     rule_options = []
@@ -1780,17 +1778,17 @@ def GetCheckpointEscapes(options, level):
 
     return region_simplified, stuck_regions, unstickable_regions
 
-STORED_CHECKPOINT_ESCAPES = None
+STORED_CHECKPOINT_ESCAPES = {}
 
-def GetCheckpointEscapesWithCache(options):
+def GetCheckpointEscapesWithCache(options, player):
     global STORED_CHECKPOINT_ESCAPES
-    if STORED_CHECKPOINT_ESCAPES is None:
-        STORED_CHECKPOINT_ESCAPES = GetAllCheckpointEscapes(options)
+    if player not in STORED_CHECKPOINT_ESCAPES:
+        STORED_CHECKPOINT_ESCAPES[player] = GetAllCheckpointEscapes(options)
 
-    return STORED_CHECKPOINT_ESCAPES
+    return STORED_CHECKPOINT_ESCAPES[player]
 
-def HasEscapePath(level, region, options):
-    check_data = GetCheckpointEscapesWithCache(options)
+def HasEscapePath(level, region, options, player):
+    check_data = GetCheckpointEscapesWithCache(options, player)
     if level in check_data:
         escapes, inescapes, simplified = check_data[level]
         if len(escapes) > 0:
@@ -1803,8 +1801,8 @@ def HasEscapePath(level, region, options):
 
     return False
 
-def HasInescapablePath(level, region, options):
-    check_data = GetCheckpointEscapesWithCache(options)
+def HasInescapablePath(level, region, options, player):
+    check_data = GetCheckpointEscapesWithCache(options, player)
     if level in check_data:
         escapes, inescapes, simplified = check_data[level]
         if len(inescapes) > 0:
