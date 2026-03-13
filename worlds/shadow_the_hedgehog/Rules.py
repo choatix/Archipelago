@@ -528,7 +528,7 @@ def lock_warp_items(multiworld, world, player):
 
     (clear_locations, mission_locations, end_location,
      enemysanity_locations, checkpointsanity_locations, charactersanity_locations,
-     token_locations, keysanity_locations, weaponsanity_locations, boss_locations,
+     token_locations, weaponsanity_locations, boss_locations,
      warp_locations, object_locations) = Locations.GetActiveLocationInfo()
 
     warpItemInfos = Items.PopulateLevelWarpPoints()
@@ -778,11 +778,14 @@ def CountRegionAccessibilityNew(options, state, player, stage_id, ix, stage_regi
         group_options = {}
 
         for key,value in count_options.items():
-            for group_name, group_list in CHECKPOINT_ESCAPE_GROUPS[stage_id].items():
-                if key in group_list:
-                    if group_name not in group_options:
-                        group_options[group_name] = 0
-                    group_options[group_name] += value
+            if stage_id not in CHECKPOINT_ESCAPE_GROUPS and stage_id in CHECKPOINT_ESCAPE_GROUPS_RESET_RESTRICTED:
+                continue
+            else:
+                for group_name, group_list in CHECKPOINT_ESCAPE_GROUPS[stage_id].items():
+                    if key in group_list:
+                        if group_name not in group_options:
+                            group_options[group_name] = 0
+                        group_options[group_name] += value
 
         # This needs to be able to account for all future accessible parts currently reachable with
         # either no restriction or available restriction
@@ -1811,6 +1814,22 @@ def HasInescapablePath(level, region, options, player):
 
     return False
 
+CHECKPOINT_ESCAPE_GROUPS_RESET_RESTRICTED = \
+{
+    Levels.STAGE_AIR_FLEET: {
+        "A": [REGION_INDICES.AIR_FLEET_CHECKPOINT_ZERO,
+              REGION_INDICES.AIR_FLEET_KEY_DOOR,
+              REGION_INDICES.AIR_FLEET_AIR_SAUCER,
+              REGION_INDICES.AIR_FLEET_RAILS,
+              REGION_INDICES.AIR_FLEET_SECRET_1],
+    },
+
+    Levels.STAGE_COSMIC_FALL:
+    {
+        "A": [REGION_INDICES.COSMIC_FALL_CHECKPOINT_ZERO]
+    }
+}
+
 CHECKPOINT_ESCAPE_GROUPS = {
     Levels.STAGE_LETHAL_HIGHWAY: {
         "A": [REGION_INDICES.LETHAL_HIGHWAY_TWO_FALL,
@@ -1845,14 +1864,6 @@ CHECKPOINT_ESCAPE_GROUPS = {
               REGION_INDICES.SKY_TROOPS_BLACK_HAWK_CC_EASY_2,
               REGION_INDICES.SKY_TROOPS_BLACK_HAWK_CC_HARD,
               REGION_INDICES.SKY_TROOPS_HAWK_OR_VOLT]
-    },
-
-    Levels.STAGE_AIR_FLEET: {
-        "A": [REGION_INDICES.AIR_FLEET_CHECKPOINT_ZERO,
-              REGION_INDICES.AIR_FLEET_KEY_DOOR,
-              REGION_INDICES.AIR_FLEET_AIR_SAUCER,
-              REGION_INDICES.AIR_FLEET_RAILS,
-              REGION_INDICES.AIR_FLEET_SECRET_1],
     },
 
     Levels.STAGE_IRON_JUNGLE: {
@@ -1919,7 +1930,6 @@ CHECKPOINT_ESCAPE_GROUPS = {
 
     Levels.STAGE_COSMIC_FALL:
     {
-        "A": [REGION_INDICES.COSMIC_FALL_CHECKPOINT_ZERO],
         "B": [REGION_INDICES.COSMIC_FALL_ONE_AWAY],
         "C": [REGION_INDICES.COSMIC_FALL_TWO_AWAY,
               REGION_INDICES.COSMIC_FALL_PULLEY_CORE],
@@ -1939,7 +1949,7 @@ CHECKPOINT_ESCAPE_GROUPS = {
         "D": [REGION_INDICES.FINAL_HAUNT_FIVE_VACUUM,
               REGION_INDICES.FINAL_HAUNT_BLACK_VOLT_2,
               REGION_INDICES.FINAL_HAUNT_DARK_TURRET,
-              REGION_INDICES.FINAL_HAUNT_KEY_DOOR,
+              REGION_INDICES.FINAL_HAUNT_FIVE_KEY_DOOR,
               REGION_INDICES.FINAL_HAUNT_SECRET_TURRET,
               REGION_INDICES.FINAL_HAUNT_VOLT_OR_FIVE],
         "E": [REGION_INDICES.FINAL_HAUNT_SHIELD_THREE]

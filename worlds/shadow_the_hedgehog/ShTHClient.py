@@ -499,8 +499,7 @@ class ShTHCommandProcessor(ClientCommandProcessor):
 
         (mission_clear_locations, mission_locations, end_location,
          enemysanity_locations, checkpointsanity_locations,
-         charactersanity_locations, token_locations, keysanity_locations,
-         weaponsanity_locations, boss_locations, warp_locations,
+         charactersanity_locations, token_locations, weaponsanity_locations, boss_locations, warp_locations,
          object_locations) = Locations.GetActiveLocationInfo()
 
         info = Items.GetItemLookupDict()
@@ -1468,7 +1467,7 @@ class ShTHContext(CommonContext):
     def restoreState(self):
         (mission_clear_locations, mission_locations, end_location, enemy_locations,
             checkpointsanity_locations, charactersanity_locations,
-         token_locations, keysanity_locations, weaponsanity_locations, boss_locations,
+         token_locations, weaponsanity_locations, boss_locations,
          warp_locations, object_locations) = Locations.GetActiveLocationInfo()
 
         if self.character_sanity:
@@ -1943,7 +1942,7 @@ async def check_save_loaded(ctx):
 
     mission_clear_locations, mission_locations, end_location, enemy_locations,\
         checkpointsanity_locations, charactersanity_locations,\
-        token_locations, keysanity_locations, weaponsanity_locations, boss_locations,\
+        token_locations, weaponsanity_locations, boss_locations,\
         warp_locations, object_locations = Locations.GetActiveLocationInfo()
 
     random_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.EXTRA_SAVE_DATA, 8)
@@ -2609,7 +2608,7 @@ def CheckAutoWarps(ctx):
 
     (clear_locations, mission_locations, end_location,
      enemysanity_locations, checkpointsanity_locations, charactersanity_locations,
-     token_locations, keysanity_locations, weaponsanity_locations, boss_locations,
+     token_locations, weaponsanity_locations, boss_locations,
      warp_locations, object_locations) = Locations.GetActiveLocationInfo()
 
     story = ctx.shuffled_story_mode
@@ -2665,7 +2664,7 @@ async def check_level_status(ctx):
 
     (clear_locations, mission_locations, end_location,
      enemysanity_locations, checkpointsanity_locations, charactersanity_locations,
-     token_locations, keysanity_locations, weaponsanity_locations, boss_locations,
+     token_locations, weaponsanity_locations, boss_locations,
      warp_locations, object_locations) = Locations.GetActiveLocationInfo()
 
     # Check mission clears and keys and clear checks from those not known to the server
@@ -3046,7 +3045,7 @@ async def check_weapons(ctx, current_level):
 
     mission_clear_locations, mission_locations, end_location, enemysanity_locations, \
         checkpointsanity_locations, charactersanity_locations, \
-        token_locations, keysanity_locations, weaponsanity_locations, boss_locations,\
+        token_locations, weaponsanity_locations, boss_locations,\
         warp_locations, object_locations = Locations.GetActiveLocationInfo()
 
     messages = []
@@ -3555,7 +3554,7 @@ async def check_junk(ctx, current_level, death):
                         if checkpoint_status:
                             mission_clear_locations, mission_locations, end_location, enemysanity_locations, \
                                 checkpointsanity_locations, charactersanity_locations, \
-                                token_locations, keysanity_locations, weaponsanity_locations, boss_locations, \
+                                token_locations, weaponsanity_locations, boss_locations, \
                                 warp_locations, object_locations = Locations.GetActiveLocationInfo()
 
                             # Check the check has been completed beforeadding to active
@@ -4141,7 +4140,7 @@ async def handle_objects(ctx, current_level):
     info = Items.GetItemLookupDict()
     mission_clear_locations, mission_locations, end_location, enemysanity_locations, \
         checkpointsanity_locations, charactersanity_locations, \
-        token_locations, keysanity_locations, weaponsanity_locations, boss_locations, \
+        token_locations, weaponsanity_locations, boss_locations, \
         warp_locations, object_locations = Locations.GetActiveLocationInfo()
 
     force_despawn = 0x04
@@ -4849,7 +4848,7 @@ async def update_level_behaviour(ctx, current_level, death):
     info = Items.GetItemLookupDict()
     mission_clear_locations, mission_locations, end_location, enemysanity_locations,\
         checkpointsanity_locations, charactersanity_locations,\
-        token_locations, keysanity_locations, weaponsanity_locations, boss_locations,\
+        token_locations, weaponsanity_locations, boss_locations,\
         warp_locations, object_locations = Locations.GetActiveLocationInfo()
 
     handle_count = 0
@@ -5324,7 +5323,7 @@ async def update_level_behaviour(ctx, current_level, death):
 
         if expected_dark_value is not None and current_count > expected_dark_value:
             if ctx.debug_logging:
-                logger.info("Dark count increased: %d %d", current_count, expected_dark_value)
+                pass #logger.info("Dark count increased: %d %d", current_count, expected_dark_value)
 
             required_count = ShadowUtils.getMaxRequired(
                 ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_OBJECTIVE_AVAILABLE,
@@ -5491,6 +5490,13 @@ async def update_level_behaviour(ctx, current_level, death):
         ctx.keys_required_for_doors != 5) and current_level in KEY_IDENTIFIER_BY_STAGE:
         key_addresses = GetKeysanityAddresses()
         if "key_index" in ctx.level_state:
+            all_keys = []
+            if not ctx.key_restore_complete:
+                all_key_data = dolphin_memory_engine.read_bytes(key_addresses[0], 20)
+                all_keys = []
+                for i in range(0, 5):
+                    k_bytes = all_key_data[(i*4):(i*4)+4]
+                    all_keys.append(int.from_bytes(k_bytes, byteorder='big'))
             state_key_index = ctx.level_state["key_index"]
             if state_key_index < len(key_addresses):
                 current_key_bytes = dolphin_memory_engine.read_bytes(key_addresses[state_key_index], 4)
@@ -5503,8 +5509,8 @@ async def update_level_behaviour(ctx, current_level, death):
                         writeBytes(key_addresses[state_key_index], empty_bytes)
                     elif current_key_data in key_options:
                         # What to do when the player gets a new key
-                        logger.error("Take key away when arch key item only")
                         if ctx.key_collection_method == Options.KeyCollectionMethod.option_arch:
+                            logger.error("Take key away when arch key item only")
                             empty_bytes = 0xFFFFFFFF.to_bytes(4, byteorder='big')
                             writeBytes(key_addresses[state_key_index], empty_bytes)
                         else:
@@ -5522,11 +5528,11 @@ async def update_level_behaviour(ctx, current_level, death):
                         # Fake key, ignore
                         logger.error("Detected fake key - increment")
                         ctx.level_state["key_index"] = state_key_index + 1
-                    else:
-                        if ctx.error_logging:
-                            logger.error("Unknown key object: %d %s %s", current_level, str(key_options), str(current_key_data))
-                        key_locations = [k for k in keysanity_locations if k.stageId == current_level and k.count == state_key_index]
-                        messages.extend([k.locationId for k in key_locations])
+                    #else:
+                    ##    if ctx.error_logging:
+                    #        logger.error("Unknown key object: %d %s %s", current_level, str(key_options), str(current_key_data))
+                    #    key_locations = [k for k in keysanity_locations if k.stageId == current_level and k.count == state_key_index]
+                    #    messages.extend([k.locationId for k in key_locations])
                 elif not ctx.key_restore_complete:
                     door_requirement = ctx.keys_required_for_doors
                     if state_key_index < (5 - door_requirement):
@@ -5535,19 +5541,37 @@ async def update_level_behaviour(ctx, current_level, death):
                         ctx.level_state["key_index"] = state_key_index + 1
                         writeBytes(key_addresses[state_key_index], fake_key_bytes)
                         logger.error("Fake key added")
-                    else:
+                    elif ctx.key_collection_method != Options.KeyCollectionMethod.option_arch:
                         key_options_unknown = KEY_IDENTIFIER_BY_STAGE[current_level]
                         keys_to_confirm = [ k for k in key_options_unknown if k not in ctx.level_keys]
                         key_ind = [ key_options_unknown.index(k) for k in keys_to_confirm ]
-                        key_locations = [k.locationId for k in keysanity_locations if k.stageId == current_level and k.count in key_ind]
-                        checked_keys = [ c for c in ctx.checked_locations if c in key_locations]
+
+                        key_locations = [ k.locationId for k in object_locations if k.other == ObjectType.KEY and
+                                          k.stageId == current_level ]
+
+                        check_key_locations = [ k for k in key_locations if key_locations.index(k) in key_ind ]
+                        checked_keys = [ c for c in ctx.checked_locations if c in check_key_locations ]
+
+                        #logger.error("KL %s CK %s CL %s KI %s KIU %s KTC %s CTXLK %s",
+                        #             key_locations, checked_keys, ctx.checked_locations, key_ind,
+                        #             key_options_unknown, keys_to_confirm, ctx.level_keys)
+
                         if len(checked_keys) > 0:
                             first_key_location_id = checked_keys.pop()
-                            key_data = [k for k in keysanity_locations if k.locationId == first_key_location_id][0]
-                            key_value_to_write = key_options_unknown[key_data.count]
-                            restored_key_bytes = key_value_to_write.to_bytes(4, byteorder='big')
-                            logger.error("Key index restored")
-                            writeBytes(key_addresses[state_key_index], restored_key_bytes)
+                            key_index = key_locations.index([ k for k in key_locations if k == first_key_location_id ][0])
+                            key_value_to_write = key_options_unknown[key_index]
+
+                            if key_value_to_write not in all_keys:
+                                logger.error("Get key %d as not obtained", key_value_to_write)
+                                restored_key_bytes = key_value_to_write.to_bytes(4, byteorder='big')
+                                logger.error("Key index restored")
+                                writeBytes(key_addresses[state_key_index], restored_key_bytes)
+                                ctx.level_state["key_index"] = state_key_index + 1
+                                ctx.level_keys.append(key_value_to_write)
+                            else:
+                                logger.error("Skip key %d as still obtained %s", key_value_to_write, all_keys)
+                                ctx.level_state["key_index"] = state_key_index + 1
+                                ctx.level_keys.append(key_value_to_write)
                         else:
                             logger.error("Key restore complete")
                             info = Items.GetItemLookupDict()
@@ -5557,13 +5581,21 @@ async def update_level_behaviour(ctx, current_level, death):
                                 ctx.handled.remove(item)
 
                             ctx.key_restore_complete = True
+                    else:
+                        ctx.key_restore_complete = True
                 else:
+
                     if ctx.level_state["key_check_index"] != ctx.last_rcvd_index:
                         info = Items.GetItemLookupDict()
 
+                        handled_check = False
+                        if ctx.level_state["key_check_index"] == -1:
+                            handled_check = True
+
                         key_items = [unlock for unlock in ctx.items_to_handle if unlock[0].item in info and \
                                               info[unlock[0].item].stageId == current_level and
-                                              info[unlock[0].item].type == "key" and unlock not in ctx.handled]
+                                              info[unlock[0].item].type == "key" and
+                                     (handled_check or unlock not in ctx.handled)]
 
                         for item in key_items:
                             empty_bytes = 0x00.to_bytes(4, byteorder='big')
@@ -5577,6 +5609,7 @@ async def update_level_behaviour(ctx, current_level, death):
                             logger.error("increment key index")
                             ctx.level_state["key_index"] = state_key_index
 
+                        logger.error("set key index %d", ctx.last_rcvd_index)
                         ctx.level_state["key_check_index"] = ctx.last_rcvd_index
         else:
             logger.error("Key index not present: %s", str(ctx.level_state))
@@ -5830,7 +5863,7 @@ async def check_charactersanity(ctx, level):
 
     (mission_clear_locations, mission_locations, end_location,
      enemysanity_locations, checkpointsanity_locations,
-     charactersanity_locations, token_locations, keysanity_locations,
+     charactersanity_locations, token_locations,
      weaponsanity_locations, boss_locations, warp_locations,
      object_locations) = Locations.GetActiveLocationInfo()
 

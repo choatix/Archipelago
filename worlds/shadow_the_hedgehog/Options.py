@@ -356,12 +356,13 @@ class SelectGatesCount(Range):
     range_end = 10
     default = 5
 
-
-
-
 class GateUnlockRequirement(Choice):
     """
-        Determines distribution behaviour for select gates.
+        Determines how gates are opened when using select gates.
+        Items: Adds specific gate keys into the logic which open gates sequentially.
+        Objective: Uses the objective items (e.g. Egg Balloon / Jungle Soldier)
+        Chaos Emeralds: Each chaos emerald unlocks a gate. Forces gate count.
+        Objective Available: Objective; but only uses stage items for levels previously available in gates.
     """
     display_name = "Gate Unlock Requirement"
     option_items = 0
@@ -372,7 +373,8 @@ class GateUnlockRequirement(Choice):
 
 class GateDensity(Range):
     """
-    Determines the density of items required for gates as per gate formula.
+        Determines the density of objective items required for gates as per gate formula.
+        Higher values will set the percentages higher to open gates.
     """
     display_name = "Gate Density"
     range_start = 0
@@ -507,7 +509,7 @@ class WeaponGroups(OptionSet):
     - Black Warrior Weapons: Held by standard Black Arms
     - Black Oak Weapons: Held by big Black Arm enemies
     - Worm Weapons:  Held by Black Arm Worm enemies
-    - Gun Solider Weapons: Held by GUN Soliders
+    - Gun Soldier Weapons: Held by GUN Soldiers
     - Gun Mech Weapons: Held by GUN Mechs
     - Laser Weapons: Laser-style weapons
     """

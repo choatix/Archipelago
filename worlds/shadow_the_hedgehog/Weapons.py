@@ -76,8 +76,8 @@ def GetRuleByWeaponRequirement(player, req, stageId: int, fromRegion: int|None, 
 
 def GetRuleByWeaponRequirementData(player, req, stageId: int, fromRegion: int|None, as_weapon: bool = False):
 
-    if req == Names.REGION_RESTRICTION_TYPES.NoRestriction:
-        return lambda state: True
+    #if req == Names.REGION_RESTRICTION_TYPES.NoRestriction:
+    #    return lambda state: True
 
     if fromRegion is None:
         region_to_use = None
@@ -133,11 +133,13 @@ def GetRuleByWeaponRequirementData(player, req, stageId: int, fromRegion: int|No
             weapon = weapon_dict[weapon_id]
             weapon_regions = option[1]
 
-            #weapon_group = [group[0] for group in WeaponGroups.items() if
-            #                  len([x for x in group[1] if x == weapon.game_id]) > 0]
-
             matches = [weapon.name]
-            #matches.extend(weapon_group)
+
+            matches_groups = [group[0] for group in WeaponGroups.items() if len([x for x in group[1] if x in
+                                                                                 [m.game_id for m in
+                                                                                  [weapon]]]) > 0]
+
+            matches.extend(matches_groups)
 
             region_escapes = [ Levels.GetDistributionEscapeRegionEventName(stageId, l) for l in weapon_regions ]
 

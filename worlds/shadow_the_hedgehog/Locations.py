@@ -682,7 +682,6 @@ def GetAllLocationInfo():
     enemysanity_locations = []
     checkpointsanity_locations = []
     charactersanity_locations = []
-    keysanity_locations = []
     weaponsanity_locations = []
     boss_locations = []
     warp_locations = []
@@ -785,12 +784,6 @@ def GetAllLocationInfo():
         charactersanity_locations.append(info)
         char_index+=1
 
-    #for key_location in Objects.GetAllKeyLocations():
-    #    key_location_id, key_location_name = GetKeysanityLocationName(key_location.stageId, key_location.index)
-    #    info = LocationInfo(LOCATION_TYPE_KEY, key_location_id, key_location_name,
-    #                                stageId=key_location.stageId, alignmentId=None, count=key_location.index, total=5, other=None)
-    #    keysanity_locations.append(info)
-
     for weapon in Weapons.WEAPON_INFO:
         weapon_location_id, weapon_location_name = GetWeaponsanityLocationName(weapon.name, weapon.game_id)
         info = LocationInfo(LOCATION_TYPE_WEAPON_HOLD, weapon_location_id, weapon_location_name,
@@ -824,7 +817,7 @@ def GetAllLocationInfo():
 
     return (mission_clear_locations, mission_locations, progression_locations,
             enemysanity_locations, checkpointsanity_locations, charactersanity_locations,
-            token_locations, keysanity_locations, weaponsanity_locations, boss_locations,
+            token_locations, weaponsanity_locations, boss_locations,
             warp_locations, object_locations)
 
 
@@ -931,7 +924,7 @@ def is_token_required_by_goal(options, token : LocationInfo, available_levels):
 def create_locations(world, regions: Dict[str, Region]):
     (clear_locations, mission_locations, end_location,
      enemysanity_locations, checkpointsanity_locations, charactersanity_locations,
-     token_locations, keysanity_locations, weaponsanity_locations, boss_locations,
+     token_locations, weaponsanity_locations, boss_locations,
      warp_locations, object_locations) = GetActiveLocationInfo()
 
     menu_region = regions["Menu"]
@@ -1050,21 +1043,6 @@ def create_locations(world, regions: Dict[str, Region]):
             within_region = regions[Levels.stage_id_to_region(checkpoint.stageId, region_index)]
             completion_location = ShadowTheHedgehogLocation(world.player, checkpoint.name, checkpoint.locationId, within_region)
             within_region.locations.append(completion_location)
-
-    #if world.options.key_sanity:
-    #    for key in keysanity_locations:
-    #        if key.stageId not in world.available_levels:
-    #            continue
-#
-#            if world.options.exclude_go_mode_items and key.stageId == STAGE_THE_LAST_WAY and \
-#                    not world.options.include_last_way_shuffle:
-#                continue
-#
-#            found_key_level_info = [c for c in KeyLocations if c.stageId == key.stageId][0]
-#            region_index = found_key_level_info.getRegion(key.count)
-#            within_region = regions[Levels.stage_id_to_region(key.stageId, region_index)]
-#            completion_location = ShadowTheHedgehogLocation(world.player, key.name, key.locationId, within_region)
-#            within_region.locations.append(completion_location)
 
     for boss in boss_locations:
         if boss.stageId not in world.available_levels:
@@ -1369,7 +1347,7 @@ def count_locations(world):
     count = 0
     (mission_clear_locations, mission_locations, progression_locations,
      enemysanity_locations, checkpointsanity_locations,
-     charactersanity_locations, token_locations, keysanity_locations,
+     charactersanity_locations, token_locations,
      weaponsanity_locations, boss_locations, warp_locations,
      object_locations) = GetActiveLocationInfo()
 
@@ -1393,10 +1371,6 @@ def count_locations(world):
                                   in world.available_levels and (
                                               not world.options.exclude_go_mode_items or ml.stageId != STAGE_THE_LAST_WAY or \
                                               world.options.include_last_way_shuffle)]
-
-    #keysanity_locations = [ks for ks in keysanity_locations if ks.stageId
-    #                         in world.available_levels and (not world.options.exclude_go_mode_items or ks.stageId != STAGE_THE_LAST_WAY or \
-    #                            world.options.include_last_way_shuffle)]
 
     boss_locations = [ b for b in boss_locations if b.stageId in world.available_levels ]
 
@@ -1644,7 +1618,7 @@ def GetStagesWithNoRequirements(world):
 def getLocationGroups():
     (clear_locations, mission_locations, end_location,
      enemysanity_locations, checkpointsanity_locations, charactersanity_locations,
-     token_locations, keysanity_locations, weaponsanity_locations, boss_locations,
+     token_locations, weaponsanity_locations, boss_locations,
      warp_locations, object_locations) = GetActiveLocationInfo()
 
     groups = {
@@ -1665,7 +1639,6 @@ def getLocationGroups():
         "Alien Enemies": [c.name for c in enemysanity_locations if c.alignmentId == ENEMY_CLASS_ALIEN],
         "Checkpoints": [c.name for c in checkpointsanity_locations],
         "Characters": [c.name for c in charactersanity_locations],
-        "Keys": [c.name for c in keysanity_locations],
         "Weapons": [c.name for c in weaponsanity_locations],
         "Bosses": [c.name for c in boss_locations],
         "Final Bosses": [c.name for c in boss_locations if c.stageId in Levels.FINAL_BOSSES],
