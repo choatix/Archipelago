@@ -329,6 +329,7 @@ def handle_path_rules(options, player, from_region_id, additional_level_region, 
     if options.weapon_sanity_unlock and Levels.IsWeaponsanityRestriction(additional_level_region.restrictionTypes):
         if Names.REGION_RESTRICTION_TYPES.Torch in additional_level_region.restrictionTypes:
             outputs.append("Torch")
+
             rule = Weapons.GetRuleByWeaponRequirement(player, Weapons.WeaponAttributes.TORCH,
                                                       additional_level_region.stageId, from_region_id)
 
@@ -491,8 +492,8 @@ def handle_path_rules(options, player, from_region_id, additional_level_region, 
         for r in relevant_regions:
             region_data[r.regionIndex] = r
 
-        rule = lambda state, s=additional_level_region.stageId: (
-            CraftCalculation(options, state, player, s, craft_info, region_data))
+        rule = lambda state, s=additional_level_region.stageId, p=player: (
+            CraftCalculation(options, state, p, s, craft_info, region_data))
 
         #rule = lambda state: False
 
@@ -506,7 +507,9 @@ def handle_path_rules(options, player, from_region_id, additional_level_region, 
         for r in relevant_regions:
             region_data[r.regionIndex] = r
 
-        rule = lambda state: RingCalculation(options, state, player, additional_level_region.stageId, ring_info, region_data)
+        #def RingCalculation(options, state, player, stage_id, ring_info, region_data):
+        rule = lambda state, o=options, p=player,\
+            s=additional_level_region.stageId, ri=ring_info, rd=region_data: RingCalculation(o, state, p, s, ri, rd)
 
     return rule, indirects
 
@@ -1131,8 +1134,8 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
                                 continue
 
                             prog_rule = lambda state, ix=l, data=progress_dist_by_name, keys=progress_dist_by_name.keys(),\
-                                s=clear.stageId, kl=GetDistributionKeys(clear.stageId)\
-                                : CountRegionAccessibilityNew(world.options, state, player, s, ix, keys, data, kl)
+                                s=clear.stageId, kl=GetDistributionKeys(clear.stageId), p=player\
+                                : CountRegionAccessibilityNew(world.options, state, p, s, ix, keys, data, kl)
 
                             location_id, objective_location_name = (
                                 Levels.GetLevelObjectNames(clear.stageId, clear.alignmentId, clear.mission_object_name,
@@ -1197,8 +1200,8 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
                     finish_count = 0
 
                 prog_rule = lambda state, keys=progress_dist_by_name.keys(), data=progress_dist_by_name,\
-                                   ix=finish_count, s=clear.stageId, kl=GetDistributionKeys(clear.stageId)\
-                    : CountRegionAccessibilityNew(world.options, state, player, s, ix, keys, data, kl)
+                                   ix=finish_count, s=clear.stageId, kl=GetDistributionKeys(clear.stageId), p=player\
+                    : CountRegionAccessibilityNew(world.options, state, p, s, ix, keys, data, kl)
                     #: CountRegionAccessibility(state, keys, data, ix, player)
 
 
@@ -1402,8 +1405,8 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
 
 
                 new_rule = lambda state, ix=l, data=enemy_dist_by_name, keys=enemy_dist_by_name.keys(),\
-                                  p=perc_required, s=enemy.stageId, kl=GetDistributionKeys(enemy.stageId) \
-                    : CountRegionAccessibilityNew(world.options, state, player, s, ix, keys, data, given_keys=kl)
+                                  p=perc_required, s=enemy.stageId, kl=GetDistributionKeys(enemy.stageId), pl=player \
+                    : CountRegionAccessibilityNew(world.options, state, pl, s, ix, keys, data, given_keys=kl)
                     #: CountRegionAccessibility(state, keys, data, ix, player, p)
                 location_id, objective_location_name = (
                     Locations.GetEnemyLocationName(enemy.stageId, enemy.enemyClass, enemy.mission_object_name,

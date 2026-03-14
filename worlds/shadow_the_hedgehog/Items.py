@@ -1052,6 +1052,8 @@ def PopulateItemPool(world: World):
     weapon_items.extend(special_weapons_weaponsanity_extras)
 
     available_weapons = [w for w in weapon_items if w.name in world.available_weapons]
+    available_weapons = copy.deepcopy(available_weapons)
+
     for w in available_weapons:
         # If changed already, then ignore
         if w.classification == ItemClassification.progression:

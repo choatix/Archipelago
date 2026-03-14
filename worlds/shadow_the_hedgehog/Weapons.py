@@ -115,10 +115,10 @@ def GetRuleByWeaponRequirementData(player, req, stageId: int, fromRegion: int|No
     individual_weapon_rules = []
     base_rule = None
     if len(base_matches) > 0:
-        base_rule = lambda state, em=base_matches: state.has_any(em, player)
+        base_rule = lambda state, em=base_matches, p=player: state.has_any(em, p)
         if as_weapon:
             for weapon in base_matches:
-                i_rule = lambda state, m=weapon: state.has(m, player)
+                i_rule = lambda state, m=weapon, p=player: state.has(m, p)
                 if weapon in weapon_name_dict:
                     individual_weapon_rules.append((weapon_name_dict[weapon], i_rule))
 
@@ -143,8 +143,8 @@ def GetRuleByWeaponRequirementData(player, req, stageId: int, fromRegion: int|No
 
             region_escapes = [ Levels.GetDistributionEscapeRegionEventName(stageId, l) for l in weapon_regions ]
 
-            secondary_new_rule = lambda state, re=region_escapes, m=matches: (
-                    state.has_any(m, player) and state.has_any(re, player))
+            secondary_new_rule = lambda state, re=region_escapes, m=matches, p=player: (
+                    state.has_any(m, p) and state.has_any(re, p))
 
             if as_weapon:
                 individual_weapon_rules.append((weapon, secondary_new_rule))
