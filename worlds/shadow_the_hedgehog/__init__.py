@@ -12,7 +12,7 @@ from worlds.LauncherComponents import Component, SuffixIdentifier, Type, compone
 #from .Levels import GetLevelCompletionNames
 #from .Locations import *
 
-from . import Options, Rules, Regions, Utils as ShadowUtils, Story, Names, Items, Locations, Levels
+from . import Options, Rules, Regions, Utils as ShadowUtils, Story, Names, Items, Locations, Levels, Weapons
 from .Options import shadow_option_groups, PercentOverrides, AutoClearMissions
 
 
@@ -92,6 +92,8 @@ class ShtHWorld(World):
         self.starting_items = []
         self.gates = {}
         self.first_checkpoints = {}
+        self.available_checkpoints = {}
+        self.weapon_counts = {}
 
         for token in Items.TOKENS:
             self.required_tokens[token] = 0
@@ -392,8 +394,6 @@ class ShtHWorld(World):
         else:
             self.shuffled_story_mode = Story.DefaultStoryMode
 
-        #Story.PrintStoryMode(self, None)
-
         if hasattr(self.multiworld, "re_gen_passthrough"):
             if "Shadow The Hedgehog" in self.multiworld.re_gen_passthrough:
                 self.reinitialise()
@@ -647,15 +647,25 @@ class ShtHWorld(World):
                     self.options.checkpoint_shuffle = passthrough["checkpoint_shuffle"]
 
                 if "first_checkpoints" in passthrough:
-                    #print("Read first checkpoints for UT")
                     first_checkpoints = passthrough["first_checkpoints"]
                     self.first_checkpoints = {}
                     for stage_str, index in first_checkpoints.items():
                         self.first_checkpoints[int(stage_str)] = index
-                    #print(self.first_checkpoints)
+
+                if "available_checkpoints" in passthrough:
+                    available_checkpoints = passthrough["available_checkpoints"]
+                    self.available_checkpoints = {}
+                    for stage_str, index in available_checkpoints.items():
+                        self.available_checkpoints[int(stage_str)] = index
 
                 if "last_way_enemysanity" in passthrough:
                     self.options.last_way_enemysanity = passthrough["last_way_enemysanity"]
+
+                if "checkpoint_rules" in passthrough:
+                    self.options.checkpoint_rules = passthrough["checkpoint_rules"]
+
+                if "minimal_checkpoint_percentage" in passthrough:
+                    self.options.minimal_checkpoint_percentage = passthrough["minimal_checkpoint_percentage"]
 
         # Set maximum of levels required
         # Exclude missions listed in exclude_locations
@@ -678,8 +688,8 @@ class ShtHWorld(World):
                     self.starting_items.append(item)
                     self.multiworld.push_precollected(self.create_item(item))
 
-            if self.options.checkpoint_shuffle == Options.CheckpointShuffle.option_start_and_unlock:
-                self.first_checkpoints = Regions.GenerateFirstCheckpoints(self)
+            self.weapon_counts = Weapons.CalculateWeaponDupes(self)
+            self.first_checkpoints, self.available_checkpoints = Regions.GenerateFirstAndAvailableCheckpoints(self)
 
             if self.options.level_progression != Options.LevelProgression.option_select and \
                 self.options.story_progression_balancing_passes > 0:
@@ -950,9 +960,12 @@ class ShtHWorld(World):
             "item_sanity": self.options.item_sanity.value,
             "checkpoint_shuffle": self.options.checkpoint_shuffle.value,
             "first_checkpoints": self.first_checkpoints,
+            "available_checkpoints": self.available_checkpoints,
             "checkpoint_convenience": self.options.checkpoint_convenience.value,
             "music_shuffle": self.options.music_shuffle.value,
-            "last_way_enemysanity": self.options.last_way_enemysanity.value
+            "last_way_enemysanity": self.options.last_way_enemysanity.value,
+            "checkpoint_rules": self.options.checkpoint_rules.value,
+            "minimal_checkpoint_percentage": self.options.minimal_checkpoint_percentage.value
         }
 
         return slot_data

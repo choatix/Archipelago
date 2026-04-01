@@ -573,6 +573,8 @@ LevelRegion(STAGE_CRYPTIC_CASTLE, REGION_INDICES.CRYPTIC_CASTLE_FIVE_BALLOON,
     LevelRegion(STAGE_PRISON_ISLAND, REGION_INDICES.PRISON_ISLAND_SIX_AIR_SAUCER,
                 REGION_RESTRICTION_TYPES.AirSaucer)
         .setLogicType(Options.LogicLevel.option_hard),
+    LevelRegion(STAGE_PRISON_ISLAND, REGION_INDICES.PRISON_ISLAND_SIX_KEY,
+                REGION_RESTRICTION_TYPES.NoRestriction),
     LevelRegion(STAGE_PRISON_ISLAND, REGION_INDICES.PRISON_ISLAND_CHECKPOINT_SEVEN,
                 REGION_RESTRICTION_TYPES.NoRestriction),
 
@@ -672,10 +674,13 @@ LevelRegion(STAGE_CRYPTIC_CASTLE, REGION_INDICES.CRYPTIC_CASTLE_FIVE_BALLOON,
         .setFromRegion(REGION_INDICES.CENTRAL_CITY_CHECKPOINT_FOUR),
     LevelRegion(STAGE_CENTRAL_CITY, REGION_INDICES.CENTRAL_CITY_CHECKPOINT_FIVE,
                 REGION_RESTRICTION_TYPES.NoRestriction),
-    LevelRegion(STAGE_CENTRAL_CITY, REGION_INDICES.CENTRAL_CITY_GUN_TURRET_2,
+    LevelRegion(STAGE_CENTRAL_CITY, REGION_INDICES.CENTRAL_CITY_FIVE_TURRET,
                 REGION_RESTRICTION_TYPES.GunTurret).setAsDiversion(),
+    LevelRegion(STAGE_CENTRAL_CITY, REGION_INDICES.CENTRAL_CITY_BEHIND_SIX_OR_TURRET,
+                REGION_RESTRICTION_TYPES.NoRestriction).setAsDiversion(),
     LevelRegion(STAGE_CENTRAL_CITY, REGION_INDICES.CENTRAL_CITY_FIVE_TRAVERSE,
-                REGION_RESTRICTION_TYPES.Car).setFromRegion(REGION_INDICES.CENTRAL_CITY_CHECKPOINT_FIVE),
+                REGION_RESTRICTION_TYPES.Car).setFromRegion(REGION_INDICES.CENTRAL_CITY_CHECKPOINT_FIVE)
+        .setFromRegion(REGION_INDICES.CENTRAL_CITY_CHECKPOINT_FIVE),
     LevelRegion(STAGE_CENTRAL_CITY, REGION_INDICES.CENTRAL_CITY_FIVE_ROCKET,
                 REGION_RESTRICTION_TYPES.Rocket)
         .setFromRegion(REGION_INDICES.CENTRAL_CITY_CHECKPOINT_FIVE),
@@ -685,14 +690,19 @@ LevelRegion(STAGE_CRYPTIC_CASTLE, REGION_INDICES.CRYPTIC_CASTLE_FIVE_BALLOON,
                         REGION_INDICES.CENTRAL_CITY_FIVE_TRAVERSE]),
     LevelRegion(STAGE_CENTRAL_CITY, REGION_INDICES.CENTRAL_CITY_CHECKPOINT_SIX,
                 REGION_RESTRICTION_TYPES.NoRestriction),
+    LevelRegion(STAGE_CENTRAL_CITY, REGION_INDICES.CENTRAL_CITY_SIX_WEAPON_OR_BOMB,
+                REGION_RESTRICTION_TYPES.VacuumOrShot),
     LevelRegion(STAGE_CENTRAL_CITY, REGION_INDICES.CENTRAL_CITY_BOMB_OR_BAZOOKA_3,
                 REGION_RESTRICTION_TYPES.Explosion)
-        .setLogicType(Options.LogicLevel.option_hard).setAsDiversion(),
+        .setLogicType(Options.LogicLevel.option_hard).setAsDiversion()
+        .setFromRegion(REGION_INDICES.CENTRAL_CITY_CHECKPOINT_SIX),
 
     LevelRegion(STAGE_THE_DOOM, REGION_INDICES.THE_DOOM_CHECKPOINT_ONE,
                 REGION_RESTRICTION_TYPES.NoRestriction),
     LevelRegion(STAGE_THE_DOOM, REGION_INDICES.THE_DOOM_PULLEY,
-                REGION_RESTRICTION_TYPES.Pulley).setAsDiversion(),
+                REGION_RESTRICTION_TYPES.Pulley)
+        .setLogicType(Options.LogicLevel.option_hard)
+        .setAsDiversion(),
     LevelRegion(STAGE_THE_DOOM, REGION_INDICES.THE_DOOM_KEY_DOOR,
                     REGION_RESTRICTION_TYPES.KeyDoor).setAsDiversion(),
 
@@ -989,7 +999,8 @@ LevelRegion(STAGE_THE_ARK, REGION_INDICES.THE_ARK_CHECKPOINT_EIGHT,
 
 # need to work out the hard logic for this
 LevelRegion(STAGE_AIR_FLEET, REGION_INDICES.AIR_FLEET_PULLEY,
-                    REGION_RESTRICTION_TYPES.Pulley),
+                    REGION_RESTRICTION_TYPES.Pulley)
+    .setLogicType(Options.LogicLevel.option_hard),
 LevelRegion(STAGE_AIR_FLEET, REGION_INDICES.AIR_FLEET_KEYDOOR_ENTRANCE,
                     REGION_RESTRICTION_TYPES.NoRestriction).setAsDiversion(),
 LevelRegion(STAGE_AIR_FLEET, REGION_INDICES.AIR_FLEET_KEY_DOOR,
@@ -1129,7 +1140,8 @@ LevelRegion(STAGE_IRON_JUNGLE, REGION_INDICES.IRON_JUNGLE_CHECKPOINT_SIX,
 LevelRegion(STAGE_IRON_JUNGLE, REGION_INDICES.IRON_JUNGLE_ANDROID_HOLE_THREE,
                     REGION_RESTRICTION_TYPES.NoRestriction),
 LevelRegion(STAGE_IRON_JUNGLE, REGION_INDICES.IRON_JUNGLE_HERO_PULLEY,
-                    REGION_RESTRICTION_TYPES.Pulley),
+                    REGION_RESTRICTION_TYPES.Pulley)
+    .setLogicType(Options.LogicLevel.option_easy),
 LevelRegion(STAGE_IRON_JUNGLE, REGION_INDICES.IRON_JUNGLE_HERO_ROCKET,
                     REGION_RESTRICTION_TYPES.Rocket),
 LevelRegion(STAGE_IRON_JUNGLE, REGION_INDICES.IRON_JUNGLE_LIGHT_DASH_DARK,
@@ -1137,12 +1149,12 @@ LevelRegion(STAGE_IRON_JUNGLE, REGION_INDICES.IRON_JUNGLE_LIGHT_DASH_DARK,
     .setFromRegion(REGION_INDICES.IRON_JUNGLE_CHECKPOINT_FIVE),
 LevelRegion(STAGE_IRON_JUNGLE, REGION_INDICES.IRON_JUNGLE_CHECKPOINT_SEVEN,
                     REGION_RESTRICTION_TYPES.NoRestriction),
-LevelRegion(STAGE_IRON_JUNGLE, REGION_INDICES.IRON_JUNGLE_DARK_PULLEY,
-                    REGION_RESTRICTION_TYPES.Pulley)
-    .setLogicType(Options.LogicLevel.option_hard),
+#LevelRegion(STAGE_IRON_JUNGLE, REGION_INDICES.IRON_JUNGLE_DARK_PULLEY,
+#                    REGION_RESTRICTION_TYPES.Pulley)
+#    .setLogicType(Options.LogicLevel.option_hard),
 LevelRegion(STAGE_IRON_JUNGLE, REGION_INDICES.IRON_JUNGLE_CHECKPOINT_EIGHT,
                     REGION_RESTRICTION_TYPES.NoRestriction)
-    .setFromRegion([REGION_INDICES.IRON_JUNGLE_DARK_PULLEY,
+    .setFromRegion([REGION_INDICES.IRON_JUNGLE_CHECKPOINT_SEVEN,
                     REGION_INDICES.IRON_JUNGLE_HERO_ROCKET]),
 LevelRegion(STAGE_IRON_JUNGLE, REGION_INDICES.IRON_JUNGLE_DEFEATED_CRAFT,
             REGION_RESTRICTION_TYPES.Craft).setAsDiversion()
@@ -1214,19 +1226,37 @@ LevelRegion(STAGE_LOST_IMPACT, REGION_INDICES.LOST_IMPACT_GUN_LIFT,
                     REGION_RESTRICTION_TYPES.GunLift),
 LevelRegion(STAGE_LOST_IMPACT, REGION_INDICES.LOST_IMPACT_CHECKPOINT_TWO,
                     REGION_RESTRICTION_TYPES.NoRestriction),
+LevelRegion(STAGE_LOST_IMPACT, REGION_INDICES.LOST_IMPACT_TWO_LIFT_OR_WEAPON,
+                    REGION_RESTRICTION_TYPES.GunLiftOrWeapon).setAsDiversion()
+    .setLogicType(Options.LogicLevel.option_hard),
 LevelRegion(STAGE_LOST_IMPACT, REGION_INDICES.LOST_IMPACT_TWO_GUN_LIFT,
-                    REGION_RESTRICTION_TYPES.GunLift),
+                    REGION_RESTRICTION_TYPES.GunLift)
+        .setFromRegion(REGION_INDICES.LOST_IMPACT_CHECKPOINT_TWO),
 LevelRegion(STAGE_LOST_IMPACT, REGION_INDICES.LOST_IMPACT_CHECKPOINT_THREE,
                     REGION_RESTRICTION_TYPES.NoRestriction),
+LevelRegion(STAGE_LOST_IMPACT, REGION_INDICES.LOST_IMPACT_THREE_LIFT_OR_WEAPON,
+                    REGION_RESTRICTION_TYPES.GunLiftOrWeapon)
+        .setAsDiversion(),
+LevelRegion(STAGE_LOST_IMPACT, REGION_INDICES.LOST_IMPACT_THREE_WEAPON,
+                    REGION_RESTRICTION_TYPES.VacuumOrShot).setAsDiversion()
+        .setFromRegion(REGION_INDICES.LOST_IMPACT_CHECKPOINT_THREE),
+LevelRegion(STAGE_LOST_IMPACT, REGION_INDICES.LOST_IMPACT_THREE_WEAPON_EASY,
+                    REGION_RESTRICTION_TYPES.Explosion).setAsDiversion()
+        .setLogicType(Options.LogicLevel.option_easy)
+        .setFromRegion(REGION_INDICES.LOST_IMPACT_CHECKPOINT_THREE),
 LevelRegion(STAGE_LOST_IMPACT, REGION_INDICES.LOST_IMPACT_PULLEY,
-                    REGION_RESTRICTION_TYPES.Pulley).setAsDiversion(),
+                    REGION_RESTRICTION_TYPES.Pulley).setAsDiversion()
+        .setFromRegion(REGION_INDICES.LOST_IMPACT_CHECKPOINT_THREE),
 LevelRegion(STAGE_LOST_IMPACT, REGION_INDICES.LOST_IMPACT_KEY_DOOR,
                     REGION_RESTRICTION_TYPES.KeyDoor).setAsDiversion(),
 LevelRegion(STAGE_LOST_IMPACT, REGION_INDICES.LOST_IMPACT_CHECKPOINT_FOUR,
                     REGION_RESTRICTION_TYPES.NoRestriction)
     .setFromRegion(REGION_INDICES.LOST_IMPACT_CHECKPOINT_THREE),
+LevelRegion(STAGE_LOST_IMPACT, REGION_INDICES.LOST_IMPACT_FOUR_LIFT_OR_WEAPON,
+                    REGION_RESTRICTION_TYPES.GunLiftOrWeapon).setAsDiversion(),
 LevelRegion(STAGE_LOST_IMPACT, REGION_INDICES.LOST_IMPACT_FOUR_GUN_LIFT,
-                    REGION_RESTRICTION_TYPES.GunLift),
+                    REGION_RESTRICTION_TYPES.GunLift)
+        .setFromRegion(REGION_INDICES.LOST_IMPACT_CHECKPOINT_THREE),
 LevelRegion(STAGE_LOST_IMPACT, REGION_INDICES.LOST_IMPACT_CHECKPOINT_FIVE,
                     REGION_RESTRICTION_TYPES.NoRestriction),
 LevelRegion(STAGE_LOST_IMPACT, REGION_INDICES.LOST_IMPACT_ROCKET,
@@ -1238,8 +1268,13 @@ LevelRegion(STAGE_LOST_IMPACT, REGION_INDICES.LOST_IMPACT_BEHIND_SIX,
                     REGION_RESTRICTION_TYPES.NoRestriction),
 LevelRegion(STAGE_LOST_IMPACT, REGION_INDICES.LOST_IMPACT_CHECKPOINT_SIX,
                     REGION_RESTRICTION_TYPES.NoRestriction),
+LevelRegion(STAGE_LOST_IMPACT, REGION_INDICES.LOST_IMPACT_SIX_WEAPON,
+                    REGION_RESTRICTION_TYPES.AnyStageWeapon)
+    .setLogicType(Options.LogicLevel.option_hard)
+    .setAsDiversion(),
 LevelRegion(STAGE_LOST_IMPACT, REGION_INDICES.LOST_IMPACT_CHECKPOINT_SEVEN,
-                    REGION_RESTRICTION_TYPES.NoRestriction),
+                    REGION_RESTRICTION_TYPES.NoRestriction)
+    .setFromRegion(REGION_INDICES.LOST_IMPACT_CHECKPOINT_SIX),
 LevelRegion(STAGE_LOST_IMPACT, REGION_INDICES.LOST_IMPACT_SEVEN_GUN_LIFT,
                     REGION_RESTRICTION_TYPES.GunLift),
 LevelRegion(STAGE_LOST_IMPACT, REGION_INDICES.LOST_IMPACT_CHECKPOINT_EIGHT,
@@ -1299,7 +1334,7 @@ LevelRegion(STAGE_GUN_FORTRESS, REGION_INDICES.GUN_FORTRESS_CHECKPOINT_THREE,
 
 LevelRegion(STAGE_GUN_FORTRESS, REGION_INDICES.GUN_FORTRESS_ROCKET_NORMAL,
                     REGION_RESTRICTION_TYPES.Rocket)
-    .setLogicType(Options.LogicLevel.option_hard),
+    .setLogicType(Options.LogicLevel.option_easy),
 
 LevelRegion(STAGE_GUN_FORTRESS, REGION_INDICES.GUN_FORTRESS_CHECKPOINT_FOUR,
                     REGION_RESTRICTION_TYPES.NoRestriction),
@@ -1309,11 +1344,11 @@ LevelRegion(STAGE_GUN_FORTRESS, REGION_INDICES.GUN_FORTRESS_WEAPON_SHOT,
 
 LevelRegion(STAGE_GUN_FORTRESS, REGION_INDICES.GUN_FORTRESS_TUNNEL_2,
                     REGION_RESTRICTION_TYPES.Pulley)
-    .setFromRegion(REGION_INDICES.GUN_FORTRESS_ROCKET_NORMAL),
+    .setFromRegion(REGION_INDICES.GUN_FORTRESS_CHECKPOINT_FOUR),
 
 LevelRegion(STAGE_GUN_FORTRESS, REGION_INDICES.GUN_FORTRESS_TOP_TUNNEL_2,
                     REGION_RESTRICTION_TYPES.Pulley)
-    .setFromRegion( REGION_INDICES.GUN_FORTRESS_ROCKET_NORMAL)
+    .setFromRegion( REGION_INDICES.GUN_FORTRESS_CHECKPOINT_FOUR)
     .setLogicType(Options.LogicLevel.option_normal, Options.ChaosControlLogicLevel.option_hard, True),
 
 LevelRegion(STAGE_GUN_FORTRESS, REGION_INDICES.GUN_FORTRESS_COMPUTER_2_BACK,
@@ -1570,7 +1605,8 @@ LevelRegion(STAGE_LAVA_SHELTER, REGION_INDICES.LAVA_SHELTER_PULLEY,
     .setLogicType(Options.LogicLevel.option_normal, Options.ChaosControlLogicLevel.option_easy),
 LevelRegion(STAGE_LAVA_SHELTER, REGION_INDICES.LAVA_SHELTER_SECRET,
                     REGION_RESTRICTION_TYPES.RegionAccess(REGION_INDICES.LAVA_SHELTER_AIR_SAUCER))
-    .setLogicType(Options.LogicLevel.option_normal, Options.ChaosControlLogicLevel.option_easy),
+    .setLogicType(Options.LogicLevel.option_normal, Options.ChaosControlLogicLevel.option_easy)
+    .setFromRegion(REGION_INDICES.LAVA_SHELTER_CHECKPOINT_TWO),
 LevelRegion(STAGE_LAVA_SHELTER, REGION_INDICES.LAVA_SHELTER_PULLEY_OR_LAVA,
                     REGION_RESTRICTION_TYPES.NoRestriction)
     .setFromRegion([REGION_INDICES.LAVA_SHELTER_PULLEY,
@@ -1716,7 +1752,7 @@ LevelRegion(STAGE_COSMIC_FALL, REGION_INDICES.COSMIC_FALL_CHECKPOINT_SEVEN,
                         REGION_RESTRICTION_TYPES.NoRestriction),
     LevelRegion(STAGE_FINAL_HAUNT, REGION_INDICES.FINAL_HAUNT_ROCKET_NORMAL,
                         REGION_RESTRICTION_TYPES.Rocket)
-        .setLogicType(Options.LogicLevel.option_hard),
+        .setLogicType(Options.LogicLevel.option_easy),
     LevelRegion(STAGE_FINAL_HAUNT, REGION_INDICES.FINAL_HAUNT_CHECKPOINT_FOUR,
                         REGION_RESTRICTION_TYPES.NoRestriction),
     LevelRegion(STAGE_FINAL_HAUNT, REGION_INDICES.FINAL_HAUNT_SHIELD_TWO,
@@ -2040,6 +2076,9 @@ BACKTRACKING_REGIONS = [
     BacktrackRegion(STAGE_PRISON_ISLAND, REGION_INDICES.PRISON_ISLAND_CHECKPOINT_ONE,
                     REGION_INDICES.PRISON_ISLAND_CHECKPOINT_ZERO, Options.LogicLevel.option_easy,
                     REGION_RESTRICTION_TYPES.NoRestriction),
+    BacktrackRegion(STAGE_PRISON_ISLAND, REGION_INDICES.PRISON_ISLAND_CHECKPOINT_SEVEN,
+                    REGION_INDICES.PRISON_ISLAND_SIX_KEY, Options.LogicLevel.option_normal,
+                    REGION_RESTRICTION_TYPES.NoRestriction).setHardLogicOnly(),
 
     BacktrackRegion(STAGE_CENTRAL_CITY, REGION_INDICES.CENTRAL_CITY_CHECKPOINT_ONE,
                     REGION_INDICES.CENTRAL_CITY_CHECKPOINT_ZERO, Options.LogicLevel.option_easy,
@@ -2050,6 +2089,9 @@ BACKTRACKING_REGIONS = [
     BacktrackRegion(STAGE_CENTRAL_CITY, REGION_INDICES.CENTRAL_CITY_CHECKPOINT_THREE,
                     REGION_INDICES.CENTRAL_CITY_CHECKPOINT_TWO, Options.LogicLevel.option_normal,
                     REGION_RESTRICTION_TYPES.NoBacktracking),
+    BacktrackRegion(STAGE_CENTRAL_CITY, REGION_INDICES.CENTRAL_CITY_CHECKPOINT_THREE,
+                    REGION_INDICES.CENTRAL_CITY_ROCKET_LANDING, Options.LogicLevel.option_easy,
+                    REGION_RESTRICTION_TYPES.NoBacktracking),
     BacktrackRegion(STAGE_CENTRAL_CITY, REGION_INDICES.CENTRAL_CITY_CHECKPOINT_FOUR,
                     REGION_INDICES.CENTRAL_CITY_CHECKPOINT_THREE, Options.LogicLevel.option_normal,
                     REGION_RESTRICTION_TYPES.Explosion).setHardLogicOnly(),
@@ -2059,6 +2101,9 @@ BACKTRACKING_REGIONS = [
     BacktrackRegion(STAGE_CENTRAL_CITY, REGION_INDICES.CENTRAL_CITY_CHECKPOINT_SIX,
                     REGION_INDICES.CENTRAL_CITY_BEHIND_SIX, Options.LogicLevel.option_easy,
                     REGION_RESTRICTION_TYPES.NoBacktracking),
+    BacktrackRegion(STAGE_CENTRAL_CITY, REGION_INDICES.CENTRAL_CITY_BEHIND_SIX,
+                    REGION_INDICES.CENTRAL_CITY_BEHIND_SIX_OR_TURRET, Options.LogicLevel.option_normal,
+                    REGION_RESTRICTION_TYPES.NoRestriction),
     BacktrackRegion(STAGE_CENTRAL_CITY, REGION_INDICES.CENTRAL_CITY_CHECKPOINT_SIX,
                     REGION_INDICES.CENTRAL_CITY_CHECKPOINT_FIVE, Options.LogicLevel.option_normal,
                     REGION_RESTRICTION_TYPES.NoBacktracking).setHardLogicOnly(),
@@ -2068,6 +2113,9 @@ BACKTRACKING_REGIONS = [
     BacktrackRegion(STAGE_CENTRAL_CITY, REGION_INDICES.CENTRAL_CITY_CHECKPOINT_FOUR,
                     REGION_INDICES.CENTRAL_CITY_CHECKPOINT_SIX, Options.LogicLevel.option_normal,
                     REGION_RESTRICTION_TYPES.Explosion).setHardLogicOnly(),
+    BacktrackRegion(STAGE_CENTRAL_CITY, REGION_INDICES.CENTRAL_CITY_SIX_WEAPON_OR_BOMB,
+                    REGION_INDICES.CENTRAL_CITY_BOMB_OR_BAZOOKA_3, Options.LogicLevel.option_normal,
+                    REGION_RESTRICTION_TYPES.NoRestriction),
 
     BacktrackRegion(STAGE_CIRCUS_PARK, REGION_INDICES.CIRCUS_PARK_CHECKPOINT_ONE,
                     REGION_INDICES.CIRCUS_PARK_CHECKPOINT_ZERO, Options.LogicLevel.option_easy,
@@ -2320,8 +2368,8 @@ BACKTRACKING_REGIONS = [
                     REGION_INDICES.LAVA_SHELTER_CHECKPOINT_FIVE, Options.LogicLevel.option_easy,
                     REGION_RESTRICTION_TYPES.NoBacktracking),
     BacktrackRegion(STAGE_LAVA_SHELTER, REGION_INDICES.LAVA_SHELTER_CHECKPOINT_EIGHT,
-                    REGION_INDICES.LAVA_SHELTER_WIND, Options.LogicLevel.option_easy,
-                    REGION_RESTRICTION_TYPES.NoBacktracking),
+                    REGION_INDICES.LAVA_SHELTER_WIND, Options.LogicLevel.option_normal,
+                    REGION_RESTRICTION_TYPES.NoBacktracking).setHardLogicOnly(),
 
     BacktrackRegion(STAGE_COSMIC_FALL, REGION_INDICES.COSMIC_FALL_CHECKPOINT_ONE,
                     REGION_INDICES.COSMIC_FALL_FIRST_ENEMIES, Options.LogicLevel.option_normal,
@@ -2387,8 +2435,40 @@ BACKTRACKING_REGIONS = [
                     REGION_RESTRICTION_TYPES.NoRestriction).setHardLogicOnly(),
 ]
 
-
+UseCheckpointZeroCache = {}
 HasCheckpointZeroCache = {}
+HasGoalRingCheckpointCache = {}
+
+def HasGoalRingCheckpoint(stage):
+    key = stage
+
+    if key in HasGoalRingCheckpointCache:
+        return HasGoalRingCheckpointCache[key]
+
+    return False
+
+def UseCheckpointZero(stage,logic_level):
+    key =  (stage, logic_level)
+
+    if key in UseCheckpointZeroCache:
+        return UseCheckpointZeroCache[key]
+
+    has_zero = HasCheckpointZero(stage)
+    if not has_zero:
+        UseCheckpointZeroCache[key] = False
+        return False
+
+    b_regions = [ b for b in BACKTRACKING_REGIONS if b.stageId == stage and b.backtrackToRegion == 0 ]
+    found = False
+    for b_region in b_regions:
+        if b_region.hardLogicOnly and logic_level == Options.LogicLevel.option_hard:
+            found = True
+        elif b_region.logicType == Options.LogicLevel.option_easy and logic_level != Options.LogicLevel.option_easy:
+            found = True
+
+    UseCheckpointZeroCache[key] = not found
+    return not found
+
 
 def HasCheckpointZero(stage):
 

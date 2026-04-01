@@ -1,3 +1,4 @@
+import copy
 import math
 import typing
 from typing import Dict
@@ -136,6 +137,8 @@ def DetermineFirstStages(world):
                     possible_first_regions.extend(world.random.sample(
                         first_choices, backup_picks))
 
+        possible_first_regions = list(set(possible_first_regions))
+
         if starting_stage_count > len(possible_first_regions):
             starting_stage_count = len(possible_first_regions)
 
@@ -156,9 +159,9 @@ def DetermineGates(world):
 
     stages_to_assign = [ l for l in Levels.ALL_STAGES if l in world.available_select_stages ]
 
-    #print("WFIRST", world.first_regions)
-    #fake_gates = {0: world.first_regions, 1: [Levels.BOSS_BLACK_BULL_LH, Levels.BOSS_EGG_BREAKER_MM, Levels.STAGE_BLACK_COMET], 2: [Levels.STAGE_LETHAL_HIGHWAY, Levels.STAGE_MAD_MATRIX]}
-    #return fake_gates
+    if len(world.first_regions) == len(stages_to_assign):
+        # Disable gates here
+        return {}
 
     world.random.shuffle(stages_to_assign)
 
@@ -867,24 +870,83 @@ def GetDefaultCheckpointRegionForStage(world, stage):
 
     return GetCheckpointRegion(stage, checkpoint_id)
 
-def GenerateFirstCheckpoints(world):
+def GenerateFirstAndAvailableCheckpoints(world):
     first_checkpoints = {}
+    available_checkpoints = {}
 
     for level in world.available_levels:
         if level in Levels.BOSS_STAGES:
             continue
 
-        if Levels.LEVEL_ID_TO_LEVEL[level] in world.options.plando_checkpoint_spawns:
-            first_checkpoints[level] = world.options.plando_checkpoint_spawns[Levels.LEVEL_ID_TO_LEVEL[level]]
+        c = [l for l in Locations.CheckpointLocations if l.stageId == level][0]
+
+        base_check = 1
+        if Levels.HasCheckpointZero(level):
+            base_check = 0
+
+        first_choices = [x for x in range(base_check, c.total_count + 1)]
+        available_checkpoints_for_stage = copy.deepcopy(first_choices)
+
+        regions_to_disable = Objects.GetRegionsForGoalRings(level)
+
+        if "Disable Spawn At Goal Rings" in world.options.checkpoint_rules:
+            for item in regions_to_disable:
+                if item in c.region:
+                    item_index = c.region.index(item) + 1
+                    first_choices = [c for c in first_choices if c != item_index]
+
+        if "Disable Goal Ring Item" in world.options.checkpoint_rules:
+            for item in regions_to_disable:
+                if item in c.region:
+                    item_index = c.region.index(item) + 1
+                    available_checkpoints_for_stage = [c for c in available_checkpoints_for_stage if c != item_index]
+
+        if world.options.checkpoint_shuffle != Options.CheckpointShuffle.option_start_and_unlock:
+            first_checkpoints[level] = 0
+        elif "Zero Start" in world.options.checkpoint_rules and Levels.UseCheckpointZero(level, world.options.logic_level):
+            first_checkpoints[level] = 0
         else:
-            c = [l for l in Locations.CheckpointLocations if l.stageId == level][0]
+            if Levels.LEVEL_ID_TO_LEVEL[level] in world.options.plando_checkpoint_spawns:
+                plando_selection = world.options.plando_checkpoint_spawns[Levels.LEVEL_ID_TO_LEVEL[level]]
+                if plando_selection not in first_choices:
+                    raise OptionError("Invalid plando selection for checkpoint spawn")
 
-            # Exclude 0 for stages without a Checkpoint Zero!
-            base_check = 1
-            if Levels.HasCheckpointZero(level):
-                base_check = 0
+                first_checkpoints[level] = plando_selection
+            else:
+                first = world.random.choice(first_choices)
 
-            first = world.random.choice(range(base_check, c.total_count + 1))
-            first_checkpoints[level] = first
+                first_checkpoints[level] = first
 
-    return first_checkpoints
+        if Levels.UseCheckpointZero(c.stageId, world.options.logic_level):
+            available_checkpoints_for_stage.append(0)
+
+        available_checkpoints_for_stage = [ a for a in available_checkpoints_for_stage if a != first_checkpoints[level] ]
+
+        if "Minimal Checkpoints" in world.options.checkpoint_rules:
+            has_zero = Levels.UseCheckpointZero(level, world.options.logic_level)
+            first_choice = first_checkpoints[level]
+            earliest = None
+            if has_zero and first_choice != 0:
+                earliest = 0
+            elif has_zero:
+                earliest = None
+            elif first_choice in (0, 1):
+                earliest = None
+            else:
+                earliest = 1
+
+            selected = []
+            for item in available_checkpoints_for_stage:
+                if item == earliest:
+                    selected.append(item)
+                else:
+                    r = world.random.randrange(0, 100)
+                    if world.options.minimal_checkpoint_percentage >= r:
+                        selected.append(item)
+
+            available_checkpoints[level] = selected
+        else:
+            available_checkpoints[level] = available_checkpoints_for_stage
+
+    return first_checkpoints, available_checkpoints
+

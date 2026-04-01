@@ -13,7 +13,7 @@ from . import Weapons, Vehicle, Utils as ShadowUtils, Options, Levels, Objects, 
 from .Levels import LEVEL_ID_TO_LEVEL, ALL_STAGES, MISSION_ALIGNMENT_DARK, \
     MISSION_ALIGNMENT_HERO, MISSION_ALIGNMENT_NEUTRAL, ITEM_TOKEN_TYPE_STANDARD, ITEM_TOKEN_TYPE_FINAL, \
     ITEM_TOKEN_TYPE_OBJECTIVE, ITEM_TOKEN_TYPE_ALIGNMENT, ITEM_TOKEN_TYPE_BOSS, \
-    ITEM_TOKEN_TYPE_FINAL_BOSS
+    ITEM_TOKEN_TYPE_FINAL_BOSS, UseCheckpointZero
 from .Locations import MissionClearLocations, GetAlignmentsForStage, count_locations, count_last_way_locations, CheckpointLocations
 
 BASE_ID = 1743800000
@@ -641,14 +641,57 @@ def AddItemsToStartInventory(world, count):
     valid_removals = [ i for i in multiworld_itempool_self if i.name not in base_plando_items
                        and i.classification == ItemClassification.progression and i.name not in plando_items]
 
+    priority_removals = [ i for i in valid_removals if i.name in
+                          [ w for w in world.go_mode_weapons_only] ]
+
+
+    valid_removals = [ r for r in valid_removals if r not in priority_removals ]
+
+    #go_mode_weapons_only
+
+
     if len(valid_removals) < count:
         raise OptionError(f"Unable to remove {count} items from valid list of {len(valid_removals)}")
+
+    priority_count = count
+    if priority_count > len(priority_removals):
+        priority_count = len(priority_removals)
+    priorities = world.random.sample(priority_removals, k=priority_count)
+    for s in priorities:
+        world.multiworld.itempool.remove(s)
+        logging.info(f"Add {s} to starting inventory")
+        world.push_precollected(s)
+
+    count = count - priority_count
+    if count == 0:
+        return
 
     startings = world.random.sample(valid_removals, k=count)
     for s in startings:
         world.multiworld.itempool.remove(s)
         logging.info(f"Add {s} to starting inventory")
         world.push_precollected(s)
+
+
+def GetItemsFromWeaponInfo(world, weapon_items, weapon_group_items):
+    data = world.weapon_counts
+
+    weapons = []
+    for name in data.keys():
+        w_s = [ w for w in weapon_items if w.name == name]
+        if len(w_s) == 0:
+            w_s = [w for w in weapon_group_items if w.name == name]
+            if len(w_s) == 0:
+                print("Invalid item info,", name, weapon_items)
+                continue
+            else:
+                w = w_s[0]
+        else:
+            w = w_s[0]
+        weapons.extend([w] * world.weapon_counts[name])
+
+    mw_weapon_items = [ShadowTheHedgehogItem(w, world.player) for w in weapons]
+    return mw_weapon_items
 
 
 def CountItems(world: World):
@@ -689,11 +732,16 @@ def CountItems(world: World):
         items = [item] * max_available
         using_stage_objective_items.extend(items)
 
-    use_level_unlock_items = [l for l in level_unlock_items if l.stageId not in world.first_regions and
-                              l.stageId in world.available_levels
-                              and l.stageId not in Levels.LAST_STORY_STAGES
-                              and (l.stageId not in Levels.BOSS_STAGES or world.options.select_bosses)
-                              and world.options.level_progression != Options.LevelProgression.option_story]
+    use_level_unlock_items = []
+    if world.options.level_progression != Options.LevelProgression.option_story and \
+            world.options.select_gates == Options.SelectGates.option_off:
+        use_level_unlock_items = [l for l in level_unlock_items if l.stageId not in world.first_regions and
+                                  l.stageId in world.available_levels
+                                  # and (l.stageId not in Levels.FINAL_BOSSES
+                                  and (
+                                              l.stageId not in Levels.LAST_STORY_STAGES or world.options.include_last_way_shuffle)
+                                  and (l.stageId not in Levels.BOSS_STAGES or world.options.select_bosses)
+                                  ]
 
     select_stage_count = 0
     if len(use_level_unlock_items) > 0:
@@ -701,8 +749,8 @@ def CountItems(world: World):
                         l.stageId not in world.first_regions]
         select_stage_count = len(unlock_items)
 
-    item_count = increment_item_count(0, select_stage_count)
-    item_count = increment_item_count(item_count, using_stage_objective_items)
+    item_count = increment_item_count(0, select_stage_count, item_type="stage unlocks")
+    item_count = increment_item_count(item_count, using_stage_objective_items, item_type="stage_objective_items")
     if world.options.goal_chaos_emeralds or world.options.gate_unlock_requirement == Options.GateUnlockRequirement.option_chaos_emeralds:
         item_count = increment_item_count(item_count, emerald_items)
 
@@ -718,10 +766,7 @@ def CountItems(world: World):
 
     weapon_items.extend(special_weapon_extras)
 
-    available_weapons = [w for w in weapon_items if w.name in world.available_weapons]
-    HandleAllWeaponsGroups(world.options, available_weapons, weapon_group_items)
-
-    mw_weapon_items = [ShadowTheHedgehogItem(w, world.player) for w in available_weapons]
+    mw_weapon_items = GetItemsFromWeaponInfo(world, weapon_items, weapon_group_items)
 
     mw_weapon_special_only = [ShadowTheHedgehogItem(w, world.player) for w in special_weapon_extras]
     mw_weapon_special_only_dupes = [ShadowTheHedgehogItem(w, world.player) for w in special_weapon_extras]
@@ -736,38 +781,50 @@ def CountItems(world: World):
         mw_weapon_items.extend([ShadowTheHedgehogItem(w, world.player) for w in rifle_components])
 
     if world.options.weapon_sanity_unlock:
-        item_count = increment_item_count(item_count, mw_weapon_items)
+        item_count = increment_item_count(item_count, mw_weapon_items, item_type="Weapons")
     else:
-        item_count = increment_item_count(item_count, mw_weapon_special_only)
+        item_count = increment_item_count(item_count, mw_weapon_special_only, item_type="Special Weapons")
 
     if world.options.vehicle_logic:
         available_vehicle_items = Objects.GetAvailableVehicles(world)
-        item_count = increment_item_count(item_count, len(available_vehicle_items))
+        item_count = increment_item_count(item_count, len(available_vehicle_items), item_type="Vehicles")
+
 
     if world.options.object_unlocks:
         available_objects = Objects.GetAvailableObjects(world)
-        if world.options.object_pulleys and ObjectTypes.ObjectType.STANDARD_PULLEY in available_objects:
-            item_count = increment_item_count(item_count, 1)
+        if world.options.object_pulleys and ObjectTypes.ObjectType.STANDARD_PULLEY in available_objects and "Pulley" not in world.starting_items:
+            item_count = increment_item_count(item_count, 1, "Pulley")
         if world.options.object_ziplines and (ObjectTypes.ObjectType.GUN_ZIPWIRE in available_objects
             or ObjectTypes.ObjectType.SPACE_ZIPWIRE in available_objects or ObjectTypes.ObjectType.GUN_ZIPWIRE in available_objects or
-            ObjectTypes.ObjectType.BALLOON_ZIPWIRE in available_objects):
-            item_count = increment_item_count(item_count, 1)
+            ObjectTypes.ObjectType.BALLOON_ZIPWIRE in available_objects) and "Zipwire" not in world.starting_items:
+            item_count = increment_item_count(item_count, 1, "Zipline")
         if world.options.object_units:
-            if ObjectTypes.ObjectType.BOMB in available_objects or ObjectTypes.ObjectType.BOMB_SERVER in available_objects:
-                item_count = increment_item_count(item_count, 1)
-            if ObjectTypes.ObjectType.HEAL_UNIT in available_objects or ObjectTypes.ObjectType.HEAL_SERVER in available_objects:
-                item_count = increment_item_count(item_count, 1)
-        if world.options.object_rockets and ObjectTypes.ObjectType.ROCKET in available_objects:
-            item_count = increment_item_count(item_count, 1)
-        if world.options.object_light_dashes and ObjectTypes.ObjectType.LIGHT_DASH_TRAIL in available_objects:
-            item_count = increment_item_count(item_count, 1)
-        if world.options.object_warp_holes and ObjectTypes.ObjectType.WARP_HOLE in available_objects:
-            item_count = increment_item_count(item_count, 1)
+            if (ObjectTypes.ObjectType.BOMB in available_objects or ObjectTypes.ObjectType.BOMB_SERVER in available_objects)\
+                    and "Bombs" not in world.starting_items:
+                item_count = increment_item_count(item_count, 1, "Bombs")
+            if (ObjectTypes.ObjectType.HEAL_UNIT in available_objects or ObjectTypes.ObjectType.HEAL_SERVER in available_objects) \
+                    and "Heal Units" not in world.starting_items:
+                item_count = increment_item_count(item_count, 1, "Heal Units")
+        if world.options.object_rockets and ObjectTypes.ObjectType.ROCKET in available_objects and "Rocket" not in world.starting_items:
+            item_count = increment_item_count(item_count, 1, "Rocket")
+        if world.options.object_light_dashes and ObjectTypes.ObjectType.LIGHT_DASH_TRAIL in available_objects and "Air Shoes" not in world.starting_items:
+            item_count = increment_item_count(item_count, 1, "Air Shoes")
+        if world.options.object_warp_holes and ObjectTypes.ObjectType.WARP_HOLE in available_objects and "Warp Holes" not in world.starting_items:
+            item_count = increment_item_count(item_count, 1, "Warp Holes")
 
     if world.options.checkpoint_shuffle != Options.CheckpointShuffle.option_off:
         relevant_checkpoint_items = [c for c in checkpoint_items if c.stageId in world.available_levels and
-                                     (world.options.checkpoint_shuffle == Options.CheckpointShuffle.option_start_and_unlock or c.value != 0)]
-        item_count = increment_item_count(item_count, len(relevant_checkpoint_items))
+                                     c.value in world.available_checkpoints[c.stageId]]
+
+        item_count = increment_item_count(item_count, len(relevant_checkpoint_items), item_type="Checkpoints")
+
+    if world.options.key_collection_method != Options.KeyCollectionMethod.option_local:
+        relevant_key_items = len([c for c in key_items if c.stageId in world.available_levels]) * world.options.keys_required_for_doors
+        item_count = increment_item_count(item_count, relevant_key_items, item_type="Door Keys")
+
+    if (world.options.select_gates != Options.SelectGates.option_off and world.options.gate_unlock_requirement == Options.GateUnlockRequirement.option_items
+            and len(world.gates.keys()) > 0):
+        item_count = increment_item_count(item_count, int(world.options.select_gates_count), item_type="Gate Key")
 
     return item_count
 
@@ -889,63 +946,21 @@ def GetShadowRifle():
 
     return [w for w in weapon_items if w.name == 'Shadow Rifle' or w.name == 'Weapon:Shadow Rifle'][0]
 
-def HandleWeaponDuplicates(world, available_weapons):
-    new_weapons = []
 
-    weapon_min = world.options.weapon_sanity_min_available
-    weapon_max = world.options.weapon_sanity_max_available
-
-    weapon_dict = Weapons.GetWeaponDict()
-    for w in available_weapons:
-        if w.name in weapon_dict and Weapons.WeaponAttributes.SPECIAL in weapon_dict[w.name].attributes:
-            new_weapons.extend([w]*1)
-        elif weapon_min == weapon_max:
-            new_weapons.extend([w]*weapon_min)
-        else:
-            weapon_maximum = weapon_max if weapon_max > weapon_min else weapon_min
-            weapon_minimum = weapon_max if weapon_max < weapon_min else weapon_min
-            r = world.random.randrange(weapon_minimum, weapon_maximum)
-            new_weapons.extend([w]*r)
-
-    return new_weapons
-
-
-def HandleAllWeaponsGroups(options, items, group_items):
-    if not options.weapon_sanity_unlock:
-        return
-
-    weapons_to_remove = []
-    for group in Weapons.WeaponGroups.keys():
-        if group in options.weapon_groups:
-            HandleWeaponGroup(items, group_items, group, weapons_to_remove)
-
-    for weapon in weapons_to_remove:
-        if weapon in items:
-            items.remove(weapon)
-
-
-def HandleWeaponGroup(items, group_items, weapon_group_name, weapons_to_remove):
-    melee_group = Weapons.WeaponGroups[weapon_group_name]
-    weapon_items_to_remove = [w for w in items if w.value in melee_group]
-
-    if len(weapon_items_to_remove) == 0:
-        # If no items in the group are available, don't add the group
-        return
-
-    weapons_to_remove.extend(weapon_items_to_remove)
-    group_item = [w for w in group_items if w.name == weapon_group_name]
-    items.extend(group_item)
-
-
-def increment_item_count(count, items):
+def increment_item_count(count, items, item_type=""):
     plus = 0
     printString = ""
     if type(items) is list:
         plus += len(items)
-        printString = [x.name for x in items]
+        printString = len([x.name for x in items])
     if type(items) is int:
         plus += items
         printString = str(plus)
+
+    if True:
+        if count == 0:
+            print("---")
+        print("IIC", item_type, printString)
 
     return count + plus
 
@@ -1061,11 +1076,7 @@ def PopulateItemPool(world: World):
             if weapon_classification is not None:
                 w.classification = weapon_classification
 
-    HandleAllWeaponsGroups(world.options, available_weapons, weapon_group_items)
-    available_weapons = HandleWeaponDuplicates(world, available_weapons)
-
-    mw_weapon_items = [ShadowTheHedgehogItem(w, world.player) for w in available_weapons]
-
+    mw_weapon_items = GetItemsFromWeaponInfo(world, weapon_items, weapon_group_items)
     mw_weapon_special_only = [ShadowTheHedgehogItem(w, world.player) for w in special_weapons_weaponsanity_extras]
 
     # Not sure how much this helps
@@ -1093,7 +1104,7 @@ def PopulateItemPool(world: World):
         item_count = increment_item_count(item_count, mw_em_items)
 
     if world.options.weapon_sanity_unlock:
-        item_count = increment_item_count(item_count, mw_weapon_items)
+        item_count = increment_item_count(item_count, mw_weapon_items, item_type="Weapons")
     else:
         item_count = increment_item_count(item_count, mw_weapon_special_only)
 
@@ -1107,7 +1118,7 @@ def PopulateItemPool(world: World):
             mw_object_items.append(ShadowTheHedgehogItem
                                    ([o for o in object_items if o.name == "Pulley"]
                                     [0], world.player))
-            item_count = increment_item_count(item_count, 1)
+            item_count = increment_item_count(item_count, 1, item_type="Pulley")
         if world.options.object_ziplines and (ObjectTypes.ObjectType.GUN_ZIPWIRE in available_objects
             or ObjectTypes.ObjectType.SPACE_ZIPWIRE in available_objects or ObjectTypes.ObjectType.GUN_ZIPWIRE in available_objects or
             ObjectTypes.ObjectType.BALLOON_ZIPWIRE in available_objects or
@@ -1115,37 +1126,37 @@ def PopulateItemPool(world: World):
             mw_object_items.append(ShadowTheHedgehogItem
                                    ([o for o in object_items if o.name == "Zipwire"]
                                     [0], world.player))
-            item_count = increment_item_count(item_count, 1)
+            item_count = increment_item_count(item_count, 1, item_type="Zipwire")
         if world.options.object_units:
-            if ObjectTypes.ObjectType.BOMB in available_objects or ObjectTypes.ObjectType.BOMB_SERVER in available_objects\
+            if (ObjectTypes.ObjectType.BOMB in available_objects or ObjectTypes.ObjectType.BOMB_SERVER in available_objects)\
                     and "Bombs" not in world.starting_items:
                 mw_object_items.append(ShadowTheHedgehogItem
                                        ([o for o in object_items if o.name == "Bombs"]
                                         [0], world.player))
-                item_count = increment_item_count(item_count, 1)
+                item_count = increment_item_count(item_count, 1, item_type="Bombs")
             if ObjectTypes.ObjectType.HEAL_UNIT in available_objects or ObjectTypes.ObjectType.HEAL_SERVER in available_objects\
                     and "Heal Units" not in world.starting_items:
                 mw_object_items.append(ShadowTheHedgehogItem
                                    ([o for o in object_items if o.name == "Heal Units"]
                                     [0], world.player))
-                item_count = increment_item_count(item_count, 1)
+                item_count = increment_item_count(item_count, 1, item_type="Heal Units")
 
         if world.options.object_rockets and ObjectTypes.ObjectType.ROCKET in available_objects and "Rocket" not in world.starting_items:
             mw_object_items.append(ShadowTheHedgehogItem
                                    ([o for o in object_items if o.name == "Rocket"]
                                     [0], world.player))
-            item_count = increment_item_count(item_count, 1)
+            item_count = increment_item_count(item_count, 1, item_type="Rocket")
         if world.options.object_light_dashes and ObjectTypes.ObjectType.LIGHT_DASH_TRAIL in available_objects \
                 and "Air Shoes" not in world.starting_items:
             mw_object_items.append(ShadowTheHedgehogItem
                                    ([o for o in object_items if o.name == "Air Shoes"]
                                     [0], world.player))
-            item_count = increment_item_count(item_count, 1)
+            item_count = increment_item_count(item_count, 1, item_type="Air Shoes")
         if world.options.object_warp_holes and ObjectTypes.ObjectType.WARP_HOLE in available_objects and "Warp Holes" not in world.starting_items:
             mw_object_items.append(ShadowTheHedgehogItem
                                    ([o for o in object_items if o.name == "Warp Holes"]
                                     [0], world.player))
-            item_count = increment_item_count(item_count, 1)
+            item_count = increment_item_count(item_count, 1, item_type="Warp Holes")
 
     location_count = count_locations(world)
 
@@ -1182,7 +1193,8 @@ def PopulateItemPool(world: World):
 
         item_count = increment_item_count(item_count, mw_key_items)
 
-    if world.options.gate_unlock_requirement == Options.GateUnlockRequirement.option_items:
+    if (world.options.gate_unlock_requirement == Options.GateUnlockRequirement.option_items and
+            world.options.select_gates != Options.SelectGates.option_off) and len(world.gates.keys()) > 0:
         gate_key_item = [ l for l in key_items if l.type == 'gatekey'][0]
         gate_count = world.options.select_gates_count
         mw_prep_items = [ gate_key_item ] * gate_count
@@ -1190,17 +1202,21 @@ def PopulateItemPool(world: World):
         item_count = increment_item_count(item_count, mw_gate_keys)
         shadow_item_pool += mw_gate_keys
 
-
     if world.options.checkpoint_shuffle != Options.CheckpointShuffle.option_off:
         relevant_checkpoint_items = [ c for c in checkpoint_items if c.stageId in world.available_levels and
-                                      (world.options.checkpoint_shuffle == Options.CheckpointShuffle.option_start_and_unlock or c.value != 0)
-                                      and (c.stageId not in world.first_checkpoints or world.first_checkpoints[c.stageId] != c.value)]
+                                      c.value in world.available_checkpoints[c.stageId] ]
+
         mw_checkpoint_items = [ ShadowTheHedgehogItem(i, world.player) for i in relevant_checkpoint_items ]
+
         item_count = increment_item_count(item_count, mw_checkpoint_items)
         shadow_item_pool += mw_checkpoint_items
 
     # Add checks here for checks locked by The Last Way when this is the final part
     # If required, replace all TLW checks with junk items in the pool, start inventory will get amended
+
+    counted_items = CountItems(world)
+    if counted_items != item_count:
+        raise Exception("Invalid count of items!", counted_items, item_count)
 
     junk_count = (location_count - item_count - len(mw_useful_items))
     print("Junk count is", location_count, junk_count)
@@ -1232,7 +1248,7 @@ def PopulateItemPool(world: World):
 
     world.multiworld.itempool += shadow_item_pool
 
-    if reverse_count > 0:
+    if reverse_count > 0 and not hasattr(world.multiworld, "re_gen_passthrough"):
         AddItemsToStartInventory(world, reverse_count)
 
 def RemoveExcessAvailableFromFullPool(world, to_remove, pool):

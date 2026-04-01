@@ -213,14 +213,14 @@ DESIRABLE_OBJECTS_THE_DOOM = [
     SETObject(ObjectType.ITEM_IN_METAL_BOX, Levels.STAGE_THE_DOOM, 391, 'After Bomb E',
               region=REGION_INDICES.THE_DOOM_BOMBS),
     SETObject(ObjectType.ITEM_CAPSULE, Levels.STAGE_THE_DOOM, 184, 'Up Bomb Lift A',
-              region=REGION_INDICES.THE_DOOM_BOMBS),
+              region=REGION_INDICES.THE_DOOM_CHECKPOINT_TWO),
 
     SETObject(ObjectType.ITEM_CAPSULE, Levels.STAGE_THE_DOOM, 95, 'Near Key 4',
               region=REGION_INDICES.THE_DOOM_CHECKPOINT_TWO),
     SETObject(ObjectType.ITEM_IN_METAL_BOX, Levels.STAGE_THE_DOOM, 133, 'Nearer Key 4',
               region=REGION_INDICES.THE_DOOM_CHECKPOINT_TWO),
     SETObject(ObjectType.ITEM_CAPSULE, Levels.STAGE_THE_DOOM, 193, 'Right Next to Key 4',
-              region=REGION_INDICES.THE_DOOM_CHECKPOINT_TWO),
+              region=REGION_INDICES.THE_DOOM_PULLEY),
 
     SETObject(ObjectType.ITEM_CAPSULE, Levels.STAGE_THE_DOOM, 197, 'Fan Room Item A',
               region=REGION_INDICES.THE_DOOM_FAN_ROOM),

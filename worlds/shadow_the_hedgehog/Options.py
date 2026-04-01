@@ -251,6 +251,27 @@ class CheckpointShuffle(Choice):
     option_start_and_unlock = 2
     default = option_off
 
+class CheckpointRules(OptionSet):
+    """
+        Specific settings for controlling which checkpoint items are included.
+        Disable Goal Rings: Disables including the goal ring as a possible checkpoint / spawn point.
+        Zero Start: If checkpoint zero cannot be backtracked to, always start at 0. Note, read readme for information on reaching if disabled.
+        Minimal Checkpoints: Removes random checkpoints from the pool to prevent end-game bloat.
+    """
+
+    display_name = "Checkpoint Rules"
+    valid_keys = Names.getValidCheckpointRules()
+    default = ["Zero Start"]
+
+class MinimalCheckpointPercentage(Range):
+    """
+            Percentage chance to include a checkpoint if Minimal Checkpoint rule is enabled.
+    """
+    display_name = "Minimal Checkpoint Percentage"
+    default = 50
+    range_start = 1
+    range_end = 100
+
 class CheckpointConvenience(DefaultOnToggle):
     """
         Determines whether checkpoint convenience is enabled, allowing warping back to a checkpoint
@@ -950,6 +971,8 @@ class ShadowTheHedgehogOptions(PerGameCommonOptions):
     key_collection_method: KeyCollectionMethod
     checkpoint_sanity: Checkpointsanity
     checkpoint_shuffle: CheckpointShuffle
+    checkpoint_rules: CheckpointRules
+    minimal_checkpoint_percentage: MinimalCheckpointPercentage
     checkpoint_convenience: CheckpointConvenience
     starting_stages: StartingStages
     select_gates: SelectGates
@@ -1031,7 +1054,7 @@ shadow_option_groups = [
                              VehicleLogic, ObjectUnlocks,
                              ShadowBoxes, EnergyCores, GoldBeetleSanity,
                              DoorSanity, KeyCollectionMethod, Itemsanity,
-                             CheckpointShuffle]),
+                             CheckpointShuffle, CheckpointRules, MinimalCheckpointPercentage]),
 
     OptionGroup("Progression", [StartingStages, LevelProgression, SelectGates,
                                 SelectGatesCount, GateUnlockRequirement,

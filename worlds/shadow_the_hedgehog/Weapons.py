@@ -1,3 +1,4 @@
+import json
 from dataclasses import dataclass
 
 from BaseClasses import ItemClassification
@@ -62,22 +63,24 @@ def DoMaxThing(stage_id, region_id):
 
 WeaponRuleCache = {}
 
-def GetRuleByWeaponRequirement(player, req, stageId: int, fromRegion: int|None, as_weapon: bool = False):
+def GetRuleByWeaponRequirement(options, player, req, stageId: int, fromRegion: int|None, as_weapon: bool = False):
 
-    arg_key = (player, req, stageId, fromRegion, as_weapon)
+    o_key = (options.weapon_sanity_unlock,) if options is not None else ""
+    arg_key = (o_key, player, req, stageId, fromRegion, as_weapon)
 
     if arg_key in WeaponRuleCache:
         return WeaponRuleCache[arg_key]
 
-    rule_result = GetRuleByWeaponRequirementData(player, req, stageId, fromRegion, as_weapon)
+    rule_result = GetRuleByWeaponRequirementData(options, player, req, stageId, fromRegion, as_weapon)
     WeaponRuleCache[arg_key] = rule_result
     return rule_result
 
 
-def GetRuleByWeaponRequirementData(player, req, stageId: int, fromRegion: int|None, as_weapon: bool = False):
+def GetRuleByWeaponRequirementData(options, player, req, stageId: int, fromRegion: int|None, as_weapon: bool = False):
 
-    #if req == Names.REGION_RESTRICTION_TYPES.NoRestriction:
-    #    return lambda state: True
+    have_weapon_rule = False
+    if options is None or options.weapon_sanity_unlock:
+        have_weapon_rule = True
 
     if fromRegion is None:
         region_to_use = None
@@ -115,12 +118,20 @@ def GetRuleByWeaponRequirementData(player, req, stageId: int, fromRegion: int|No
     individual_weapon_rules = []
     base_rule = None
     if len(base_matches) > 0:
-        base_rule = lambda state, em=base_matches, p=player: state.has_any(em, p)
-        if as_weapon:
-            for weapon in base_matches:
-                i_rule = lambda state, m=weapon, p=player: state.has(m, p)
-                if weapon in weapon_name_dict:
-                    individual_weapon_rules.append((weapon_name_dict[weapon], i_rule))
+        if have_weapon_rule:
+            base_rule = lambda state, em=base_matches, p=player: state.has_any(em, p)
+            if as_weapon:
+                for weapon in base_matches:
+                    i_rule = lambda state, m=weapon, p=player: state.has(m, p)
+                    if weapon in weapon_name_dict:
+                        individual_weapon_rules.append((weapon_name_dict[weapon], i_rule))
+        else:
+            base_rule = lambda state: True
+            if as_weapon:
+                for weapon in base_matches:
+                    if weapon in weapon_name_dict:
+                        individual_weapon_rules.append((weapon_name_dict[weapon], lambda state: True))
+
 
     secondary_rule = None
     if len(other_weapons) > 0:
@@ -143,8 +154,12 @@ def GetRuleByWeaponRequirementData(player, req, stageId: int, fromRegion: int|No
 
             region_escapes = [ Levels.GetDistributionEscapeRegionEventName(stageId, l) for l in weapon_regions ]
 
-            secondary_new_rule = lambda state, re=region_escapes, m=matches, p=player: (
-                    state.has_any(m, p) and state.has_any(re, p))
+
+            if have_weapon_rule:
+                secondary_new_rule = lambda state, re=region_escapes, m=matches, p=player: (
+                        state.has_any(m, p) and state.has_any(re, p))
+            else:
+                secondary_new_rule = lambda state, re=region_escapes, p=player: state.has_any(re, p)
 
             if as_weapon:
                 individual_weapon_rules.append((weapon, secondary_new_rule))
@@ -609,7 +624,7 @@ def GenerateWeaponInfo():
 
     shadow_box_info = [w for w in Objects.DESIRABLE_OBJECTS if w.object_type == ObjectType.SHADOW_BOX]
     stage_info = [ w for w in Objects.DESIRABLE_OBJECTS if w.weapon is not None and w.object_type !=  ObjectType.SHADOW_BOX
-                   and w.object_type in Objects.GetPlayableObjectTypes() and ObjectTypes.ObjectFlags.Floater not in w.flags]
+                   and w.object_type in Objects.GetWeaponObjectTypes() and ObjectTypes.ObjectFlags.Floater not in w.flags]
 
     for weapon_id in Names.WEAPONS:
         found_weapon = [ i for i in BASE_WEAPON_INFO if i.game_id == weapon_id ][0]
@@ -646,6 +661,9 @@ def GenerateWeaponInfo():
         for case in special_cases:
             if (case[0], case[2]) not in found_weapon.available_stages:
                 found_weapon.available_stages.append((case[0], case[2]))
+
+        # Weapon Vehicle options
+        # TODO: Check/fix handling for vehicles having the weapon here!
 
         weapon_info.append(found_weapon)
 
@@ -800,4 +818,59 @@ def GetWeaponClassification(world, weapon : WeaponInfo):
 
     return ItemClassification.useful
 
+def HandleWeaponGroup(items, group_items, weapon_group_name, weapons_to_remove):
+    melee_group = WeaponGroups[weapon_group_name]
+    weapon_items_to_remove = [ i.name for i in WEAPON_INFO if i.game_id in melee_group ]
 
+    if len(weapon_items_to_remove) == 0:
+        print("No items in group?")
+        # If no items in the group are available, don't add the group
+        return
+
+    weapons_to_remove.extend(weapon_items_to_remove)
+    items.append(weapon_group_name)
+
+def HandleAllWeaponsGroups(options, items, group_items):
+    if not options.weapon_sanity_unlock:
+        return
+
+    weapons_to_remove = []
+    for group in WeaponGroups.keys():
+        if group in options.weapon_groups:
+            HandleWeaponGroup(items, group_items, group, weapons_to_remove)
+
+    for weapon in weapons_to_remove:
+        if weapon in items:
+            items.remove(weapon)
+
+def CalculateWeaponDupes(world):
+    weapon_counts = {}
+    weapon_min = world.options.weapon_sanity_min_available
+    weapon_max = world.options.weapon_sanity_max_available
+
+    available_weapons = [w.name for w in WEAPON_INFO if w.name in world.available_weapons]
+    HandleAllWeaponsGroups(world.options, available_weapons, WeaponGroups)
+
+    weapon_dict = GetWeaponDict()
+    for w in available_weapons:
+
+        weapon_info_data = [ wi for wi in WEAPON_INFO if wi.name == w]
+
+        if len(weapon_info_data) == 1 and weapon_info_data[0].name in weapon_dict and WeaponAttributes.SPECIAL in weapon_dict[w].attributes:
+            if WeaponAttributes.SHADOW_RIFLE in weapon_dict[w].attributes:
+                if world.options.rifle_components:
+                    pass
+                else:
+                    weapon_counts[w] = 1
+            else:
+                weapon_counts[w] = 2
+        elif weapon_min == weapon_max:
+            weapon_counts[w] = weapon_min
+        else:
+            weapon_maximum = weapon_max if weapon_max > weapon_min else weapon_min
+            weapon_minimum = weapon_max if weapon_max < weapon_min else weapon_min
+            r = world.random.randrange(weapon_minimum, weapon_maximum)
+            weapon_counts[w] = r
+            #new_weapons.extend([w] * r)
+
+    return weapon_counts

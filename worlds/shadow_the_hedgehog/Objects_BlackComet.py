@@ -78,7 +78,7 @@ DESIRABLE_OBJECTS_BLACK_COMET = [
               region=REGION_INDICES.BLACK_COMET_ONSLAUGHT_FLOATERS),
     SETObject(ObjectType.VEHICLE, Levels.STAGE_BLACK_COMET,
               35, "Black Turret 3", vehicle=ObjectTypeVehicles.BLACK_TURRET,
-              region=REGION_INDICES.BLACK_COMET_WARP_HOLE, weapon=WEAPONS.BLACK_BARREL),
+              region=REGION_INDICES.BLACK_COMET_FIVE_TURRET, weapon=WEAPONS.BLACK_BARREL),
     SETObject(ObjectType.SHADOW_BOX, Levels.STAGE_BLACK_COMET,
               449, "Special Weapons Box 5", region=REGION_INDICES.BLACK_COMET_WARP_HOLE,
               weapon=WEAPONS.LASER_RIFLE),

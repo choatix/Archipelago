@@ -30,7 +30,7 @@ VEHICLE_INFO = \
 
 ]
 
-def GetRuleByVehicleRequirement(player, req):
+def GetRuleByVehicleRequirement(options, player, req):
     #, stage, regions):
     #if regions is not None:
     #    for i in range(0, len(regions)):
@@ -42,6 +42,9 @@ def GetRuleByVehicleRequirement(player, req):
     #        regions = []
     #    else:
     #        regions = p_regions
+
+    if not options.vehicle_logic:
+        return lambda state: True
 
     matches = [ v for v in VEHICLE_INFO if Names.GetNameForVehicle(req) == v.name ]
 

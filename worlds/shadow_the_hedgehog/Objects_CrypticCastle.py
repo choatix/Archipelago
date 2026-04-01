@@ -193,7 +193,7 @@ DESIRABLE_OBJECTS_CRYPTIC_CASTLE  = [
               region=REGION_INDICES.CRYPTIC_CASTLE_ENEMY_HAWKS_2, old_name="63", is_hard=True),
     SETObject(ObjectType.BLACK_HAWK, Levels.STAGE_CRYPTIC_CASTLE, 280, "69",
               region=REGION_INDICES.CRYPTIC_CASTLE_ENEMY_HAWKS_2, old_name="64", is_hard=True),
-    SETObject(ObjectType.BLACK_HAWK, Levels.STAGE_CRYPTIC_CASTLE, 263, "70",
+    SETObject(ObjectType.BLACK_HAWK_TOO_HARD, Levels.STAGE_CRYPTIC_CASTLE, 263, "70",
               region=REGION_INDICES.CRYPTIC_CASTLE_ENEMY_HAWKS_2, old_name="65", is_hard=True),
     SETObject(ObjectType.BLACK_HAWK, Levels.STAGE_CRYPTIC_CASTLE, 251, "71",
               region=REGION_INDICES.CRYPTIC_CASTLE_ENEMY_HAWKS_2, old_name="66", is_hard=True),

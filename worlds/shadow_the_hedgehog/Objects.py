@@ -1,7 +1,7 @@
 
 from . import Levels, Weapons, Names
 from .Names import *
-from .ObjectTypes import ObjectType
+from .ObjectTypes import ObjectType, ObjectTypeVehicles
 from .Objects_BlackComet import DESIRABLE_OBJECTS_BLACK_COMET
 from .Objects_CentralCity import DESIRABLE_OBJECTS_CENTRAL_CITY
 from .Objects_CircusPark import DESIRABLE_OBJECTS_CIRCUS_PARK
@@ -46,6 +46,15 @@ def GetObjectSanityTypes():
         ObjectType.WARP_HOLE, ObjectType.ROCKET,
         ObjectType.BALLOON_ZIPWIRE
     ]
+
+def GetWeaponObjectTypes():
+    playable = GetPlayableObjectTypes()
+    playable.extend([
+        ObjectType.VEHICLE
+    ])
+
+    return playable
+
 
 def GetPlayableObjectTypes():
     return [
@@ -1085,7 +1094,8 @@ def GetAvailableObjects(world):
 
 def GetAvailableVehicles(world):
     vehicle_items = set([ v.vehicle for v in DESIRABLE_OBJECTS if v.vehicle is not None and v.stage in world.available_levels ])
-    return vehicle_items
+    valid_vehicle_items = [ v for v in vehicle_items if v not in [ObjectTypeVehicles.GUN_LIFT_FAST] ]
+    return valid_vehicle_items
 
 
 def GetShadowBonusWeapons(stageId):
@@ -1124,5 +1134,13 @@ def GetCharacterSanityLocations():
             results[s.name].append((o.stage, o.region))
 
     return results
+
+
+def GetRegionsForGoalRings(stage):
+    objects_for_stage = [ x for x in DESIRABLE_OBJECTS if x.stage == stage and x.object_type in
+             [ObjectType.GOAL_RING, ObjectType.DIGITAL_CORE, ObjectType.COSMIC_FALL_COMPUTER_ROOM ]]
+
+    return list(set([ x.region for x in objects_for_stage]))
+
 
 CharacterToLevel = GetCharacterSanityLocations()

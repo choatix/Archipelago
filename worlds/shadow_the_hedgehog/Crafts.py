@@ -4,10 +4,12 @@ from .Names import REGION_INDICES, STAGE_AIR_FLEET, STAGE_LETHAL_HIGHWAY, STAGE_
 class CraftSpawn:
     region: int
     hit_rate: int
+    caveat: bool
 
-    def __init__(self, region, hit_rate):
+    def __init__(self, region, hit_rate, caveat=False):
         self.region = region
         self.hit_rate = hit_rate
+        self.caveat = caveat
 
 
 class CraftInfo:
@@ -16,7 +18,7 @@ class CraftInfo:
     stage: int
     spawns: list
 
-    def __init__(self, name, health, stage):
+    def __init__(self, name, health, stage, caveat=False):
         self.name = name
         self.health = health
         self.stage = stage
@@ -30,7 +32,7 @@ Crafts = [
     CraftInfo("Black Tank", 350, STAGE_LETHAL_HIGHWAY)
         .AddSpawn(CraftSpawn(REGION_INDICES.LETHAL_HIGHWAY_CHECKPOINT_ZERO, 45))
         .AddSpawn(CraftSpawn(REGION_INDICES.LETHAL_HIGHWAY_CHECKPOINT_ONE, 180))
-        .AddSpawn(CraftSpawn(REGION_INDICES.LETHAL_HIGHWAY_CHECKPOINT_THREE, 400))
+        .AddSpawn(CraftSpawn(REGION_INDICES.LETHAL_HIGHWAY_CHECKPOINT_THREE, 400, True))
         .AddSpawn(CraftSpawn(REGION_INDICES.LETHAL_HIGHWAY_CHECKPOINT_FOUR, 120))
         .AddSpawn(CraftSpawn(REGION_INDICES.LETHAL_HIGHWAY_FIVE_ROCKET, 250)),
 

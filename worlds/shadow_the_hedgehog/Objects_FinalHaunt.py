@@ -53,7 +53,7 @@ DESIRABLE_OBJECTS_FINAL_HAUNT = [
               region=REGION_INDICES.FINAL_HAUNT_CHECKPOINT_SEVEN, weapon=WEAPONS.HEAVY_SHOT),
     SETObject(ObjectType.VEHICLE, Levels.STAGE_FINAL_HAUNT, 161, "Black Turret 6",
               vehicle=ObjectTypeVehicles.BLACK_TURRET, weapon=WEAPONS.BLACK_BARREL,
-              region=REGION_INDICES.FINAL_HAUNT_CHECKPOINT_SEVEN),
+              region=REGION_INDICES.FINAL_HAUNT_SEVEN_TURRET),
     SETObject(ObjectType.KEY_DOOR, Levels.STAGE_FINAL_HAUNT, 160, "Secret Door 4",
               region=REGION_INDICES.FINAL_HAUNT_KEY_DOOR_3),
     SETObject(ObjectType.VEHICLE, Levels.STAGE_FINAL_HAUNT, 84, "Black Turret 7 (Secret)",

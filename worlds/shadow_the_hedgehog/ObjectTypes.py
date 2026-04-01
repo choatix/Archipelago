@@ -114,8 +114,6 @@ class ObjectType(IntEnum):
     BLACK_WING_LOTTERY = 86
     EGG_PAWN_LOTTERY = 87
     CHECKPOINT = 88
-
-
     WEAPON_BOX = 89
     WEAPON_WOODEN_BOX = 90
     WEAPON_METAL_BOX = 91
@@ -123,6 +121,8 @@ class ObjectType(IntEnum):
     ENVIRONMENT_WEAPON = 92
     FLOOR_WEAPON = 93
     WEAPON_BOX_UNHANDLED = 94
+
+    BLACK_HAWK_TOO_HARD = 95
 
 class SETObject:
     object_type: int
