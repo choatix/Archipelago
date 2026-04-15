@@ -834,12 +834,19 @@ def ObjectTypeToName(type: int):
 def GetObjectLocationName(object: SETObject):
     id_name = int(str(LOCATION_ID_PLUS_O) + str(6) + str(object.stage) + "0" + str(object.index))
 
+
     DEBUG_NAME = False
+    FLAG_NAME = True
+
     if DEBUG_NAME:
         region_name = GetRegionName(object.stage, object.region)
         view_name = f"{LEVEL_ID_TO_LEVEL[object.stage]}-{region_name}-{ObjectTypeToName(object.object_type)}-{object.name}"
+        if FLAG_NAME and ObjectFlags.HardLogic in object.flags:
+            view_name += "--hard"
     else:
         view_name = f"{LEVEL_ID_TO_LEVEL[object.stage]} {ObjectTypeToName(object.object_type)}-{object.name}"
+        if FLAG_NAME:
+            view_name += "--hard"
 
     return id_name, view_name
 

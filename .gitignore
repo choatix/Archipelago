@@ -197,3 +197,22 @@ Thumbs.db
 [Dd]esktop.ini
 
 fuzz_output/*
+worlds/shadow_the_hedgehog/DolphinTest.py
+datapackage_export.json
+fuzz.py
+fuzz_old.py
+fuzzmeta.txt
+fuzzmetablank.txt
+NewSettings.py
+profile.pstat
+hooks/check_placement_item_location_references.py
+hooks/collect_accessibility_test.py
+hooks/deprecated_get_options.py
+hooks/deprecated_get_settings.py
+hooks/detect_rule_variable_capture_issues.py
+hooks/determinism.py
+hooks/gerpocalypse.py
+hooks/item_location_count.py
+hooks/no_rs.py
+hooks/profile.py
+hooks/with_empty.py
