@@ -859,11 +859,13 @@ def CalculateWeaponDupes(world):
         if len(weapon_info_data) == 1 and weapon_info_data[0].name in weapon_dict and WeaponAttributes.SPECIAL in weapon_dict[w].attributes:
             if WeaponAttributes.SHADOW_RIFLE in weapon_dict[w].attributes:
                 if world.options.rifle_components:
-                    pass
+                    weapon_counts[w] = 0
                 else:
                     weapon_counts[w] = 1
             else:
                 weapon_counts[w] = 2
+        elif not world.options.weapon_sanity_unlock:
+            pass
         elif weapon_min == weapon_max:
             weapon_counts[w] = weapon_min
         else:

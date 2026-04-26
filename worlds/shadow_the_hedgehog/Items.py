@@ -4,7 +4,7 @@ import logging
 import typing
 from dataclasses import dataclass
 from math import floor, ceil
-from typing import List, Optional
+from typing import List, Optional, Any
 
 from BaseClasses import Item, ItemClassification
 from Options import OptionError
@@ -754,36 +754,12 @@ def CountItems(world: World):
     if world.options.goal_chaos_emeralds or world.options.gate_unlock_requirement == Options.GateUnlockRequirement.option_chaos_emeralds:
         item_count = increment_item_count(item_count, emerald_items)
 
-    weapon_dict = Weapons.GetWeaponDict()
-    special_weapon_extras = [w for w in weapon_items if
-                             Weapons.WeaponAttributes.SPECIAL in weapon_dict[w.name].attributes and
-                             w.name != 'Shadow Rifle' and w.name != 'Weapon:Shadow Rifle']
-
-
-    weapon_items = [w for w in weapon_items if
-                    w.name != "Weapon:Shadow Rifle" and
-                    w.name != "Shadow Rifle"]
-
-    weapon_items.extend(special_weapon_extras)
-
     mw_weapon_items = GetItemsFromWeaponInfo(world, weapon_items, weapon_group_items)
 
-    mw_weapon_special_only = [ShadowTheHedgehogItem(w, world.player) for w in special_weapon_extras]
-    mw_weapon_special_only_dupes = [ShadowTheHedgehogItem(w, world.player) for w in special_weapon_extras]
-    mw_weapon_special_only.extend(mw_weapon_special_only_dupes)
-
-    shadow_rifle = GetShadowRifle()
-    if not world.options.rifle_components:
-        mw_weapon_special_only.append(ShadowTheHedgehogItem(shadow_rifle, world.player))
-        mw_weapon_items.append(ShadowTheHedgehogItem(shadow_rifle, world.player))
-    else:
-        mw_weapon_special_only.extend([ShadowTheHedgehogItem(w, world.player) for w in rifle_components])
+    if world.options.rifle_components:
         mw_weapon_items.extend([ShadowTheHedgehogItem(w, world.player) for w in rifle_components])
 
-    if world.options.weapon_sanity_unlock:
-        item_count = increment_item_count(item_count, mw_weapon_items, item_type="Weapons")
-    else:
-        item_count = increment_item_count(item_count, mw_weapon_special_only, item_type="Special Weapons")
+    item_count = increment_item_count(item_count, mw_weapon_items, item_type="Weapons")
 
     if world.options.vehicle_logic:
         available_vehicle_items = Objects.GetAvailableVehicles(world)
@@ -795,7 +771,7 @@ def CountItems(world: World):
         if world.options.object_pulleys and ObjectTypes.ObjectType.STANDARD_PULLEY in available_objects and "Pulley" not in world.starting_items:
             item_count = increment_item_count(item_count, 1, "Pulley")
         if world.options.object_ziplines and (ObjectTypes.ObjectType.GUN_ZIPWIRE in available_objects
-            or ObjectTypes.ObjectType.SPACE_ZIPWIRE in available_objects or ObjectTypes.ObjectType.GUN_ZIPWIRE in available_objects or
+            or ObjectTypes.ObjectType.SPACE_ZIPWIRE in available_objects or ObjectTypes.ObjectType.CIRCUS_ZIPWIRE in available_objects or
             ObjectTypes.ObjectType.BALLOON_ZIPWIRE in available_objects) and "Zipwire" not in world.starting_items:
             item_count = increment_item_count(item_count, 1, "Zipline")
         if world.options.object_units:
@@ -957,7 +933,7 @@ def increment_item_count(count, items, item_type=""):
         plus += items
         printString = str(plus)
 
-    if True:
+    if False:
         if count == 0:
             print("---")
         print("IIC", item_type, printString)
@@ -1032,39 +1008,16 @@ def PopulateItemPool(world: World):
 
     mw_stage_items = GetStageItems(world, stage_objective_items)
 
-    # potential_downgrade, to_remove = GetPotentialDowngradeItems(world, mw_stage_items)
-    # if world.excess_item_count > 0 and len(potential_downgrade) > 0:
-    #     t_size = len(to_remove)
-    #     size = world.excess_item_count - t_size
-    #     size = min(size, len(potential_downgrade))
-    #     new_remove = world.random.sample(potential_downgrade, k=size)
-    #     potential_downgrade = [ p for p in potential_downgrade if p not in new_remove]
-    #     to_remove.extend(new_remove)
-
-    # if world.options.exceeding_items_filler == Options.ExceedingItemsFiller.option_always:
-    #     for downgrade in potential_downgrade:
-    #         downgrade.classification = ItemClassification.useful
-    #
-    # elif world.options.exceeding_items_filler == Options.ExceedingItemsFiller.option_chance:
-    #     chance = world.options.exceeding_items_filler_random
-    #     sample = [item for item in potential_downgrade if world.random.randrange(0, 100) < chance]
-    #     for downgrade in sample:
-    #         downgrade.classification = ItemClassification.useful
-    #
-    # for remove in to_remove:
-    #     logging.debug("Remove excess item: %s", remove)
-    #     mw_stage_items.remove(remove)
-
     weapon_dict = Weapons.GetWeaponDict()
-    special_weapons_weaponsanity_extras = [copy.copy(w) for w in weapon_items if
-                             Weapons.WeaponAttributes.SPECIAL in weapon_dict[w.name].attributes and
-                             w.name != 'Shadow Rifle' and w.name != 'Weapon:Shadow Rifle']
+    #special_weapons_weaponsanity_extras = [copy.copy(w) for w in weapon_items if
+    #                         Weapons.WeaponAttributes.SPECIAL in weapon_dict[w.name].attributes and
+    #                         w.name != 'Shadow Rifle' and w.name != 'Weapon:Shadow Rifle']
 
-    weapon_items = [w for w in weapon_items if
-                    w.name != "Weapon:Shadow Rifle" and
-                    w.name != "Shadow Rifle"]
+    #weapon_items = [w for w in weapon_items if
+    #                w.name != "Weapon:Shadow Rifle" and
+    #                w.name != "Shadow Rifle"]
 
-    weapon_items.extend(special_weapons_weaponsanity_extras)
+    #weapon_items.extend(special_weapons_weaponsanity_extras)
 
     available_weapons = [w for w in weapon_items if w.name in world.available_weapons]
     available_weapons = copy.deepcopy(available_weapons)
@@ -1077,22 +1030,18 @@ def PopulateItemPool(world: World):
                 w.classification = weapon_classification
 
     mw_weapon_items = GetItemsFromWeaponInfo(world, weapon_items, weapon_group_items)
-    mw_weapon_special_only = [ShadowTheHedgehogItem(w, world.player) for w in special_weapons_weaponsanity_extras]
+    #mw_weapon_special_only = [ShadowTheHedgehogItem(w, world.player) for w in special_weapons_weaponsanity_extras]
 
     # Not sure how much this helps
     #for weapon in special_weapons_weaponsanity_extras:
     #    print("Change weapon to Useful", weapon.name)
     #    weapon.classification = ItemClassification.useful
 
-    mw_weapon_special_only_dupes = [ShadowTheHedgehogItem(w, world.player) for w in special_weapons_weaponsanity_extras]
-    mw_weapon_special_only.extend(mw_weapon_special_only_dupes)
-
-    shadow_rifle = GetShadowRifle()
-    if not world.options.rifle_components:
-        mw_weapon_special_only.append(ShadowTheHedgehogItem(shadow_rifle, world.player))
-        mw_weapon_items.append(ShadowTheHedgehogItem(shadow_rifle, world.player))
-    else:
-        mw_weapon_special_only.extend([ShadowTheHedgehogItem(w, world.player) for w in rifle_components])
+    #shadow_rifle = GetShadowRifle()
+    #if not world.options.rifle_components:
+    #    mw_weapon_special_only.append(ShadowTheHedgehogItem(shadow_rifle, world.player))
+    #    mw_weapon_items.append(ShadowTheHedgehogItem(shadow_rifle, world.player))
+    if world.options.rifle_components:
         mw_weapon_items.extend([ShadowTheHedgehogItem(w, world.player) for w in rifle_components])
 
     available_vehicle_items = Objects.GetAvailableVehicles(world)
@@ -1103,10 +1052,12 @@ def PopulateItemPool(world: World):
     if world.options.goal_chaos_emeralds or world.options.gate_unlock_requirement == Options.GateUnlockRequirement.option_chaos_emeralds:
         item_count = increment_item_count(item_count, mw_em_items)
 
-    if world.options.weapon_sanity_unlock:
-        item_count = increment_item_count(item_count, mw_weapon_items, item_type="Weapons")
-    else:
-        item_count = increment_item_count(item_count, mw_weapon_special_only)
+    item_count = increment_item_count(item_count, mw_weapon_items, item_type="Weapons")
+
+    #if world.options.weapon_sanity_unlock:
+    #
+    #else:
+    #    item_count = increment_item_count(item_count, mw_weapon_special_only)
 
     if world.options.vehicle_logic:
         item_count = increment_item_count(item_count, mw_vehicle_items)
@@ -1174,10 +1125,7 @@ def PopulateItemPool(world: World):
     shadow_item_pool += mw_stage_items
     shadow_item_pool += mw_useful_items
 
-    if world.options.weapon_sanity_unlock:
-        shadow_item_pool += mw_weapon_items
-    else:
-        shadow_item_pool += mw_weapon_special_only
+    shadow_item_pool += mw_weapon_items
 
     if world.options.vehicle_logic:
         shadow_item_pool += mw_vehicle_items

@@ -144,7 +144,7 @@ class ShtHWorld(World):
 
     def set_rules(self):
         Rules.set_rules(self.multiworld, self, self.player)
-        #self.emergency_sphere_one_handler()
+        self.emergency_sphere_one_handler()
 
     def check_invalid_configurations(self):
 
@@ -260,6 +260,7 @@ class ShtHWorld(World):
         if self.options.objective_sanity_behaviour == Options.ObjectiveSanityBehaviour.option_base_clear and \
                 self.options.gate_unlock_requirement == Options.GateUnlockRequirement.option_objective_available:
             raise OptionError("Cannot have gate unlock be objective available when playing Base Clear")
+
 
     def calculate_non_objective_sanity_maximums(self):
         relevant_mission_clears =  [m for m in Locations.MissionClearLocations if
@@ -690,6 +691,28 @@ class ShtHWorld(World):
 
             self.weapon_counts = Weapons.CalculateWeaponDupes(self)
             self.first_checkpoints, self.available_checkpoints = Regions.GenerateFirstAndAvailableCheckpoints(self)
+
+
+
+            # TODO: Check first gate requirement count when playing gates
+            if not self.options.select_gates == Options.SelectGates.option_off and self.options.level_progression \
+                == Options.LevelProgression.option_select:
+
+                stage_items = Items.GetStageItems(self, None, True)
+
+                # Get check count from first gates
+                total_requirements = Rules.GetGateKeyRequirementCount(self, self.player, 1)
+                gate_1_checks = Locations.count_locations(self, levels=
+                    self.gates[0]) - len(self.available_weapons) - len(self.available_characters)
+
+                if total_requirements > gate_1_checks:
+                    raise OptionError(f"Invalid gate checks alongside requirements. Check your gate requirements. "
+                                      f"({total_requirements},{gate_1_checks})")
+                # Get minimum gate requirement
+
+                # Check if higher
+
+                pass
 
             if self.options.level_progression != Options.LevelProgression.option_select and \
                 self.options.story_progression_balancing_passes > 0:

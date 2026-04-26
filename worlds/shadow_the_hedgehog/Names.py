@@ -845,7 +845,7 @@ def GetObjectLocationName(object: SETObject):
             view_name += "--hard"
     else:
         view_name = f"{LEVEL_ID_TO_LEVEL[object.stage]} {ObjectTypeToName(object.object_type)}-{object.name}"
-        if FLAG_NAME:
+        if FLAG_NAME and ObjectFlags.HardLogic in object.flags:
             view_name += "--hard"
 
     return id_name, view_name

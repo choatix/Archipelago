@@ -42,7 +42,11 @@ def GetKeyRule(options, stage, player):
     return (lambda state, ri=region_list, a_item=arch_item: (state.count_from_list(ri, player) +
                                           (0 if a_item is None else state.count(a_item, player)) >= required_keys), region_names)
 
+def GetIndirectRulesForRings(ring_info):
+    return list(set([ x.region for x in ring_info ]))
+
 def RingCalculation(options, state, player, stage_id, ring_info, region_data):
+    indirect_regions = []
     repeatable_bells = [ l for l in ring_info if l.obtain_type == Rings.RingObtainType.Bell]
 
     total_rings = 0
@@ -50,9 +54,13 @@ def RingCalculation(options, state, player, stage_id, ring_info, region_data):
     if not options.logic_level == Options.LogicLevel.option_easy:
         if len(repeatable_bells) > 0:
             if state.has_any([Names.GetDistributionRegionEventName(stage_id, x.region) for x in repeatable_bells], player):
+                indirect_regions = [ r.region for r in repeatable_bells ]
                 total_rings += 400
 
     for ring_availability in ring_info:
+        region = ring_availability.region
+        if region not in indirect_regions:
+            indirect_regions.append(region)
         current_region = None
         if ring_availability.region in region_data:
             current_region = region_data[ring_availability.region]
@@ -109,7 +117,7 @@ def RingCalculation(options, state, player, stage_id, ring_info, region_data):
                     total_rings += 50
 
     #print("RC: total:", total_rings)
-    return total_rings >= 400
+    return total_rings >= 400, indirect_regions
 
 
 def CraftCalculation(world, options, state, player, stage_id, craft_info, region_data):
@@ -533,6 +541,11 @@ def handle_path_rules(world, options, player, from_region_id, additional_level_r
         rule = lambda state, o=options, p=player,\
             s=additional_level_region.stageId, ri=ring_info, rd=region_data: RingCalculation(o, state, p, s, ri, rd)
 
+        ring_indirects = GetIndirectRulesForRings(ring_info)
+
+        for ring_indirect in ring_indirects:
+            indirects.append(Levels.stage_id_to_region(additional_level_region.stageId, ring_indirect))
+
     return rule, indirects
 
 def restrict_objects(multiworld, world, player):
@@ -594,10 +607,7 @@ def CalculateObjectiveValueForGate(value, max_gates, gate_no, gate_density, rate
 
     return expected_result
 
-
-def GetGateKeyRule(world, player, gate_no):
-    # Add weapon unlocks as gate requirement
-
+def GetIndividualGateKeyRequirements(world, player, gate_no):
     if int(gate_no) == 0:
         return lambda state: True
 
@@ -679,6 +689,34 @@ def GetGateKeyRule(world, player, gate_no):
             if r[1] > 0:
                 solid_requirements[r[0]] =  r[1]
             count_options.append(r[0])
+
+    return solid_requirements, count_requirements, count_options
+
+def GetGateKeyRequirementCount(world, player, gate_no):
+    solid_requirements, count_requirements, count_options = GetIndividualGateKeyRequirements(world, player, gate_no)
+    if len(solid_requirements) == 0 and count_requirements is None:
+        return 0
+    elif len(solid_requirements) > 0 and count_requirements is None:
+        count = 0
+        for i in solid_requirements.values():
+            count += i
+
+        return count
+    elif count_requirements is not None:
+        return count_requirements
+    else:
+        count = 0
+        for i in solid_requirements.values():
+            count += i
+
+        # Does not account for crossover which the rule might
+        return count + count_requirements
+
+
+def GetGateKeyRule(world, player, gate_no):
+    # Add weapon unlocks as gate requirement
+
+    solid_requirements, count_requirements, count_options = GetIndividualGateKeyRequirements(world, player, gate_no)
 
     if len(solid_requirements) == 0 and count_requirements is None:
         # Happens when there are no available options in the game

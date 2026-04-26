@@ -870,7 +870,6 @@ def GetLocationInfoDict():
     return result
 
 
-
 def is_token_required_by_goal(options, token : LocationInfo, available_levels):
 
     goal_dictates_missions = options.goal_missions > 0
@@ -1343,7 +1342,7 @@ def count_last_way_locations(world):
 
     return result
 
-def count_locations(world):
+def count_locations(world, levels=None):
     count = 0
     (mission_clear_locations, mission_locations, progression_locations,
      enemysanity_locations, checkpointsanity_locations,
@@ -1351,28 +1350,33 @@ def count_locations(world):
      weaponsanity_locations, boss_locations, warp_locations,
      object_locations) = GetActiveLocationInfo()
 
+
+    location_available_levels = world.available_levels
+    if levels is not None:
+        location_available_levels = levels
+
     mission_clear_locations = [ mc for mc in mission_clear_locations if mc.stageId
-                                in world.available_levels]
+                                in location_available_levels]
 
     mission_locations = [ ml for ml in mission_locations if ml.stageId
-                                in world.available_levels]
+                                in location_available_levels]
 
     enemysanity_locations = [ml for ml in enemysanity_locations if ml.stageId
-                         in world.available_levels and (not world.options.exclude_go_mode_items or ml.stageId != STAGE_THE_LAST_WAY or \
+                         in location_available_levels and (not world.options.exclude_go_mode_items or ml.stageId != STAGE_THE_LAST_WAY or \
                                 world.options.include_last_way_shuffle)]
 
     checkpointsanity_locations = [ml for ml in checkpointsanity_locations if ml.stageId
-                             in world.available_levels and (not world.options.exclude_go_mode_items or ml.stageId != STAGE_THE_LAST_WAY or \
+                             in location_available_levels and (not world.options.exclude_go_mode_items or ml.stageId != STAGE_THE_LAST_WAY or \
                                 world.options.include_last_way_shuffle)]
 
     charactersanity_locations = [ ml for ml in charactersanity_locations if ml.other in world.available_characters ]
 
     object_locations = [ml for ml in object_locations if ml.stageId
-                                  in world.available_levels and (
+                                  in location_available_levels and (
                                               not world.options.exclude_go_mode_items or ml.stageId != STAGE_THE_LAST_WAY or \
                                               world.options.include_last_way_shuffle)]
 
-    boss_locations = [ b for b in boss_locations if b.stageId in world.available_levels ]
+    boss_locations = [ b for b in boss_locations if b.stageId in location_available_levels ]
 
     weaponsanity_locations = [ml for ml in weaponsanity_locations if ml.other in world.available_weapons and
                               ml.other not in world.go_mode_weapons_only]
@@ -1448,7 +1452,7 @@ def count_locations(world):
 
     if world.options.key_sanity:
         count = increment_location_count(count, len([x for x in object_locations if x.other == ObjectType.KEY
-                                                     if x.stageId in world.available_levels]), "c")
+                                                     if x.stageId in location_available_levels]), "c")
 
     count = increment_location_count(count, len(boss_locations), "b")
     #if world.options.include_last_way_shuffle and world.options.story_shuffle == Options.StoryShuffle.option_test3:
@@ -1459,21 +1463,21 @@ def count_locations(world):
 
     if world.options.shadow_boxes:
         count = increment_location_count(count, len([x for x in object_locations if x.other == ObjectType.SHADOW_BOX
-                                                     if x.stageId in world.available_levels and (not world.options.exclude_go_mode_items or x.stageId != STAGE_THE_LAST_WAY or \
+                                                     if x.stageId in location_available_levels and (not world.options.exclude_go_mode_items or x.stageId != STAGE_THE_LAST_WAY or \
                                 world.options.include_last_way_shuffle)]), "b")
 
     if world.options.gold_beetle_sanity:
         count = increment_location_count(count, len([x for x in object_locations if x.other == ObjectType.GOLD_BEETLE
-                                                     if x.stageId in world.available_levels]), "g")
+                                                     if x.stageId in location_available_levels]), "g")
 
     if world.options.energy_cores:
         count = increment_location_count(count, len([x for x in object_locations if x.other == ObjectType.ENERGY_CORE
                                                      or x.other == ObjectType.ENERGY_CORE_IN_WOOD_BOX
-                                                     if x.stageId in world.available_levels]), "c")
+                                                     if x.stageId in location_available_levels]), "c")
 
     if world.options.door_sanity:
         count = increment_location_count(count, len([x for x in object_locations if x.other == ObjectType.KEY_DOOR
-                                                     if x.stageId in world.available_levels and (not world.options.exclude_go_mode_items or x.stageId != STAGE_THE_LAST_WAY or \
+                                                     if x.stageId in location_available_levels and (not world.options.exclude_go_mode_items or x.stageId != STAGE_THE_LAST_WAY or \
                                 world.options.include_last_way_shuffle)]), "kd")
 
     object_location_checks = []
@@ -1486,7 +1490,7 @@ def count_locations(world):
             item_type = i[1]
             item_type_data = item_type[0]
 
-            if item_stage not in world.available_levels:
+            if item_stage not in location_available_levels:
                 continue
 
             if world.options.exclude_go_mode_items and item_stage == STAGE_THE_LAST_WAY and \
@@ -1524,7 +1528,7 @@ def count_locations(world):
     if world.options.enemy_sanity and world.options.objective_sanity_system != Options.ObjectiveSanitySystem.option_count_up:
         enemy_types = Objects.GetStandardEnemyTypes()
         enemy_sanity_object_checks = [x for x in object_locations if
-         x.other in enemy_types and x not in object_location_checks and x.stageId in world.available_levels and
+         x.other in enemy_types and x not in object_location_checks and x.stageId in location_available_levels and
                                       (world.options.boss_enemy_sanity or x.stageId not in Levels.BOSS_STAGES)
                                       and (world.options.difficult_enemy_sanity or not x.flag) and
                                       (not world.options.exclude_go_mode_items or x.stageId != STAGE_THE_LAST_WAY or
@@ -1540,7 +1544,7 @@ def count_locations(world):
     if world.options.item_sanity:
         item_types = Objects.GetItemBoxTypes()
         possible = [x for x in object_locations if x.other in item_types and
-                                   x.stageId in world.available_levels
+                                   x.stageId in location_available_levels
                                     and (world.options.difficult_enemy_sanity or not x.flag) and
                     (not world.options.exclude_go_mode_items or x.stageId != STAGE_THE_LAST_WAY or
                      world.options.include_last_way_shuffle)
