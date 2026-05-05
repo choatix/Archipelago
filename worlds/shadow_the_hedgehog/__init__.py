@@ -695,19 +695,20 @@ class ShtHWorld(World):
 
 
             # TODO: Check first gate requirement count when playing gates
-            if not self.options.select_gates == Options.SelectGates.option_off and self.options.level_progression \
+            if (self.options.select_gates != Options.SelectGates.option_off) and self.options.level_progression \
                 == Options.LevelProgression.option_select:
 
                 stage_items = Items.GetStageItems(self, None, True)
 
-                # Get check count from first gates
-                total_requirements = Rules.GetGateKeyRequirementCount(self, self.player, 1)
-                gate_1_checks = Locations.count_locations(self, levels=
-                    self.gates[0]) - len(self.available_weapons) - len(self.available_characters)
+                if(len(self.gates)) != 0:
+                    # Get check count from first gates
+                    total_requirements = Rules.GetGateKeyRequirementCount(self, self.player, 1)
+                    gate_1_checks = Locations.count_locations(self, levels=
+                        self.gates[0]) - len(self.available_weapons) - len(self.available_characters)
 
-                if total_requirements > gate_1_checks:
-                    raise OptionError(f"Invalid gate checks alongside requirements. Check your gate requirements. "
-                                      f"({total_requirements},{gate_1_checks})")
+                    if total_requirements > gate_1_checks:
+                        raise OptionError(f"Invalid gate checks alongside requirements. Check your gate requirements. "
+                                          f"({total_requirements},{gate_1_checks})")
                 # Get minimum gate requirement
 
                 # Check if higher
@@ -742,7 +743,7 @@ class ShtHWorld(World):
         item_count = Items.CountItems(self)
         location_count = Locations.count_locations(self)
 
-        if self.options.exceeding_items_filler != Options.ExceedingItemsFiller.option_off:
+        #if self.options.exceeding_items_filler != Options.ExceedingItemsFiller.option_off:
             # if item_count > location_count:
             #     #print("item_count=", item_count, "location_count=", location_count)
             #     potential_downgrades, removals = Items.GetPotentialDowngradeItems(self)
@@ -755,11 +756,11 @@ class ShtHWorld(World):
             #         if not self.options.start_inventory_excess_items:
             #             raise OptionError("Not enough locations to fill even with downgrades::"+str(c))
 
-                self.excess_item_count = item_count - location_count
+        #        self.excess_item_count = item_count - location_count
 
-        elif self.options.exceeding_items_filler == Options.ExceedingItemsFiller.option_off and \
-            location_count < item_count and not self.options.start_inventory_excess_items:
-            raise OptionError("Invalid count of items present:"+str(location_count)+" vs "+str(item_count))
+        #elif self.options.exceeding_items_filler == Options.ExceedingItemsFiller.option_off and \
+        #    location_count < item_count and not self.options.start_inventory_excess_items:
+        #    raise OptionError("Invalid count of items present:"+str(location_count)+" vs "+str(item_count))
 
         for missionClear in Locations.MissionClearLocations:
 
@@ -934,7 +935,7 @@ class ShtHWorld(World):
             "excluded_stages": self.options.excluded_stages.value,
             "logic_level": self.options.logic_level.value,
             "enable_gauge_items": self.options.enable_gauge_items.value,
-            "exceeding_items_filler": self.options.exceeding_items_filler.value,
+            #"exceeding_items_filler": self.options.exceeding_items_filler.value,
             "include_last_way_shuffle": self.options.include_last_way_shuffle.value,
             "story_shuffle": self.options.story_shuffle.value,
             "story_boss_count": self.options.story_boss_count.value,

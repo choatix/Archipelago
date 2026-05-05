@@ -159,7 +159,14 @@ def DetermineGates(world):
 
     stages_to_assign = [ l for l in Levels.ALL_STAGES if l in world.available_select_stages ]
 
-    if len(world.first_regions) == len(stages_to_assign):
+    if Levels.STAGE_THE_LAST_WAY in stages_to_assign and not world.options.include_last_way_shuffle:
+        raise Exception("Last Way should not be included in selectable stages")
+
+    if Levels.BOSS_DEVIL_DOOM in stages_to_assign:
+        raise Exception("Invalid for Devil Doom to be in a select gate")
+
+    in_start = [ x for x in stages_to_assign if x not in world.first_regions ]
+    if len(in_start) == 0:
         # Disable gates here
         return {}
 
@@ -293,7 +300,7 @@ def early_region_checks(world):
 
     if world.options.level_progression == Options.LevelProgression.option_both:
         story_inaccessible_stages = [ s for s in world.available_levels if s not in world.available_story_levels
-                                      and s not in [Levels.LAST_STORY_STAGES] ]
+                                      and s not in Levels.LAST_STORY_STAGES ]
         available_select_stages.extend(story_inaccessible_stages)
 
     total_select_stages = math.ceil(len(world.available_levels) * world.options.select_percentage / 100)

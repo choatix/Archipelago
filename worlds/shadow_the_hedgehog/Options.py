@@ -1031,7 +1031,7 @@ class ShadowTheHedgehogOptions(PerGameCommonOptions):
     story_and_select_start_together: StoryAndSelectStartTogether
     select_percentage: SelectPercentage
     gate_density: GateDensity
-    exceeding_items_filler: ExceedingItemsFiller
+    #exceeding_items_filler: ExceedingItemsFiller
     start_inventory_excess_items: StartInventoryExcessItems
     exclude_go_mode_items: ExcludeGoModeItems
     enable_traps: EnableTraps
