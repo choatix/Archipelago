@@ -887,8 +887,11 @@ def GenerateFirstAndAvailableCheckpoints(world):
 
         c = [l for l in Locations.CheckpointLocations if l.stageId == level][0]
 
+        has_checkpoint_zero = Levels.HasCheckpointZero(level)
+        use_checkpoint_zero = Levels.UseCheckpointZero(level, world.options.logic_level)
+
         base_check = 1
-        if Levels.HasCheckpointZero(level):
+        if has_checkpoint_zero:
             base_check = 0
 
         first_choices = [x for x in range(base_check, c.total_count + 1)]
@@ -928,14 +931,15 @@ def GenerateFirstAndAvailableCheckpoints(world):
             available_checkpoints_for_stage.append(0)
 
         available_checkpoints_for_stage = [ a for a in available_checkpoints_for_stage if a != first_checkpoints[level] ]
+        if 0 in available_checkpoints_for_stage and not use_checkpoint_zero:
+            available_checkpoints_for_stage.remove(0)
 
         if "Minimal Checkpoints" in world.options.checkpoint_rules:
-            has_zero = Levels.UseCheckpointZero(level, world.options.logic_level)
             first_choice = first_checkpoints[level]
             earliest = None
-            if has_zero and first_choice != 0:
+            if use_checkpoint_zero and first_choice != 0:
                 earliest = 0
-            elif has_zero:
+            elif use_checkpoint_zero:
                 earliest = None
             elif first_choice in (0, 1):
                 earliest = None

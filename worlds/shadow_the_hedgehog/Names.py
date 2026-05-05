@@ -834,8 +834,7 @@ def ObjectTypeToName(type: int):
 def GetObjectLocationName(object: SETObject):
     id_name = int(str(LOCATION_ID_PLUS_O) + str(6) + str(object.stage) + "0" + str(object.index))
 
-
-    DEBUG_NAME = False
+    DEBUG_NAME = True
     FLAG_NAME = True
 
     if DEBUG_NAME:

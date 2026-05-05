@@ -2043,7 +2043,7 @@ BACKTRACKING_REGIONS = [
                     REGION_RESTRICTION_TYPES.NoRestriction).setHardLogicOnly(),
 
     BacktrackRegion(STAGE_CRYPTIC_CASTLE, REGION_INDICES.CRYPTIC_CASTLE_CHECKPOINT_ONE,
-                    REGION_INDICES.CRYPTIC_CASTLE_CHECKPOINT_ZERO, Options.LogicLevel.option_hard,
+                    REGION_INDICES.CRYPTIC_CASTLE_CHECKPOINT_ZERO, Options.LogicLevel.option_normal,
                     REGION_RESTRICTION_TYPES.Zipwire),
     BacktrackRegion(STAGE_CRYPTIC_CASTLE, REGION_INDICES.CRYPTIC_CASTLE_TOP_PATH,
                     REGION_INDICES.CRYPTIC_CASTLE_TWO_LOWER, Options.LogicLevel.option_normal,
@@ -2113,8 +2113,8 @@ BACKTRACKING_REGIONS = [
     BacktrackRegion(STAGE_CENTRAL_CITY, REGION_INDICES.CENTRAL_CITY_CHECKPOINT_FOUR,
                     REGION_INDICES.CENTRAL_CITY_CHECKPOINT_SIX, Options.LogicLevel.option_normal,
                     REGION_RESTRICTION_TYPES.Explosion).setHardLogicOnly(),
-    BacktrackRegion(STAGE_CENTRAL_CITY, REGION_INDICES.CENTRAL_CITY_SIX_WEAPON_OR_BOMB,
-                    REGION_INDICES.CENTRAL_CITY_BOMB_OR_BAZOOKA_3, Options.LogicLevel.option_normal,
+    BacktrackRegion(STAGE_CENTRAL_CITY, REGION_INDICES.CENTRAL_CITY_BOMB_OR_BAZOOKA_3,
+                    REGION_INDICES.CENTRAL_CITY_SIX_WEAPON_OR_BOMB, Options.LogicLevel.option_normal,
                     REGION_RESTRICTION_TYPES.NoRestriction),
 
     BacktrackRegion(STAGE_CIRCUS_PARK, REGION_INDICES.CIRCUS_PARK_CHECKPOINT_ONE,
@@ -2227,19 +2227,22 @@ BACKTRACKING_REGIONS = [
     BacktrackRegion(STAGE_AIR_FLEET, REGION_INDICES.AIR_FLEET_CHECKPOINT_ONE,
                     REGION_INDICES.AIR_FLEET_SECRET_1, Options.LogicLevel.option_normal,
                     REGION_RESTRICTION_TYPES.NoRestriction).setHardLogicOnly(),
-    BacktrackRegion(STAGE_AIR_FLEET, REGION_INDICES.AIR_FLEET_CHECKPOINT_ONE,
+    BacktrackRegion(STAGE_AIR_FLEET, REGION_INDICES.AIR_FLEET_PULLEY,
                     REGION_INDICES.AIR_FLEET_CHECKPOINT_ZERO, Options.LogicLevel.option_normal,
-                    REGION_RESTRICTION_TYPES.NoRestriction).setHardLogicOnly(),
+                    REGION_RESTRICTION_TYPES.NoRestriction),
     BacktrackRegion(STAGE_AIR_FLEET, REGION_INDICES.AIR_FLEET_CHECKPOINT_ONE,
                     REGION_INDICES.AIR_FLEET_KEYDOOR_ENTRANCE, Options.LogicLevel.option_normal,
                     REGION_RESTRICTION_TYPES.NoRestriction).setHardLogicOnly(),
-    BacktrackRegion(STAGE_AIR_FLEET, REGION_INDICES.AIR_FLEET_RAILS,
-                    REGION_INDICES.AIR_FLEET_CHECKPOINT_ZERO, Options.LogicLevel.option_normal,
-                    REGION_RESTRICTION_TYPES.NoRestriction),
 
     BacktrackRegion(STAGE_AIR_FLEET, REGION_INDICES.AIR_FLEET_CHECKPOINT_TWO,
                     REGION_INDICES.AIR_FLEET_CHECKPOINT_ONE, Options.LogicLevel.option_easy,
                     REGION_RESTRICTION_TYPES.NoBacktracking),
+    BacktrackRegion(STAGE_AIR_FLEET, REGION_INDICES.AIR_FLEET_CHECKPOINT_THREE,
+                    REGION_INDICES.AIR_FLEET_CHECKPOINT_TWO, Options.LogicLevel.option_normal,
+                    REGION_RESTRICTION_TYPES.NoRestriction).setHardLogicOnly(),
+    BacktrackRegion(STAGE_AIR_FLEET, REGION_INDICES.AIR_FLEET_THREE_LOWER,
+                    REGION_INDICES.AIR_FLEET_CHECKPOINT_THREE, Options.LogicLevel.option_normal,
+                    REGION_RESTRICTION_TYPES.NoRestriction).setHardLogicOnly(),
     BacktrackRegion(STAGE_AIR_FLEET, REGION_INDICES.AIR_FLEET_CHECKPOINT_FOUR,
                     REGION_INDICES.AIR_FLEET_THREE_LOWER, Options.LogicLevel.option_normal,
                     REGION_RESTRICTION_TYPES.SatelliteGun).setHardLogicOnly(),
@@ -2250,7 +2253,7 @@ BACKTRACKING_REGIONS = [
                     REGION_INDICES.AIR_FLEET_CHECKPOINT_FIVE, Options.LogicLevel.option_normal,
                     REGION_RESTRICTION_TYPES.NoRestriction).setHardLogicOnly(),
     BacktrackRegion(STAGE_AIR_FLEET, REGION_INDICES.AIR_FLEET_CHECKPOINT_SEVEN,
-                    REGION_INDICES.AIR_FLEET_OUTSIDE_SECTION, Options.LogicLevel.option_normal,
+                    REGION_INDICES.AIR_FLEET_CHECKPOINT_SIX, Options.LogicLevel.option_normal,
                     REGION_RESTRICTION_TYPES.NoRestriction).setHardLogicOnly(),
 
 
@@ -2286,6 +2289,9 @@ BACKTRACKING_REGIONS = [
     BacktrackRegion(STAGE_IRON_JUNGLE, REGION_INDICES.IRON_JUNGLE_CHECKPOINT_SEVEN,
                     REGION_INDICES.IRON_JUNGLE_CHECKPOINT_FIVE, Options.LogicLevel.option_normal,
                     REGION_RESTRICTION_TYPES.LightDash).setHardLogicOnly(),
+    BacktrackRegion(STAGE_IRON_JUNGLE, REGION_INDICES.IRON_JUNGLE_CHECKPOINT_SEVEN,
+                    REGION_INDICES.IRON_JUNGLE_CHECKPOINT_SIX, Options.LogicLevel.option_normal,
+                    REGION_RESTRICTION_TYPES.NoRestriction).setHardLogicOnly(),
 
     BacktrackRegion(STAGE_SPACE_GADGET, REGION_INDICES.SPACE_GADGET_CHECKPOINT_FOUR,
                     REGION_INDICES.SPACE_GADGET_POST_ZIP, Options.LogicLevel.option_normal,
@@ -2464,6 +2470,8 @@ def UseCheckpointZero(stage,logic_level):
         if b_region.hardLogicOnly and logic_level == Options.LogicLevel.option_hard:
             found = True
         elif b_region.logicType == Options.LogicLevel.option_easy and logic_level != Options.LogicLevel.option_easy:
+            found = True
+        elif b_region.logicType == Options.LogicLevel.option_normal and logic_level != Options.LogicLevel.option_easy:
             found = True
 
     UseCheckpointZeroCache[key] = not found
