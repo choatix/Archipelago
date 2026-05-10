@@ -43,8 +43,8 @@ valid_game_bytes = [
     bytes(SHADOW_THE_HEDGEHOG_GAME_ID_SX, "utf-8")
 ]
 
-SAVE_VALUE_CHECK = True
-SHOW_SET_CHANGES = False
+SAVE_VALUE_CHECK = ShadowUtils.USE_SAVE_VALUE_CHECK
+SHOW_SET_CHANGES = ShadowUtils.USE_DEFAULT_SET_CHANGES
 
 @dataclass
 class CharacterAddress:
@@ -329,7 +329,12 @@ class ShTHCommandProcessor(ClientCommandProcessor):
     def __init__(self, ctx: CommonContext):
         super().__init__(ctx)
 
-
+    def _cmd_setchanges(self):
+        global SHOW_SET_CHANGES
+        """Prints the current weapons to the client."""
+        if isinstance(self.ctx, ShTHContext):
+            SHOW_SET_CHANGES = not SHOW_SET_CHANGES
+            logger.info(f"Showing Set Changes changed to {SHOW_SET_CHANGES}")
 
     def _cmd_dolphin(self):
         """Prints the current Dolphin status to the client."""
