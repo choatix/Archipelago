@@ -3,10 +3,13 @@
 import importlib
 import os
 import pkgutil
+import shutil
 import sys
 import time
 
+
 from BaseClasses import MultiWorld
+from Options import OptionError
 from . import Levels, Names, ShTHClient, Objects, ShtHWorld, Options, Rules
 from .Items import GetAllItemInfo
 from .Levels import INDIVIDUAL_LEVEL_REGIONS, BACKTRACKING_REGIONS
@@ -17,6 +20,8 @@ from .Objects_AirFleet import DESIRABLE_OBJECTS_AIR_FLEET
 from .Objects_GlyphicCanyon import DESIRABLE_OBJECTS_GLYPHIC_CANYON
 from .Objects_PrisonIsland import DESIRABLE_OBJECTS_PRISON_ISLAND
 from .Options import ShadowTheHedgehogOptions
+
+
 
 
 def TestA():
