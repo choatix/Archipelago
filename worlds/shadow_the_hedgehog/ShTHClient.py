@@ -43,8 +43,8 @@ valid_game_bytes = [
     bytes(SHADOW_THE_HEDGEHOG_GAME_ID_SX, "utf-8")
 ]
 
-SAVE_VALUE_CHECK = ShadowUtils.USE_SAVE_VALUE_CHECK
-SHOW_SET_CHANGES = ShadowUtils.USE_DEFAULT_SET_CHANGES
+SAVE_VALUE_CHECK = Flags.USE_SAVE_VALUE_CHECK
+SHOW_SET_CHANGES = Flags.USE_DEFAULT_SET_CHANGES
 
 @dataclass
 class CharacterAddress:
