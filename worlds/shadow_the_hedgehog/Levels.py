@@ -13,65 +13,65 @@ LOCATION_ID_SHADOW_RIFLE_COMPLETE = 100067
 
 STAGE_TO_STORY_BLOCK = \
 {
-    STAGE_WESTOPOLIS: 5,
-    STAGE_DIGITAL_CIRCUIT: 6,
-    STAGE_GLYPHIC_CANYON: 7,
-    STAGE_LETHAL_HIGHWAY: 8,
-    STAGE_CRYPTIC_CASTLE: 9,
-    STAGE_PRISON_ISLAND: 10,
-    STAGE_CIRCUS_PARK: 11,
-    STAGE_CENTRAL_CITY: 12,
-    STAGE_THE_DOOM: 13,
-    STAGE_SKY_TROOPS: 14,
-    STAGE_MAD_MATRIX: 15,
-    STAGE_DEATH_RUINS: 16,
-    STAGE_THE_ARK: 17,
-    STAGE_AIR_FLEET: 18,
-    STAGE_IRON_JUNGLE: 19,
-    STAGE_SPACE_GADGET: 20,
-    STAGE_LOST_IMPACT: 21,
-    STAGE_GUN_FORTRESS: 22,
-    STAGE_BLACK_COMET: 23,
-    STAGE_LAVA_SHELTER: 24,
-    STAGE_COSMIC_FALL: 25,
-    STAGE_FINAL_HAUNT: 26,
+    Names.STAGE_WESTOPOLIS: 5,
+    Names.STAGE_DIGITAL_CIRCUIT: 6,
+    Names.STAGE_GLYPHIC_CANYON: 7,
+    Names.STAGE_LETHAL_HIGHWAY: 8,
+    Names.STAGE_CRYPTIC_CASTLE: 9,
+    Names.STAGE_PRISON_ISLAND: 10,
+    Names.STAGE_CIRCUS_PARK: 11,
+    Names.STAGE_CENTRAL_CITY: 12,
+    Names.STAGE_THE_DOOM: 13,
+    Names.STAGE_SKY_TROOPS: 14,
+    Names.STAGE_MAD_MATRIX: 15,
+    Names.STAGE_DEATH_RUINS: 16,
+    Names.STAGE_THE_ARK: 17,
+    Names.STAGE_AIR_FLEET: 18,
+    Names.STAGE_IRON_JUNGLE: 19,
+    Names.STAGE_SPACE_GADGET: 20,
+    Names.STAGE_LOST_IMPACT: 21,
+    Names.STAGE_GUN_FORTRESS: 22,
+    Names.STAGE_BLACK_COMET: 23,
+    Names.STAGE_LAVA_SHELTER: 24,
+    Names.STAGE_COSMIC_FALL: 25,
+    Names.STAGE_FINAL_HAUNT: 26,
 
-    STAGE_THE_LAST_WAY: 27,
+    Names.STAGE_THE_LAST_WAY: 27,
 
-    BOSS_BLACK_BULL_LH: 28,
-    BOSS_EGG_BREAKER_CC: 29,
-    BOSS_HEAVY_DOG: 30,
-    BOSS_EGG_BREAKER_MM: 31,
-    BOSS_BLACK_BULL_DR: 32,
-    BOSS_BLUE_FALCON: 33,
-    BOSS_EGG_BREAKER_IJ: 34,
-    BOSS_BLACK_DOOM_GF:  35,
-    BOSS_DIABLON_GF: 36,
-    BOSS_EGG_DEALER_BC: 37,
-    BOSS_DIABLON_BC: 38,
-    BOSS_EGG_DEALER_LS: 39,
-    BOSS_EGG_DEALER_CF: 40,
-    BOSS_BLACK_DOOM_CF: 41,
-    BOSS_BLACK_DOOM_FH: 42,
-    BOSS_DIABLON_FH: 43,
-    BOSS_DEVIL_DOOM: 44
+    Names.BOSS_BLACK_BULL_LH: 28,
+    Names.BOSS_EGG_BREAKER_CC: 29,
+    Names.BOSS_HEAVY_DOG: 30,
+    Names.BOSS_EGG_BREAKER_MM: 31,
+    Names.BOSS_BLACK_BULL_DR: 32,
+    Names.BOSS_BLUE_FALCON: 33,
+    Names.BOSS_EGG_BREAKER_IJ: 34,
+    Names.BOSS_BLACK_DOOM_GF:  35,
+    Names.BOSS_DIABLON_GF: 36,
+    Names.BOSS_EGG_DEALER_BC: 37,
+    Names.BOSS_DIABLON_BC: 38,
+    Names.BOSS_EGG_DEALER_LS: 39,
+    Names.BOSS_EGG_DEALER_CF: 40,
+    Names.BOSS_BLACK_DOOM_CF: 41,
+    Names.BOSS_BLACK_DOOM_FH: 42,
+    Names.BOSS_DIABLON_FH: 43,
+    Names.BOSS_DEVIL_DOOM: 44
 
 }
 
 BOSS_GROUPING = {
-    "Black Doom": [BOSS_BLACK_DOOM_GF, BOSS_BLACK_DOOM_CF, BOSS_BLACK_DOOM_FH],
-    "Egg Dealer": [BOSS_EGG_DEALER_BC, BOSS_EGG_DEALER_LS, BOSS_EGG_DEALER_CF],
-    "Diablon": [BOSS_DIABLON_GF, BOSS_DIABLON_BC, BOSS_DIABLON_FH],
-    "Egg Breaker": [BOSS_EGG_BREAKER_CC, BOSS_EGG_BREAKER_MM, BOSS_EGG_BREAKER_IJ],
-    "Black Bull": [BOSS_BLACK_BULL_LH, BOSS_BLACK_BULL_DR]
+    "Black Doom": [Names.BOSS_BLACK_DOOM_GF, Names.BOSS_BLACK_DOOM_CF, Names.BOSS_BLACK_DOOM_FH],
+    "Egg Dealer": [Names.BOSS_EGG_DEALER_BC, Names.BOSS_EGG_DEALER_LS, Names.BOSS_EGG_DEALER_CF],
+    "Diablon": [Names.BOSS_DIABLON_GF, Names.BOSS_DIABLON_BC, Names.BOSS_DIABLON_FH],
+    "Egg Breaker": [Names.BOSS_EGG_BREAKER_CC, Names.BOSS_EGG_BREAKER_MM, Names.BOSS_EGG_BREAKER_IJ],
+    "Black Bull": [Names.BOSS_BLACK_BULL_LH, Names.BOSS_BLACK_BULL_DR]
 
 }
 
 
 def IsObjectRestriction(restriction_types):
-    object_restrictions = [REGION_RESTRICTION_TYPES.Pulley, REGION_RESTRICTION_TYPES.LightDash,
-               REGION_RESTRICTION_TYPES.WarpHole, REGION_RESTRICTION_TYPES.Rocket,
-               REGION_RESTRICTION_TYPES.Zipwire]
+    object_restrictions = [Names.REGION_RESTRICTION_TYPES.Pulley, Names.REGION_RESTRICTION_TYPES.LightDash,
+               Names.REGION_RESTRICTION_TYPES.WarpHole, Names.REGION_RESTRICTION_TYPES.Rocket,
+               Names.REGION_RESTRICTION_TYPES.Zipwire]
 
     return len(set(restriction_types).intersection(object_restrictions)) > 0
 
@@ -81,11 +81,11 @@ class REGION_RESTRICTION_REFERENCE_TYPES:
     BossLogic = 2
 
 def IsWeaponsanityRestriction(restriction_types):
-    weapons = [REGION_RESTRICTION_TYPES.Torch, REGION_RESTRICTION_TYPES.LongRangeGun,
-               REGION_RESTRICTION_TYPES.Vacuum, REGION_RESTRICTION_TYPES.Gun,
-               REGION_RESTRICTION_TYPES.Heal, REGION_RESTRICTION_TYPES.AnyStageWeapon,
-               REGION_RESTRICTION_TYPES.VacuumOrShot,
-               REGION_RESTRICTION_TYPES.SatelliteGun]
+    weapons = [Names.REGION_RESTRICTION_TYPES.Torch, Names.REGION_RESTRICTION_TYPES.LongRangeGun,
+               Names.REGION_RESTRICTION_TYPES.Vacuum, Names.REGION_RESTRICTION_TYPES.Gun,
+               Names.REGION_RESTRICTION_TYPES.Heal, Names.REGION_RESTRICTION_TYPES.AnyStageWeapon,
+               Names.REGION_RESTRICTION_TYPES.VacuumOrShot,
+               Names.REGION_RESTRICTION_TYPES.SatelliteGun]
 
     for w in weapons:
         if w in restriction_types:
@@ -94,10 +94,10 @@ def IsWeaponsanityRestriction(restriction_types):
     return False
 
 def IsVeichleSanityRestriction(restriction_types):
-    vehicles = [REGION_RESTRICTION_TYPES.BlackHawk, REGION_RESTRICTION_TYPES.BlackVolt,
-                REGION_RESTRICTION_TYPES.AirSaucer, REGION_RESTRICTION_TYPES.Car,
-                REGION_RESTRICTION_TYPES.GunJumper, REGION_RESTRICTION_TYPES.GunLift,
-                REGION_RESTRICTION_TYPES.BlackArmsTurret, REGION_RESTRICTION_TYPES.GunTurret]
+    vehicles = [Names.REGION_RESTRICTION_TYPES.BlackHawk, Names.REGION_RESTRICTION_TYPES.BlackVolt,
+                Names.REGION_RESTRICTION_TYPES.AirSaucer, Names.REGION_RESTRICTION_TYPES.Car,
+                Names.REGION_RESTRICTION_TYPES.GunJumper, Names.REGION_RESTRICTION_TYPES.GunLift,
+                Names.REGION_RESTRICTION_TYPES.BlackArmsTurret, Names.REGION_RESTRICTION_TYPES.GunTurret]
 
     for v in vehicles:
         if v in restriction_types:
@@ -113,7 +113,7 @@ class BacktrackRegion:
     logicType: int
     hardLogicOnly: bool
     iccLogicOnly: bool
-    restrictionTypes: list[REGION_RESTRICTION_TYPES]
+    restrictionTypes: list[Names.REGION_RESTRICTION_TYPES]
 
     def __init__(self, stageId, fromRegion, toRegion,
                  logicType, restrictionTypes):
@@ -150,7 +150,7 @@ class EscapePath:
 class LevelRegion:
     stageId: int
     regionIndex: int
-    restrictionTypes: list[REGION_RESTRICTION_TYPES]
+    restrictionTypes: list[Names.REGION_RESTRICTION_TYPES]
     logicType: int
     chaosControlLogicType: int
     fromRegions: list
@@ -159,7 +159,7 @@ class LevelRegion:
     isDiversion: bool = False
 
     def __init__(self, stageId, regionIndex,
-                 restrictionTypes: list[REGION_RESTRICTION_TYPES] | REGION_RESTRICTION_TYPES):
+                 restrictionTypes: list[Names.REGION_RESTRICTION_TYPES] | Names.REGION_RESTRICTION_TYPES):
         self.stageId = stageId
         self.regionIndex = regionIndex
 
@@ -207,18 +207,18 @@ class LevelRegion:
 
 
 def IsRegionRestrictionApplication(region_restriction, options, starting_items):
-    if region_restriction == REGION_RESTRICTION_TYPES.ShootOrTurret and \
+    if region_restriction == Names.REGION_RESTRICTION_TYPES.ShootOrTurret and \
             not (options.weapon_sanity_unlock and options.vehicle_logic):
         return False
 
-    if region_restriction == REGION_RESTRICTION_TYPES.ShootOrTurret and "Vehicle:Gun Turret" in starting_items:
+    if region_restriction == Names.REGION_RESTRICTION_TYPES.ShootOrTurret and "Vehicle:Gun Turret" in starting_items:
         return False
 
-    if region_restriction == REGION_RESTRICTION_TYPES.Explosion and not \
+    if region_restriction == Names.REGION_RESTRICTION_TYPES.Explosion and not \
             (options.weapon_sanity_unlock or options.object_units):
         return False
 
-    if region_restriction == REGION_RESTRICTION_TYPES.Explosion and "Bombs" in starting_items:
+    if region_restriction == Names.REGION_RESTRICTION_TYPES.Explosion and "Bombs" in starting_items:
         return False
 
     if IsWeaponsanityRestriction([region_restriction]) and not options.weapon_sanity_unlock:
@@ -230,19 +230,19 @@ def IsRegionRestrictionApplication(region_restriction, options, starting_items):
     if IsObjectRestriction([region_restriction]):
         if not options.object_unlocks:
             return False
-        if (region_restriction == REGION_RESTRICTION_TYPES.Zipwire and
+        if (region_restriction == Names.REGION_RESTRICTION_TYPES.Zipwire and
                 (not options.object_ziplines or "Zipwire" in starting_items)):
             return False
-        if (region_restriction == REGION_RESTRICTION_TYPES.LightDash and
+        if (region_restriction == Names.REGION_RESTRICTION_TYPES.LightDash and
                 (not options.object_light_dashes or "Air Shoes" in starting_items)):
             return False
-        if (region_restriction == REGION_RESTRICTION_TYPES.WarpHole and
+        if (region_restriction == Names.REGION_RESTRICTION_TYPES.WarpHole and
                 (not options.object_warp_holes or "Warp Hole" in starting_items)):
             return False
-        if (region_restriction == REGION_RESTRICTION_TYPES.Rocket and
+        if (region_restriction == Names.REGION_RESTRICTION_TYPES.Rocket and
                 (not options.object_rockets or "Rocket" in starting_items)):
             return False
-        if (region_restriction == REGION_RESTRICTION_TYPES.Pulley and
+        if (region_restriction == Names.REGION_RESTRICTION_TYPES.Pulley and
                 (not options.object_pulleys or "Pulley" in starting_items)):
             return False
 
@@ -274,7 +274,7 @@ def IsLogicLevelApplicable(region, options, path_type, starting_items):
             logic_level  == Options.LogicLevel.option_hard:
         return False
 
-    if len(region_restrictions) == 1 and REGION_RESTRICTION_TYPES.NoRestriction in region_restrictions and \
+    if len(region_restrictions) == 1 and Names.REGION_RESTRICTION_TYPES.NoRestriction in region_restrictions and \
         len(region.fromRegions) == 1:
         return False
 

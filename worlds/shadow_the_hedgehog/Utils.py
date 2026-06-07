@@ -5,13 +5,6 @@ from . import Levels, Locations
 
 VERSION: Tuple[int, int, int] = (0, 4, 6)
 
-DEBUG_OPTION = True
-
-USE_DEBUG_NAMES = False
-USE_FLAG_NAMES = True
-USE_SAVE_VALUE_CHECK = True
-USE_DEFAULT_SET_CHANGES = False
-
 TYPE_ID_ENEMY = 0
 TYPE_ID_OBJECTIVE = 1
 TYPE_ID_COMPLETION = 2

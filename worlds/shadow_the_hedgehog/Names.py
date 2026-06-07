@@ -3,7 +3,7 @@ from enum import Enum, IntEnum
 LOCATION_ID_PLUS_O = 110068
 
 from .ObjectTypes import SETObject, ObjectType, ObjectFlags
-from . import Utils as ShadowUtils
+from . import Flags
 
 STAGE_WESTOPOLIS = 100
 STAGE_DIGITAL_CIRCUIT = 200
@@ -835,8 +835,8 @@ def ObjectTypeToName(type: int):
 def GetObjectLocationName(object: SETObject):
     id_name = int(str(LOCATION_ID_PLUS_O) + str(6) + str(object.stage) + "0" + str(object.index))
 
-    DEBUG_NAME = ShadowUtils.USE_DEBUG_NAMES
-    FLAG_NAME = ShadowUtils.USE_FLAG_NAMES
+    DEBUG_NAME = Flags.USE_DEBUG_NAMES
+    FLAG_NAME = Flags.USE_FLAG_NAMES
 
     if DEBUG_NAME:
         region_name = GetRegionName(object.stage, object.region)
