@@ -3,7 +3,7 @@ from typing import Tuple
 
 from . import Levels, Locations
 
-VERSION: Tuple[int, int, int] = (0, 4, 5)
+VERSION: Tuple[int, int, int] = (0, 4, 6)
 
 DEBUG_OPTION = True
 
