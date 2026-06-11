@@ -608,8 +608,9 @@ def CalculateObjectiveValueForGate(value, max_gates, gate_no, gate_density, rate
     return expected_result
 
 def GetIndividualGateKeyRequirements(world, player, gate_no):
+    print("GIGR", world, player, gate_no)
     if int(gate_no) == 0:
-        return lambda state: True
+        return {}, None, []
 
     gate_density = world.options.gate_density
     reqs = {}
@@ -715,7 +716,7 @@ def GetGateKeyRequirementCount(world, player, gate_no):
 
 def GetGateKeyRule(world, player, gate_no):
     # Add weapon unlocks as gate requirement
-
+    print("GGKR", world, player, gate_no)
     solid_requirements, count_requirements, count_options = GetIndividualGateKeyRequirements(world, player, gate_no)
 
     if len(solid_requirements) == 0 and count_requirements is None:
