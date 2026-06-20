@@ -95,7 +95,7 @@ class ObjectiveSanitySystem(Choice):
     Both, checks for both in the system, if available
 
     """
-
+    display_name = "Objective Sanity System"
     option_count_up = 0
     option_individual = 1
     option_both = 2
@@ -111,6 +111,7 @@ class ObjectiveSanityBehaviour(Choice):
             required to still press Z to avoid inability to get checks.
     """
 
+    display_name = "Objective Sanity Behaviour"
     option_default = 0
     option_manual_clear = 1
     option_base_clear = 2

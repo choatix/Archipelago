@@ -412,12 +412,6 @@ class ShtHWorld(World):
                 if "objective_completion_percentage" in passthrough:
                     self.options.objective_completion_percentage = passthrough["objective_completion_percentage"]
 
-                if "objective_percentage" in passthrough:
-                    self.options.objective_percentage = passthrough["objective_percentage"]
-
-                if "objective_enemy_percentage" in passthrough:
-                    self.options.objective_enemy_percentage = passthrough["objective_enemy_percentage"]
-
                 if "objective_completion_enemy_percentage" in passthrough:
                     self.options.objective_completion_enemy_percentage = passthrough["objective_completion_enemy_percentage"]
 
@@ -453,9 +447,6 @@ class ShtHWorld(World):
 
                 if "required_final_boss_tokens" in passthrough:
                     self.options.required_final_boss_tokens = passthrough["required_final_boss_tokens"]
-
-                if "objective_completion_percentage" in passthrough:
-                    self.options.objective_completion_percentage = passthrough["objective_completion_percentage"]
 
                 if "requires_emeralds" in passthrough:
                     self.options.requires_emeralds = passthrough["requires_emeralds"]
@@ -700,15 +691,15 @@ class ShtHWorld(World):
 
                 stage_items = Items.GetStageItems(self, None, True)
 
+                #TODO: Handle this properly inside count_locations
                 if(len(self.gates)) != 0:
                     # Get check count from first gates
                     total_requirements = Rules.GetGateKeyRequirementCount(self, self.player, 1)
-                    gate_1_checks = Locations.count_locations(self, levels=
-                        self.gates[0]) - len(self.available_weapons) - len(self.available_characters)
+                    gate_1_checks_locations = (Locations.count_locations(self, levels=self.gates[0]))
 
-                    if total_requirements > gate_1_checks:
+                    if total_requirements > gate_1_checks_locations:
                         raise OptionError(f"Invalid gate checks alongside requirements. Check your gate requirements. "
-                                          f"({total_requirements},{gate_1_checks})")
+                                          f"({total_requirements},{gate_1_checks_locations})")
                 # Get minimum gate requirement
 
                 # Check if higher

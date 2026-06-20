@@ -15,7 +15,7 @@ from CommonClient import ClientCommandProcessor, CommonContext, get_base_parser,
 from NetUtils import ClientStatus
 from worlds.shadow_the_hedgehog.ObjectTypes import ObjectTypeVehicles
 from .Options import WeaponsanityHold
-from . import Levels, Items, Locations, Utils as ShadowUtils, Weapons, Story, Objects, Names, Checkpoints, ObjectTypes
+from . import Levels, Items, Locations, Utils as ShadowUtils, Weapons, Story, Objects, Checkpoints, ObjectTypes
 from .Levels import *
 from .Locations import GetStageInformation, GetAlignmentsForStage, \
     GetStageEnemysanityInformation, MissionClearLocations
@@ -63,6 +63,7 @@ def GetGameAddress(ctx, base_address):
     return base_address
 
 OBJECT_SIZE = 0x2C
+CONFIG_ISSUE_OFFSET = 0x240
 
 class GAME_ADDRESSES:
     STORY_MODE_COUNTER = 0x80576988
@@ -224,7 +225,7 @@ async def ShowSETChanges(current_level, ctx):
     if length is None or length == 0:
         return
 
-    start_address = GAME_ADDRESSES.LEVEL_SET_DATA
+    start_address = ctx.GetObjectDataStart()
     set_item_count = length
 
     #809AF000 + (2C * (109-1)) + 20
@@ -235,10 +236,13 @@ async def ShowSETChanges(current_level, ctx):
     force_full_check = False
 
     bytes_size = (OBJECT_SIZE * (set_item_count + 1))
-    full_loaded_bytes = dolphin_memory_engine.read_bytes(start_address, (0x2C * (set_item_count + 1)))
+    full_loaded_bytes = dolphin_memory_engine.read_bytes(start_address, (OBJECT_SIZE * (set_item_count + 1)))
 
     if ctx.last_object_bytes is not None and not force_full_check:
         previous_bytes = ctx.last_object_bytes
+        if len(previous_bytes) != bytes_size:
+            print("Invalid bytes size: ", len(previous_bytes), bytes_size)
+            return
         mask = [1 if (previous_bytes[i] ^ full_loaded_bytes[i]) else 0 for i in range(bytes_size)]
         obj_mask = {}
 
@@ -263,7 +267,7 @@ async def ShowSETChanges(current_level, ctx):
         if i not in changed_indexes:
             continue
 
-        spawn_data = start_address  + (0x2C * i) + 0x20
+        spawn_data = start_address  + (OBJECT_SIZE * i) + 0x20
         object_type = spawn_data + 0x08
         link_id_ref = object_type + 0x02
         object_additional_pointer = None
@@ -335,6 +339,12 @@ class ShTHCommandProcessor(ClientCommandProcessor):
         if isinstance(self.ctx, ShTHContext):
             SHOW_SET_CHANGES = not SHOW_SET_CHANGES
             logger.info(f"Showing Set Changes changed to {SHOW_SET_CHANGES}")
+
+    def _cmd_offset(self):
+        """Changes the offset manually"""
+        if isinstance(self.ctx, ShTHContext):
+            self.ctx.object_offset = not self.ctx.object_offset
+            logger.info(f"Object Offset changed to {self.ctx.object_offset}")
 
     def _cmd_dolphin(self):
         """Prints the current Dolphin status to the client."""
@@ -983,9 +993,9 @@ class ShTHCommandProcessor(ClientCommandProcessor):
                                 len(arguments) == 0 or
                                 (len(arguments) == 1 and stageId != self.ctx.last_level) ):
                             if valid_type in enemy_sanities and not self.ctx.enemy_sanity:
-                                break
+                                continue
                             if valid_type in objective_sanities and not self.ctx.objective_sanity:
-                                break
+                                continue
                             details = self.get_required_and_active_count(self.ctx, stageId, valid_type)
                             if details is None:
                                 continue
@@ -1395,6 +1405,15 @@ class ShTHContext(CommonContext):
         self.last_object_bytes = None
         self.music_shuffle = True
 
+        self.object_offset = None
+
+    def GetObjectDataStart(self):
+        if self.object_offset is None:
+            return GAME_ADDRESSES.LEVEL_SET_DATA
+        elif self.object_offset:
+            return GAME_ADDRESSES.LEVEL_SET_DATA + CONFIG_ISSUE_OFFSET
+        else:
+            return GAME_ADDRESSES.LEVEL_SET_DATA
 
     async def disconnect(self, allow_autoreconnect: bool = False):
         self.auth = None
@@ -1518,13 +1537,13 @@ class ShTHContext(CommonContext):
 
         relevant_objects = [ r for r in relevant_objects if GetObjectLocationName(r)[0] in self.checked_locations]
 
-        start_address = GAME_ADDRESSES.LEVEL_SET_DATA
+        start_address = self.GetObjectDataStart()
         max_index = max([o.index for o in relevant_objects])
 
-        full_loaded_bytes = dolphin_memory_engine.read_bytes(start_address, (0x2C * (max_index + 1)))
+        full_loaded_bytes = dolphin_memory_engine.read_bytes(start_address, (OBJECT_SIZE * (max_index + 1)))
 
         for object in relevant_objects:
-            base_index = (0x2C * object.index) + 0x20
+            base_index = (OBJECT_SIZE * object.index) + 0x20
             spawn_base_byte = base_index + 0x03
             #object_type_index = base_index + 0x08
             #extra_data_pointer = base_index + 0x10
@@ -1532,7 +1551,7 @@ class ShTHContext(CommonContext):
             despawn = 4
             despawn_bytes = despawn.to_bytes(4, byteorder='big')
 
-            spawn_data = start_address + (0x2C * object.index) + 0x20
+            spawn_data = start_address + (OBJECT_SIZE * object.index) + 0x20
 
             loaded_bytes = [full_loaded_bytes[spawn_base_byte]]
             loaded_spawn_data = int.from_bytes(loaded_bytes, byteorder='big')
@@ -4204,7 +4223,7 @@ async def handle_objects(ctx, current_level):
     despawn_bytes = force_despawn.to_bytes(1, byteorder='big')
     spawn_bytes = spawn_inform.to_bytes(1, byteorder='big')
 
-    start_address = GAME_ADDRESSES.LEVEL_SET_DATA
+    start_address = ctx.GetObjectDataStart()
 
     key_sanity = ctx.key_sanity
     object_unlocks = ctx.object_unlocks
@@ -4293,13 +4312,11 @@ async def handle_objects(ctx, current_level):
     else:
         changed_objects = relevant_objects
 
-    ctx.last_object_bytes = full_loaded_bytes
-
     for object in changed_objects:
         object_index = object.index
 
-        spawn_data = start_address + (0x2C * object_index) + 0x20
-        base_index = (0x2C * object_index) + 0x20
+        spawn_data = start_address + (OBJECT_SIZE * object_index) + 0x20
+        base_index = (OBJECT_SIZE * object_index) + 0x20
         spawn_address = spawn_data + 0x03
 
         check_save_byte = base_index + 0x01
@@ -4327,14 +4344,20 @@ async def handle_objects(ctx, current_level):
         expected_type = Objects.GetTypeId(object.object_type)
 
         if expected_type is not None and Objects.GetTypeId(object.object_type) != loaded_object_type:
-            if loaded_object_type == 0x00:
+
+            if ctx.object_offset is None:
+                logger.error("Detected mismatch of types, switching to offset mode")
+                ctx.object_offset = True
                 break
-            print("Failed to read type correctly",
-                  "Coded Type", Objects.GetTypeId(object.object_type),
-                  "Loaded Type", loaded_object_type,
-                  "Coded Type", expected_type,
-                  "Index", object.index,
-                  "Name", object.name)
+
+            logger.error("Failed to read type correctly" +
+                  "Coded Type" + str(Objects.GetTypeId(object.object_type)) +
+                  "Loaded Type" + str(loaded_object_type) +
+                  "Coded Type" + str(expected_type) +
+                  "Index" + str(object.index) +
+                  "Name" + object.name)
+        elif expected_type is None:
+            logger.error("Unexpected object type: %d", object.object_type)
 
         # TODO: Only load the extra bytes when needed
         loaded_extra_pointer_bytes = dolphin_memory_engine.read_bytes(extra_data_pointer, 4)
@@ -4732,6 +4755,8 @@ async def handle_objects(ctx, current_level):
             if use_spawn_for_completion == 0x40:
                 if object.count not in ctx.level_state["active_checkpoints"]:
                     ctx.level_state["active_checkpoints"].append(object.count)
+
+    ctx.last_object_bytes = full_loaded_bytes
 
     if len(messages) > 0:
         message = [{"cmd": 'LocationChecks', "locations": messages}]
@@ -5216,6 +5241,8 @@ async def update_level_behaviour(ctx, current_level, death):
                                                                   darkInfo.stageId, darkInfo.alignmentId,
                                                                   ctx.override_settings), darkInfo.requirement_count,
             current_level, MISSION_ALIGNMENT_DARK, ctx.override_settings)
+
+
 
         darkMaxAvailable = ShadowUtils.getMaxRequired(
             ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_OBJECTIVE_AVAILABLE,

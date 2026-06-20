@@ -304,12 +304,6 @@ def GetTypeId(objectType):
     if objectType == ObjectType.SMALL_BOMB_AUTO_DETONATE:
         return 0xFA1
 
-    if objectType == ObjectType.LIGHT_DASH_TRAIL_ANTI_TRAP:
-        pass
-
-    if objectType == ObjectType.WARP_HOLE_ANTI_TRAP:
-        pass
-
     if objectType == ObjectType.ENERGY_CORE_IN_WOOD_BOX:
         return 0x09
 
@@ -400,23 +394,8 @@ def GetTypeId(objectType):
     if objectType == ObjectType.ITEM_IN_METAL_BOX:
         return 0x0A
 
-    #if objectType == ObjectType.FIRE:
-    #    return 0x34
-
-    #if objectType == ObjectType.POISON_GAS:
-    #    return 0x35
-
-    #if objectType == ObjectType.DARK_SPIN_ENTRY:
-    #    return 0x61
-
     if objectType == ObjectType.DEFENSE_PROGRAM:
         return 0x7D4
-
-    #if objectType == ObjectType.RING_OF_FIRE:
-    #    return 0xC85
-
-    #if objectType == ObjectType.HELICOPTER:
-    #    return 0xFA2
 
     if objectType == ObjectType.CLEAR_TRIGGER:
         return 0x2595
@@ -438,6 +417,18 @@ def GetTypeId(objectType):
 
     if objectType == ObjectType.WEAPON_WOODEN_BOX:
         return 0x9
+
+    if objectType == ObjectType.BLACK_HAWK_TOO_HARD:
+        return 0x8E
+
+    if objectType == ObjectType.WEAPON_BOX_UNHANDLED:
+        return 0x0C
+
+    if objectType == ObjectType.LIGHT_DASH_TRAIL_ANTI_TRAP:
+        return 0x10
+
+    if objectType == ObjectType.WARP_HOLE_ANTI_TRAP:
+        return 0x1F
 
     return None
 

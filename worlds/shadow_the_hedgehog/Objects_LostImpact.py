@@ -242,7 +242,7 @@ DESIRABLE_OBJECTS_LOST_IMPACT = [
     SETObject(ObjectType.ITEM_CAPSULE, Levels.STAGE_LOST_IMPACT, 179, 'Room After Lift B',
               region=REGION_INDICES.LOST_IMPACT_TWO_LIFT_OR_WEAPON),
 
-    SETObject(ObjectType.ITEM_IN_METAL_BOX, Levels.STAGE_LOST_IMPACT, 331, 'Behind Lift Pole',
+    SETObject(ObjectType.ITEM_CAPSULE, Levels.STAGE_LOST_IMPACT, 331, 'Behind Lift Pole',
               region=REGION_INDICES.LOST_IMPACT_THREE_WEAPON),
 
     SETObject(ObjectType.ITEM_IN_METAL_BOX, Levels.STAGE_LOST_IMPACT, 214, '3 Right At Turn A',

@@ -1448,7 +1448,15 @@ def count_locations(world, levels=None):
         count = increment_location_count(count, len(checkpointsanity_locations), "c")
 
     if world.options.character_sanity:
-        count = increment_location_count(count, len(charactersanity_locations), "ch")
+        if levels is not None and len(levels) > 0:
+            for c in charactersanity_locations:
+                levels_in = Objects.CharacterToLevel[c.other]
+                levels_in = [(l[0] if type(l) is tuple else l) for l in levels_in]
+                levels_left = [l for l in levels_in if l in levels]
+                if len(levels_left) > 0:
+                    count = increment_location_count(count, 1, "ch")
+        else:
+            count = increment_location_count(count, len(charactersanity_locations), "ch")
 
     if world.options.key_sanity:
         count = increment_location_count(count, len([x for x in object_locations if x.other == ObjectType.KEY
@@ -1459,7 +1467,17 @@ def count_locations(world, levels=None):
     #    count -= 1 # Devil Doom Boss
 
     if world.options.weapon_sanity_hold > 0:
-        count = increment_location_count(count, len(weaponsanity_locations), "w")
+        if levels is not None and len(levels) > 0:
+            for weapon in weaponsanity_locations:
+                weapon_name = weapon.other
+                weapon_info = [ w for w in Weapons.WEAPON_INFO if w.name == weapon_name][0]
+                levels_in = weapon_info.available_stages
+                levels_in = [(l[0] if type(l) is tuple else l) for l in levels_in]
+                levels_left = [l for l in levels_in if l in world.available_levels]
+                if len(levels_left) > 0:
+                    count = increment_location_count(count, 1, "w")
+        else:
+            count = increment_location_count(count, len(weaponsanity_locations), "w")
 
     if world.options.shadow_boxes:
         count = increment_location_count(count, len([x for x in object_locations if x.other == ObjectType.SHADOW_BOX

@@ -2464,15 +2464,38 @@ def UseCheckpointZero(stage,logic_level):
         UseCheckpointZeroCache[key] = False
         return False
 
+    # This needs to factor in accessibility from a checkpoint, just not from anywhere!
+
+    stage_name = LEVEL_ID_TO_LEVEL[stage].upper().replace(" ","_")
+
+    checkpoint_keys = list([k[1] for k in REGION_INDICES.__dict__.items() if
+                            k[0].startswith(stage_name.upper()) and "CHECKPOINT_" in k[0]
+                            and "ZERO" not in k[0]])
+
     b_regions = [ b for b in BACKTRACKING_REGIONS if b.stageId == stage and b.backtrackToRegion == 0 ]
     found = False
     for b_region in b_regions:
-        if b_region.hardLogicOnly and logic_level == Options.LogicLevel.option_hard:
-            found = True
+        safe_progression = False
+
+
+        if b_region.hardLogicOnly:
+            if logic_level == Options.LogicLevel.option_hard:
+                safe_progression = True
         elif b_region.logicType == Options.LogicLevel.option_easy and logic_level != Options.LogicLevel.option_easy:
-            found = True
+            safe_progression = True
         elif b_region.logicType == Options.LogicLevel.option_normal and logic_level != Options.LogicLevel.option_easy:
-            found = True
+            safe_progression = True
+
+        if safe_progression:
+
+            if b_region.backtrackFromRegion in checkpoint_keys:
+                found = True
+                break
+            else:
+                new_b_regions = [b for b in BACKTRACKING_REGIONS if b.stageId == stage and b.backtrackToRegion == b_region.backtrackFromRegion and
+                                 b not in b_regions]
+                if len(new_b_regions) > 0:
+                    b_regions.extend(new_b_regions)
 
     UseCheckpointZeroCache[key] = not found
     return not found
