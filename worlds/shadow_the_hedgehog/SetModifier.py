@@ -7,7 +7,6 @@ import astor  # You might need to install via `pip install astor`
 from worlds.shadow_the_hedgehog import Levels, Weapons
 from worlds.shadow_the_hedgehog.Names import WEAPONS
 from worlds.shadow_the_hedgehog.ObjectTypes import SETObject, ObjectType, ObjectTypeVehicles
-from .Items import GetAllItemInfo
 
 
 class AddArgumentToSETObject(ast.NodeTransformer):

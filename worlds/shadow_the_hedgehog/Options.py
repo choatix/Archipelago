@@ -66,6 +66,27 @@ class GoalFinalBosses(Range):
     range_end = 100
     default = 0
 
+class GoalPaths(Range):
+    """
+        Determines what count of goal paths is required for completion.
+    """
+    display_name = "Goal: Paths"
+    range_start = 0
+    range_end = 326
+    default = 0
+
+class GoalLastWay(DefaultOnToggle):
+    """
+        Determines if Last Way is required to goal the game.
+    """
+    display_name = "Goal: Last Way"
+
+class GoalDevilDoom(DefaultOnToggle):
+    """
+        Determines if Devil Doom is required to goal the game.
+    """
+    display_name = "Goal: Devil Doom"
+
 class GoalFinalMissions(Range):
     """
         Determines what percentage of final missions are required for completion, rounded up.
@@ -74,6 +95,15 @@ class GoalFinalMissions(Range):
     range_start = 0
     range_end = 100
     default = 0
+
+class GoalCharacters(Toggle):
+    """
+    Whether meeting all the characters is included in the goal.
+    """
+    display_name = "Goal: Characters"
+    option_off = 0
+    option_on = 1
+    default = option_on
 
 class ObjectiveSanity(DefaultOnToggle):
     """
@@ -281,13 +311,17 @@ class CheckpointConvenience(DefaultOnToggle):
     """
     display_name = "Checkpoint Convenience"
 
-class CharacterSanity(DefaultOnToggle):
+class CharacterSanity(Choice):
     """
         Determines if character checks are enabled.
         The first time you meet a character, the cutscene will play and provide a check.
         Disabling is handling by overwriting the value and cutscene will never play.
     """
     display_name = "Character Sanity"
+    option_off = 0
+    option_on = 1
+    option_unlock = 2
+    default_value = option_on
 
 class WeaponsanityUnlock(Toggle):
     """
@@ -373,7 +407,7 @@ class SelectGatesCount(Range):
     """
         Determines the number of select gates.
     """
-    display_name = "Select Gates"
+    display_name = "Select Gates Count"
     range_start = 1
     range_end = 10
     default = 5
@@ -385,12 +419,14 @@ class GateUnlockRequirement(Choice):
         Objective: Uses the objective items (e.g. Egg Balloon / Jungle Soldier)
         Chaos Emeralds: Each chaos emerald unlocks a gate. Forces gate count.
         Objective Available: Objective; but only uses stage items for levels previously available in gates.
+        Weapons: Collect various weapons to unlock gates
     """
     display_name = "Gate Unlock Requirement"
     option_items = 0
     option_objective = 1
     option_chaos_emeralds = 2
     option_objective_available = 3
+    option_weapons = 4
     default = option_objective_available
 
 class GateDensity(Range):
@@ -951,6 +987,10 @@ class ShadowTheHedgehogOptions(PerGameCommonOptions):
     goal_objective_missions: GoalObjectiveMissions
     goal_bosses: GoalBosses
     goal_final_bosses: GoalFinalBosses
+    goal_paths: GoalPaths
+    goal_devil_doom: GoalDevilDoom
+    goal_last_way: GoalLastWay
+    goal_characters: GoalCharacters
     objective_sanity: ObjectiveSanity
     objective_sanity_system: ObjectiveSanitySystem
     objective_sanity_behaviour: ObjectiveSanityBehaviour
@@ -1070,7 +1110,8 @@ shadow_option_groups = [
     OptionGroup("Goal", [GoalChaosEmeralds, GoalMissions,
                          GoalObjectiveMissions, GoalFinalMissions,
                          GoalHeroMissions, GoalDarkMissions,
-                         GoalBosses, GoalFinalBosses]),
+                         GoalBosses, GoalFinalBosses, GoalPaths, GoalLastWay, GoalDevilDoom,
+                         GoalCharacters]),
 
     OptionGroup("Objective Configuration", [
         ObjectiveSanitySystem, ObjectiveSanityBehaviour, KeysRequiredForDoors,

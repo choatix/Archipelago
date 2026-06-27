@@ -3,7 +3,7 @@ import copy
 from typing import Dict, Optional
 
 from BaseClasses import Location, Region, LocationProgressType
-from . import Regions, Levels, Weapons, Objects, Names, ObjectTypes
+from . import Regions, Levels, Weapons, Objects, Names, ObjectTypes, Story
 from .Levels import *
 from . import Utils as ShadowUtils
 from .ObjectTypes import ObjectType
@@ -518,9 +518,13 @@ def GetBossLocationName(bossName, bossStageId):
 
     return id_name, view_name
 
-def GetClearLocation():
-    return [LocationInfo(LOCATION_TYPE_OTHER, LOCATION_ID_PLUS + 1000, Levels.DevilDoom_Name,
-                  stageId=None, alignmentId=None, total=None, count=None, other=None)]
+def GetClearLocations():
+    return [
+        LocationInfo(LOCATION_TYPE_OTHER, LOCATION_ID_PLUS + 1000, Levels.DevilDoom_Name,
+                  stageId=None, alignmentId=None, total=None, count=None, other=None),
+        LocationInfo(LOCATION_TYPE_OTHER, LOCATION_ID_PLUS + 1001, Levels.Anytime_Clear,
+                     stageId=None, alignmentId=None, total=None, count=None, other=None)
+    ]
 
 
 def GetEnemySanityLocations():
@@ -714,6 +718,14 @@ def GetAllLocationInfo():
                             other=Levels.ITEM_TOKEN_TYPE_STANDARD)
         token_locations.append(info)
 
+        if location.stageId == Levels.STAGE_THE_LAST_WAY:
+            base_token_id, base_token_name = GetLevelTokenNames(location.stageId, location.alignmentId,
+                                                                Levels.ITEM_TOKEN_TYPE_LAST_WAY)
+            info = LocationInfo(LOCATION_TYPE_TOKEN, base_token_id, base_token_name,
+                                stageId=location.stageId, alignmentId=location.alignmentId, count=None, total=None,
+                                other=Levels.ITEM_TOKEN_TYPE_LAST_WAY)
+            token_locations.append(info)
+
         if location.alignmentId != MISSION_ALIGNMENT_NEUTRAL:
             hero_or_dark_token_id, hero_or_dark_token_name = GetLevelTokenNames(location.stageId, location.alignmentId, Levels.ITEM_TOKEN_TYPE_ALIGNMENT)
             info = LocationInfo(LOCATION_TYPE_TOKEN, hero_or_dark_token_id, hero_or_dark_token_name,
@@ -728,6 +740,13 @@ def GetAllLocationInfo():
                                 stageId=location.stageId, alignmentId=location.alignmentId, count=None, total=None,
                                 other=Levels.ITEM_TOKEN_TYPE_FINAL)
             token_locations.append(info)
+
+        path_token_id, path_token_name = GetLevelTokenNames(location.stageId, location.alignmentId,
+                                                              ITEM_TOKEN_TYPE_PATH)
+        path_info = LocationInfo(LOCATION_TYPE_TOKEN, path_token_id, path_token_name,
+                            stageId=location.stageId, alignmentId=location.alignmentId, count=None, total=None,
+                            other=Levels.ITEM_TOKEN_TYPE_PATH)
+        token_locations.append(path_info)
 
         i = 0
         if location.requirement_count is not None:
@@ -758,7 +777,7 @@ def GetAllLocationInfo():
                                 count=j, total=enemy.total_count, other=None)
             enemysanity_locations.append(info)
 
-    progression_locations = GetClearLocation()
+    progression_locations = GetClearLocations()
 
     progression_locations.append(
         LocationInfo(LOCATION_TYPE_OTHER, LOCATION_ID_SHADOW_RIFLE_COMPLETE, "Shadow Rifle Complete", stageId=None, \
@@ -782,6 +801,14 @@ def GetAllLocationInfo():
                             stageId=None, alignmentId=None,
                             count=None, total=None, other=character.name)
         charactersanity_locations.append(info)
+
+        requirement_token_id, requirement_token_name = GetCharacterTokenNames(character.name,
+                                                                              char_index, None,
+                                                                          ITEM_TOKEN_TYPE_CHARACTER)
+        info = LocationInfo(LOCATION_TYPE_CHARACTER, requirement_token_id, requirement_token_name,
+                            stageId=None, alignmentId=None,
+                            count=None, total=None, other=character.name)
+        token_locations.append(info)
         char_index+=1
 
     for weapon in Weapons.WEAPON_INFO:
@@ -805,6 +832,13 @@ def GetAllLocationInfo():
         info = LocationInfo(LOCATION_TYPE_TOKEN, boss_token_id, boss_token_name,
                             stageId=boss.stageId, alignmentId=None, count=None, total=None,
                             other=Levels.ITEM_TOKEN_TYPE_BOSS)
+        token_locations.append(info)
+
+        boss_path_token_id, boss_path_token_name = GetBossTokenNames(boss.stageId,
+                                                           Levels.ITEM_TOKEN_TYPE_PATH)
+        info = LocationInfo(LOCATION_TYPE_TOKEN, boss_path_token_id, boss_path_token_name,
+                            stageId=boss.stageId, alignmentId=None, count=None, total=None,
+                            other=Levels.ITEM_TOKEN_TYPE_PATH)
         token_locations.append(info)
 
         if boss.stageId in Levels.FINAL_BOSSES:
@@ -870,7 +904,7 @@ def GetLocationInfoDict():
     return result
 
 
-def is_token_required_by_goal(options, token : LocationInfo, available_levels):
+def is_token_required_by_goal(options, token : LocationInfo, world):
 
     goal_dictates_missions = options.goal_missions > 0
     goal_dictates_dark_missions = options.goal_dark_missions > 0
@@ -880,8 +914,10 @@ def is_token_required_by_goal(options, token : LocationInfo, available_levels):
     goal_dictates_progression_missions = options.goal_objective_missions > 0
     goal_dictates_boss_tokens = options.goal_bosses > 0
     goal_dictates_final_boss_tokens = options.goal_final_bosses > 0
+    goal_dictates_path_tokens = options.goal_paths > 0
+    goal_dictates_character_tokens = options.goal_characters
 
-    if token.stageId not in available_levels:
+    if token.stageId not in world.available_levels:
         return False
 
     if token.stageId == Levels.STAGE_THE_LAST_WAY and goal_dictates_neutral_missions and token.other == ITEM_TOKEN_TYPE_STANDARD and \
@@ -916,6 +952,14 @@ def is_token_required_by_goal(options, token : LocationInfo, available_levels):
     if goal_dictates_final_boss_tokens and token.other == ITEM_TOKEN_TYPE_FINAL_BOSS:
         return True
 
+    if goal_dictates_path_tokens and token.other == ITEM_TOKEN_TYPE_PATH:
+        return Story.IsStageRequiredForChosenPaths(world.chosen_paths, token.stageId, token.alignmentId)
+
+    if options.goal_last_way and token.other == ITEM_TOKEN_TYPE_LAST_WAY:
+        return True
+
+    if goal_dictates_character_tokens and token.other == ITEM_TOKEN_TYPE_CHARACTER:
+        return True
 
     return False
 
@@ -1057,7 +1101,7 @@ def create_locations(world, regions: Dict[str, Region]):
         within_region.locations.append(completion_location)
         pass
 
-    if world.options.character_sanity:
+    if world.options.character_sanity != Options.CharacterSanity.option_off:
         for character in charactersanity_locations:
             region_name = Regions.character_name_to_region(character.other)
             if region_name not in regions:
@@ -1066,6 +1110,16 @@ def create_locations(world, regions: Dict[str, Region]):
             completion_location = ShadowTheHedgehogLocation(world.player, character.name, character.locationId,
                                                             within_region)
             within_region.locations.append(completion_location)
+
+            if world.options.goal_characters:
+                found_token = [ l for l in token_locations if l.location_type == ITEM_TOKEN_TYPE_CHARACTER and l.other  == character.other ]
+                if len(found_token) == 1:
+                    found_token = found_token[0]
+                    token_location = ShadowTheHedgehogLocation(world.player, found_token.name, found_token.locationId,
+                                                               within_region)
+
+                    within_region.locations.append(token_location)
+                    world.token_locations.append(found_token)
 
     if world.options.weapon_sanity_hold > 0 :
         for weapon in weaponsanity_locations:
@@ -1082,8 +1136,11 @@ def create_locations(world, regions: Dict[str, Region]):
             within_region.locations.append(completion_location)
 
     for token in token_locations:
-        goal_required = is_token_required_by_goal(world.options, token, world.available_levels)
+        goal_required = is_token_required_by_goal(world.options, token, world)
         if not goal_required:
+            continue
+
+        if token.other == ITEM_TOKEN_TYPE_CHARACTER:
             continue
 
         if token.stageId not in Levels.BOSS_STAGES:
@@ -1304,9 +1361,15 @@ def create_locations(world, regions: Dict[str, Region]):
 
     SetRegionEvents(world, world.player, regions)
 
-    end_region = regions[Levels.boss_stage_id_to_region(Levels.BOSS_DEVIL_DOOM)]
-    devil_doom_location = ShadowTheHedgehogLocation(world.player, end_location[0].name, end_location[0].locationId, end_region)
-    end_region.locations.append(devil_doom_location)
+    if world.options.goal_devil_doom:
+        end_region = regions[Levels.boss_stage_id_to_region(Levels.BOSS_DEVIL_DOOM)]
+        devil_doom_location = ShadowTheHedgehogLocation(world.player, end_location[0].name, end_location[0].locationId, end_region)
+        end_region.locations.append(devil_doom_location)
+    else:
+        end_region = regions["Menu"]
+        end_anywhere_location = ShadowTheHedgehogLocation(world.player, end_location[1].name, end_location[1].locationId,
+                                                        end_region)
+        end_region.locations.append(end_anywhere_location)
 
 def increment_location_count(count, plus, t):
     #print("ILC", count, plus, t)
@@ -1333,7 +1396,7 @@ def count_last_way_locations(world):
         lw_weapons.append(weapon.name)
 
     world.available_weapons = lw_weapons
-    world.options.character_sanity = False
+    world.options.character_sanity = Options.CharacterSanity.option_off
 
     result = count_locations(world)
     world.available_levels = backup_levels
@@ -1447,7 +1510,7 @@ def count_locations(world, levels=None):
     if world.options.checkpoint_sanity:
         count = increment_location_count(count, len(checkpointsanity_locations), "c")
 
-    if world.options.character_sanity:
+    if world.options.character_sanity != Options.CharacterSanity.option_off:
         if levels is not None and len(levels) > 0:
             for c in charactersanity_locations:
                 levels_in = Objects.CharacterToLevel[c.other]

@@ -94,6 +94,7 @@ class ShtHWorld(World):
         self.first_checkpoints = {}
         self.available_checkpoints = {}
         self.weapon_counts = {}
+        self.chosen_paths = []
 
         for token in Items.TOKENS:
             self.required_tokens[token] = 0
@@ -174,7 +175,7 @@ class ShtHWorld(World):
             self.options.starting_stages = Options.StartingStages(1)
 
         if self.options.shadow_mod.value != Options.ShadowMod.option_vanilla and\
-            self.options.character_sanity:
+            self.options.character_sanity != Options.CharacterSanity.option_off:
             raise OptionError("Unable to play charactersanity outside of vanilla")
 
         if self.options.shadow_mod.value != Options.ShadowMod.option_vanilla:
@@ -260,6 +261,9 @@ class ShtHWorld(World):
         if self.options.objective_sanity_behaviour == Options.ObjectiveSanityBehaviour.option_base_clear and \
                 self.options.gate_unlock_requirement == Options.GateUnlockRequirement.option_objective_available:
             raise OptionError("Cannot have gate unlock be objective available when playing Base Clear")
+
+        if not self.options.weapon_sanity_unlock and self.options.gate_unlock_requirement == Options.GateUnlockRequirement.option_weapons:
+            raise OptionError("You cannot use weapons as an unlock without them disabled")
 
 
     def calculate_non_objective_sanity_maximums(self):
@@ -542,6 +546,18 @@ class ShtHWorld(World):
                 if "goal_final_bosses" in passthrough:
                     self.options.goal_final_bosses = passthrough["goal_final_bosses"]
 
+                if "goal_paths" in passthrough:
+                    self.options.goal_paths = passthrough["goal_paths"]
+
+                if "goal_devil_doom" in passthrough:
+                    self.options.goal_devil_doom = passthrough["goal_devil_doom"]
+
+                if "goal_last_way" in passthrough:
+                    self.options.goal_last_way = passthrough["goal_last_way"]
+
+                if "goal_characters" in passthrough:
+                    self.options.goal_characters = passthrough["goal_characters"]
+
                 if "shuffled_story_mode" in passthrough:
                     self.shuffled_story_mode = Story.StringToStory(passthrough["shuffled_story_mode"])
 
@@ -644,6 +660,9 @@ class ShtHWorld(World):
                     for stage_str, index in first_checkpoints.items():
                         self.first_checkpoints[int(stage_str)] = index
 
+                if "chosen_paths" in passthrough:
+                    self.chosen_paths = passthrough["chosen_paths"]
+
                 if "available_checkpoints" in passthrough:
                     available_checkpoints = passthrough["available_checkpoints"]
                     self.available_checkpoints = {}
@@ -683,6 +702,10 @@ class ShtHWorld(World):
             self.weapon_counts = Weapons.CalculateWeaponDupes(self)
             self.first_checkpoints, self.available_checkpoints = Regions.GenerateFirstAndAvailableCheckpoints(self)
 
+            if self.options.goal_paths > 0:
+                self.chosen_paths = Story.ChooseGoalLibraryPaths(self, self.options.goal_paths)
+                if len(self.chosen_paths) == 0:
+                    raise OptionError("Invalid chosen path count")
 
 
             # TODO: Check first gate requirement count when playing gates
@@ -943,6 +966,7 @@ class ShtHWorld(World):
             "goal_objective_missions": self.options.goal_objective_missions.value,
             "goal_bosses": self.options.goal_bosses.value,
             "goal_final_bosses": self.options.goal_final_bosses.value,
+            "goal_paths": self.options.goal_paths.value,
             "shadow_mod": self.options.shadow_mod.value,
             "weapon_groups": self.options.weapon_groups.value,
             "single_egg_dealer": self.options.single_egg_dealer.value,
@@ -980,7 +1004,12 @@ class ShtHWorld(World):
             "music_shuffle": self.options.music_shuffle.value,
             "last_way_enemysanity": self.options.last_way_enemysanity.value,
             "checkpoint_rules": self.options.checkpoint_rules.value,
-            "minimal_checkpoint_percentage": self.options.minimal_checkpoint_percentage.value
+            "minimal_checkpoint_percentage": self.options.minimal_checkpoint_percentage.value,
+            "chosen_paths": self.chosen_paths,
+            "goal_last_way": self.options.goal_last_way.value,
+            "goal_devil_doom": self.options.goal_devil_doom.value,
+            "goal_characters": self.options.goal_characters.value,
+            "required_characters": 0 if not self.options.goal_characters else len(self.available_characters)
         }
 
         return slot_data

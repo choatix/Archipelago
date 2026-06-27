@@ -1891,6 +1891,7 @@ ALL_STAGES = list(LEVEL_ID_TO_LEVEL.keys())
 
 
 DevilDoom_Name = "Devil Doom"
+Anytime_Clear = "Anytime Clear"
 
 
 # Starting at Westopolis Clear
@@ -1903,6 +1904,9 @@ ITEM_TOKEN_TYPE_FINAL = 2
 ITEM_TOKEN_TYPE_OBJECTIVE = 3
 ITEM_TOKEN_TYPE_BOSS = 4
 ITEM_TOKEN_TYPE_FINAL_BOSS = 5
+ITEM_TOKEN_TYPE_PATH = 6
+ITEM_TOKEN_TYPE_LAST_WAY = 7
+ITEM_TOKEN_TYPE_CHARACTER = 8
 
 TOKEN_TYPE_TO_STRING = \
 {
@@ -1911,13 +1915,27 @@ TOKEN_TYPE_TO_STRING = \
     ITEM_TOKEN_TYPE_FINAL: "Final",
     ITEM_TOKEN_TYPE_OBJECTIVE: "Objective",
     ITEM_TOKEN_TYPE_BOSS: "Boss",
-    ITEM_TOKEN_TYPE_FINAL_BOSS: "Final Boss"
+    ITEM_TOKEN_TYPE_FINAL_BOSS: "Final Boss",
+    ITEM_TOKEN_TYPE_PATH: "Path",
+    ITEM_TOKEN_TYPE_LAST_WAY: "Last Way",
+    ITEM_TOKEN_TYPE_CHARACTER: "Character"
 }
 
 
 def GetLevelTokenNames(stageId, alignmentId, type):
     id_name = int(str(LOCATION_ID_PLUS) + str(0) + str(stageId) + str(type) + str(alignmentId) + "0")
     view_name = (LEVEL_ID_TO_LEVEL[stageId] + " Mission Token " + ALIGNMENT_TO_STRING[alignmentId] +
+                 (" " + TOKEN_TYPE_TO_STRING[type] if type != ITEM_TOKEN_TYPE_STANDARD else "") )
+
+    return id_name, view_name
+
+def GetCharacterTokenNames(characterName, characterId, stageId, type):
+    if stageId is None:
+        stageId = 0
+
+
+    id_name = int(str(LOCATION_ID_PLUS) + str(characterId) + str(stageId) + str(type) + "0")
+    view_name = ("Character Token: " + characterName +
                  (" " + TOKEN_TYPE_TO_STRING[type] if type != ITEM_TOKEN_TYPE_STANDARD else "") )
 
     return id_name, view_name

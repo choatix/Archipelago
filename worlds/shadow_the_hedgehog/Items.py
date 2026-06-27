@@ -9,11 +9,12 @@ from typing import List, Optional, Any
 from BaseClasses import Item, ItemClassification
 from Options import OptionError
 from worlds.AutoWorld import World
-from . import Weapons, Vehicle, Utils as ShadowUtils, Options, Levels, Objects, ObjectTypes, Locations
+from . import Weapons, Vehicle, Utils as ShadowUtils, Options, Levels, Objects, ObjectTypes, Locations, Names
 from .Levels import LEVEL_ID_TO_LEVEL, ALL_STAGES, MISSION_ALIGNMENT_DARK, \
     MISSION_ALIGNMENT_HERO, MISSION_ALIGNMENT_NEUTRAL, ITEM_TOKEN_TYPE_STANDARD, ITEM_TOKEN_TYPE_FINAL, \
     ITEM_TOKEN_TYPE_OBJECTIVE, ITEM_TOKEN_TYPE_ALIGNMENT, ITEM_TOKEN_TYPE_BOSS, \
-    ITEM_TOKEN_TYPE_FINAL_BOSS, UseCheckpointZero
+    ITEM_TOKEN_TYPE_FINAL_BOSS, UseCheckpointZero, ITEM_TOKEN_TYPE_PATH, ITEM_TOKEN_TYPE_LAST_WAY, \
+    ITEM_TOKEN_TYPE_CHARACTER
 from .Locations import MissionClearLocations, GetAlignmentsForStage, count_locations, count_last_way_locations, CheckpointLocations
 
 BASE_ID = 1743800000
@@ -24,6 +25,7 @@ ITEM_ID_START_AT_OBJECTS = 2700
 ITEM_ID_START_AT_JUNK = 3000
 ITEM_ID_START_AT_AMMO_BOOST = 3050
 ITEM_ID_START_AT_CHECKPOINTS = 3150
+ITEM_ID_START_AT_CHARACTERS = 3300
 
 ITEM_ID_START_AT_MISSION = 1000
 ITEM_ID_START_AT_IMPORTANT = 10
@@ -62,6 +64,9 @@ class Progression:
     ObjectiveToken = "Objective Token"
     BossToken = "Boss Token"
     FinalBossToken = "Final Boss Token"
+    PathToken = "Path Token"
+    LastWayToken = "Last Way Token"
+    CharacterToken = "Character Token"
 
     #FinalHeroToken = "Final Hero Token"
     #FinalDarkToken = "Final Dark Token"
@@ -81,7 +86,8 @@ TOKENS = [
     Progression.StandardHeroToken, Progression.StandardDarkToken, Progression.StandardMissionToken,
     #Progression.FinalHeroToken, Progression.ObjectiveDarkToken,
     #Progression.FinalDarkToken, Progression.ObjectiveHeroToken,
-    Progression.FinalToken, Progression.ObjectiveToken, Progression.BossToken, Progression.FinalBossToken
+    Progression.FinalToken, Progression.ObjectiveToken, Progression.BossToken, Progression.FinalBossToken,
+    Progression.PathToken, Progression.LastWayToken, Progression.CharacterToken
 ]
 
 class Junk:
@@ -119,6 +125,10 @@ def GetLevelTokenItems():
         alignment = MISSION_ALIGNMENT_NEUTRAL
 
         type = ITEM_TOKEN_TYPE_STANDARD
+
+        if "Path" in token:
+            type = ITEM_TOKEN_TYPE_PATH
+
         if "Boss" in token:
             type = ITEM_TOKEN_TYPE_BOSS
 
@@ -135,6 +145,12 @@ def GetLevelTokenItems():
         elif "Hero" in token:
             type = ITEM_TOKEN_TYPE_ALIGNMENT
             alignment = MISSION_ALIGNMENT_HERO
+
+        if "Last Way" in token:
+            type = ITEM_TOKEN_TYPE_LAST_WAY
+
+        if "Character" in token:
+            type = ITEM_TOKEN_TYPE_CHARACTER
 
         i = ItemInfo(id_iterator, token, ItemClassification.progression_skip_balancing, None, alignment, "Token", type)
         id_iterator += 1
@@ -501,9 +517,11 @@ def GetAllItemInfoData():
     object_items = GetObjectItems()
     checkpoint_items = GetCheckpointItems()
 
+    character_items = GetCharacterItems()
+
     return (emerald_items, required_items, level_unlock_items, stage_objective_items, junk_items,
             token_items, weapon_items, vehicle_items, level_warp_items, rifle_components,
-            weapon_group_items, object_items, key_items, trap_items, checkpoint_items)
+            weapon_group_items, object_items, key_items, trap_items, checkpoint_items, character_items)
 
 
 
@@ -697,7 +715,7 @@ def GetItemsFromWeaponInfo(world, weapon_items, weapon_group_items):
 def CountItems(world: World):
     (emerald_items, required_items, level_unlock_items, stage_objective_items_x,
      junk_items, token_items, weapon_items, vehicle_items, warp_items, rifle_components,
-     weapon_group_items, object_items, key_items, trap_items, checkpoint_items) = GetAllItemInfo()
+     weapon_group_items, object_items, key_items, trap_items, checkpoint_items, character_items) = GetAllItemInfo()
 
     if (not world.options.objective_sanity or
             world.options.objective_sanity_behaviour == Options.ObjectiveSanityBehaviour.option_base_clear):
@@ -802,6 +820,11 @@ def CountItems(world: World):
             and len(world.gates.keys()) > 0):
         item_count = increment_item_count(item_count, int(world.options.select_gates_count), item_type="Gate Key")
 
+    if world.options.character_sanity == Options.CharacterSanity.option_unlock:
+        relevant_characters = [ x for x in character_items if x.name in world.available_characters ]
+        mw_character_items = [ShadowTheHedgehogItem(i, world.player) for i in relevant_characters]
+        item_count = increment_item_count(item_count, mw_character_items)
+
     return item_count
 
 
@@ -816,7 +839,7 @@ def GetStageItems(world, stage_objective_items=None, set=True):
     if stage_objective_items is None:
         (emerald_items, required_items, level_unlock_items, stage_objective_items,
          junk_items, token_items, weapon_items, vehicle_items, warp_items, rifle_components,
-         weapon_group_items, object_items, key_items, trap_items,checkpoint_items) = GetAllItemInfo()
+         weapon_group_items, object_items, key_items, trap_items,checkpoint_items, character_items) = GetAllItemInfo()
 
     if (not world.options.objective_sanity or
             world.options.objective_sanity_behaviour == Options.ObjectiveSanityBehaviour.option_base_clear):
@@ -918,7 +941,7 @@ def GetStageItems(world, stage_objective_items=None, set=True):
 def GetShadowRifle():
     (emerald_items, required_items, level_unlock_items, stage_objective_items,
      junk_items, token_items, weapon_items, vehicle_items, warp_items, rifle_components,
-     weapon_group_items, object_items, key_items, trap_items,checkpoint_items) = GetAllItemInfo()
+     weapon_group_items, object_items, key_items, trap_items,checkpoint_items, character_items) = GetAllItemInfo()
 
     return [w for w in weapon_items if w.name == 'Shadow Rifle' or w.name == 'Weapon:Shadow Rifle'][0]
 
@@ -963,6 +986,17 @@ def GetCheckpointItems():
     return items
 
 
+def GetCharacterItems():
+    id_c = ITEM_ID_START_AT_CHARACTERS
+    items = []
+    char_index = 0
+    for char in Names.Characters:
+        i = ItemInfo(id_c+char_index, char.name, ItemClassification.progression, None, None, "Character", None)
+        char_index +=1
+        items.append(i)
+
+    return items
+
 def GetObjectItems():
     id_s = ITEM_ID_START_AT_OBJECTS
     object_items = [
@@ -983,7 +1017,7 @@ def GetObjectItems():
 def PopulateItemPool(world: World):
     (emerald_items, required_items, level_unlock_items, stage_objective_items,
      junk_items, token_items, weapon_items, vehicle_items, warp_items, rifle_components,
-     weapon_group_items, object_items, key_items, trap_items,checkpoint_items) = GetAllItemInfo()
+     weapon_group_items, object_items, key_items, trap_items,checkpoint_items, character_items) = GetAllItemInfo()
 
     shadow_item_pool = []
 
@@ -1159,6 +1193,12 @@ def PopulateItemPool(world: World):
         item_count = increment_item_count(item_count, mw_checkpoint_items)
         shadow_item_pool += mw_checkpoint_items
 
+    if world.options.character_sanity == Options.CharacterSanity.option_unlock:
+        relevant_characters = [ x for x in character_items if x.name in world.available_characters ]
+        mw_character_items = [ShadowTheHedgehogItem(i, world.player) for i in relevant_characters]
+        item_count = increment_item_count(item_count, mw_character_items)
+        shadow_item_pool += mw_character_items
+
     # Add checks here for checks locked by The Last Way when this is the final part
     # If required, replace all TLW checks with junk items in the pool, start inventory will get amended
 
@@ -1226,7 +1266,7 @@ def RemoveExcessAvailableFromFullPool(world, to_remove, pool):
 def get_item_groups():
     (emerald_items, required_items, level_unlock_items, stage_objective_items,
      junk_items, token_items, weapon_items, vehicle_items, warp_items, rifle_components,
-     weapon_group_items, object_items, key_items, trap_items, checkpoint_items) = GetAllItemInfo()
+     weapon_group_items, object_items, key_items, trap_items, checkpoint_items, character_items) = GetAllItemInfo()
 
     item_groups: typing.Dict[str, list] = {
         "Chaos Emeralds": [e.name for e in emerald_items],

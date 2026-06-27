@@ -1280,7 +1280,7 @@ class ShTHContext(CommonContext):
         self.objective_percentage = 100
         self.objective_item_percentage = 100
         self.checkpoint_sanity = False
-        self.character_sanity = False
+        self.character_sanity = Options.CharacterSanity.option_on
         #self.checked_locations = []
         self.required_mission_tokens = 0
         self.required_hero_tokens = 0
@@ -1404,8 +1404,15 @@ class ShTHContext(CommonContext):
         self.checkpoint_shuffle = None
         self.last_object_bytes = None
         self.music_shuffle = True
+        self.chosen_paths = []
+        self.goal_devil_doom = True
+        self.goal_last_way = True
+        self.required_paths = 0
+        self.goal_characters = False
 
         self.object_offset = None
+        self.last_level_status = None
+        self.client_cache = {}
 
     def GetObjectDataStart(self):
         if self.object_offset is None:
@@ -1779,6 +1786,19 @@ class ShTHContext(CommonContext):
             if "music_shuffle" in slot_data:
                 self.music_shuffle = slot_data["music_shuffle"]
 
+            if "chosen_paths" in slot_data:
+                self.chosen_paths = slot_data["chosen_paths"]
+                self.required_paths = len(Story.GetCombinedLevelsForGoal(self.chosen_paths))
+
+            if "goal_last_way" in slot_data:
+                self.goal_last_way = slot_data["goal_last_way"]
+
+            if "goal_devil_doom" in slot_data:
+                self.goal_devil_doom = slot_data["goal_devil_doom"]
+
+            if "required_characters" in slot_data:
+                self.required_characters = slot_data["required_characters"]
+
             self.restoreState()
             self.awaiting_server = False
 
@@ -2119,16 +2139,14 @@ async def check_save_loaded(ctx):
 
         finished = False
 
-        # TODO: Write 0s to cutscene chain to allow them to be skipped
-        # Mainly for final story
-        # If possible, work out how to kick the player out after TLW
-        # Or don't let it finish, etc.
-
-        last_cutscene_data = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.ADDRESS_LAST_CUTSCENE, 4)
-        last_cutscene_id = int.from_bytes(last_cutscene_data, byteorder='big')
-        # Full CGI Cutscenes seem to go to  809F1300, which includes 8201!
-        # 926 Is the moment Super Shadow is successful
-        if last_cutscene_id in (926, 8201, 8202, 8203, 8204):
+        if ctx.goal_devil_doom:
+            last_cutscene_data = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.ADDRESS_LAST_CUTSCENE, 4)
+            last_cutscene_id = int.from_bytes(last_cutscene_data, byteorder='big')
+            # Full CGI Cutscenes seem to go to  809F1300, which includes 8201!
+            # 926 Is the moment Super Shadow is successful
+            if last_cutscene_id in (926, 8201, 8202, 8203, 8204):
+                finished = True
+        else:
             finished = True
 
 
@@ -2217,6 +2235,23 @@ def IsEndGameEnabled(ctx):
         if len([t for t in ctx.tokens if
                 t[1].name == Items.Progression.FinalBossToken]) < ctx.required_final_boss_tokens:
             set_last_way = False
+
+    if ctx.required_paths > 0:
+        if len([t for t in ctx.tokens if
+                t[1].name == Items.Progression.PathToken]) < ctx.required_paths:
+            set_last_way = False
+
+    if ctx.goal_last_way:
+        if len([t for t in ctx.tokens if
+                t[1].name == Items.Progression.LastWayToken]) < 1:
+            set_last_way = False
+        pass
+
+    if ctx.required_characters:
+        if len([t for t in ctx.tokens if
+                t[1].name == Items.Progression.CharacterToken]) < ctx.required_characters:
+            set_last_way = False
+        pass
 
     return set_last_way
 
@@ -2852,6 +2887,8 @@ async def check_level_status(ctx):
 
         level_status_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.ADDRESS_LEVEL_STATUS, 4)
         level_status_value = int.from_bytes(level_status_bytes, byteorder='big')
+
+        ctx.last_level_status = level_status_value
 
         if level_status_value in [LevelStatusOptions.LoadingFirstTime, LevelStatusOptions.NotInLevel,
                                   LevelStatusOptions.Loading,
@@ -4197,12 +4234,23 @@ def GetStageRegionName(stage_id, region_id):
 
 
 async def handle_objects(ctx, current_level):
-    if ctx.level_state is None or len(ctx.level_state.keys()) == 0:
+
+    despawn_only = False
+    if current_level is None:
+        return
+
+    if ctx.last_level_status in [LevelStatusOptions.Loading, LevelStatusOptions.LoadingFirstTime]:
+      despawn_only = True
+    elif ctx.level_state is None or len(ctx.level_state.keys()) == 0:
         ctx.client_cache = {}
         return
 
-    if "object_status" not in ctx.level_state:
-        ctx.level_state["object_status"] = {}
+    # Need to check in this function for last level status
+    # But only load once the Set Data is present
+
+    if not despawn_only:
+        if "object_status" not in ctx.level_state:
+            ctx.level_state["object_status"] = {}
 
     relevant_objects = Objects.GetDesirableObjectsForStage(current_level)
     if relevant_objects is None or len(relevant_objects) == 0:
@@ -4275,7 +4323,7 @@ async def handle_objects(ctx, current_level):
                                (1 if allowed_warp_holes else 0) +
                                len(allowed_vehicles) )
 
-    force_full_check = False
+    force_full_check = despawn_only
     if "Objects" in ctx.client_cache:
         value = ctx.client_cache["Objects"]
         if value != object_despawn_present:
@@ -4350,12 +4398,16 @@ async def handle_objects(ctx, current_level):
                 ctx.object_offset = True
                 break
 
-            logger.error("Failed to read type correctly" +
-                  "Coded Type" + str(Objects.GetTypeId(object.object_type)) +
-                  "Loaded Type" + str(loaded_object_type) +
-                  "Coded Type" + str(expected_type) +
-                  "Index" + str(object.index) +
-                  "Name" + object.name)
+            if loaded_object_type == 0 and ctx.last_level_status in [LevelStatusOptions.Loading, LevelStatusOptions.LoadingFirstTime]:
+                print("Still loading...?")
+            else:
+                logger.error("Failed to read type correctly" +
+                      "Coded Type" + str(Objects.GetTypeId(object.object_type)) +
+                      "Loaded Type" + str(loaded_object_type) +
+                      "Coded Type" + str(expected_type) +
+                      "Index" + str(object.index) +
+                      "Name" + object.name)
+                break
         elif expected_type is None:
             logger.error("Unexpected object type: %d", object.object_type)
 
@@ -4614,6 +4666,21 @@ async def handle_objects(ctx, current_level):
                 if current_riding_saucer_value != appear_type_warp_saucer:
                     on_air_saucer_bytes = appear_type_warp_saucer.to_bytes(4, byteorder='big')
                     writeBytes(OnAirSaucerBytesAddress, on_air_saucer_bytes)
+        elif (ctx.character_sanity == Options.CharacterSanity.option_unlock and
+              object.object_type == Objects.ObjectType.PARTNER):
+            character = object.character.name
+
+            allowed_character = len(
+                [info[unlock[0].item].name for unlock in ctx.items_to_handle if unlock[0].item in info and \
+                 info[unlock[0].item].name == character]) > 0
+
+            if allowed_character:
+                if object_name in ctx.level_state:
+                    spawn = True
+                    states_to_remove.append(object_name+character)
+            else:
+                despawn = True
+                states_to_add[object_name+character] = False
 
         if despawn and loaded_spawn_data not in (0x00, 0x04):
             writeBytes(spawn_address, despawn_bytes)
@@ -4673,88 +4740,87 @@ async def handle_objects(ctx, current_level):
 
             object_values_complete = [0x0]
 
-        if len(object_values_complete) != 0:
-            expected_object_id, expected_object_name = Names.GetObjectLocationName(object)
+        if "object_status" in ctx.level_state:
+            if len(object_values_complete) != 0:
+                expected_object_id, expected_object_name = Names.GetObjectLocationName(object)
 
-            related_locations = [l.locationId for l in object_locations if
-                                 l.name == expected_object_name]
+                related_locations = [l.locationId for l in object_locations if
+                                     l.name == expected_object_name]
 
-            arch_location_complete = len([l for l in related_locations if
-                                          l not in ctx.handled
-                                          and l not in ctx.checked_locations]) == 0
+                arch_location_complete = len([l for l in related_locations if
+                                              l not in ctx.handled
+                                              and l not in ctx.checked_locations]) == 0
 
-            is_world_location = len([l for l in related_locations if
-                                          l in ctx.server_locations]) != 0
+                is_world_location = len([l for l in related_locations if
+                                              l in ctx.server_locations]) != 0
 
-            if len(related_locations) == 0:
-                print("Related  locations not recognised:", expected_object_name)
-                continue
-            elif not is_world_location:
-                #print("Unrecognised as world item:", expected_object_name)
-                continue
+                if len(related_locations) == 0:
+                    print("Related  locations not recognised:", expected_object_name)
+                    continue
+                elif not is_world_location:
+                    #print("Unrecognised as world item:", expected_object_name)
+                    continue
 
-            if object.index in ctx.level_state["object_status"]:
-                object_status = ctx.level_state["object_status"][object.index]
-                if object_status in object_values_complete:
-                    arch_location_complete = True
+                if object.index in ctx.level_state["object_status"]:
+                    object_status = ctx.level_state["object_status"][object.index]
+                    if object_status in object_values_complete:
+                        arch_location_complete = True
 
-            if not arch_location_complete:
-                if use_spawn_for_completion in object_values_complete:
-                    ctx.level_state["object_status"][object.index] = 0x0B
-                    messages.extend(related_locations)
+                    if not arch_location_complete:
+                        if use_spawn_for_completion in object_values_complete:
+                            ctx.level_state["object_status"][object.index] = 0x0B
+                            messages.extend(related_locations)
 
-        if beetle_sanity and object.object_type == Objects.ObjectType.GOLD_BEETLE:
+            if beetle_sanity and object.object_type == Objects.ObjectType.GOLD_BEETLE:
 
-            expected_object_id, expected_object_name = Names.GetObjectLocationName(object)
+                expected_object_id, expected_object_name = Names.GetObjectLocationName(object)
 
-            related_locations = [l.locationId for l in object_locations if
-                                 l.name == expected_object_name]
+                related_locations = [l.locationId for l in object_locations if
+                                     l.name == expected_object_name]
 
-            arch_location_complete = len([l for l in related_locations if
-                                          l not in ctx.handled
-                                          and l not in ctx.checked_locations]) == 0
+                arch_location_complete = len([l for l in related_locations if
+                                              l not in ctx.handled
+                                              and l not in ctx.checked_locations]) == 0
 
-            if object.index in ctx.level_state["object_status"]:
-                object_status = ctx.level_state["object_status"][object.index]
-                if object_status in (0x00, 0x08):
-                    arch_location_complete = True
+                if object.index in ctx.level_state["object_status"]:
+                    object_status = ctx.level_state["object_status"][object.index]
+                    if object_status in (0x00, 0x08):
+                        arch_location_complete = True
 
-            if not arch_location_complete:
-                if use_spawn_for_completion in (0x00, 0x08):
-                    ctx.level_state["object_status"][object.index] = 0x08
-                    messages.extend(related_locations)
+                if not arch_location_complete:
+                    if use_spawn_for_completion in (0x00, 0x08):
+                        ctx.level_state["object_status"][object.index] = 0x08
+                        messages.extend(related_locations)
 
 
-        if door_sanity and object.object_type == Objects.ObjectType.KEY_DOOR:
-            expected_object_id, expected_object_name = Names.GetObjectLocationName(object)
+            if door_sanity and object.object_type == Objects.ObjectType.KEY_DOOR:
+                expected_object_id, expected_object_name = Names.GetObjectLocationName(object)
 
-            related_locations = [l.locationId for l in object_locations if
-                            l.name == expected_object_name ]
+                related_locations = [l.locationId for l in object_locations if
+                                l.name == expected_object_name ]
 
-            arch_location_complete = len([ l for l in related_locations if
-                                           l not in ctx.handled
-                                           and l not in ctx.checked_locations]) == 0
+                arch_location_complete = len([ l for l in related_locations if
+                                               l not in ctx.handled
+                                               and l not in ctx.checked_locations]) == 0
 
-            use_spawn_for_completion = loaded_check_save_byte
+                use_spawn_for_completion = loaded_check_save_byte
 
-            if object.index in ctx.level_state["object_status"]:
-                object_status = ctx.level_state["object_status"][object.index]
-                if object_status == 0x00:
-                    arch_location_complete = True
+                if object.index in ctx.level_state["object_status"]:
+                    object_status = ctx.level_state["object_status"][object.index]
+                    if object_status == 0x00:
+                        arch_location_complete = True
 
-            if not arch_location_complete:
+                if not arch_location_complete:
+                    if use_spawn_for_completion == 0x40:
+                        ctx.level_state["object_status"][object.index] = 0x00
+                        messages.extend(related_locations)
+
+            if object.object_type == Objects.ObjectType.CHECKPOINT:
+                use_spawn_for_completion = loaded_check_save_byte
+
                 if use_spawn_for_completion == 0x40:
-                    ctx.level_state["object_status"][object.index] = 0x00
-                    messages.extend(related_locations)
-
-
-
-        if object.object_type == Objects.ObjectType.CHECKPOINT:
-            use_spawn_for_completion = loaded_check_save_byte
-
-            if use_spawn_for_completion == 0x40:
-                if object.count not in ctx.level_state["active_checkpoints"]:
-                    ctx.level_state["active_checkpoints"].append(object.count)
+                    if object.count not in ctx.level_state["active_checkpoints"]:
+                        ctx.level_state["active_checkpoints"].append(object.count)
 
     ctx.last_object_bytes = full_loaded_bytes
 
@@ -4762,16 +4828,17 @@ async def handle_objects(ctx, current_level):
         message = [{"cmd": 'LocationChecks', "locations": messages}]
         await ctx.send_msgs(message)
 
-    for key, value in states_to_add.items():
-        if key not in ctx.level_state:
-            print("Add to state", key, value)
-            ctx.level_state[key] = value
+    if not despawn_only:
+        for key, value in states_to_add.items():
+            if key not in ctx.level_state:
+                print("Add to state", key, value)
+                ctx.level_state[key] = value
 
-    for entry in states_to_remove:
-        if entry in ctx.level_state:
-            print("Delete from state", entry)
-            del ctx.level_state[entry]
-            print("Delete from state", ctx.level_state)
+        for entry in states_to_remove:
+            if entry in ctx.level_state:
+                print("Delete from state", entry)
+                del ctx.level_state[entry]
+                print("Delete from state", ctx.level_state)
 
 def TextToShadowBytes(message):
     shadow_bytes = []
@@ -4914,14 +4981,15 @@ async def update_level_behaviour(ctx, current_level, death):
     # Set initial value (to level of value from server)
     # If higher than previous value, recognise as check and reduce by 1
 
-    if SHOW_SET_CHANGES:
-        await ShowSETChanges(current_level, ctx)
 
     await handle_objects(ctx, current_level)
+    if ctx.level_status is None:
+        return
 
     await clearout_individual_enemies_by_percentage(ctx, current_level)
 
-
+    if SHOW_SET_CHANGES:
+        await ShowSETChanges(current_level, ctx)
 
     #DisplayMessages(ctx)
 
@@ -5964,7 +6032,7 @@ async def check_charactersanity(ctx, level):
         check = True
         set_state = True
 
-    if ctx.character_sanity and level != Levels.STAGE_THE_LAST_WAY:
+    if ctx.character_sanity != Options.CharacterSanity.option_off and level != Levels.STAGE_THE_LAST_WAY:
         for character in GAME_ADDRESSES.CharacterAddresses:
             if character.name in ctx.characters_met:
                 continue
@@ -6051,9 +6119,9 @@ async def dolphin_sync_task(ctx: ShTHContext):
                 check_cheats()
                 await check_charactersanity(ctx, level)
                 await set_music(ctx, level)
-                if level is not None and ctx.level_status is not None:
-                    await update_level_behaviour(ctx,level, death)
-                    await handle_ring_link(ctx, level, death)
+                #if level is not None and ctx.level_status is not None:
+                await update_level_behaviour(ctx,level, death)
+                await handle_ring_link(ctx, level, death)
 
                 await asyncio.sleep(0.1)
             else:

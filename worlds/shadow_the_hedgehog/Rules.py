@@ -9,7 +9,7 @@ from . import Items, Levels, Utils, Weapons, Regions, Vehicle, Options, Location
 from .Crafts import Crafts
 
 from .Items import ShadowTheHedgehogItem, GetLevelTokenItems
-from .Levels import INDIVIDUAL_LEVEL_REGIONS
+from .Levels import INDIVIDUAL_LEVEL_REGIONS, ITEM_TOKEN_TYPE_LAST_WAY
 from .Locations import MissionClearLocations, LocationInfo, BossClearLocations, HasCheckpointZero
 from .Names import REGION_INDICES
 from .Options import LevelProgression
@@ -198,6 +198,10 @@ def GetRelevantTokenItem(token: LocationInfo):
         level_token_items = [t for t in level_token_items if t.value == Items.ITEM_TOKEN_TYPE_BOSS]
     elif token.other == Items.ITEM_TOKEN_TYPE_FINAL_BOSS:
         level_token_items = [t for t in level_token_items if t.value == Items.ITEM_TOKEN_TYPE_FINAL_BOSS]
+    elif token.other == Levels.ITEM_TOKEN_TYPE_PATH:
+        level_token_items = [t for t in level_token_items if t.value == Levels.ITEM_TOKEN_TYPE_PATH]
+    elif token.other == Levels.ITEM_TOKEN_TYPE_LAST_WAY:
+        level_token_items = [t for t in level_token_items if t.value == Levels.ITEM_TOKEN_TYPE_LAST_WAY]
 
     if len(level_token_items) == 0:
         return None
@@ -559,6 +563,23 @@ def restrict_objects(multiworld, world, player):
             location_with_restriction.access_rule = handle_path_rules(world, world.options, player, object.region, dummy_region,
                                                                       Levels.REGION_RESTRICTION_REFERENCE_TYPES.BaseLogic)[0]
 
+def lock_character_tokens(multiworld, world, player):
+    if not world.options.goal_characters:
+        return
+
+    token_items = GetLevelTokenItems()
+    character_token = [ t for t in token_items if t.value == Items.ITEM_TOKEN_TYPE_CHARACTER ][0]
+
+    char_index = 0
+    for character,stages in Objects.CharacterToLevel.items():
+        if character in world.available_characters:
+            requirement_token_id, requirement_token_name = Levels.GetCharacterTokenNames(character, char_index,None,
+                                                                                  Levels.ITEM_TOKEN_TYPE_CHARACTER)
+            location = multiworld.get_location(requirement_token_name, player)
+            mw_token_item = ShadowTheHedgehogItem(character_token, player)
+            location.place_locked_item(mw_token_item)
+        char_index += 1
+
 def lock_warp_items(multiworld, world, player):
 
     if world.options.level_progression == Options.LevelProgression.option_select or not world.options.secret_story_progression:
@@ -598,12 +619,16 @@ def lock_warp_items(multiworld, world, player):
         location.place_locked_item(
             mw_token_item)
 
-def CalculateObjectiveValueForGate(value, max_gates, gate_no, gate_density, rate=1):
+def CalculateObjectiveValueForGate(value, max_gates, gate_no, gate_density, rate=1, rounding=True):
     perc = pow((gate_no + gate_density), 2) / pow((max_gates+1+gate_density), 2)
     result = value * perc
-    expected_result = round(result, 0)
-    if expected_result == 0:
-        return 1
+
+    if rounding:
+        expected_result = round(result, 0)
+        if expected_result == 0:
+            return 1
+    else:
+        expected_result = result
 
     return expected_result
 
@@ -620,15 +645,29 @@ def GetIndividualGateKeyRequirements(world, player, gate_no):
             full_reqs = world.objective_requirements.copy()
             reqs = {}
 
+            count = 0
             for o in full_reqs.items():
                 key = o[0]
                 value = o[1]
-                reqs[key] = CalculateObjectiveValueForGate(value, world.options.select_gates_count, gate_no, gate_density)
+
+                base_value_to_set = CalculateObjectiveValueForGate(value, world.options.select_gates_count, gate_no, gate_density,
+                                                                   rounding=False)
+
+                reqs[key] = floor(base_value_to_set)
+                count += base_value_to_set
+
+            if count < 1:
+                count = 1
+            else:
+                count = ceil(count)
+
+            reqs["Count"] = count
+
             world.gate_requirements[gate_no] = reqs
         elif world.options.gate_unlock_requirement == Options.GateUnlockRequirement.option_objective_available:
             full_reqs = world.objective_requirements.copy()
             reqs = {}
-
+            count = 0
             gated_stages = []
             for i in world.gates.keys():
                 if i < gate_no:
@@ -639,12 +678,17 @@ def GetIndividualGateKeyRequirements(world, player, gate_no):
                                                   in gated_stages ]:
                 key = o[0]
                 value = o[1]
-                gate_value = CalculateObjectiveValueForGate(value, world.options.select_gates_count, gate_no, gate_density)
+                base_value_to_set = CalculateObjectiveValueForGate(value, world.options.select_gates_count, gate_no, gate_density,
+                                                            rounding=False)
 
-                for key, value in previous_gates:
-                    pass
+                reqs[key] = floor(base_value_to_set)
+                count += base_value_to_set
 
-                reqs[key] = gate_value
+            if count < 1:
+                count = 1
+            else:
+                count = ceil(count)
+            reqs["Count"] = count
 
             world.gate_requirements[gate_no] = reqs
         elif world.options.gate_unlock_requirement == Options.GateUnlockRequirement.option_items:
@@ -673,6 +717,23 @@ def GetIndividualGateKeyRequirements(world, player, gate_no):
                 raise Exception("Invalid gate count for this mode")
 
             world.gate_requirements[gate_no] = reqs
+        elif world.options.gate_unlock_requirement == Options.GateUnlockRequirement.option_weapons:
+            weapon_counts = world.weapon_counts
+            count = 0
+            for item, w_count in weapon_counts.items():
+                count += w_count
+
+            gate_value = CalculateObjectiveValueForGate(count, world.options.select_gates_count, gate_no, gate_density)
+
+            reqs = {
+
+            }
+
+            for weapon in world.available_weapons:
+                reqs[weapon] = 0
+
+            reqs["Count"] = gate_value
+
 
         else:
             print("Unknown requirements:", reqs)
@@ -1072,6 +1133,7 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
 
     override_settings = world.options.percent_overrides
     lock_warp_items(multiworld, world, world.player)
+    lock_character_tokens(multiworld, world, world.player)
 
     restrict_objects(multiworld, world, world.player)
 
@@ -1089,17 +1151,24 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
 
             # If not goal ring type, require the character in the stage
             if clear.requirement_count is not None:
-                pass
                 character_for_mission = clear.character.name
+                if world.options.character_sanity == Options.CharacterSanity.option_unlock:
+                    character_rule = lambda state, cm=character_for_mission: state.has(cm, player)
+
                 character_regions = Objects.CharacterToLevel[character_for_mission]
                 character_regions_for_level = [ l[1] for l in character_regions if l[0] == clear.stageId ]
 
+                character_region_rule = None
                 for i in character_regions_for_level:
                     region_required = Levels.stage_id_to_region(clear.stageId, i)
-                    if character_rule is None:
-                        character_rule = lambda state, rq=region_required: state.can_reach_region(rq, player)
+                    if character_region_rule is None:
+                        character_region_rule = lambda state, rq=region_required: state.can_reach_region(rq, player)
                     else:
-                        character_rule = lambda state, rq=region_required, cr=character_rule: state.can_reach_region(rq, player) or cr(state)
+                        character_region_rule = lambda state, rq=region_required, cr=character_region_rule: state.can_reach_region(rq, player) or cr(state)
+
+                if character_region_rule is not None:
+                    character_rule = lambda state, crr=character_region_rule, cr=character_rule: (
+                        crr(state) and cr(state))
 
             if clear.requirements is not None:
                 for req in clear.requirements:
@@ -1339,7 +1408,8 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
 
         associated_tokens = [t for t in world.token_locations if
                              t.stageId == boss.stageId and
-                             (t.other == Items.ITEM_TOKEN_TYPE_BOSS or t.other == Items.ITEM_TOKEN_TYPE_FINAL_BOSS)]
+                             (t.other == Items.ITEM_TOKEN_TYPE_BOSS or t.other == Items.ITEM_TOKEN_TYPE_FINAL_BOSS
+                             or t.other == Items.ITEM_TOKEN_TYPE_PATH) ]
         for token in associated_tokens:
             allocated_item = GetRelevantTokenItem(token)
             if allocated_item.name not in token_assignments:
@@ -1375,7 +1445,11 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
                 else:
                     region_stage = world.get_region(Levels.stage_id_to_region(stage, region_index))
 
-                region_stage.connect(region, region_name_for_character(Levels.LEVEL_ID_TO_LEVEL[stage], character, region_index))
+                rule = None
+                if world.options.character_sanity == Options.CharacterSanity.option_unlock:
+                    rule = lambda state, c=character: state.has(c, player)
+
+                region_stage.connect(region, region_name_for_character(Levels.LEVEL_ID_TO_LEVEL[stage], character, region_index), rule=rule)
                 already_added.append((stage, region_index))
 
 
@@ -1526,6 +1600,7 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
 
 
     goal_has = []
+    goal_has_lw = []
     if world.options.goal_chaos_emeralds:
         emeralds = Items.GetEmeraldItems()
         goal_has.extend([ (ce.name,1) for ce in emeralds ])
@@ -1550,18 +1625,31 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
     if world.options.goal_final_bosses > 0:
         tokens = get_token_count(world, Items.Progression.FinalBossToken, token_assignments, world.options.goal_final_bosses)
         goal_has.append(tokens)
+    if world.options.goal_last_way:
+        # Only include this token requirement if you have access, otherwise it's used to restrict getting INTO the stage to finish
+        goal_has_lw.append(("Last Way Token", 1))
+    if world.options.goal_paths > 0:
+        tokens = get_token_count(world, Items.Progression.PathToken, token_assignments,
+                                 world.options.goal_paths)
+        goal_has.append(tokens)
+    if world.options.goal_characters == Options.GoalCharacters.option_on:
+        goal_has.append(("Character Token", len(world.available_characters)))
 
+    goal_has_lw.extend(goal_has)
     e_rule = lambda state, g_has=goal_has: check_final_rule(state, player, goal_has)
+    e_rule_lw = lambda state, g_has=goal_has: check_final_rule(state, player, goal_has_lw)
 
+    # If in Story shuffle, Devil Doom is somewhere else
     if world.options.include_last_way_shuffle and world.options.level_progression != Options.LevelProgression.option_select\
             and world.options.story_shuffle != Options.StoryShuffle.option_off:
 
         # handle requirement that DD must be found in the level shuffle!
+        #if world.options.goal_devil_doom:
         devil_doom_story_region = Regions.boss_stage_id_to_story_region(Levels.BOSS_DEVIL_DOOM)
         devil_doom_region = multiworld.get_region(devil_doom_story_region, player)
 
         for entrance in devil_doom_region.entrances:
-            entrance.access_rule = lambda state, er=e_rule, b_rule=entrance.access_rule: er(state) and b_rule(state)
+            entrance.access_rule = lambda state, er=e_rule_lw, b_rule=entrance.access_rule: er(state) and b_rule(state)
 
     else:
         default_region_index = Regions.GetDefaultCheckpointRegionForStage(world, Levels.STAGE_THE_LAST_WAY)
@@ -1594,8 +1682,20 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
 
     final_item = Items.GetFinalItem()
     mw_final_item = ShadowTheHedgehogItem(final_item, world.player)
-    multiworld.get_location(Levels.DevilDoom_Name, world.player).place_locked_item(
-        mw_final_item)
+
+    if world.options.goal_devil_doom:
+        multiworld.get_location(Levels.DevilDoom_Name, world.player).place_locked_item(
+            mw_final_item)
+    else:
+        # Need the add the e_rule to it
+        (multiworld.get_location(Levels.Anytime_Clear, world.player)
+        .place_locked_item(
+            mw_final_item))
+
+        if world.options.goal_last_way:
+            e_rule = e_rule_lw
+
+        multiworld.get_location(Levels.Anytime_Clear, world.player).access_rule = e_rule
 
     if world.options.rifle_components:
         location = multiworld.get_location("Complete Shadow Rifle", player)
@@ -1634,7 +1734,10 @@ def get_token_count(world, type, token_assignments, goal_value):
     if type not in token_assignments:
         return (type, 0)
     count = len(token_assignments[type])
-    goal_req = Utils.getRequiredCount(count, goal_value, ceil)
+    if type != Items.Progression.PathToken:
+        goal_req = Utils.getRequiredCount(count, goal_value, ceil)
+    else:
+        goal_req = count
     world.required_tokens[type] = goal_req
     return (type, goal_req)
 

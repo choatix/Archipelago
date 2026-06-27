@@ -55,6 +55,49 @@ def GetWeaponObjectTypes():
 
     return playable
 
+def GetObjectTypesForLocations():
+    return [
+        ObjectType.GUN_SOLDIER,
+        ObjectType.GOLD_BEETLE, ObjectType.SHADOW_BOX,
+        ObjectType.ENERGY_CORE, ObjectType.KEY_DOOR,
+        ObjectType.ENERGY_CORE_IN_WOOD_BOX,
+        ObjectType.GLYPHIC_CANYON_TEMPLE,
+        ObjectType.CRYPTIC_CASTLE_LANTERN,
+        ObjectType.CREAM,
+        ObjectType.CHEESE,
+        ObjectType.PRISON_ISLAND_DISC,
+        ObjectType.CENTRAL_CITY_BIG_BOMB,
+        ObjectType.DOOM_RESEARCHER,
+        ObjectType.SKY_TROOPS_EGG_SHIP,
+        ObjectType.SKY_TROOPS_TEMPLE,
+        ObjectType.MAD_MATRIX_BOMB,
+        ObjectType.MAD_MATRIX_TERMINAL,
+        ObjectType.THE_ARK_DEFENSE_UNIT,
+        ObjectType.SPACE_GADGET_DEFENSE_UNIT,
+        ObjectType.GUN_FORTRESS_COMPUTER,
+        ObjectType.LAVA_SHELTER_DEFENSE,
+        ObjectType.GUN_BEETLE,
+        ObjectType.BIG_FOOT,
+        ObjectType.GUN_ROBOT,
+        ObjectType.EGG_CLOWN,
+        ObjectType.EGG_PAWN,
+        ObjectType.SHADOW_ANDROID,
+        ObjectType.BLACK_ASSASSIN,
+        ObjectType.BLACK_VOLT,
+        ObjectType.BLACK_HAWK,
+        ObjectType.BLACK_WARRIOR,
+        ObjectType.BLACK_OAK,
+        ObjectType.BLACK_WING,
+        ObjectType.BLACK_WORM,
+        ObjectType.BLACK_LARVAE,
+        ObjectType.ARTIFICIAL_CHAOS,
+        ObjectType.KEY,
+        ObjectType.ITEM_CAPSULE,
+        ObjectType.BALLOON_ITEM,
+        ObjectType.ITEM_IN_METAL_BOX,
+        ObjectType.ITEM_IN_BOX,
+        ObjectType.CHECKPOINT
+    ]
 
 def GetPlayableObjectTypes():
     return [
@@ -103,11 +146,12 @@ def GetPlayableObjectTypes():
             ObjectType.WEAPON_METAL_BOX,
             ObjectType.WEAPON_WOODEN_BOX,
             ObjectType.ENVIRONMENT_WEAPON,
-            ObjectType.FLOOR_WEAPON
+            ObjectType.FLOOR_WEAPON,
+            ObjectType.PARTNER
     ]
 
 def GetObjectChecks():
-    object_check_types = GetPlayableObjectTypes()
+    object_check_types = GetObjectTypesForLocations()
 
     object_checks = [ d for d in DESIRABLE_OBJECTS if d.object_type in object_check_types ]
     return object_checks
