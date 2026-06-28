@@ -1009,7 +1009,8 @@ class ShtHWorld(World):
             "goal_last_way": self.options.goal_last_way.value,
             "goal_devil_doom": self.options.goal_devil_doom.value,
             "goal_characters": self.options.goal_characters.value,
-            "required_characters": 0 if not self.options.goal_characters else len(self.available_characters)
+            "required_characters": 0 if not self.options.goal_characters else len(self.available_characters),
+            "death_link": self.options.death_link.value
         }
 
         return slot_data

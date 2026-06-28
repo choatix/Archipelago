@@ -127,6 +127,7 @@ class GAME_ADDRESSES:
 
     LEVEL_SPAWN_BASE = 0x8057AC64
     CHECKPOINT_ENABLE_DATA = 0x80575FE4
+    LEVEL_SELECTOR = 0x80575F87
 
     # TODO: Update this code to use the same baseline!
     CharacterAddresses = [
@@ -147,6 +148,11 @@ class GAME_ADDRESSES:
     FIRST_STORY_MODE_STAGE_ADDRESS = 0x802D2131
     FIRST_STORY_MODE_STAGE_ADDRESS_SX = 0x80004BE5
     FIRST_STORY_MODE_STAGE_ADDRESS_RELOADED = 0x800046FD
+
+class LevelSelectorOptions:
+    Death = 0x08
+    Restart = 0x0F
+    Exit = 0x11
 
 class LevelStatusOptions:
     LoadingFirstTime = 0x00
@@ -328,7 +334,6 @@ class ShTHCommandProcessor(ClientCommandProcessor):
 
     reports = []
     region = 0
-
 
     def __init__(self, ctx: CommonContext):
         super().__init__(ctx)
@@ -1255,6 +1260,12 @@ class ShTHContext(CommonContext):
     game = "Shadow The Hedgehog"
     items_handling = 0b111
 
+    async def update_death_link(self, death_link: bool):
+        if death_link:
+            self.game_tags.append("DeathLink")
+        await super().update_death_link(death_link)
+
+
     def __init__(self, server_address, password):
         super().__init__(server_address, password)
 
@@ -1413,6 +1424,8 @@ class ShTHContext(CommonContext):
         self.object_offset = None
         self.last_level_status = None
         self.client_cache = {}
+        self.required_characters = 0
+        self.death_link = False
 
     def GetObjectDataStart(self):
         if self.object_offset is None:
@@ -1798,18 +1811,12 @@ class ShTHContext(CommonContext):
 
             if "required_characters" in slot_data:
                 self.required_characters = slot_data["required_characters"]
-
             self.restoreState()
             self.awaiting_server = False
 
-            #self.items_received_2 = []
-            #self.last_rcvd_index = -1
-            #self.update_salvage_locations_map()
-            #if "death_link" in args["slot_data"]:
-            #    Utils.async_start(self.update_death_link(bool(args["slot_data"]["death_link"])))
-            # Request the connected slot's dictionary (used as a set) of visited stages.
-            #visited_stages_key = AP_VISITED_STAGE_NAMES_KEY_FORMAT % self.slot
-            #Utils.async_start(self.send_msgs([{"cmd": "Get", "keys": [visited_stages_key]}]))
+            if "death_link" in slot_data:
+                self.death_link = slot_data["death_link"]
+
         elif cmd == "ReceivedItems":
             if args["index"] >= self.last_rcvd_index:
                 self.last_rcvd_index = args["index"]
@@ -1825,26 +1832,14 @@ class ShTHContext(CommonContext):
                 related_tags = args["tags"]
                 if "RingLink" in related_tags:
                     handle_received_rings(self, args["data"])
-            #requested_keys_dict = args["keys"]
-            # Read the connected slot's dictionary (used as a set) of visited stages.
-            #if self.slot is not None:
-            #    visited_stages_key = AP_VISITED_STAGE_NAMES_KEY_FORMAT % self.slot
-            #    if visited_stages_key in requested_keys_dict:
-            #        visited_stages = requested_keys_dict[visited_stages_key]
-            #        # If it has not been set before, the value in the response will be None
-            #       visited_stage_names = set() if visited_stages is None else set(visited_stages.keys())
-            #        # If the current stage name is not in the set, send a message to update the dictionary on the
-            #        # server.
-            #        current_stage_name = self.current_stage_name
-            #        if current_stage_name and current_stage_name not in visited_stage_names:
-            #            visited_stage_names.add(current_stage_name)
-            #            Utils.async_start(self.update_visited_stages(current_stage_name))
-            #        self.visited_stage_names = visited_stage_names
-        #Utils.async_start(self.process_shth_data(cmd, args))
 
     def on_deathlink(self, data: Dict[str, Any]):
+        print("Got a death link!", data)
+        if "cause" not in data:
+            return
+
         super().on_deathlink(data)
-        #_give_death(self)
+        handle_death_link(self)
 
     def run_gui(self):
         from kvui import GameManager
@@ -3349,6 +3344,9 @@ def should_send_ring_link(ctx, death):
         elif ctx.restart:
             should_send = False
 
+    if ctx.last_level_status != LevelStatusOptions.Active:
+        should_send = False
+
     return should_send
 
 def should_send_traps(ctx, death):
@@ -3370,9 +3368,9 @@ async def handle_ring_link(ctx, level, death):
     if ctx.ring_link != Options.RingLink.option_off:
         if "RingLink" not in ctx.game_tags:
             ctx.game_tags.append("RingLink")
+            ctx.tags.add("RingLink")
         ring_link = True
-    else:
-        ctx.game_tags = []
+
     if old_tags != ctx.game_tags and ctx.server and not ctx.server.socket.closed:
         await ctx.send_msgs([{"cmd": "ConnectUpdate", "tags": ctx.game_tags}])
 
@@ -3410,10 +3408,19 @@ async def handle_ring_link(ctx, level, death):
                 "source": ctx.instance_id,
                 "amount": difference
             },
-            "tags": ctx.game_tags
+            "tags": ["RingLink"]
         }
 
         await ctx.send_msgs([msg])
+
+def handle_death_link(ctx):
+    print("STATUS:", ctx.last_level_status)
+    if ctx.last_level_status != LevelStatusOptions.Death:
+        value = LevelSelectorOptions.Death
+        death_bytes = value.to_bytes(1, byteorder='big')
+        writeBytes(GAME_ADDRESSES.LEVEL_SELECTOR, death_bytes)
+        ctx.dead = True
+
 
 def handle_received_rings(ctx, data):
     amount = data["amount"]
@@ -4393,13 +4400,16 @@ async def handle_objects(ctx, current_level):
 
         if expected_type is not None and Objects.GetTypeId(object.object_type) != loaded_object_type:
 
-            if ctx.object_offset is None:
+            if loaded_object_type == 0 and ctx.last_level_status in [LevelStatusOptions.Loading, LevelStatusOptions.LoadingFirstTime]:
+                pass
+                #print("Still loading...?")
+            elif ctx.object_offset is None:
                 logger.error("Detected mismatch of types, switching to offset mode")
                 ctx.object_offset = True
                 break
 
             if loaded_object_type == 0 and ctx.last_level_status in [LevelStatusOptions.Loading, LevelStatusOptions.LoadingFirstTime]:
-                print("Still loading...?")
+                pass
             else:
                 logger.error("Failed to read type correctly" +
                       "Coded Type" + str(Objects.GetTypeId(object.object_type)) +
@@ -4981,7 +4991,6 @@ async def update_level_behaviour(ctx, current_level, death):
     # Set initial value (to level of value from server)
     # If higher than previous value, recognise as check and reduce by 1
 
-
     await handle_objects(ctx, current_level)
     if ctx.level_status is None:
         return
@@ -4990,6 +4999,8 @@ async def update_level_behaviour(ctx, current_level, death):
 
     if SHOW_SET_CHANGES:
         await ShowSETChanges(current_level, ctx)
+
+    await ctx.update_death_link(ctx.death_link)
 
     #DisplayMessages(ctx)
 
@@ -5835,6 +5846,12 @@ async def update_level_behaviour(ctx, current_level, death):
     ctx.death_flag = False
 
 
+def GetDeathMessage(level):
+    if level == Names.STAGE_IRON_JUNGLE:
+        return "The androids overthrew Shadow"
+
+    return "Shadow can't hack it"
+
 
 async def check_death(ctx: ShTHContext):
     level_status_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.ADDRESS_LEVEL_STATUS, 4)
@@ -5844,6 +5861,12 @@ async def check_death(ctx: ShTHContext):
         if ctx.dead:
             return None
         ctx.dead = True
+
+        print("DEATH OCCURED")
+
+        death_message = GetDeathMessage(ctx.last_level)
+        await ctx.send_death(death_message)
+
         return True
 
     if level_status_value == LevelStatusOptions.Restarting and not ctx.restart:

@@ -975,6 +975,12 @@ class LastWayEnemysanity(DefaultOnToggle):
     """
     display_name = "Last Way Enemysanity"
 
+class DeathLink(DefaultOnToggle):
+    """
+        Toggle to enable Death Link
+    """
+    display_name = "Death Link"
+
 @dataclass
 class ShadowTheHedgehogOptions(PerGameCommonOptions):
     #goal: Goal
@@ -1084,6 +1090,7 @@ class ShadowTheHedgehogOptions(PerGameCommonOptions):
     plando_checkpoint_spawns: PlandoCheckpointSpawns
     music_shuffle: MusicShuffle
     last_way_enemysanity: LastWayEnemysanity
+    death_link: DeathLink
 
 
 shadow_option_groups = [
@@ -1137,7 +1144,7 @@ shadow_option_groups = [
                                 PoisonTraps, AmmoTraps, CheckpointTraps,
                                 WeaponSanityMinAvailable, WeaponSanityMaxAvailable, WeaponGroups]),
 
-    OptionGroup("Other", [RingLink, MusicShuffle, ShadowMod, ExceedingItemsFiller]),
+    OptionGroup("Other", [RingLink, MusicShuffle, ShadowMod, ExceedingItemsFiller, DeathLink]),
 
     OptionGroup("Plando", [PlandoStartingStages, PlandoCheckpointSpawns])
 
