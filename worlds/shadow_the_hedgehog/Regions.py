@@ -118,32 +118,18 @@ def DetermineFirstStages(world):
 
     possible_first_regions = [ r for r in within_selections if r not in Levels.LAST_STORY_STAGES and r not in Levels.BOSS_STAGES ]
 
+    if starting_stage_count > len(possible_first_regions):
+        starting_stage_count = len(possible_first_regions)
+
     if world.options.level_progression != Options.LevelProgression.option_story:
-
-
-        #print("Select picking", starting_stage_count, possible_first_regions, first_stages_selections)
-
-        if starting_stage_count > len(possible_first_regions) and \
-            len(first_stages_selections) > 0:
-
-            while len(first_stages_selections) > 0 and len(possible_first_regions) < starting_stage_count:
-                first_choices = first_stages_selections.pop(0)
-                backup_picks = starting_stage_count - len(possible_first_regions)
-                #print("backups", len(first_choices), len(possible_first_regions), backup_picks)
-
-                if backup_picks >= len(first_choices):
-                    possible_first_regions.extend(first_choices)
-                else:
-                    possible_first_regions.extend(world.random.sample(
-                        first_choices, backup_picks))
-
-        possible_first_regions = list(set(possible_first_regions))
-
-        if starting_stage_count > len(possible_first_regions):
-            starting_stage_count = len(possible_first_regions)
-
-        first_stages = world.random.sample(possible_first_regions, starting_stage_count)
-        world.first_regions = first_stages
+        for given_set in first_stages_selections:
+            remaining_need = starting_stage_count - len(world.first_regions)
+            if len(given_set) <= remaining_need:
+                world.first_regions.extend(given_set)
+            else:
+                choices = world.random.sample(given_set, k=remaining_need)
+                world.first_regions.extend(choices)
+                break
 
     if world.options.level_progression != Options.LevelProgression.option_select:
         stage_ids = [ start.end_stage_id for start in world.shuffled_story_mode if start.start_stage_id is None ]
@@ -157,7 +143,7 @@ def DetermineGates(world):
     if gate_mode == Options.SelectGates.option_off:
         return {}
 
-    stages_to_assign = [ l for l in Levels.ALL_STAGES if l in world.available_select_stages ]
+    stages_to_assign = [ l for l in Levels.ALL_STAGES if l in world.available_select_stages and l not in world.first_regions ]
 
     if Levels.STAGE_THE_LAST_WAY in stages_to_assign and not world.options.include_last_way_shuffle:
         raise Exception("Last Way should not be included in selectable stages")

@@ -25,6 +25,7 @@ DESIRABLE_OBJECTS_BOSSES  = [
     SETObject(ObjectType.BLACK_WING_LOTTERY, Levels.BOSS_BLACK_BULL_LH, 21, "17W",region=0),
     SETObject(ObjectType.BLACK_WING_LOTTERY, Levels.BOSS_BLACK_BULL_LH, 22, "18W",region=0),
     SETObject(ObjectType.BLACK_WING_LOTTERY, Levels.BOSS_BLACK_BULL_LH, 23, "19W",region=0),
+    SETObject(ObjectType.BLACK_WING_LOTTERY, Levels.BOSS_BLACK_BULL_LH, 24, "20W1",region=0),
     SETObject(ObjectType.BLACK_WING_LOTTERY, Levels.BOSS_BLACK_BULL_LH, 25, "20W",region=0),
     SETObject(ObjectType.BLACK_WING_LOTTERY, Levels.BOSS_BLACK_BULL_LH, 26, "21W",region=0),
     SETObject(ObjectType.BLACK_WING_LOTTERY, Levels.BOSS_BLACK_BULL_LH, 33, "22W",region=0),
@@ -88,8 +89,19 @@ DESIRABLE_OBJECTS_BOSSES  = [
     SETObject(ObjectType.ITEM_IN_BOX, Levels.BOSS_EGG_BREAKER_MM, 30, "1",region=0),
     SETObject(ObjectType.ITEM_IN_BOX, Levels.BOSS_EGG_BREAKER_MM, 31, "2",region=0),
 
+    SETObject(ObjectType.RISING_LASER_POLE, Levels.BOSS_EGG_BREAKER_MM, 1, "1", region=0),
+    SETObject(ObjectType.RISING_LASER_POLE, Levels.BOSS_EGG_BREAKER_MM, 2, "2", region=0),
+    SETObject(ObjectType.RISING_LASER_POLE, Levels.BOSS_EGG_BREAKER_MM, 3, "3", region=0),
+    SETObject(ObjectType.RISING_LASER_POLE, Levels.BOSS_EGG_BREAKER_MM, 4, "4", region=0),
+    SETObject(ObjectType.RISING_LASER_POLE, Levels.BOSS_EGG_BREAKER_MM, 5, "5", region=0),
+    SETObject(ObjectType.RISING_LASER_POLE, Levels.BOSS_EGG_BREAKER_MM, 6, "6", region=0),
+    SETObject(ObjectType.RISING_LASER_POLE, Levels.BOSS_EGG_BREAKER_MM, 7, "7", region=0),
+    SETObject(ObjectType.RISING_LASER_POLE, Levels.BOSS_EGG_BREAKER_MM, 8, "8", region=0),
+
     SETObject(ObjectType.WEAPON_BOX, Levels.BOSS_BLUE_FALCON, 4, '4',
               region=0, weapon=WEAPONS.SUB_MACHINE_GUN),
+    SETObject(ObjectType.POLE, Levels.BOSS_BLUE_FALCON, 3, '3',
+              region=0),
 
     SETObject(ObjectType.VEHICLE, Levels.BOSS_EGG_BREAKER_IJ, 0, "1",
               vehicle=ObjectTypeVehicles.GUN_TURRET, weapon=WEAPONS.HEAVY_MACHINE_GUN,

@@ -39,12 +39,17 @@ LOCATION_ID_PLUS = 100068
 def GetObjectSanityTypes():
     return [
         ObjectType.STANDARD_PULLEY, ObjectType.LIGHT_DASH_TRAIL,
-        ObjectType.LIGHT_DASH_TRAIL,ObjectType.SPACE_ZIPWIRE,
+        ObjectType.SPACE_ZIPWIRE,
         ObjectType.GUN_ZIPWIRE, ObjectType.CIRCUS_ZIPWIRE,
         ObjectType.BOMB, ObjectType.BOMB_SERVER,
         ObjectType.HEAL_UNIT, ObjectType.HEAL_SERVER,
         ObjectType.WARP_HOLE, ObjectType.ROCKET,
-        ObjectType.BALLOON_ZIPWIRE
+        ObjectType.BALLOON_ZIPWIRE,
+        ObjectType.BALL_SWITCH, ObjectType.RISING_LASER_POLE,
+        ObjectType.POLE, ObjectType.CIRCUS_POLE, ObjectType.HEAVY_DOOR,
+        ObjectType.PROXIMITY_DOOR,
+        ObjectType.LOCKED_BLACK_ARM_CASE, ObjectType.LOCKED_GUN_CASE,
+        ObjectType.SATELLITE_LASER
     ]
 
 def GetWeaponObjectTypes():
@@ -55,42 +60,24 @@ def GetWeaponObjectTypes():
 
     return playable
 
+def GetLevelItemObjectTypes(existing_types):
+    base_object_location_types = [(t for t in s[0] if t not in existing_types) for s in STAGE_OBJECT_ITEMS.values()]
+    object_location_types = []
+    for x in base_object_location_types:
+        object_location_types.extend([l for l in x if l not in object_location_types])
+
+    return object_location_types
+
 def GetObjectTypesForLocations():
-    return [
-        ObjectType.GUN_SOLDIER,
+
+    object_types = []
+    object_types.extend(GetStandardEnemyTypes())
+    object_types.extend(GetLevelItemObjectTypes(object_types))
+
+    new_types = [
         ObjectType.GOLD_BEETLE, ObjectType.SHADOW_BOX,
         ObjectType.ENERGY_CORE, ObjectType.KEY_DOOR,
         ObjectType.ENERGY_CORE_IN_WOOD_BOX,
-        ObjectType.GLYPHIC_CANYON_TEMPLE,
-        ObjectType.CRYPTIC_CASTLE_LANTERN,
-        ObjectType.CREAM,
-        ObjectType.CHEESE,
-        ObjectType.PRISON_ISLAND_DISC,
-        ObjectType.CENTRAL_CITY_BIG_BOMB,
-        ObjectType.DOOM_RESEARCHER,
-        ObjectType.SKY_TROOPS_EGG_SHIP,
-        ObjectType.SKY_TROOPS_TEMPLE,
-        ObjectType.MAD_MATRIX_BOMB,
-        ObjectType.MAD_MATRIX_TERMINAL,
-        ObjectType.THE_ARK_DEFENSE_UNIT,
-        ObjectType.SPACE_GADGET_DEFENSE_UNIT,
-        ObjectType.GUN_FORTRESS_COMPUTER,
-        ObjectType.LAVA_SHELTER_DEFENSE,
-        ObjectType.GUN_BEETLE,
-        ObjectType.BIG_FOOT,
-        ObjectType.GUN_ROBOT,
-        ObjectType.EGG_CLOWN,
-        ObjectType.EGG_PAWN,
-        ObjectType.SHADOW_ANDROID,
-        ObjectType.BLACK_ASSASSIN,
-        ObjectType.BLACK_VOLT,
-        ObjectType.BLACK_HAWK,
-        ObjectType.BLACK_WARRIOR,
-        ObjectType.BLACK_OAK,
-        ObjectType.BLACK_WING,
-        ObjectType.BLACK_WORM,
-        ObjectType.BLACK_LARVAE,
-        ObjectType.ARTIFICIAL_CHAOS,
         ObjectType.KEY,
         ObjectType.ITEM_CAPSULE,
         ObjectType.BALLOON_ITEM,
@@ -99,55 +86,45 @@ def GetObjectTypesForLocations():
         ObjectType.CHECKPOINT
     ]
 
+    object_types.extend(new_types)
+    return object_types
+
 def GetPlayableObjectTypes():
-    return [
-            ObjectType.GUN_SOLDIER,
-            ObjectType.GOLD_BEETLE, ObjectType.SHADOW_BOX,
-            ObjectType.ENERGY_CORE, ObjectType.KEY_DOOR,
-            ObjectType.ENERGY_CORE_IN_WOOD_BOX,
-            ObjectType.GLYPHIC_CANYON_TEMPLE,
-            ObjectType.CRYPTIC_CASTLE_LANTERN,
-            ObjectType.CREAM,
-            ObjectType.CHEESE,
-            ObjectType.PRISON_ISLAND_DISC,
-            ObjectType.CENTRAL_CITY_BIG_BOMB,
-            ObjectType.DOOM_RESEARCHER,
-            ObjectType.SKY_TROOPS_EGG_SHIP,
-            ObjectType.SKY_TROOPS_TEMPLE,
-            ObjectType.MAD_MATRIX_BOMB,
-            ObjectType.MAD_MATRIX_TERMINAL,
-            ObjectType.THE_ARK_DEFENSE_UNIT,
-            ObjectType.SPACE_GADGET_DEFENSE_UNIT,
-            ObjectType.GUN_FORTRESS_COMPUTER,
-            ObjectType.LAVA_SHELTER_DEFENSE,
-            ObjectType.GUN_BEETLE,
-            ObjectType.BIG_FOOT,
-            ObjectType.GUN_ROBOT,
-            ObjectType.EGG_CLOWN,
-            ObjectType.EGG_PAWN,
-            ObjectType.SHADOW_ANDROID,
-            ObjectType.BLACK_ASSASSIN,
-            ObjectType.BLACK_VOLT,
-            ObjectType.BLACK_HAWK,
-            ObjectType.BLACK_WARRIOR,
-            ObjectType.BLACK_OAK,
-            ObjectType.BLACK_WING,
-            ObjectType.BLACK_WORM,
-            ObjectType.BLACK_LARVAE,
-            ObjectType.ARTIFICIAL_CHAOS,
-            ObjectType.KEY,
-            ObjectType.ITEM_CAPSULE,
-            ObjectType.BALLOON_ITEM,
-            ObjectType.ITEM_IN_METAL_BOX,
-            ObjectType.ITEM_IN_BOX,
+
+    object_types = []
+    object_types.extend(GetObjectTypesForLocations())
+    object_types.extend(GetObjectSanityTypes())
+
+    new_types = [
             ObjectType.PARTNER,
-            ObjectType.CHECKPOINT,
             ObjectType.WEAPON_BOX,
             ObjectType.WEAPON_METAL_BOX,
             ObjectType.WEAPON_WOODEN_BOX,
             ObjectType.ENVIRONMENT_WEAPON,
             ObjectType.FLOOR_WEAPON,
-            ObjectType.PARTNER
+            ObjectType.PARTNER,
+            ObjectType.VEHICLE
+    ]
+
+    object_types.extend(new_types)
+    return object_types
+
+def GetWIPObjectTypes():
+    return [
+        ObjectType.BALL_SWITCH,
+        ObjectType.POLE,
+        ObjectType.CIRCUS_POLE,
+        ObjectType.PROXIMITY_DOOR,
+        ObjectType.HEAVY_DOOR,
+        ObjectType.LOCKED_GUN_CASE,
+        ObjectType.LOCKED_BLACK_ARM_CASE,
+        ObjectType.DEFENSE_PROGRAM,
+        ObjectType.GOAL_RING,
+        ObjectType.RISING_LASER_POLE,
+        ObjectType.DESTRUCTIBLE_X,
+        ObjectType.SATELLITE_LASER,
+        #ObjectType.BUILDING,
+        ObjectType.CHAOS_EMERALD
     ]
 
 def GetObjectChecks():
@@ -306,7 +283,7 @@ def GetTypeId(objectType):
     if objectType == ObjectType.BLACK_OAK:
         return 0x8C
 
-    if objectType == ObjectType.BLACK_WING:
+    if objectType in (ObjectType.BLACK_WING, ObjectType.BLACK_WING_LOTTERY):
         return 0x8F
 
     if objectType == ObjectType.BLACK_WORM:
@@ -336,7 +313,7 @@ def GetTypeId(objectType):
     if objectType == ObjectType.EGG_CLOWN:
         return 0x78
 
-    if objectType == ObjectType.EGG_PAWN:
+    if objectType in (ObjectType.EGG_PAWN, ObjectType.EGG_PAWN_LOTTERY):
         return 0x79
 
     if objectType == ObjectType.SHADOW_ANDROID:
@@ -370,6 +347,9 @@ def GetTypeId(objectType):
         return 0xBBD
 
     if objectType == ObjectType.CHEESE:
+        return 0xBBE
+
+    if objectType == ObjectType.STANDARD_CHAO:
         return 0xBBE
 
     if objectType == ObjectType.PRISON_ISLAND_DISC:
@@ -474,6 +454,52 @@ def GetTypeId(objectType):
     if objectType == ObjectType.WARP_HOLE_ANTI_TRAP:
         return 0x1F
 
+    if objectType == ObjectType.BALL_SWITCH:
+        return 0x15
+
+    if objectType == ObjectType.LOCKED_BLACK_ARM_CASE or objectType == ObjectType.LOCKED_GUN_CASE:
+        return 0x07
+
+    if objectType == ObjectType.HEAVY_DOOR:
+        return 0x13F1
+
+    if objectType == ObjectType.PROXIMITY_DOOR:
+        return 0x1133
+
+    if objectType == ObjectType.POLE:
+        return 0x5A
+
+    if objectType == ObjectType.CIRCUS_POLE:
+        return 0xC87
+
+    if objectType == ObjectType.FIRE:
+        return 0x34
+
+    if objectType == ObjectType.POISON_GAS:
+        return 0x35
+
+    if objectType == ObjectType.RING_OF_FIRE:
+        return 0xC85
+
+    if objectType == ObjectType.RISING_LASER_POLE:
+        return 0x7D3
+
+    if objectType == ObjectType.LIGHTSPEED_ENTRANCE:
+        return 0x7E0
+
+    if objectType == ObjectType.LIGHTSPEED_EXIT:
+        return 0x7EA
+
+    if objectType == ObjectType.SATELLITE_LASER:
+        return 0x3EA
+
+    if objectType == ObjectType.CHAOS_EMERALD:
+        return 0x03E8
+
+    if objectType == ObjectType.DESTRUCTIBLE_X:
+        return 0x2589
+
+    print("Unhandled type", objectType)
     return None
 
 def CheckVehicleAttributes(objectType, extra_bytes, index, link_id, address):
@@ -656,17 +682,47 @@ DESIRABLE_OBJECTS.extend(DESIRABLE_OBJECTS_BOSSES)
 
 DesirableCache = {}
 
-def GetDesirableObjectsForStage(stage):
+def GetDesirableObjectsForStage(stage, include_other_matches=False):
 
-    if stage in DesirableCache:
-        return DesirableCache[stage]
+    cache_key = str(stage)+"-"+str(include_other_matches)
+    if cache_key in DesirableCache:
+        return DesirableCache[cache_key]
 
     items = [ o for o in DESIRABLE_OBJECTS if o.stage == stage]
-    DesirableCache[stage] = items
+
+    types_of_interest = GetPlayableObjectTypes()
+
+    if Flags.INCLUDE_WIP_OBJECTS:
+        types_of_interest.extend(GetWIPObjectTypes())
+
+    if include_other_matches:
+        type_ids_of_interest = [ GetTypeId(l) for l in types_of_interest ]
+        dupes = GetObjectIdDuplicates()
+        parts_to_add = [d[1] for d in dupes.items() if d[0] in type_ids_of_interest]
+        for part in parts_to_add:
+            types_of_interest.extend([ p for p in part if p not in types_of_interest])
+
+
+    items = [i for i in items if i.object_type in types_of_interest]
+    DesirableCache[cache_key] = items
     return items
 
 
+def GetObjectIdDuplicates():
+    data = {}
+    for object in ObjectType:
+        type_id = GetTypeId(object)
+        if type_id not in data:
+            data[type_id] = []
+
+        data[type_id].append(object.value)
+
+    return data
+
+
+
 def TypeToString(type):
+    #TODO: Remove this function so it isn't a duplicate with the enum now!
 
     if type == 0x01:
         return "Spring"
@@ -788,6 +844,9 @@ def TypeToString(type):
     elif type == 0x5A:
         return "Pole"
 
+    elif type == 0xc87:
+        return "Circus Pole"
+
     elif type == 0x61:
         return "Dark Spin Entry"
 
@@ -848,9 +907,6 @@ def TypeToString(type):
     elif type == 0x03E9:
         return "Building"
 
-    elif type == 0x03EA:
-        return "City Laser"
-
     elif type == 0x7D7:
         return "Digital Tile"
 
@@ -883,6 +939,18 @@ def TypeToString(type):
 
     elif type == 0x1D:
         return "Key"
+
+    elif type == 0x13F1:
+        return "Heavy Door"
+
+    elif type == 0x7E0:
+        return "Light Speed Entrance"
+
+    elif type == 0x7EA:
+        return "Light Speed Exit"
+
+    elif type == 0x3EA:
+        return "Satellite Laser"
 
     return str(type)
 
@@ -926,32 +994,44 @@ def PrintSETChange(address, index, type, previous, new, additional_bytes, link_i
     typeString = CheckVehicleAttributes(typeString, additional_bytes, index, link_id, address)
 
     found = False
-    for v in ObjectType.__dict__.items():
-        vIntValue = v[1]
-        l = GetTypeId(vIntValue)
+    for v in ObjectType:
+        # TODO: Improve to just store this in one array somewhere
+        l = GetTypeId(v.value)
         if l is not None and l == type:
+            if Flags.ONLY_SHOW_MARKED_SET:
+                if v not in GetPlayableObjectTypes():
+                    if Flags.INCLUDE_WIP_OBJECTS:
+                        if v not in GetWIPObjectTypes():
+                            break
+
             found = True
+            break
+        elif Flags.SHOW_ALL_CHANGES:
+            found = True
+
             break
 
     if not found:
         return []
 
-    handle_types = []
-    unhandled_types = ["Destructible",
-                       "City Laser", "Rings", "Box", "Empty Wood Box", "Empty Metal Box",
-                       #"Weapon In Wood Box",
-                       #"Weapon In Metal Box", #"Weapon Box",
 
-                       "Rings In Wood Box", "Rings In Metal Box",
-                       #"Black Wing", "Gun Beetle",
-                       "Heal Unit In Metal Box", "Heal Unit In Wooden Box" ]
+
+
+    handle_types = []
+    unhandled_types = [
+    # #"Destructible",
+                        "Rings",
+                        "Box",
+                        "Empty Wood Box",
+                        "Empty Metal Box",
+                        "Rings In Wood Box", "Rings In Metal Box",
+                        "Heal Unit In Metal Box", "Heal Unit In Wooden Box" ]
 
     if len(handle_types) > 0 and typeString not in handle_types:
         return []
 
     if typeString in unhandled_types:
         return []
-
 
     oldStateString = StateToString(typeString,previous)
     newStateString = StateToString(typeString,new)
@@ -980,54 +1060,53 @@ def PrintSETChange(address, index, type, previous, new, additional_bytes, link_i
 
     return prints
 
-
-def GetSETFileLength(level):
+def GetCommonSize(level):
     if level == Levels.STAGE_WESTOPOLIS:
-        return 504 + 71
+        return 504
     elif level == Levels.STAGE_DIGITAL_CIRCUIT:
-        return 529 + 125
+        return 529
     elif level == Levels.STAGE_GLYPHIC_CANYON:
-        return 328 + 86
+        return 328
     elif level == Levels.STAGE_LETHAL_HIGHWAY:
-        return 378 + 174
+        return 378
     elif level == Levels.STAGE_CRYPTIC_CASTLE:
-        return 373 + 177
+        return 373
     elif level == Levels.STAGE_PRISON_ISLAND:
-        return 526 + 152
+        return 526
     elif level == Levels.STAGE_CIRCUS_PARK:
-        return 236 + 143
+        return 236
     elif level == Levels.STAGE_CENTRAL_CITY:
-        return 539 + 161
+        return 539
     elif level == Levels.STAGE_THE_DOOM:
-        return 375 + 109
+        return 375
     elif level == Levels.STAGE_SKY_TROOPS:
-        return 312 + 78
+        return 312
     elif level == Levels.STAGE_MAD_MATRIX:
-        return 518 + 165
+        return 518
     elif level == Levels.STAGE_DEATH_RUINS:
-        return 458 + 30
+        return 458
     elif level == Levels.STAGE_THE_ARK:
-        return 355 + 51
+        return 355
     elif level == Levels.STAGE_AIR_FLEET:
-        return 420 + 113
+        return 420
     elif level == Levels.STAGE_IRON_JUNGLE:
-        return 257 + 78
+        return 257
     elif level == Levels.STAGE_SPACE_GADGET:
-        return 592 + 73
+        return 592
     elif level == Levels.STAGE_LOST_IMPACT:
-        return 339 + 79
+        return 339
     elif level == Levels.STAGE_GUN_FORTRESS:
-        return 416 + 86
+        return 416
     elif level == Levels.STAGE_BLACK_COMET:
-        return 433 + 43
+        return 433
     elif level == Levels.STAGE_LAVA_SHELTER:
-        return 341 + 74
+        return 341
     elif level == Levels.STAGE_COSMIC_FALL:
-        return 252 + 87
+        return 252
     elif level == Levels.STAGE_FINAL_HAUNT:
-        return 446 + 97
+        return 446
     elif level == Levels.STAGE_THE_LAST_WAY:
-        return 457 + 40
+        return 457
 
     elif level == Levels.BOSS_BLACK_BULL_LH:
         return 51
@@ -1064,9 +1143,69 @@ def GetSETFileLength(level):
     elif level == Levels.BOSS_BLACK_DOOM_FH:
         return 11
 
+    return 0
 
+def GetNormalSize(level):
+    if level == Levels.STAGE_WESTOPOLIS:
+        return 71
+    elif level == Levels.STAGE_DIGITAL_CIRCUIT:
+        return 125
+    elif level == Levels.STAGE_GLYPHIC_CANYON:
+        return 86
+    elif level == Levels.STAGE_LETHAL_HIGHWAY:
+        return 174
+    elif level == Levels.STAGE_CRYPTIC_CASTLE:
+        return 177
+    elif level == Levels.STAGE_PRISON_ISLAND:
+        return 152
+    elif level == Levels.STAGE_CIRCUS_PARK:
+        return 143
+    elif level == Levels.STAGE_CENTRAL_CITY:
+        return 161
+    elif level == Levels.STAGE_THE_DOOM:
+        return 109
+    elif level == Levels.STAGE_SKY_TROOPS:
+        return 78
+    elif level == Levels.STAGE_MAD_MATRIX:
+        return 165
+    elif level == Levels.STAGE_DEATH_RUINS:
+        return 30
+    elif level == Levels.STAGE_THE_ARK:
+        return 51
+    elif level == Levels.STAGE_AIR_FLEET:
+        return 113
+    elif level == Levels.STAGE_IRON_JUNGLE:
+        return 78
+    elif level == Levels.STAGE_SPACE_GADGET:
+        return 73
+    elif level == Levels.STAGE_LOST_IMPACT:
+        return 79
+    elif level == Levels.STAGE_GUN_FORTRESS:
+        return 86
+    elif level == Levels.STAGE_BLACK_COMET:
+        return 43
+    elif level == Levels.STAGE_LAVA_SHELTER:
+        return 74
+    elif level == Levels.STAGE_COSMIC_FALL:
+        return 87
+    elif level == Levels.STAGE_FINAL_HAUNT:
+        return 97
+    elif level == Levels.STAGE_THE_LAST_WAY:
+        return 40
 
-    # Could add boxsanity for bosses too?
+    return 0
+
+def GetDecorationSize(level):
+    if level == Levels.STAGE_WESTOPOLIS:
+        return 536
+
+    return 0
+
+def GetSETFileLength(level, mode=0):
+    if mode == 0:
+        return GetCommonSize(level) + GetNormalSize(level) + GetDecorationSize(level)
+    else:
+        return GetCommonSize(level)
 
     return None
 

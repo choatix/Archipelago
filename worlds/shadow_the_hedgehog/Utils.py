@@ -102,8 +102,6 @@ def GetOverrideKey(typeId, alignmentId):
 
     return type_name
 
-
-
 def GetValidOverrideKeys():
     valid_keys = []
     for missionClear in Locations.MissionClearLocations:

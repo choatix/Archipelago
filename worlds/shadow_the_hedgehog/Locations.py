@@ -799,15 +799,15 @@ def GetAllLocationInfo():
         location_id, objective_location_name = GetCharacterLocationName(character.name,char_index)
         info = LocationInfo(LOCATION_TYPE_CHARACTER, location_id, objective_location_name,
                             stageId=None, alignmentId=None,
-                            count=None, total=None, other=character.name)
+                            count=character.value, total=None, other=character.name)
         charactersanity_locations.append(info)
 
         requirement_token_id, requirement_token_name = GetCharacterTokenNames(character.name,
                                                                               char_index, None,
                                                                           ITEM_TOKEN_TYPE_CHARACTER)
-        info = LocationInfo(LOCATION_TYPE_CHARACTER, requirement_token_id, requirement_token_name,
+        info = LocationInfo(LOCATION_TYPE_TOKEN, requirement_token_id, requirement_token_name,
                             stageId=None, alignmentId=None,
-                            count=None, total=None, other=character.name)
+                            count=character.value, total=None, other=Levels.ITEM_TOKEN_TYPE_CHARACTER)
         token_locations.append(info)
         char_index+=1
 
@@ -1112,7 +1112,7 @@ def create_locations(world, regions: Dict[str, Region]):
             within_region.locations.append(completion_location)
 
             if world.options.goal_characters:
-                found_token = [ l for l in token_locations if l.location_type == ITEM_TOKEN_TYPE_CHARACTER and l.other  == character.other ]
+                found_token = [ l for l in token_locations if l.other == ITEM_TOKEN_TYPE_CHARACTER and l.count  == character.count ]
                 if len(found_token) == 1:
                     found_token = found_token[0]
                     token_location = ShadowTheHedgehogLocation(world.player, found_token.name, found_token.locationId,
@@ -1735,7 +1735,7 @@ def getLocationGroups():
         #"Key Doors": [c.name for c in object_locations if c.other == ObjectType.KEY_DOOR]
     }
 
-    for type in Objects.GetPlayableObjectTypes():
+    for type in Objects.GetObjectTypesForLocations():
         type_name = Names.ObjectTypeToName(type)
         key = type_name + "s"
         groups[key] = [c.name for c in object_locations if c.other == type]

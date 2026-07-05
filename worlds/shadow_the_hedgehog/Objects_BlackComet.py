@@ -116,6 +116,9 @@ DESIRABLE_OBJECTS_BLACK_COMET = [
     SETObject(ObjectType.BLACK_ASSASSIN, Levels.STAGE_BLACK_COMET, 78, "Black Assassin w/ Air Saucer 4",
               region=REGION_INDICES.BLACK_COMET_THREE_FLOATERS, weapon=WEAPONS.REFRACTOR,
               vehicle=ObjectTypeVehicles.AIR_SAUCER),
+    SETObject(ObjectType.BLACK_ASSASSIN, Levels.STAGE_BLACK_COMET, 16, "Black Assassin w/ Air Saucer 4.5",
+              region=REGION_INDICES.BLACK_COMET_THREE_FLOATERS, weapon=WEAPONS.REFRACTOR,
+              vehicle=ObjectTypeVehicles.AIR_SAUCER),
     SETObject(ObjectType.BLACK_ASSASSIN, Levels.STAGE_BLACK_COMET, 77, "Black Assassin w/ Air Saucer 5",
               region=REGION_INDICES.BLACK_COMET_THREE_FLOATERS, weapon=WEAPONS.REFRACTOR,
               vehicle=ObjectTypeVehicles.AIR_SAUCER),
@@ -442,5 +445,18 @@ DESIRABLE_OBJECTS_BLACK_COMET = [
         region=REGION_INDICES.BLACK_COMET_CHECKPOINT_FOUR, weapon=WEAPONS.LASER_RIFLE),
     SETObject(ObjectType.WEAPON_BOX, Levels.STAGE_BLACK_COMET, 405, '405',
         region=REGION_INDICES.BLACK_COMET_CHECKPOINT_FOUR, weapon=WEAPONS.LASER_RIFLE),
+
+    SETObject(ObjectType.PROXIMITY_DOOR, Levels.STAGE_BLACK_COMET, 156, '156',
+              region=REGION_INDICES.BLACK_COMET_TWO_UP),
+    SETObject(ObjectType.PROXIMITY_DOOR, Levels.STAGE_BLACK_COMET, 97, '97',
+              region=REGION_INDICES.BLACK_COMET_CHECKPOINT_FOUR),
+    SETObject(ObjectType.PROXIMITY_DOOR, Levels.STAGE_BLACK_COMET, 53, '53',
+              region=REGION_INDICES.BLACK_COMET_CHECKPOINT_SIX),
+    SETObject(ObjectType.PROXIMITY_DOOR, Levels.STAGE_BLACK_COMET, 319, '319',
+              region=REGION_INDICES.BLACK_COMET_FLOATING_ENEMY_WALL),
+    SETObject(ObjectType.PROXIMITY_DOOR, Levels.STAGE_BLACK_COMET, 318, '318',
+              region=REGION_INDICES.BLACK_COMET_CHECKPOINT_SEVEN),
+    SETObject(ObjectType.PROXIMITY_DOOR, Levels.STAGE_BLACK_COMET, 351, '351',
+              region=REGION_INDICES.BLACK_COMET_CHECKPOINT_SEVEN),
 
 ]

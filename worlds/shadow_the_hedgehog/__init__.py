@@ -265,6 +265,9 @@ class ShtHWorld(World):
         if not self.options.weapon_sanity_unlock and self.options.gate_unlock_requirement == Options.GateUnlockRequirement.option_weapons:
             raise OptionError("You cannot use weapons as an unlock without them disabled")
 
+        if self.options.objective_sanity_unlock and not self.options.objective_sanity:
+            raise OptionError("You cannot use objective unlock without it being enabled")
+
 
     def calculate_non_objective_sanity_maximums(self):
         relevant_mission_clears =  [m for m in Locations.MissionClearLocations if
@@ -594,21 +597,6 @@ class ShtHWorld(World):
                 if "object_unlocks" in passthrough:
                     self.options.object_unlocks = passthrough["object_unlocks"]
 
-                if "object_pulleys" in passthrough:
-                    self.options.object_pulleys = passthrough["object_pulleys"]
-
-                if "object_ziplines" in passthrough:
-                    self.options.object_zipline = passthrough["object_ziplines"]
-
-                if "object_rockets" in passthrough:
-                    self.options.object_rockets = passthrough["object_rockets"]
-
-                if "object_light_dashes" in passthrough:
-                    self.options.object_light_dashes = passthrough["object_light_dashes"]
-
-                if "object_warp_holes" in passthrough:
-                    self.options.object_warp_holes = passthrough["object_warp_holes"]
-
                 if "shadow_boxes" in passthrough:
                     self.options.shadow_boxes = passthrough["shadow_boxes"]
 
@@ -677,6 +665,9 @@ class ShtHWorld(World):
 
                 if "minimal_checkpoint_percentage" in passthrough:
                     self.options.minimal_checkpoint_percentage = passthrough["minimal_checkpoint_percentage"]
+
+                if "objective_sanity_unlock" in passthrough:
+                    self.options.objective_sanity_unlock = passthrough["objective_sanity_unlock"]
 
         # Set maximum of levels required
         # Exclude missions listed in exclude_locations
@@ -978,12 +969,12 @@ class ShtHWorld(World):
             "save_value": self.random_value,
 
             "object_unlocks": self.options.object_unlocks.value,
-            "object_pulleys": self.options.object_pulleys.value,
-            "object_ziplines": self.options.object_ziplines.value,
-            "object_units": self.options.object_units.value,
-            "object_rockets": self.options.object_rockets.value,
-            "object_light_dashes": self.options.object_light_dashes.value,
-            "object_warp_holes": self.options.object_warp_holes.value,
+            # "object_pulleys": self.options.object_pulleys.value,
+            # "object_ziplines": self.options.object_ziplines.value,
+            # "object_units": self.options.object_units.value,
+            # "object_rockets": self.options.object_rockets.value,
+            # "object_light_dashes": self.options.object_light_dashes.value,
+            # "object_warp_holes": self.options.object_warp_holes.value,
             "shadow_boxes": self.options.shadow_boxes.value,
             "energy_cores": self.options.energy_cores.value,
             "door_sanity": self.options.door_sanity.value,
@@ -1010,7 +1001,8 @@ class ShtHWorld(World):
             "goal_devil_doom": self.options.goal_devil_doom.value,
             "goal_characters": self.options.goal_characters.value,
             "required_characters": 0 if not self.options.goal_characters else len(self.available_characters),
-            "death_link": self.options.death_link.value
+            "death_link": self.options.death_link.value,
+            "objective_sanity_unlock": self.options.objective_sanity_unlock.value,
         }
 
         return slot_data

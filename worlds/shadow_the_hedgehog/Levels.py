@@ -69,11 +69,16 @@ BOSS_GROUPING = {
 
 
 def IsObjectRestriction(restriction_types):
-    object_restrictions = [Names.REGION_RESTRICTION_TYPES.Pulley, Names.REGION_RESTRICTION_TYPES.LightDash,
-               Names.REGION_RESTRICTION_TYPES.WarpHole, Names.REGION_RESTRICTION_TYPES.Rocket,
-               Names.REGION_RESTRICTION_TYPES.Zipwire]
 
-    return len(set(restriction_types).intersection(object_restrictions)) > 0
+    objects_to_restrictions = Names.GetAssociatedRestrictionForObjects()
+    for r in restriction_types:
+        if r == Names.REGION_RESTRICTION_TYPES.NoRestriction:
+            continue
+        for o in objects_to_restrictions.values():
+            if r == o:
+                return True
+
+    return False
 
 
 class REGION_RESTRICTION_REFERENCE_TYPES:
@@ -230,21 +235,29 @@ def IsRegionRestrictionApplication(region_restriction, options, starting_items):
     if IsObjectRestriction([region_restriction]):
         if not options.object_unlocks:
             return False
-        if (region_restriction == Names.REGION_RESTRICTION_TYPES.Zipwire and
-                (not options.object_ziplines or "Zipwire" in starting_items)):
+
+        objects_to_restrictions = Names.GetAssociatedRestrictionForObjects()
+        associated_skill = [ x for x in objects_to_restrictions.items() if x[1] == region_restriction][0][0]
+
+        associated_skill_name = associated_skill.name.replace('_',' ')
+        if associated_skill_name not in options.object_unlocks or associated_skill_name in starting_items:
             return False
-        if (region_restriction == Names.REGION_RESTRICTION_TYPES.LightDash and
-                (not options.object_light_dashes or "Air Shoes" in starting_items)):
-            return False
-        if (region_restriction == Names.REGION_RESTRICTION_TYPES.WarpHole and
-                (not options.object_warp_holes or "Warp Hole" in starting_items)):
-            return False
-        if (region_restriction == Names.REGION_RESTRICTION_TYPES.Rocket and
-                (not options.object_rockets or "Rocket" in starting_items)):
-            return False
-        if (region_restriction == Names.REGION_RESTRICTION_TYPES.Pulley and
-                (not options.object_pulleys or "Pulley" in starting_items)):
-            return False
+
+        # if (region_restriction == Names.REGION_RESTRICTION_TYPES.Zipwire and
+        #         (not options.object_ziplines or "Zipwire" in starting_items)):
+        #     return False
+        # if (region_restriction == Names.REGION_RESTRICTION_TYPES.LightDash and
+        #         (not options.object_light_dashes or "Air Shoes" in starting_items)):
+        #     return False
+        # if (region_restriction == Names.REGION_RESTRICTION_TYPES.WarpHole and
+        #         (not options.object_warp_holes or "Warp Hole" in starting_items)):
+        #     return False
+        # if (region_restriction == Names.REGION_RESTRICTION_TYPES.Rocket and
+        #         (not options.object_rockets or "Rocket" in starting_items)):
+        #     return False
+        # if (region_restriction == Names.REGION_RESTRICTION_TYPES.Pulley and
+        #         (not options.object_pulleys or "Pulley" in starting_items)):
+        #     return False
 
     return True
 

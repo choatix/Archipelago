@@ -294,13 +294,13 @@ def handle_path_rules(world, options, player, from_region_id, additional_level_r
             (not bombs_available):
             explosion_rule = weapon_rule
         elif bombs_available and weapon_available and \
-            options.object_unlocks and options.object_units:
+            options.object_unlocks and Names.SkillToName(Names.ObjectsAndSkills.Bombs) in options.object_unlocks:
             explosion_rule = lambda state, wr=weapon_rule, br=bomb_rule: wr(state) or br(state)
-        elif not weapon_available and options.object_unlocks and options.object_units:
+        elif not weapon_available and options.object_unlocks and Names.SkillToName(Names.ObjectsAndSkills.Bombs) in options.object_unlocks:
             explosion_rule = bomb_rule
-        elif not weapon_available and (not options.object_unlocks or options.object_units):
+        elif not weapon_available and (not options.object_unlocks or Names.SkillToName(Names.ObjectsAndSkills.Bombs) in options.object_unlocks):
             explosion_rule = lambda state: True
-        elif bombs_available and (not options.object_unlocks or not options.object_units):
+        elif bombs_available and (not options.object_unlocks or not Names.SkillToName(Names.ObjectsAndSkills.Bombs) in options.object_unlocks):
             explosion_rule = lambda state: True
         #else:
         #    print("No conditions")
@@ -338,9 +338,9 @@ def handle_path_rules(world, options, player, from_region_id, additional_level_r
                 (not units_available):
             heal_rule = weapon_rule
         elif units_available and weapon_available and \
-                options.object_unlocks and options.object_units:
+                options.object_unlocks and Names.SkillToName(Names.ObjectsAndSkills.Heal_Units) in options.object_unlocks:
             heal_rule = lambda state, wr=weapon_rule, ur=unit_rule: wr(state) or ur(state)
-        elif not weapon_available and options.object_unlocks and options.object_units:
+        elif not weapon_available and options.object_unlocks and Names.SkillToName(Names.ObjectsAndSkills.Heal_Units) in options.object_unlocks:
             heal_rule = unit_rule
 
         rule = lambda state, r=rule: heal_rule(state) and r(state)
@@ -479,21 +479,33 @@ def handle_path_rules(world, options, player, from_region_id, additional_level_r
 
     if options.object_unlocks and Levels.IsObjectRestriction(additional_level_region.restrictionTypes):
         o_rule = lambda state: True
-        if Names.REGION_RESTRICTION_TYPES.Zipwire in additional_level_region.restrictionTypes and options.object_ziplines:
-            o_rule = lambda state: state.has("Zipwire", player)
-            outputs.append("Zipwire")
-        if Names.REGION_RESTRICTION_TYPES.LightDash in additional_level_region.restrictionTypes  and options.object_light_dashes:
-            o_rule = lambda state: state.has("Air Shoes", player)
-            outputs.append("Light Dash")
-        if Names.REGION_RESTRICTION_TYPES.WarpHole in additional_level_region.restrictionTypes  and options.object_warp_holes:
-            o_rule = lambda state: state.has("Warp Holes", player)
-            outputs.append("Warp Holes")
-        if Names.REGION_RESTRICTION_TYPES.Rocket in additional_level_region.restrictionTypes  and options.object_rockets:
-            o_rule = lambda state: state.has("Rocket", player)
-            outputs.append("Rocket")
-        if Names.REGION_RESTRICTION_TYPES.Pulley in additional_level_region.restrictionTypes  and options.object_pulleys:
-            o_rule = lambda state: state.has("Pulley", player)
-            outputs.append("Pulley")
+
+        # for restriction type, get item name required and check condition
+
+        object_restrictions = Names.GetAssociatedRestrictionForObjects()
+        for restriction in additional_level_region.restrictionTypes:
+            if restriction == Names.REGION_RESTRICTION_TYPES.NoRestriction:
+                continue
+            skill_name = Names.SkillToName([o for o in object_restrictions.items() if o[1] == restriction][0][0])
+            if skill_name in options.object_unlocks:
+                o_rule = lambda state: state.has(skill_name, player)
+                outputs.append(skill_name)
+
+        # if Names.REGION_RESTRICTION_TYPES.Zipwire in additional_level_region.restrictionTypes and options.object_ziplines:
+        #     o_rule = lambda state: state.has("Zipwire", player)
+        #     outputs.append("Zipwire")
+        # if Names.REGION_RESTRICTION_TYPES.LightDash in additional_level_region.restrictionTypes  and options.object_light_dashes:
+        #     o_rule = lambda state: state.has("Air Shoes", player)
+        #     outputs.append("Light Dash")
+        # if Names.REGION_RESTRICTION_TYPES.WarpHole in additional_level_region.restrictionTypes  and options.object_warp_holes:
+        #     o_rule = lambda state: state.has("Warp Holes", player)
+        #     outputs.append("Warp Holes")
+        # if Names.REGION_RESTRICTION_TYPES.Rocket in additional_level_region.restrictionTypes  and options.object_rockets:
+        #     o_rule = lambda state: state.has("Rocket", player)
+        #     outputs.append("Rocket")
+        # if Names.REGION_RESTRICTION_TYPES.Pulley in additional_level_region.restrictionTypes  and options.object_pulleys:
+        #     o_rule = lambda state: state.has("Pulley", player)
+        #     outputs.append("Pulley")
 
         rule = lambda state, r=rule: o_rule(state) and r(state)
 
@@ -560,8 +572,33 @@ def restrict_objects(multiworld, world, player):
         if entry_location_name in world_locations:
             location_with_restriction = world.get_location(entry_location_name)
             dummy_region = Levels.LevelRegion(object.stage, object.region, [object.restrictionType])
-            location_with_restriction.access_rule = handle_path_rules(world, world.options, player, object.region, dummy_region,
+
+            access_rule = handle_path_rules(world, world.options, player, object.region, dummy_region,
                                                                       Levels.REGION_RESTRICTION_REFERENCE_TYPES.BaseLogic)[0]
+
+            if world.options.objective_sanity_unlock:
+                #clear.mission_object_name not in ("Soldier", "Artificial Chaos", "Alien"):
+                item_name = LookupItemNameForObjectUnlock(object)
+                if item_name is not None:
+                    access_rule = lambda state, a_rule=access_rule, i=item_name: a_rule(state) and state.has(item_name, player)
+
+            location_with_restriction.access_rule = access_rule
+
+def LookupItemNameForObjectUnlock(object):
+    result = None
+
+    if object.type in Objects.GetStandardEnemyTypes():
+        return None
+
+    for o in Objects.STAGE_OBJECT_ITEMS:
+        if object.type in o[0][0]:
+            result = o[1]
+
+    if result is None:
+        return None
+
+    item_name = Items.GetStageAlignmentObject(result[0], result[1])
+    return item_name
 
 def lock_character_tokens(multiworld, world, player):
     if not world.options.goal_characters:
@@ -575,6 +612,7 @@ def lock_character_tokens(multiworld, world, player):
         if character in world.available_characters:
             requirement_token_id, requirement_token_name = Levels.GetCharacterTokenNames(character, char_index,None,
                                                                                   Levels.ITEM_TOKEN_TYPE_CHARACTER)
+
             location = multiworld.get_location(requirement_token_name, player)
             mw_token_item = ShadowTheHedgehogItem(character_token, player)
             location.place_locked_item(mw_token_item)
@@ -1272,6 +1310,12 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
 
                             progression_rule = lambda state, p_rule=prog_rule, r_rule=req_rule : \
                                 p_rule(state) and r_rule(state)
+
+                            if world.options.objective_sanity_unlock and clear.mission_object_name not in ("Soldier", "Artificial Chaos", "Alien"):
+                                item_name = Items.GetStageAlignmentObject(clear.stageId, clear.alignmentId)
+
+                                progression_rule = lambda state, p_rule=progression_rule, item=item_name: (p_rule(state) and
+                                                                                           state.has(item, player))
 
                             add_rule(location, progression_rule)
 

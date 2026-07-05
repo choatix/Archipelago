@@ -113,6 +113,12 @@ class ObjectiveSanity(DefaultOnToggle):
     """
     display_name = "Objective Sanity"
 
+class ObjectiveSanityUnlock(Toggle):
+    """
+        Determines if you need at least one objective sanity item to allow the objects themsleves to spawn.
+    """
+    display_name = "Objective Sanity Unlocks"
+
 class ObjectiveSanitySystem(Choice):
     """
 
@@ -806,47 +812,13 @@ class ShadowMod(Choice):
     default = option_vanilla
 
 
-class ObjectUnlocks(Toggle):
+class ObjectUnlocks(OptionSet):
     """
-    Overarching setting to enable/disable very object options.
+        Which object unlocks are included.
     """
     display_name = "Object Unlocks"
-
-class ObjectPulleys(DefaultOnToggle):
-    """
-        Whether pulleys need to be unlocked before they can be used.
-    """
-    display_name = "Objects: Pulleys"
-
-class ObjectZiplines(DefaultOnToggle):
-    """
-        Whether ziplines need to be unlocked before they can be used.
-    """
-    display_name = "Objects: Ziplines"
-
-class ObjectUnits(DefaultOnToggle):
-    """
-        Whether heal units and bombs, as associated servers need to be unlocked before they can be used.
-    """
-    display_name = "Objects: Units"
-
-class ObjectRockets(DefaultOnToggle):
-    """
-        Whether rockets need to be unlocked before they can be used.
-    """
-    display_name = "Objects: Rockets"
-
-class ObjectLightDashes(DefaultOnToggle):
-    """
-        Whether light dash trails of rings need to be unlocked before they can be used.
-    """
-    display_name = "Objects: Light Dashes"
-
-class ObjectWarpHoles(DefaultOnToggle):
-    """
-        Whether warp holes need to be unlocked before they can be used.
-    """
-    display_name = "Objects: Warp Holes"
+    valid_keys = [ f.name.replace('_',' ') for f in Names.ObjectsAndSkills]
+    default = valid_keys
 
 class ShadowBoxes(Toggle):
     """
@@ -1064,12 +1036,7 @@ class ShadowTheHedgehogOptions(PerGameCommonOptions):
     story_progression_balancing_passes: StoryProgressionBalancingPasses
     shadow_mod: ShadowMod
     object_unlocks: ObjectUnlocks
-    object_pulleys: ObjectPulleys
-    object_ziplines: ObjectZiplines
-    object_units: ObjectUnits
-    object_rockets: ObjectRockets
-    object_light_dashes: ObjectLightDashes
-    object_warp_holes: ObjectWarpHoles
+    objective_sanity_unlock: ObjectiveSanityUnlock
     shadow_boxes: ShadowBoxes
     energy_cores: EnergyCores
     door_sanity: DoorSanity
@@ -1099,7 +1066,7 @@ shadow_option_groups = [
                              CharacterSanity, Checkpointsanity,
                              Keysanity, Enemysanity,
                              WeaponsanityUnlock, WeaponsanityHold,
-                             VehicleLogic, ObjectUnlocks,
+                             VehicleLogic, ObjectUnlocks, ObjectiveSanityUnlock,
                              ShadowBoxes, EnergyCores, GoldBeetleSanity,
                              DoorSanity, KeyCollectionMethod, Itemsanity,
                              CheckpointShuffle, CheckpointRules, MinimalCheckpointPercentage]),
@@ -1129,7 +1096,6 @@ shadow_option_groups = [
 
     OptionGroup("Configuration", [
         RifleComponents, ExcludedStages,
-        ObjectZiplines, ObjectPulleys, ObjectRockets, ObjectUnits, ObjectWarpHoles, ObjectLightDashes,
         SingleDiablon, SingleBlackDoom, SingleEggDealer,
         BossEnemysanity, DifficultEnemysanity, LastWayEnemysanity,
         StoryAndSelectStartTogether, StoryProgressionBalancing, StoryProgressionBalancingPasses,

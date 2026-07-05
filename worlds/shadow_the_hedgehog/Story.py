@@ -1218,7 +1218,7 @@ def ChoosePathOption(world, story_options):
         weights.append(weight_value)
 
 
-    randomised_item = world.random.choices(story_options, k=1, weights=weights)[0]
+    randomised_item = world.random.sample(story_options, k=1, weights=weights)[0]
 
     #print("SOI", story_options.index(randomised_item), weights, chosen_index)
 
@@ -1786,7 +1786,7 @@ def ChooseGoalLibraryPaths(world, count):
     if len(valid_libraries) < count:
         return []
 
-    return [p.index for p in world.random.choices(valid_libraries, k=count.value)]
+    return [p.index for p in world.random.sample(valid_libraries, k=count.value)]
 
 def GetCombinedLevelsForGoal(paths):
     paths = [l for l in Libraries if l.index in paths]

@@ -828,9 +828,83 @@ def GetBossClearEventName(stageId, from_id, alignment_id):
     return view_name
 
 def ObjectTypeToName(type: int):
-    value_to_name = str(ObjectType(type).name).replace("_", " ").title()
+    object_name = str(ObjectType(type).name)
+    value_to_name = object_name.replace("_", " ").title()
     return value_to_name
 
+class ObjectsAndSkills(IntEnum):
+    Pulley = 1
+    Air_Shoes = 2
+    Rocket = 3
+    Zipwire = 4
+    Heal_Units = 5
+    Bombs = 6
+    Warp_Holes = 7
+    GUN_Case_Key = 8
+    Black_Arm_Case_Key = 9
+    Triangle_Jump = 10
+    Doors = 11
+    Poles = 12
+    Switch = 13
+    Dark_Spin_Dash = 14
+    #Satellite_Laser = 15
+
+#def GetObjectAndSkillNames():
+#    return [ o.name.replace("_", "") for o in ObjectsAndSkills ]
+
+def GetAssociatedItemsToObjects():
+
+    result = {
+        ObjectsAndSkills.Pulley: [ObjectType.STANDARD_PULLEY],
+        ObjectsAndSkills.Air_Shoes: [ObjectType.LIGHT_DASH_TRAIL],
+        ObjectsAndSkills.Rocket: [ObjectType.ROCKET],
+        ObjectsAndSkills.Zipwire: [ObjectType.BALLOON_ZIPWIRE, ObjectType.CIRCUS_ZIPWIRE,
+                                   ObjectType.GUN_ZIPWIRE,ObjectType.SPACE_ZIPWIRE],
+        ObjectsAndSkills.Heal_Units: [ObjectType.HEAL_UNIT, ObjectType.HEAL_SERVER],
+        ObjectsAndSkills.Bombs: [ObjectType.BOMB, ObjectType.BOMB_SERVER],
+        ObjectsAndSkills.Warp_Holes: [ObjectType.WARP_HOLE],
+        ObjectsAndSkills.GUN_Case_Key: [ObjectType.LOCKED_GUN_CASE],
+        ObjectsAndSkills.Black_Arm_Case_Key: [ObjectType.LOCKED_BLACK_ARM_CASE],
+        ObjectsAndSkills.Triangle_Jump: [],
+        ObjectsAndSkills.Doors: [ObjectType.PROXIMITY_DOOR, ObjectType.HEAVY_DOOR],
+        ObjectsAndSkills.Poles: [ObjectType.POLE, ObjectType.RISING_LASER_POLE, ObjectType.CIRCUS_POLE],
+        ObjectsAndSkills.Switch: [ObjectType.BALL_SWITCH],
+        ObjectsAndSkills.Dark_Spin_Dash: [],
+        #ObjectsAndSkills.Satellite_Laser: [ObjectType.SATELLITE_LASER]
+
+    }
+
+    if len(result) != len(ObjectsAndSkills):
+        raise Exception("Invalid skills options")
+
+    return result
+
+def SkillToName(skillId):
+    return [ o for o in ObjectsAndSkills if o.value == skillId ][0].name.replace('_', ' ')
+
+def GetAssociatedRestrictionForObjects():
+    result = {
+        ObjectsAndSkills.Pulley: REGION_RESTRICTION_TYPES.Pulley,
+        ObjectsAndSkills.Air_Shoes: REGION_RESTRICTION_TYPES.LightDash,
+        ObjectsAndSkills.Rocket: REGION_RESTRICTION_TYPES.Rocket,
+        ObjectsAndSkills.Zipwire: REGION_RESTRICTION_TYPES.Zipwire,
+        ObjectsAndSkills.Heal_Units: REGION_RESTRICTION_TYPES.Heal,
+        ObjectsAndSkills.Bombs: REGION_RESTRICTION_TYPES.Explosion,
+        ObjectsAndSkills.Warp_Holes: REGION_RESTRICTION_TYPES.WarpHole,
+        ObjectsAndSkills.GUN_Case_Key: REGION_RESTRICTION_TYPES.GunCase,
+        ObjectsAndSkills.Black_Arm_Case_Key: REGION_RESTRICTION_TYPES.BlackArmCase,
+        ObjectsAndSkills.Triangle_Jump: REGION_RESTRICTION_TYPES.TriangleJump, #Skill
+        ObjectsAndSkills.Doors: REGION_RESTRICTION_TYPES.Door,
+        ObjectsAndSkills.Poles: REGION_RESTRICTION_TYPES.Pole,
+        ObjectsAndSkills.Switch: REGION_RESTRICTION_TYPES.Switch,
+        ObjectsAndSkills.Dark_Spin_Dash: REGION_RESTRICTION_TYPES.DarkSpinDash #Skill
+
+    }
+
+    if len(result) != len(ObjectsAndSkills):
+        raise Exception("Invalid skills options")
+
+    return result
 
 def GetObjectLocationName(object: SETObject):
     id_name = int(str(LOCATION_ID_PLUS_O) + str(6) + str(object.stage) + "0" + str(object.index))
@@ -897,6 +971,13 @@ class REGION_RESTRICTION_TYPES(IntEnum):
     Rings = 31
     Craft = 32
     GunLiftOrWeapon = 33
+    GunCase = 34
+    BlackArmCase = 35
+    TriangleJump = 36
+    Door = 37
+    Pole = 38
+    Switch = 39
+    DarkSpinDash = 40
 
     Region3 = 103
     Region4 = 104
