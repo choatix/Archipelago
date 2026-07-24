@@ -233,6 +233,19 @@ class DifficultEnemysanity(Toggle):
     """
     display_name = "Difficult Enemy Sanity"
 
+
+class Boxsanity(Toggle):
+    """
+        Determines whether boxes are included as checks.
+    """
+    display_name = "Box Sanity"
+
+class FloorWeaponSanity(Toggle):
+    """
+        Determines whether picking up weapons on the floor are included as checks
+    """
+    display_name = "Floor Weapon Sanity"
+
 class Keysanity(Toggle):
     """
         Determines whether key sanity is enabled.
@@ -932,6 +945,15 @@ class TrapFillPercentage(Range):
     range_end = 100
     default = 5
 
+class MaximumLevels(Range):
+    """
+        Maximum level count to be included in the game.
+    """
+    display_name = "Maximum Levels"
+    range_start = 1
+    range_end = 22
+    default = 22
+
 
 class PlandoCheckpointSpawns(OptionDict):
     """
@@ -986,6 +1008,11 @@ class ShadowTheHedgehogOptions(PerGameCommonOptions):
     enemy_sanity_percentage: EnemySanityPercentage
     difficult_enemy_sanity: DifficultEnemysanity
     key_sanity: Keysanity
+
+    box_sanity: Boxsanity
+    floor_weapon_sanity: FloorWeaponSanity
+
+
     keys_required_for_doors: KeysRequiredForDoors
     key_collection_method: KeyCollectionMethod
     checkpoint_sanity: Checkpointsanity
@@ -1053,6 +1080,7 @@ class ShadowTheHedgehogOptions(PerGameCommonOptions):
     checkpoint_trap_enabled: CheckpointTraps
     poison_trap_enabled: PoisonTraps
     trap_fill_percentage: TrapFillPercentage
+    maximum_levels: MaximumLevels
 
     plando_checkpoint_spawns: PlandoCheckpointSpawns
     music_shuffle: MusicShuffle
@@ -1069,7 +1097,8 @@ shadow_option_groups = [
                              VehicleLogic, ObjectUnlocks, ObjectiveSanityUnlock,
                              ShadowBoxes, EnergyCores, GoldBeetleSanity,
                              DoorSanity, KeyCollectionMethod, Itemsanity,
-                             CheckpointShuffle, CheckpointRules, MinimalCheckpointPercentage]),
+                             CheckpointShuffle, CheckpointRules, MinimalCheckpointPercentage,
+                             Boxsanity, FloorWeaponSanity]),
 
     OptionGroup("Progression", [StartingStages, LevelProgression, SelectGates,
                                 SelectGatesCount, GateUnlockRequirement,

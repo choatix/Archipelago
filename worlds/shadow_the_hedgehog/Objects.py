@@ -49,7 +49,7 @@ def GetObjectSanityTypes():
         ObjectType.POLE, ObjectType.CIRCUS_POLE, ObjectType.HEAVY_DOOR,
         ObjectType.PROXIMITY_DOOR,
         ObjectType.LOCKED_BLACK_ARM_CASE, ObjectType.LOCKED_GUN_CASE,
-        ObjectType.SATELLITE_LASER
+        #ObjectType.SATELLITE_LASER
     ]
 
 def GetWeaponObjectTypes():
@@ -87,6 +87,11 @@ def GetObjectTypesForLocations():
     ]
 
     object_types.extend(new_types)
+
+    if Flags.INCLUDE_WIP_OBJECTS:
+        wip_object_types = GetWIPLocationObjectTypes()
+        object_types.extend(wip_object_types)
+
     return object_types
 
 def GetPlayableObjectTypes():
@@ -102,12 +107,20 @@ def GetPlayableObjectTypes():
             ObjectType.WEAPON_WOODEN_BOX,
             ObjectType.ENVIRONMENT_WEAPON,
             ObjectType.FLOOR_WEAPON,
-            ObjectType.PARTNER,
             ObjectType.VEHICLE
     ]
 
     object_types.extend(new_types)
+
     return object_types
+
+def GetWIPLocationObjectTypes():
+    return [
+        ObjectType.FLOOR_WEAPON,
+        ObjectType.WEAPON_BOX,
+        ObjectType.WEAPON_METAL_BOX,
+        ObjectType.WEAPON_WOODEN_BOX
+    ]
 
 def GetWIPObjectTypes():
     return [
@@ -121,8 +134,8 @@ def GetWIPObjectTypes():
         ObjectType.DEFENSE_PROGRAM,
         ObjectType.GOAL_RING,
         ObjectType.RISING_LASER_POLE,
-        ObjectType.DESTRUCTIBLE_X,
-        ObjectType.SATELLITE_LASER,
+        #ObjectType.DESTRUCTIBLE_X,
+        #ObjectType.SATELLITE_LASER,
         #ObjectType.BUILDING,
         ObjectType.CHAOS_EMERALD
     ]
@@ -433,7 +446,7 @@ def GetTypeId(objectType):
     if objectType == ObjectType.FLOOR_WEAPON:
         return 0x20
 
-    if objectType == ObjectType.WEAPON_BOX:
+    if objectType in [ObjectType.WEAPON_BOX, ObjectType.WEAPON_BOX_LOTTERY, ObjectType.WEAPON_BOX_UNHANDLED] :
         return 0x0C
 
     if objectType == ObjectType.WEAPON_METAL_BOX:
@@ -444,9 +457,6 @@ def GetTypeId(objectType):
 
     if objectType == ObjectType.BLACK_HAWK_TOO_HARD:
         return 0x8E
-
-    if objectType == ObjectType.WEAPON_BOX_UNHANDLED:
-        return 0x0C
 
     if objectType == ObjectType.LIGHT_DASH_TRAIL_ANTI_TRAP:
         return 0x10
@@ -499,7 +509,7 @@ def GetTypeId(objectType):
     if objectType == ObjectType.DESTRUCTIBLE_X:
         return 0x2589
 
-    print("Unhandled type", objectType)
+    print("Unhandled object type", objectType)
     return None
 
 def CheckVehicleAttributes(objectType, extra_bytes, index, link_id, address):
@@ -985,7 +995,7 @@ def StateToString(type, state):
 
     return state
 
-def PrintSETChange(address, index, type, previous, new, additional_bytes, link_id):
+def PrintSETChange(address, index, type, previous, new, additional_bytes, link_id, known_object):
 
     #if not use:
     #    return
@@ -1142,6 +1152,8 @@ def GetCommonSize(level):
         return 15
     elif level == Levels.BOSS_BLACK_DOOM_FH:
         return 11
+    elif level == Levels.BOSS_DEVIL_DOOM:
+        return 2
 
     return 0
 
@@ -1195,9 +1207,103 @@ def GetNormalSize(level):
 
     return 0
 
+def GetExpertSize(level):
+    if level == Levels.STAGE_WESTOPOLIS:
+        return 22
+    elif level == Levels.STAGE_DIGITAL_CIRCUIT:
+        return 41
+    elif level == Levels.STAGE_GLYPHIC_CANYON:
+        return 9
+    elif level == Levels.STAGE_LETHAL_HIGHWAY:
+        return 95
+    elif level == Levels.STAGE_CRYPTIC_CASTLE:
+        return 89
+    elif level == Levels.STAGE_PRISON_ISLAND:
+        return 148
+    elif level == Levels.STAGE_CIRCUS_PARK:
+        return 105
+    elif level == Levels.STAGE_CENTRAL_CITY:
+        return 47
+    elif level == Levels.STAGE_THE_DOOM:
+        return 12
+    elif level == Levels.STAGE_SKY_TROOPS:
+        return 15
+    elif level == Levels.STAGE_MAD_MATRIX:
+        return 70
+    elif level == Levels.STAGE_DEATH_RUINS:
+        return 24
+    elif level == Levels.STAGE_THE_ARK:
+        return 2
+    elif level == Levels.STAGE_AIR_FLEET:
+        return 28
+    elif level == Levels.STAGE_IRON_JUNGLE:
+        return 11
+    elif level == Levels.STAGE_SPACE_GADGET:
+        return 5
+    elif level == Levels.STAGE_LOST_IMPACT:
+        return 15
+    elif level == Levels.STAGE_GUN_FORTRESS:
+        return 17
+    elif level == Levels.STAGE_BLACK_COMET:
+        return 26
+    elif level == Levels.STAGE_LAVA_SHELTER:
+        return 6
+    elif level == Levels.STAGE_COSMIC_FALL:
+        return 17
+    elif level == Levels.STAGE_FINAL_HAUNT:
+        return 5
+    elif level == Levels.STAGE_THE_LAST_WAY:
+        return 17
+
+    return 0
+
 def GetDecorationSize(level):
     if level == Levels.STAGE_WESTOPOLIS:
         return 536
+    elif level == Levels.STAGE_DIGITAL_CIRCUIT:
+        return 102
+    elif level == Levels.STAGE_GLYPHIC_CANYON:
+        return 578
+    elif level == Levels.STAGE_LETHAL_HIGHWAY:
+        return 658
+    elif level == Levels.STAGE_CRYPTIC_CASTLE:
+        return 334
+    elif level == Levels.STAGE_PRISON_ISLAND:
+        return 427
+    elif level == Levels.STAGE_CIRCUS_PARK:
+        return 272
+    elif level == Levels.STAGE_CENTRAL_CITY:
+        return 365
+    elif level == Levels.STAGE_THE_DOOM:
+        return 361
+    elif level == Levels.STAGE_SKY_TROOPS:
+        return 801
+    elif level == Levels.STAGE_MAD_MATRIX:
+        return 98
+    elif level == Levels.STAGE_DEATH_RUINS:
+        return 351
+    elif level == Levels.STAGE_THE_ARK:
+        return 244
+    elif level == Levels.STAGE_AIR_FLEET:
+        return 854
+    elif level == Levels.STAGE_IRON_JUNGLE:
+        return 465
+    elif level == Levels.STAGE_SPACE_GADGET:
+        return 586
+    elif level == Levels.STAGE_LOST_IMPACT:
+        return 545
+    elif level == Levels.STAGE_GUN_FORTRESS:
+        return 701
+    elif level == Levels.STAGE_BLACK_COMET:
+        return 762
+    elif level == Levels.STAGE_LAVA_SHELTER:
+        return 604
+    elif level == Levels.STAGE_COSMIC_FALL:
+        return 492
+    elif level == Levels.STAGE_FINAL_HAUNT:
+        return 775
+    elif level == Levels.STAGE_THE_LAST_WAY:
+        return 907
 
     return 0
 
@@ -1205,7 +1311,7 @@ def GetSETFileLength(level, mode=0):
     if mode == 0:
         return GetCommonSize(level) + GetNormalSize(level) + GetDecorationSize(level)
     else:
-        return GetCommonSize(level)
+        return GetCommonSize(level) + GetExpertSize(level) + GetDecorationSize(level)
 
     return None
 
@@ -1318,3 +1424,13 @@ def GetRegionsForGoalRings(stage):
 
 
 CharacterToLevel = GetCharacterSanityLocations()
+
+def GetBoxTypes():
+    return [ObjectType.ENERGY_CORE_IN_WOOD_BOX, ObjectType.ENERGY_CORE_IN_METAL_BOX, ObjectType.ITEM_IN_BOX,
+             ObjectType.ITEM_IN_METAL_BOX, ObjectType.WEAPON_WOODEN_BOX, ObjectType.WEAPON_METAL_BOX,
+            ObjectType.WEAPON_BOX,
+             ]
+
+def IsBox(object):
+    Boxes = GetBoxTypes()
+    return object.object_type in Boxes

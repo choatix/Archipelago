@@ -39,6 +39,20 @@ def region_name_for_character(stage_name, name, region):
 def region_name_for_weapon(stage_name, region_index, name):
     return f"{name}_in_{stage_name}_{region_index}"
 
+def handle_maximum_levels(world):
+    max_stages = world.options.maximum_levels
+    if max_stages >= 22:
+        return
+
+    base_stages = [ s for s in Levels.ALL_STAGES if s not in Levels.BOSS_STAGES and s not in Levels.LAST_STORY_STAGES \
+            and Levels.LEVEL_ID_TO_LEVEL[s] not in world.options.excluded_stages ]
+    chosen_stages = world.random.sample(base_stages, max_stages)
+
+    for stage in base_stages:
+        if stage not in chosen_stages:
+            world.options.excluded_stages = Options.ExcludedStages(
+                list(world.options.excluded_stages) + [Levels.LEVEL_ID_TO_LEVEL[stage]])
+
 def handle_single_boss(world, boss_name):
     final_bosses_full = [boss.boss for boss in Story.DefaultStoryMode if boss.end_stage_id is None and
                          Levels.LEVEL_ID_TO_LEVEL[boss.boss] not in world.options.excluded_stages]
@@ -156,6 +170,9 @@ def DetermineGates(world):
         # Disable gates here
         return {}
 
+    if Levels.STAGE_THE_LAST_WAY in stages_to_assign and world.options.level_progression == Options.LevelProgression.option_both:
+        stages_to_assign.remove(Levels.STAGE_THE_LAST_WAY)
+
     world.random.shuffle(stages_to_assign)
 
     gates = {0: world.first_regions}
@@ -194,8 +211,6 @@ def early_region_checks(world):
     # TODO: Recall why story sorted order is used rather than randomly
     story_sorted_stages = Story.StoryToOrder(world.shuffled_story_mode)
 
-
-
     last_way_required = (not world.options.include_last_way_shuffle or
                            world.options.story_shuffle == Options.StoryShuffle.option_off)
 
@@ -210,17 +225,6 @@ def early_region_checks(world):
     if devil_doom_required:
         story_sorted_stages.append(Levels.BOSS_DEVIL_DOOM)
 
-
-    #if (world.options.story_shuffle and world.options.story_boss_count == 0 and world.options.select_bosses and
-    #        world.options.level_progression != Options.LevelProgression.option_story):
-    #    mid_boss_stages = [ s for s in Levels.ALL_STAGES if s in Levels.BOSS_STAGES and s not in Levels.FINAL_BOSSES
-    #                        and Levels.LEVEL_ID_TO_LEVEL[s] not in world.options.excluded_stages
-    #                        and (Story.GetVanillaBossStage(s) is None or s in Levels.FINAL_BOSSES
-    #                             or Levels.LEVEL_ID_TO_LEVEL[
-    #                                 Story.GetVanillaBossStage(s)] not in world.options.excluded_stages)
-    #                        ]
-    #    story_sorted_stages.extend(mid_boss_stages)
-    #    available_select_stages.extend(mid_boss_stages)
 
 
     for level in story_sorted_stages:
@@ -284,10 +288,21 @@ def early_region_checks(world):
         if len(not_excluded_stages) != len(available_story_stages_no_bosses):
             raise OptionError("Invalid stage accessibility for Story w/o Shuffle")
 
+
     if world.options.level_progression == Options.LevelProgression.option_both:
         story_inaccessible_stages = [ s for s in world.available_levels if s not in world.available_story_levels
                                       and s not in Levels.LAST_STORY_STAGES ]
         available_select_stages.extend(story_inaccessible_stages)
+
+        if world.leftover_bosses is not None:
+
+            missing_bosses =  [ l for l in list(set(world.leftover_bosses)) if Story.GetVanillaBossStage(l) is None or
+                                            l in Levels.FINAL_BOSSES or
+                                            Story.GetVanillaBossStage(l) in world.available_levels]
+            available_select_stages.extend(missing_bosses)
+            world.available_levels.extend(missing_bosses)
+
+
 
     total_select_stages = math.ceil(len(world.available_levels) * world.options.select_percentage / 100)
     while len(available_select_stages) < total_select_stages:
@@ -425,8 +440,13 @@ def create_regions(world) -> Dict[str, Region]:
             boss_stage_requirement = None
 
             if stage_id in Levels.LAST_STORY_STAGES:
-                if stage_id == Levels.STAGE_THE_LAST_WAY and not world.options.include_last_way_shuffle:
-                    continue
+                if stage_id == Levels.STAGE_THE_LAST_WAY:
+                    if not world.options.include_last_way_shuffle:
+                        continue
+                    # TLW Cannot be a gate unlock on story mode due to clear condition
+                    if world.options.level_progression == LevelProgression.option_both:
+                        continue
+
                 if stage_id == Levels.BOSS_DEVIL_DOOM:
                     continue
             if stage_id in Levels.BOSS_STAGES:
@@ -818,6 +838,22 @@ def FindStartingItems(world, required=False):
             item_options.append("Zipwire")
         elif option == Names.REGION_RESTRICTION_TYPES.Vacuum:
             item_options.append("Weapon:Vacuum Pod")
+        elif option == Names.REGION_RESTRICTION_TYPES.Door:
+            item_options.append("Doors")
+        elif option == Names.REGION_RESTRICTION_TYPES.DarkSpinDash:
+            item_options.append("Dark Spin Dash")
+        elif option == Names.REGION_RESTRICTION_TYPES.LightSpeedCircuit:
+            item_options.append("Light Speed Circuit")
+        elif option == Names.REGION_RESTRICTION_TYPES.TriangleJump:
+            item_options.append("Triangle Jump")
+        elif option == Names.REGION_RESTRICTION_TYPES.Pole:
+            item_options.append("Pole")
+        elif option == Names.REGION_RESTRICTION_TYPES.BlackArmCase:
+            item_options.append("Black Arm Case Key")
+        elif option == Names.REGION_RESTRICTION_TYPES.GunCase:
+            item_options.append("GUN Case Key")
+        elif option == Names.REGION_RESTRICTION_TYPES.Switch:
+            item_options.append("Switch")
         else:
             failed_item_options.append(option)
 

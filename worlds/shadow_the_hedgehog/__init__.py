@@ -88,6 +88,7 @@ class ShtHWorld(World):
         self.required_tokens = {}
         self.excess_item_count = 0
         self.shuffled_story_mode = None
+        self.leftover_bosses = None
         self.random_value = None
         self.starting_items = []
         self.gates = {}
@@ -127,6 +128,7 @@ class ShtHWorld(World):
                 push_items = Regions.FindStartingItems(self, required=True)
                 for item in push_items:
                     print("Push emergency item:", item)
+                    # TODO Remove from itempool as well should occur?
                     self.starting_items.append(item)
                     self.multiworld.push_precollected(self.create_item(item))
 
@@ -390,6 +392,8 @@ class ShtHWorld(World):
         self.random_value = int.from_bytes(random_bytes, byteorder='big')
         self.check_invalid_configurations()
 
+        Regions.handle_maximum_levels(self)
+
         if self.options.single_egg_dealer:
             Regions.handle_single_boss(self, "Egg Dealer")
         if self.options.single_black_doom:
@@ -398,9 +402,9 @@ class ShtHWorld(World):
             Regions.handle_single_boss(self, "Diablon")
 
         if self.options.level_progression != Options.LevelProgression.option_select:
-            self.shuffled_story_mode = Story.GetStoryMode(self)
+            self.shuffled_story_mode, self.leftover_bosses = Story.GetStoryMode(self)
         else:
-            self.shuffled_story_mode = Story.DefaultStoryMode
+            self.shuffled_story_mode, self.leftover_bosses = Story.DefaultStoryMode
 
         if hasattr(self.multiworld, "re_gen_passthrough"):
             if "Shadow The Hedgehog" in self.multiworld.re_gen_passthrough:
@@ -458,6 +462,12 @@ class ShtHWorld(World):
                 if "requires_emeralds" in passthrough:
                     self.options.requires_emeralds = passthrough["requires_emeralds"]
 
+                if "box_sanity" in passthrough:
+                    self.options.box_sanity = passthrough["box_sanity"]
+
+                if "floor_weapon_sanity" in passthrough:
+                    self.options.floor_weapon_sanity = passthrough["floor_weapon_sanity"]
+
                 if "key_sanity" in passthrough:
                     self.options.key_sanity = passthrough["key_sanity"]
 
@@ -489,7 +499,6 @@ class ShtHWorld(World):
                     self.options.vehicle_logic = passthrough["vehicle_logic"]
 
                 if "override_settings" in passthrough:
-                    print("override=", passthrough["override_settings"])
                     self.options.percent_overrides = passthrough["override_settings"]
 
                 if "level_progression" in passthrough:
@@ -563,6 +572,9 @@ class ShtHWorld(World):
 
                 if "shuffled_story_mode" in passthrough:
                     self.shuffled_story_mode = Story.StringToStory(passthrough["shuffled_story_mode"])
+
+                if "leftover_bosses" in passthrough:
+                    self.leftover_bosses = passthrough["leftover_bosses"]
 
                 if "gates" in passthrough:
                     self.gates = passthrough["gates"]
@@ -668,6 +680,12 @@ class ShtHWorld(World):
 
                 if "objective_sanity_unlock" in passthrough:
                     self.options.objective_sanity_unlock = passthrough["objective_sanity_unlock"]
+
+                if "weapon_counts" in passthrough:
+                    self.weapon_counts = passthrough["weapon_counts"]
+
+                if "maximum_levels" in passthrough:
+                    self.options.maximum_levels = passthrough["maximum_levels"]
 
         # Set maximum of levels required
         # Exclude missions listed in exclude_locations
@@ -936,6 +954,7 @@ class ShtHWorld(World):
             "required_client_version": ShadowUtils.GetVersionString(),
             "override_settings": self.options.percent_overrides.value,
             "shuffled_story_mode": Story.StoryToString(self.shuffled_story_mode),
+            "leftover_bosses": self.leftover_bosses,
             "level_progression": self.options.level_progression.value,
             "excluded_stages": self.options.excluded_stages.value,
             "logic_level": self.options.logic_level.value,
@@ -1003,6 +1022,10 @@ class ShtHWorld(World):
             "required_characters": 0 if not self.options.goal_characters else len(self.available_characters),
             "death_link": self.options.death_link.value,
             "objective_sanity_unlock": self.options.objective_sanity_unlock.value,
+            "floor_weapon_sanity": self.options.floor_weapon_sanity.value,
+            "box_sanity": self.options.box_sanity.value,
+            "weapon_counts": self.weapon_counts,
+            "maximum_levels": self.options.maximum_levels.value
         }
 
         return slot_data

@@ -1355,6 +1355,56 @@ def create_locations(world, regions: Dict[str, Region]):
                                                            objective_location.locationId, stage_region)
             stage_region.locations.append(new_objective_location)
 
+    if world.options.box_sanity:
+
+        for box_location in [ x for x in object_locations if x.other in Objects.GetBoxTypes() and
+                                                              x.stageId in world.available_levels]:
+
+            if world.options.exclude_go_mode_items and box_location.stageId == STAGE_THE_LAST_WAY and \
+                    not world.options.include_last_way_shuffle:
+                continue
+
+            if (box_location.other == ObjectType.ENERGY_CORE_IN_METAL_BOX or \
+                box_location.other == ObjectType.ENERGY_CORE_IN_WOOD_BOX) and world.options.energy_cores:
+                continue
+
+            if (box_location.other == ObjectType.ITEM_IN_BOX or box_location.other == ObjectType.ITEM_IN_METAL_BOX) \
+                    and world.options.item_sanity:
+                continue
+
+            if box_location.regionId is not None:
+
+                if box_location.stageId in Levels.BOSS_STAGES:
+                    stage_region_name = Levels.boss_stage_id_to_region(box_location.stageId,
+                                                                       box_location.regionId)
+                else:
+                    stage_region_name = Levels.stage_id_to_region(box_location.stageId,
+                                                                  box_location.regionId)
+                stage_region = regions[stage_region_name]
+                box_location = ShadowTheHedgehogLocation(world.player, box_location.name,
+                                                           box_location.locationId, stage_region)
+                stage_region.locations.append(box_location)
+            else:
+                print("Error with box:", box_location)
+
+    if world.options.floor_weapon_sanity:
+
+        for floor_location in [ x for x in object_locations if x.other == ObjectType.FLOOR_WEAPON and
+                                                              x.stageId in world.available_levels]:
+
+            if world.options.exclude_go_mode_items and floor_location.stageId == STAGE_THE_LAST_WAY and \
+                    not world.options.include_last_way_shuffle:
+                continue
+
+            if floor_location.regionId is not None:
+                stage_region_name = Levels.stage_id_to_region(floor_location.stageId, floor_location.regionId)
+                stage_region = regions[stage_region_name]
+                floor_location = ShadowTheHedgehogLocation(world.player, floor_location.name,
+                                                           floor_location.locationId, stage_region)
+                stage_region.locations.append(floor_location)
+            else:
+                print("Error with floor weapon:", floor_location)
+
 
     if world.options.level_progression != Options.LevelProgression.option_select:
         SetStoryClearEvents(world, world.player, regions)
@@ -1631,6 +1681,33 @@ def count_locations(world, levels=None):
                      world.options.include_last_way_shuffle)
                     ]
 
+        count = increment_location_count(count, len(possible), "i")
+
+    if world.options.floor_weapon_sanity:
+        item_types = [ObjectType.FLOOR_WEAPON]
+        possible = [x for x in object_locations if x.other in item_types and
+                                   x.stageId in location_available_levels
+                                    and (world.options.difficult_enemy_sanity or not x.flag) and
+                    (not world.options.exclude_go_mode_items or x.stageId != STAGE_THE_LAST_WAY or
+                     world.options.include_last_way_shuffle)
+                    ]
+
+        count = increment_location_count(count, len(possible), "i")
+
+    if world.options.box_sanity:
+        item_types = Objects.GetBoxTypes()
+        possible = [x for x in object_locations if x.other in item_types and
+                                   x.stageId in location_available_levels
+                                    and (world.options.difficult_enemy_sanity or not x.flag) and
+                    (not world.options.exclude_go_mode_items or x.stageId != STAGE_THE_LAST_WAY or
+                     world.options.include_last_way_shuffle)
+                    ]
+
+        possible = [ p for p in possible if not
+                    ((world.options.energy_cores and p.other in [ObjectType.ENERGY_CORE_IN_METAL_BOX, ObjectType.ENERGY_CORE_IN_WOOD_BOX])
+                     or
+                     (world.options.item_sanity and p.other in [ObjectType.ITEM_IN_BOX, ObjectType.ITEM_IN_METAL_BOX]))
+                     ]
         count = increment_location_count(count, len(possible), "i")
 
     return count

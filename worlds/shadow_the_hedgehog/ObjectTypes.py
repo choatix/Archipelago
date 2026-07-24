@@ -140,10 +140,11 @@ class ObjectType(IntEnum):
     LIGHTSPEED_ENTRANCE = 108
     LIGHTSPEED_EXIT = 109
     SATELLITE_LASER = 110
-    BUILDING = 111
+    #BUILDING = 111
     CHAOS_EMERALD = 112
 
     DESTRUCTIBLE_X = 113
+    WEAPON_BOX_LOTTERY = 114
 
 class SETObject:
     object_type: int

@@ -11,7 +11,7 @@ from .Crafts import Crafts
 from .Items import ShadowTheHedgehogItem, GetLevelTokenItems
 from .Levels import INDIVIDUAL_LEVEL_REGIONS, ITEM_TOKEN_TYPE_LAST_WAY
 from .Locations import MissionClearLocations, LocationInfo, BossClearLocations, HasCheckpointZero
-from .Names import REGION_INDICES
+from .Names import REGION_INDICES, REGION_RESTRICTION_TYPES
 from .Options import LevelProgression
 from .Regions import character_name_to_region, region_name_for_character, weapon_name_to_region, \
     region_name_for_weapon
@@ -486,7 +486,12 @@ def handle_path_rules(world, options, player, from_region_id, additional_level_r
         for restriction in additional_level_region.restrictionTypes:
             if restriction == Names.REGION_RESTRICTION_TYPES.NoRestriction:
                 continue
-            skill_name = Names.SkillToName([o for o in object_restrictions.items() if o[1] == restriction][0][0])
+
+            found_skills = [o for o in object_restrictions.items() if o[1] == restriction]
+            if len(found_skills) == 0:
+                continue
+
+            skill_name = Names.SkillToName(found_skills[0][0])
             if skill_name in options.object_unlocks:
                 o_rule = lambda state: state.has(skill_name, player)
                 outputs.append(skill_name)
@@ -562,37 +567,60 @@ def handle_path_rules(world, options, player, from_region_id, additional_level_r
         for ring_indirect in ring_indirects:
             indirects.append(Levels.stage_id_to_region(additional_level_region.stageId, ring_indirect))
 
+    if Names.REGION_RESTRICTION_TYPES.Lantern in additional_level_region.restrictionTypes and options.objective_sanity_unlock:
+        rule = lambda state, r=rule: state.has("Cryptic Castle Lantern", player) and r(state)
+
+    if Names.REGION_RESTRICTION_TYPES.SpaceGadgetDefense in additional_level_region.restrictionTypes and options.objective_sanity_unlock:
+        rule = lambda state, r=rule: state.has("Space Gadget Defense Unit", player) and r(state)
+
+    if Names.REGION_RESTRICTION_TYPES.Shield in additional_level_region.restrictionTypes and options.objective_sanity_unlock:
+        rule = lambda state, r=rule: state.has("Final Haunt Shield", player) and r(state)
+
+    if Names.REGION_RESTRICTION_TYPES.Terminal in additional_level_region.restrictionTypes and options.objective_sanity_unlock:
+        rule = lambda state, r=rule: state.has("Mad Matrix Terminal", player) and r(state)
+
+    if Names.REGION_RESTRICTION_TYPES.Defense in additional_level_region.restrictionTypes and options.objective_sanity_unlock:
+        rule = lambda state, r=rule: state.has("Lava Shelter Defense", player) and r(state)
+
     return rule, indirects
 
 def restrict_objects(multiworld, world, player):
     world_locations = [ l.name for l in world.get_locations()]
 
-    for object in [ x for x in Objects.GetObjectChecks() if x.restrictionType != 10 ]:
+    for object in [ x for x in Objects.GetObjectChecks()]:
         location_id, entry_location_name = Names.GetObjectLocationName(object)
         if entry_location_name in world_locations:
+
+            item_name = LookupItemNameForObjectUnlock(object)
+            if object.restrictionType == REGION_RESTRICTION_TYPES.NoRestriction and (
+                    world.options.objective_sanity_unlock and
+                    object.object_type not in Objects.GetStandardEnemyTypes() and item_name is None):
+                continue
+
             location_with_restriction = world.get_location(entry_location_name)
             dummy_region = Levels.LevelRegion(object.stage, object.region, [object.restrictionType])
 
             access_rule = handle_path_rules(world, world.options, player, object.region, dummy_region,
                                                                       Levels.REGION_RESTRICTION_REFERENCE_TYPES.BaseLogic)[0]
 
-            if world.options.objective_sanity_unlock:
-                #clear.mission_object_name not in ("Soldier", "Artificial Chaos", "Alien"):
+            if (world.options.objective_sanity_unlock and
+                    object.object_type not in Objects.GetStandardEnemyTypes()):
                 item_name = LookupItemNameForObjectUnlock(object)
                 if item_name is not None:
-                    access_rule = lambda state, a_rule=access_rule, i=item_name: a_rule(state) and state.has(item_name, player)
+                    access_rule = lambda state, a_rule=access_rule, i=item_name: a_rule(state) and state.has(i, player)
 
             location_with_restriction.access_rule = access_rule
 
 def LookupItemNameForObjectUnlock(object):
     result = None
 
-    if object.type in Objects.GetStandardEnemyTypes():
+    if object.object_type in Objects.GetStandardEnemyTypes():
         return None
 
-    for o in Objects.STAGE_OBJECT_ITEMS:
-        if object.type in o[0][0]:
-            result = o[1]
+    for o in Objects.STAGE_OBJECT_ITEMS.items():
+        if object.object_type in o[1][0]:
+            result = o[0]
+            break
 
     if result is None:
         return None
@@ -671,7 +699,10 @@ def CalculateObjectiveValueForGate(value, max_gates, gate_no, gate_density, rate
     return expected_result
 
 def GetIndividualGateKeyRequirements(world, player, gate_no):
-    if int(gate_no) == 0:
+    if(type(gate_no)) != int:
+        gate_no = int(gate_no)
+
+    if gate_no == 0:
         return {}, None, []
 
     gate_density = world.options.gate_density
@@ -771,8 +802,7 @@ def GetIndividualGateKeyRequirements(world, player, gate_no):
                 reqs[weapon] = 0
 
             reqs["Count"] = gate_value
-
-
+            world.gate_requirements[gate_no] = reqs
         else:
             print("Unknown requirements:", reqs)
 
@@ -1157,6 +1187,7 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
         if path_rule is not None:
             connection_name = Names.GetRegionEntranceName(from_region_name, to_region_name,
                                                           mock_region_info.restrictionTypes)
+
             connect(world.player, connection_name,
                     from_region, to_region, path_rule)
 
@@ -2019,6 +2050,9 @@ def HasInescapablePath(level, region, options, player):
         escapes, inescapes, simplified = check_data[level]
         if len(inescapes) > 0:
             if region in inescapes:
+
+                #print("Inescapble Path:", level, region, escapes, inescapes, simplified)
+
                 return True
 
     return False
@@ -2040,12 +2074,22 @@ CHECKPOINT_ESCAPE_GROUPS_RESET_RESTRICTED = \
 }
 
 CHECKPOINT_ESCAPE_GROUPS = {
+
+    Levels.STAGE_GLYPHIC_CANYON: {
+        "A": [REGION_INDICES.GLYPHIC_CANYON_SIX_DOOR]
+    },
+
     Levels.STAGE_LETHAL_HIGHWAY: {
         "A": [REGION_INDICES.LETHAL_HIGHWAY_TWO_FALL,
               REGION_INDICES.LETHAL_HIGHWAY_KEY_DOOR],
         "B": [REGION_INDICES.LETHAL_HIGHWAY_FIVE_BOMB,
               REGION_INDICES.LETHAL_HIGHWAY_FIVE_ROCKET,
               REGION_INDICES.LETHAL_HIGHWAY_FIVE_FALL]
+    },
+
+    Levels.STAGE_PRISON_ISLAND:
+    {
+        "A": []
     },
 
     Levels.STAGE_CRYPTIC_CASTLE: {
@@ -2063,6 +2107,16 @@ CHECKPOINT_ESCAPE_GROUPS = {
         "A": [REGION_INDICES.CIRCUS_PARK_PULLEY]
     },
 
+    Levels.STAGE_CENTRAL_CITY:
+        {
+            "A": []
+        },
+
+    Levels.STAGE_THE_DOOM:
+    {
+        "A": [REGION_INDICES.THE_DOOM_THREE_UP_DOWN],
+    },
+
     Levels.STAGE_SKY_TROOPS: {
         "A": [REGION_INDICES.SKY_TROOPS_LIGHT_DASH,
               REGION_INDICES.SKY_TROOPS_GUN_JUMPER],
@@ -2074,6 +2128,16 @@ CHECKPOINT_ESCAPE_GROUPS = {
               REGION_INDICES.SKY_TROOPS_BLACK_HAWK_CC_HARD,
               REGION_INDICES.SKY_TROOPS_HAWK_OR_VOLT]
     },
+
+    Levels.STAGE_MAD_MATRIX:
+        {
+            "A": []
+        },
+
+    Levels.STAGE_DEATH_RUINS:
+        {
+            "A": []
+        },
 
     Levels.STAGE_IRON_JUNGLE: {
         "A": [REGION_INDICES.IRON_JUNGLE_ANDROID_HOLE_ONE,
@@ -2158,8 +2222,8 @@ CHECKPOINT_ESCAPE_GROUPS = {
         "D": [REGION_INDICES.FINAL_HAUNT_FIVE_VACUUM,
               REGION_INDICES.FINAL_HAUNT_BLACK_VOLT_2,
               REGION_INDICES.FINAL_HAUNT_DARK_TURRET,
-              REGION_INDICES.FINAL_HAUNT_FIVE_KEY_DOOR,
-              REGION_INDICES.FINAL_HAUNT_SECRET_TURRET,
+              REGION_INDICES.FINAL_HAUNT_FIVE_KEY_DOOR_1,
+              REGION_INDICES.FINAL_HAUNT_FIVE_SECRET_TURRET_1,
               REGION_INDICES.FINAL_HAUNT_VOLT_OR_FIVE],
         "E": [REGION_INDICES.FINAL_HAUNT_SHIELD_THREE]
     }

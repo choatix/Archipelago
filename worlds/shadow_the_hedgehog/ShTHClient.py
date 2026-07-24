@@ -157,11 +157,15 @@ class GAME_ADDRESSES:
 
     TRIANGLE_JUMP_SKILL_ADDRESS = 0x805F2960
     DARK_SPIN_DASH_SPEED = 0x805EE3C0
+    LIGHT_SPEED_CIRCUIT_SPEED = 0x805EE358
+
+    HOMING_ATTACK_POWER = 0x805201C4
+    AIR_DASH_ATTACK_POWER = 0x80520188
 
 class LevelSelectorOptions:
     Death = 0x08
     Restart = 0x0F
-    Exit = 0x11
+    Exit = 0x10
 
 class LevelStatusOptions:
     LoadingFirstTime = 0x00
@@ -176,7 +180,7 @@ class LevelStatusOptions:
     Death = 0x09
     Saving = 0x0A
     Blackout = 0x0B
-    Other = 0x10
+    ForceExit = 0x10
 
 class MenuOptions:
     NotInMenu = 0x00
@@ -220,6 +224,9 @@ def GetCheckpointEnableAddresses():
 
     return checkpoint_addresses
 
+def ResetSetChangeHistory(ctx):
+    ctx.set_change_history = []
+
 last_level = None
 memory_data = {}
 async def ShowSETChanges(current_level, ctx):
@@ -231,6 +238,9 @@ async def ShowSETChanges(current_level, ctx):
         return
 
     weapon_check = False
+    box_check = False
+
+
     if last_level != current_level:
         #weapon_check = True
         last_level = current_level
@@ -246,8 +256,10 @@ async def ShowSETChanges(current_level, ctx):
 
     #809AF000 + (2C * (109-1)) + 20
 
-    show_known = False
-    known_objects = [ s.index for s in Objects.GetDesirableObjectsForStage(current_level, include_other_matches=True) ]
+    show_known = Flags.SHOW_KNOWN
+    known_objects_full = [ s for s in Objects.GetDesirableObjectsForStage(current_level, include_other_matches=True) ]
+
+    known_objects = [s.index for s in known_objects_full ]
 
     force_full_check = False
 
@@ -276,12 +288,26 @@ async def ShowSETChanges(current_level, ctx):
     full_object_change_data = []
 
     for i in range(0, set_item_count):
-
         if not weapon_check and not show_known and i in known_objects:
-            continue
+
+            if box_check:
+                l = [ l for l in known_objects_full if l.index == i]
+                if len(l) > 0:
+                    is_box = Objects.IsBox(l[0])
+                    if not is_box:
+                        continue
+                else:
+                    continue
+            else:
+                continue
 
         if i not in changed_indexes:
             continue
+
+        known_object = None
+        if i in known_objects:
+            known_object = [ l for l in known_objects_full if l.index == i][0]
+
 
         spawn_data = start_address  + (OBJECT_SIZE * i) + 0x20
         object_type = spawn_data + 0x08
@@ -294,11 +320,8 @@ async def ShowSETChanges(current_level, ctx):
         loaded_bytes = dolphin_memory_engine.read_bytes(object_type, 2)
         loaded_object_type = int.from_bytes(loaded_bytes, byteorder='big')
 
-        if loaded_object_type == Objects.GetTypeId(ObjectType.ENVIRONMENT_WEAPON) and current_level in (Names.STAGE_FINAL_HAUNT,
-                                                                                     Names.STAGE_THE_LAST_WAY):
+        if loaded_object_type == Objects.GetTypeId(ObjectType.ENVIRONMENT_WEAPON):  #and current_level in (Names.STAGE_FINAL_HAUNT,Names.STAGE_THE_LAST_WAY)):
             continue
-
-
 
         loaded_bytes = dolphin_memory_engine.read_bytes(link_id_ref, 1)
         link_id = int.from_bytes(loaded_bytes, byteorder='big')
@@ -322,9 +345,9 @@ async def ShowSETChanges(current_level, ctx):
         full_object_change_data.append((spawn_data, i, loaded_object_type, last_known_spawn, loaded_spawn_data,
                                    loaded_from_extra_pointer_bytes, link_id))
 
-        if last_known_spawn != loaded_spawn_data and i not in known_objects:
+        if last_known_spawn != loaded_spawn_data:
             outputs = Objects.PrintSETChange(spawn_data, i, loaded_object_type, last_known_spawn, loaded_spawn_data,
-                                   loaded_from_extra_pointer_bytes, link_id)
+                                   loaded_from_extra_pointer_bytes, link_id, known_object)
             memory_data[spawn_data] = [loaded_spawn_data, loaded_object_type]
 
             new_outputs.extend(outputs)
@@ -342,6 +365,7 @@ async def ShowSETChanges(current_level, ctx):
                              )
 
         for line in new_outputs:
+            ctx.set_change_history.append(line)
             logger.info(line)
 
     ctx.last_set_changes_bytes = full_loaded_bytes
@@ -349,17 +373,23 @@ async def ShowSETChanges(current_level, ctx):
     if weapon_check:
         await handle_missing_set_weapons(current_level, ctx, full_object_change_data)
 
-
-def f1():
-    pass
-
 class ShTHCommandProcessor(ClientCommandProcessor):
-
-    reports = []
-    region = 0
+    set_change_history = []
+    set_change_region = None
 
     def __init__(self, ctx: CommonContext):
         super().__init__(ctx)
+
+
+    def _cmd_setregion(self, *args):
+        arguments = self.parse_args(args)
+        region_value = arguments["r"]
+        self.set_change_region = region_value
+        self.set_change_history.append(self.set_change_region)
+
+    def _cmd_sethistory(self, *args):
+        # May wish to re-parse the data here
+        logger.info(self.set_change_history)
 
     def _cmd_setchanges(self):
         global SHOW_SET_CHANGES
@@ -378,22 +408,6 @@ class ShTHCommandProcessor(ClientCommandProcessor):
         """Prints the current Dolphin status to the client."""
         if isinstance(self.ctx, ShTHContext):
             logger.info(f"Dolphin Status: {self.ctx.dolphin_status}")
-
-
-    #def _cmd_print_report(self):
-    #    for p in self.reports:
-    #        print("index=", p[0], "region=", p[1], "counter=", self.reports.index(p))
-
-    #def _cmd_region_break(self):
-    #    self.region += 1
-
-    #def _cmd_region_clear(self):
-    #    self.region = 0
-    #    self.reports = []
-
-    #def _cmd_set_r(self, *args):
-    #    arguments = self.parse_args(args)
-    #    self.reports.append((arguments["i"], self.region))
 
     def arg_finish(self, build, type, results, value):
         to_use = " ".join(build)
@@ -964,11 +978,6 @@ class ShTHCommandProcessor(ClientCommandProcessor):
                                             current_count, location_total_required,
                                             freq_or_avail, "\t(Complete)" if complete else "")
             return dataset
-
-
-
-
-
     def _cmd_story_hint(self, *args):
         """Using known path data, recommend a location to hint"""
         data = self._cmd_story_progression("/q")
@@ -1011,7 +1020,6 @@ class ShTHCommandProcessor(ClientCommandProcessor):
 
         pass
         #options = _cmd_story_progression("/q")
-
     def _cmd_sanity(self, *args):
         """Prints the current sanities to the client."""
         if isinstance(self.ctx, ShTHContext):
@@ -1088,9 +1096,11 @@ class StageAlignmentAddress:
     stageId: int
     alignmentId: int
     tally_address: Optional[int]
-    #addressSize: int
-    #searchIndex: int | None
-    #totalSearchIndex: int | None
+
+    def __init__(self, stageId, alignmentId, tally_address=None):
+        self.stageId = stageId
+        self.alignmentId = alignmentId
+        self.tally_address = tally_address
 
 class SAVE_STRUCTURE_DETAILS:
     LevelClears = 4
@@ -1428,6 +1438,7 @@ class ShTHContext(CommonContext):
         self.music = None
         self.key_restore_complete = False
         self.shuffled_story_mode = Story.DefaultStoryMode
+        self.missed_bosses = None
         self.successful_shuffle = False
         self.successful_spawn_write = False
         self.include_last_way_shuffle = False
@@ -1475,6 +1486,10 @@ class ShTHContext(CommonContext):
         self.death_link = False
         self.objective_sanity_unlock = True
 
+        self.floor_weapon_sanity = False
+        self.box_sanity = False
+        self.weapon_counts = {}
+
     def GetObjectDataStart(self):
         if self.object_offset is None:
             return GAME_ADDRESSES.LEVEL_SET_DATA
@@ -1497,7 +1512,9 @@ class ShTHContext(CommonContext):
     def get_current_objects(self):
         info = Items.GetItemLookupDict()
 
-        object_options = ["Pulley", "Zipwire", "Heal Units", "Bombs", "Rocket", "Air Shoes", "Warp Holes"]
+        object_options = []
+        if self.ctx.object_unlocks:
+            object_options = self.ctx.object_unlocks
 
         object_results = [
             (x, (len([info[unlock[0].item].name for unlock in self.items_to_handle if unlock[0].item in info and \
@@ -1833,6 +1850,9 @@ class ShTHContext(CommonContext):
                 self.chosen_paths = slot_data["chosen_paths"]
                 self.required_paths = len(Story.GetCombinedLevelsForGoal(self.chosen_paths))
 
+            if "weapon_counts" in slot_data:
+                self.weapon_counts = slot_data["weapon_counts"]
+
             if "goal_last_way" in slot_data:
                 self.goal_last_way = slot_data["goal_last_way"]
 
@@ -1844,6 +1864,12 @@ class ShTHContext(CommonContext):
 
             if "objective_sanity_unlock" in slot_data:
                 self.objective_sanity_unlock = slot_data["objective_sanity_unlock"]
+
+            if "box_sanity" in slot_data:
+                self.box_sanity = slot_data["box_sanity"]
+
+            if "floor_weapon_sanity" in slot_data:
+                self.floor_weapon_sanity = slot_data["floor_weapon_sanity"]
 
 
             self.restoreState()
@@ -2186,7 +2212,7 @@ async def check_save_loaded(ctx):
             await ctx.send_msgs(message)
 
         if finished and not ctx.finished_game:
-            clear_location = Locations.GetClearLocation()[0]
+            clear_location = Locations.GetClearLocations()[0]
             message = [{"cmd": 'LocationChecks', "locations": [clear_location.locationId]}]
             await ctx.send_msgs(message)
 
@@ -2924,7 +2950,7 @@ async def check_level_status(ctx):
         if level_status_value in [LevelStatusOptions.LoadingFirstTime, LevelStatusOptions.NotInLevel,
                                   LevelStatusOptions.Loading,
                                   LevelStatusOptions.Saving,
-                                  LevelStatusOptions.Other, LevelStatusOptions.Restarting]:
+                                  LevelStatusOptions.ForceExit, LevelStatusOptions.Restarting]:
 
             ctx.level_status = None
             ctx.junk_delay = 0
@@ -2970,21 +2996,23 @@ async def check_level_status(ctx):
                         ctx.last_level = None
                         return None
 
-                    current_rings_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.RINGS_ADDRESS, 4)
-                    current_rings = int.from_bytes(current_rings_bytes, byteorder="big")
+                    #current_rings_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.RINGS_ADDRESS, 4)
+                    #current_rings = int.from_bytes(current_rings_bytes, byteorder="big")
+                    handle_exit_stage(ctx)
 
-                    if ctx.boss_delay == 0:
-                        ctx.last_level = None
-                        if 0 < current_rings < 50:
-                            logger.info("You do not have the required items to fight the final boss")
-                            logger.info("Set rings to 0")
-                            new_rings = 0
-                            new_bytes = new_rings.to_bytes(4, byteorder='big')
-                            writeBytes(GAME_ADDRESSES.RINGS_ADDRESS, new_bytes)
-                            ctx.boss_delay = 3
-                    else:
-                        ctx.boss_delay -= 1
-                        ctx.last_level = None
+                    #if ctx.boss_delay == 0:
+                    #    ctx.last_level = None
+                    #    if 0 < current_rings < 50:
+                    #        logger.info("You do not have the required items to fight the final boss")
+
+                            #logger.info("Set rings to 0")
+                            #new_rings = 0
+                            #new_bytes = new_rings.to_bytes(4, byteorder='big')
+                            #writeBytes(GAME_ADDRESSES.RINGS_ADDRESS, new_bytes)
+                            #ctx.boss_delay = 3
+                    #else:
+                    #    ctx.boss_delay -= 1
+                    #    ctx.last_level = None
 
                     return None
 
@@ -3450,13 +3478,18 @@ async def handle_ring_link(ctx, level, death):
         await ctx.send_msgs([msg])
 
 def handle_death_link(ctx):
-    print("STATUS:", ctx.last_level_status)
     if ctx.last_level_status != LevelStatusOptions.Death:
         value = LevelSelectorOptions.Death
         death_bytes = value.to_bytes(1, byteorder='big')
         writeBytes(GAME_ADDRESSES.LEVEL_SELECTOR, death_bytes)
         ctx.dead = True
 
+def handle_exit_stage(ctx):
+    if ctx.last_level_status == LevelStatusOptions.Active:
+        value = LevelSelectorOptions.Exit
+        death_bytes = value.to_bytes(1, byteorder='big')
+        writeBytes(GAME_ADDRESSES.LEVEL_SELECTOR, death_bytes)
+        ctx.dead = True
 
 def handle_received_rings(ctx, data):
     amount = data["amount"]
@@ -4282,8 +4315,10 @@ async def handle_skills(ctx):
     owned_objects = [info[unlock[0].item].name for unlock in ctx.items_to_handle if
                      unlock[0].item in info and info[unlock[0].item].name in [x[1] for x in object_names]]
 
-    for skill in object_names:
+    homing_power = 2
+    dash_power = 2
 
+    for skill in object_names:
         address = 0x0
         valueToWrite = 0
         bytes_size = 0
@@ -4305,11 +4340,43 @@ async def handle_skills(ctx):
                 valueToWrite = 0x00
                 bytes_size = 1
 
+        elif skill[0] == Objects.ObjectsAndSkills.Light_Speed_Circuit:
+            address = GAME_ADDRESSES.LIGHT_SPEED_CIRCUIT_SPEED
+            if skill[1] in owned_objects:
+                valueToWrite = 0x4448
+                bytes_size = 2
+            else:
+                valueToWrite = 0xC448
+                bytes_size = 2
+
+        elif skill[0] == Objects.ObjectsAndSkills.Air_Dash_Attack_Power:
+            dash_power += len([ o for o in owned_objects if o == "Homing Attack Power"])
+            continue
+
+        elif skill[0] == Objects.ObjectsAndSkills.Homing_Attack_Power:
+            homing_power += len([ o for o in owned_objects if o == "Air Dash Attack Power"])
+            continue
+
         current_value_bytes = dolphin_memory_engine.read_bytes(address, bytes_size)
         current_value = int.from_bytes(current_value_bytes, byteorder='big')
         if current_value != valueToWrite:
             bytes_to_write = valueToWrite.to_bytes(bytes_size, byteorder='big')
             writeBytes(address, bytes_to_write)
+
+    if homing_power != 2:
+        current_value_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.HOMING_ATTACK_POWER, 4)
+        current_value = struct.unpack('>f', current_value_bytes)[0]
+        #print("CVHP", current_value, homing_power, float(homing_power))
+        if float(current_value) != float(homing_power):
+            bytes_to_write = struct.pack('>f', homing_power)
+            writeBytes(GAME_ADDRESSES.HOMING_ATTACK_POWER, bytes_to_write)
+
+    if dash_power != 2:
+        current_value_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.AIR_DASH_ATTACK_POWER, 4)
+        current_value = struct.unpack('>f', current_value_bytes)[0]
+        if float(current_value) != float(dash_power):
+            bytes_to_write = struct.pack('>f', dash_power)
+            writeBytes(GAME_ADDRESSES.AIR_DASH_ATTACK_POWER, bytes_to_write)
 
 
 async def handle_objects(ctx, current_level):
@@ -4365,6 +4432,10 @@ async def handle_objects(ctx, current_level):
     objects_and_skills = [ c for c in Names.ObjectsAndSkills if len(association_items[c]) > 0]
     object_names = [ Names.SkillToName(o.value) for o in objects_and_skills ]
 
+    if ctx.objective_sanity_unlock:
+        l = [ o for o in Objects.GetLevelItemObjectTypes([]) if o not in Objects.GetStandardEnemyTypes() ]
+        object_names.extend(l)
+
     always_available_items = [ o for o in object_names if o not in ctx.object_unlocks ]
     owned_objects = [ info[unlock[0].item].name for unlock in ctx.items_to_handle if unlock[0].item in info and info[unlock[0].item].name in object_names ]
     owned_objects.extend(always_available_items)
@@ -4392,6 +4463,8 @@ async def handle_objects(ctx, current_level):
             force_full_check = True
     else:
         ctx.client_cache["Objects"] = object_despawn_present
+
+    # New conditions required to check for changes in the level
 
     messages = []
 
@@ -4512,22 +4585,29 @@ async def handle_objects(ctx, current_level):
         despawn = False
         spawn = False
 
+        despawn_before_check = False
+
         if (ctx.objective_sanity_unlock and object.object_type in Objects.GetLevelItemObjectTypes([])
                 and object.object_type not in Objects.GetStandardEnemyTypes()):
 
             stage,alignment = [ x[0] for x in Objects.STAGE_OBJECT_ITEMS.items() if object.object_type in x[1][0] ][0]
             item_name = Items.GetStageAlignmentObject(stage, alignment)
             if item_name is not None:
-                owned = len([ info[unlock[0].item].name for unlock in ctx.items_to_handle if unlock[0].item in info and info[unlock[0].item].name == item_name ]) > 0
+                everything = set(ctx.items_to_handle).union(set(ctx.handled))
+                owned = len([ info[unlock[0].item].name for unlock in everything if unlock[0].item in info and info[unlock[0].item].name == item_name ]) > 0
 
                 if owned:
-                    if object_name+"d" in ctx.level_state:
+                    if object_name in ctx.level_state:
+                        despawn_before_check = True
                         spawn = True
-                        states_to_remove.append(object_name+"d")
+                        states_to_remove.append(object_name)
                 else:
+                    despawn_before_check = True
                     despawn = True
-                    states_to_add[object_name+"d"] = False
+                    states_to_add[object_name] = False
 
+        if despawn_before_check:
+            pass
         elif object.object_type in object_item_availability.keys():
             available = object_item_availability[object.object_type]
 
@@ -4772,10 +4852,11 @@ async def handle_objects(ctx, current_level):
         # Base style objects 0
         if (key_sanity and object.object_type == Objects.ObjectType.KEY) or \
             (shadow_box_sanity and object.object_type == Objects.ObjectType.SHADOW_BOX) or \
-            (core_sanity and object.object_type == Objects.ObjectType.ENERGY_CORE or \
+            (core_sanity and object.object_type == Objects.ObjectType.ENERGY_CORE or
             object.object_type == Objects.ObjectType.ENERGY_CORE_IN_WOOD_BOX) or \
-            (True and ( object.object_type in Objects.GetItemBoxTypes()
-            )):
+            (True and ( object.object_type in Objects.GetItemBoxTypes())) or \
+            (ctx.floor_weapon_sanity and object.object_type == ObjectType.FLOOR_WEAPON) or \
+            (ctx.box_sanity and Objects.IsBox(object)):
 
             object_values_complete = [0x0]
 
@@ -5022,6 +5103,7 @@ async def update_level_behaviour(ctx, current_level, death):
 
     await handle_objects(ctx, current_level)
     if ctx.level_status is None:
+        ResetSetChangeHistory(ctx)
         return
 
     await clearout_individual_enemies_by_percentage(ctx, current_level)
@@ -5893,8 +5975,6 @@ async def check_death(ctx: ShTHContext):
             return None
         ctx.dead = True
 
-        print("DEATH OCCURED")
-
         death_message = GetDeathMessage(ctx.last_level)
         await ctx.send_death(death_message)
 
@@ -5928,7 +6008,9 @@ async def check_death(ctx: ShTHContext):
 def CheckGateConditions(ctx: ShTHContext):
     required_items = ctx.gate_requirements
     info = Items.GetItemLookupDict()
-    current_items = [ info[i.item].name for i in ctx.items_received ]
+
+    available_items = set([ r for r in ctx.items_received]).union([ r[0] for r in set(ctx.handled)])
+    current_items = [ info[i.item].name for i in available_items ]
 
     open_gates = []
 

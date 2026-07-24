@@ -1218,7 +1218,7 @@ def ChoosePathOption(world, story_options):
         weights.append(weight_value)
 
 
-    randomised_item = world.random.sample(story_options, k=1, weights=weights)[0]
+    randomised_item = world.random.choices(story_options, k=1, weights=weights)[0]
 
     #print("SOI", story_options.index(randomised_item), weights, chosen_index)
 
@@ -1571,6 +1571,8 @@ def ChaosShuffle(world):
 
     force_path = None #[0, Levels.MISSION_ALIGNMENT_HERO, Levels.BOSS_DEVIL_DOOM]
 
+    selected = []
+
     while len(steps_to_randomise) > 0:
         step = None
         boss_possible = False
@@ -1603,6 +1605,7 @@ def ChaosShuffle(world):
         elif boss_possible and len(final_bosses) > 0 and step.start_stage_id is not None:
             step.end_stage_id = None
             step.boss = final_bosses.pop()
+            selected.append(step.boss)
         else:
             boss_assigned = False
             if boss_possible and len(bosses_to_assign) > 0 and step.start_stage_id is not None:
@@ -1651,6 +1654,7 @@ def ChaosShuffle(world):
 
             elif len(stages_to_assign) > 0:
                 step.end_stage_id = stages_to_assign.pop()
+                selected.append(step.end_stage_id)
                 if step.end_stage_id == step.start_stage_id and len(stages_to_assign) != 0:
                     stages_to_assign.append(step.end_stage_id)
             else:
@@ -1664,8 +1668,11 @@ def ChaosShuffle(world):
     new_story.extend(new_steps)
     new_story.extend([p[1] for p in plando_steps])
 
+    bosses_to_assign = set(bosses_to_assign).union(set(final_bosses))
+    leftover_bosses = [ l for l in bosses_to_assign if l not in [ x.boss for x in new_story if x is not None ]]
+
     logging.debug("Shadow Story is: %s", new_story)
-    return new_story
+    return new_story, leftover_bosses
 
 
 
@@ -1708,7 +1715,7 @@ def GetStoryMode(world):
     if world.options.story_shuffle == Options.StoryShuffle.option_chaos:
         return ChaosShuffle(world)
     else:
-        return DefaultStoryMode
+        return DefaultStoryMode, None
 
 
 def StoryToString(Story):
