@@ -308,7 +308,7 @@ MissionClearLocations = [
     MissionClearLocation(STAGE_WESTOPOLIS, MISSION_ALIGNMENT_HERO, 45,
                          "Alien", character=Characters.Sonic),
 
-    MissionClearLocation(STAGE_DIGITAL_CIRCUIT, MISSION_ALIGNMENT_DARK, None,
+    MissionClearLocation(STAGE_DIGITAL_CIRCUIT, MISSION_ALIGNMENT_DARK, 1,
                          "Core", character=Characters.Doom),
     MissionClearLocation(STAGE_DIGITAL_CIRCUIT, MISSION_ALIGNMENT_HERO, None,
                          "Goal Ring", character=Characters.Rouge),
@@ -343,12 +343,12 @@ MissionClearLocations = [
     MissionClearLocation(STAGE_CIRCUS_PARK, MISSION_ALIGNMENT_NEUTRAL, None,
                          "Goal Ring"),
     MissionClearLocation(STAGE_CIRCUS_PARK, MISSION_ALIGNMENT_HERO, None,
-                         "400 Rings"),
+                         "400 Rings", character=Characters.Tails),
     MissionClearLocation(STAGE_CENTRAL_CITY, MISSION_ALIGNMENT_DARK, 5,
                          "Big Bomb", character=Characters.Doom),
     MissionClearLocation(STAGE_CENTRAL_CITY, MISSION_ALIGNMENT_HERO, 20,
                          "Little Bomb", character=Characters.Knuckles)
-        .setRequirement(REGION_RESTRICTION_TYPES.Vacuum),
+        .setRequirement(REGION_RESTRICTION_TYPES.BombSuck),
     MissionClearLocation(STAGE_THE_DOOM, MISSION_ALIGNMENT_DARK, 60,
                          "Soldier", character=Characters.Doom),
     MissionClearLocation(STAGE_THE_DOOM, MISSION_ALIGNMENT_NEUTRAL, None,
@@ -400,7 +400,7 @@ MissionClearLocations = [
     MissionClearLocation(STAGE_SPACE_GADGET, MISSION_ALIGNMENT_NEUTRAL, None,
                          "Goal Ring"),
     MissionClearLocation(STAGE_SPACE_GADGET, MISSION_ALIGNMENT_HERO, None,
-                         "Goal Ring"),
+                         "Goal Ring", character=Characters.Sonic),
     MissionClearLocation(STAGE_LOST_IMPACT, MISSION_ALIGNMENT_NEUTRAL, None,
                          "Goal Ring"),
     MissionClearLocation(STAGE_LOST_IMPACT, MISSION_ALIGNMENT_HERO, 35,
@@ -409,23 +409,23 @@ MissionClearLocations = [
                          "Computer", character=Characters.Doom)
     .setRequirement(REGION_RESTRICTION_TYPES.ShootOrTurret),
     MissionClearLocation(STAGE_GUN_FORTRESS, MISSION_ALIGNMENT_HERO, None,
-                         "Goal Ring"),
+                         "Goal Ring", character=Characters.Rouge),
     MissionClearLocation(STAGE_BLACK_COMET, MISSION_ALIGNMENT_DARK, 50,
                          "Soldier", character=Characters.Doom),
     MissionClearLocation(STAGE_BLACK_COMET, MISSION_ALIGNMENT_HERO, None,
-                         "Goal Ring"),
+                         "Goal Ring", character=Characters.Knuckles),
     MissionClearLocation(STAGE_LAVA_SHELTER, MISSION_ALIGNMENT_DARK, 5,
                          "Defense", character=Characters.Eggman),
     MissionClearLocation(STAGE_LAVA_SHELTER, MISSION_ALIGNMENT_HERO, None,
-                         "Goal Ring"),
+                         "Goal Ring", character=Characters.Omega),
     MissionClearLocation(STAGE_COSMIC_FALL, MISSION_ALIGNMENT_DARK, None,
                          "Goal Ring", character=Characters.Doom),
-    MissionClearLocation(STAGE_COSMIC_FALL, MISSION_ALIGNMENT_HERO, None,
+    MissionClearLocation(STAGE_COSMIC_FALL, MISSION_ALIGNMENT_HERO, 1,
                          "Computer Room", character=Characters.Vector),
     MissionClearLocation(STAGE_FINAL_HAUNT, MISSION_ALIGNMENT_DARK, 4,
                          "Shield", character=Characters.Doom),
     MissionClearLocation(STAGE_FINAL_HAUNT, MISSION_ALIGNMENT_HERO, None,
-                         "Goal Ring"),
+                         "Goal Ring", character=Characters.Sonic),
     MissionClearLocation(STAGE_THE_LAST_WAY, MISSION_ALIGNMENT_NEUTRAL, None,
                          None)
 ]
@@ -690,6 +690,7 @@ def GetAllLocationInfo():
     boss_locations = []
     warp_locations = []
     object_locations = []
+    gate_locations = []
 
     for level in Levels.ALL_STAGES:
         location_id, entry_location_name = GetLevelWarpName(level)
@@ -749,7 +750,7 @@ def GetAllLocationInfo():
         token_locations.append(path_info)
 
         i = 0
-        if location.requirement_count is not None:
+        if location.requirement_count is not None and location.requirement_count > 1:
             requirement_token_id, requirement_token_name = GetLevelTokenNames(location.stageId, location.alignmentId,
                                                                 ITEM_TOKEN_TYPE_OBJECTIVE)
             info = LocationInfo(LOCATION_TYPE_TOKEN, requirement_token_id, requirement_token_name,
@@ -848,6 +849,7 @@ def GetAllLocationInfo():
                                 stageId=boss.stageId, alignmentId=None, count=None, total=None,
                                 other=Levels.ITEM_TOKEN_TYPE_FINAL_BOSS)
             token_locations.append(info)
+
 
     return (mission_clear_locations, mission_locations, progression_locations,
             enemysanity_locations, checkpointsanity_locations, charactersanity_locations,
@@ -1955,6 +1957,13 @@ def SetRegionEvents(world, player, regions):
         region_event.show_in_spoiler = False
         region_event.progress_type = LocationProgressType.PRIORITY
         o_region.locations.append(region_event)
+
+    for i in range(1, world.options.select_gates_count+1):
+        menu_region = regions["Menu"]
+        event_name = Names.GetGateEventName(i)
+        event_location = ShadowTheHedgehogLocation(player, event_name, None, menu_region)
+        menu_region.locations.append(event_location)
+
 
     #menu_region.locations.extend(region_events)
 

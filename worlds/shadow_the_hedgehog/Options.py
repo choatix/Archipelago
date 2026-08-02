@@ -103,7 +103,7 @@ class GoalCharacters(Toggle):
     display_name = "Goal: Characters"
     option_off = 0
     option_on = 1
-    default = option_on
+    default = option_off
 
 class ObjectiveSanity(DefaultOnToggle):
     """
@@ -954,6 +954,17 @@ class MaximumLevels(Range):
     range_end = 22
     default = 22
 
+class GoalRings(OptionSet):
+    """
+        Option handling for configuring goal rings
+        Character Required For Goal Ring: Character unlock required to finish character missions
+        Item Required For Character: Goal Ring Item required to finish character missions
+        Item Required For Neutral: Goal Ring Item required to finish neutral missions
+    """
+    display_name = "Goal Ring Items"
+    valid_keys = Names.getValidGoalRingRules()
+    default = []
+
 
 class PlandoCheckpointSpawns(OptionDict):
     """
@@ -974,6 +985,16 @@ class DeathLink(DefaultOnToggle):
         Toggle to enable Death Link
     """
     display_name = "Death Link"
+
+class LogicTweaks(OptionSet):
+    """
+        List of specific rules for changing logic
+    """
+
+    dislay_name = "Logic Tweaks"
+    valid_keys = Names.getValidLogicTweaks()
+    default = []
+
 
 @dataclass
 class ShadowTheHedgehogOptions(PerGameCommonOptions):
@@ -1081,6 +1102,8 @@ class ShadowTheHedgehogOptions(PerGameCommonOptions):
     poison_trap_enabled: PoisonTraps
     trap_fill_percentage: TrapFillPercentage
     maximum_levels: MaximumLevels
+    goal_rings: GoalRings
+    logic_tweaks: LogicTweaks
 
     plando_checkpoint_spawns: PlandoCheckpointSpawns
     music_shuffle: MusicShuffle

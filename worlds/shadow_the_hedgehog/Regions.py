@@ -46,7 +46,11 @@ def handle_maximum_levels(world):
 
     base_stages = [ s for s in Levels.ALL_STAGES if s not in Levels.BOSS_STAGES and s not in Levels.LAST_STORY_STAGES \
             and Levels.LEVEL_ID_TO_LEVEL[s] not in world.options.excluded_stages ]
-    chosen_stages = world.random.sample(base_stages, max_stages)
+
+    if len(base_stages) > max_stages:
+        chosen_stages = world.random.sample(base_stages, max_stages)
+    else:
+        chosen_stages = base_stages
 
     for stage in base_stages:
         if stage not in chosen_stages:
@@ -578,6 +582,15 @@ def connect_by_story_mode(multiworld: MultiWorld, world, player: int, order: typ
         start_base_region_name = stage_id_to_story_region(path.start_stage_id, default_region_index)
         start_region = world.get_region(start_base_region_name)
 
+        # If mission clear location is in excluded locations, ban this route
+        completion_location_id, completion_location_name = Levels.GetLevelCompletionNames(path.start_stage_id,
+                                                                                          path.alignment_id)
+
+        if completion_location_name in world.options.exclude_locations and \
+                path.start_stage_id != path.end_stage_id:
+            print("Unable to take story path due to excluded location:", path.start_stage_id, path.alignment_id)
+            continue
+
         invalid_boss = False
         if path.boss is not None:
             if path.boss in world.available_story_levels: # and path.end_stage_id is not None:
@@ -595,11 +608,13 @@ def connect_by_story_mode(multiworld: MultiWorld, world, player: int, order: typ
                     view_name = Names.GetBossClearEventName(path.boss, path.start_stage_id, path.alignment_id)
 
                     event_location = multiworld.get_location(view_name, player)
-                    event_location.access_rule = (lambda state, n=boss_name, br=start_base_region_name: (
+                    event_location.access_rule = (lambda state, l=completion_location_name, n=boss_name, br=start_base_region_name: (
                         state.can_reach_location(n, player) and
+                        state.can_reach_location(l, player) and
                         state.can_reach_region(br, player)))
 
-                    item_name = f"Story Access Through {Names.LEVEL_ID_TO_LEVEL[path.boss]}"
+                    item_name = (f"Story Access Through {Names.LEVEL_ID_TO_LEVEL[path.boss]} from "
+                                 f"{Names.LEVEL_ID_TO_LEVEL[path.start_stage_id]} to {Names.LEVEL_ID_TO_LEVEL[path.end_stage_id]}")
 
                     event_location.place_locked_item(Item(item_name,
                                                           ItemClassification.progression_skip_balancing, None, player))
@@ -667,14 +682,7 @@ def connect_by_story_mode(multiworld: MultiWorld, world, player: int, order: typ
 
             continue
 
-        # If mission clear location is in excluded locations, ban this route
-        completion_location_id, completion_location_name = Levels.GetLevelCompletionNames(path.start_stage_id,
-                                                                                   path.alignment_id)
 
-        if completion_location_name in world.options.exclude_locations and \
-            path.start_stage_id != path.end_stage_id:
-            print("Unable to take story path due to excluded location:", path.start_stage_id, path.alignment_id)
-            continue
 
         if invalid_boss:
             continue
@@ -837,6 +845,10 @@ def FindStartingItems(world, required=False):
         elif option == Names.REGION_RESTRICTION_TYPES.Zipwire:
             item_options.append("Zipwire")
         elif option == Names.REGION_RESTRICTION_TYPES.Vacuum:
+            item_options.append("Weapon:Vacuum Pod")
+        elif option == Names.REGION_RESTRICTION_TYPES.BombSuck:
+            item_options.append("Weapon:Vacuum Pod")
+        elif option == Names.REGION_RESTRICTION_TYPES.VacuumWall:
             item_options.append("Weapon:Vacuum Pod")
         elif option == Names.REGION_RESTRICTION_TYPES.Door:
             item_options.append("Doors")

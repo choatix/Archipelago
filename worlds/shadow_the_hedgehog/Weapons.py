@@ -76,7 +76,7 @@ def GetRuleByWeaponRequirement(options, player, req, stageId: int, fromRegion: i
     return rule_result
 
 
-def GetRuleByWeaponRequirementData(options, player, req, stageId: int, fromRegion: int|None, as_weapon: bool = False):
+def GetRuleByWeaponRequirementData(options, player, req, stageId: int|None, fromRegion: int|None, as_weapon: bool = False):
 
     have_weapon_rule = False
     if options is None or options.weapon_sanity_unlock:

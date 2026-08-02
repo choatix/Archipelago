@@ -2,31 +2,32 @@
 from . import Levels, Weapons, Names
 from .Names import *
 from .ObjectTypes import ObjectType, ObjectTypeVehicles
-from .Objects_BlackComet import DESIRABLE_OBJECTS_BLACK_COMET
-from .Objects_CentralCity import DESIRABLE_OBJECTS_CENTRAL_CITY
-from .Objects_CircusPark import DESIRABLE_OBJECTS_CIRCUS_PARK
 
-from .Objects_CosmicFall import DESIRABLE_OBJECTS_COSMIC_FALL
-from .Objects_CrypticCastle import DESIRABLE_OBJECTS_CRYPTIC_CASTLE
-from .Objects_AirFleet import DESIRABLE_OBJECTS_AIR_FLEET
-from .Objects_DeathRuins import DESIRABLE_OBJECTS_DEATH_RUINS
-from .Objects_DigitalCircuit import DESIRABLE_OBJECTS_DIGITAL_CIRCUIT
-from .Objects_FinalHaunt import DESIRABLE_OBJECTS_FINAL_HAUNT
-from .Objects_GlyphicCanyon import DESIRABLE_OBJECTS_GLYPHIC_CANYON
-from .Objects_GunFortress import DESIRABLE_OBJECTS_GUN_FORTRESS
-from .Objects_IronJungle import DESIRABLE_OBJECTS_IRON_JUNGLE
-from .Objects_LavaShelter import DESIRABLE_OBJECTS_LAVA_SHELTER
-from .Objects_LethalHighway import DESIRABLE_OBJECTS_LETHAL_HIGHWAY
-from .Objects_LostImpact import DESIRABLE_OBJECTS_LOST_IMPACT
-from .Objects_MadMatrix import DESIRABLE_OBJECTS_MAD_MATRIX
-from .Objects_PrisonIsland import DESIRABLE_OBJECTS_PRISON_ISLAND
-from .Objects_SkyTroops import DESIRABLE_OBJECTS_SKY_TROOPS
-from .Objects_SpaceGadget import DESIRABLE_OBJECTS_SPACE_GADGET
-from .Objects_TheArk import DESIRABLE_OBJECTS_THE_ARK
-from .Objects_TheDoom import DESIRABLE_OBJECTS_THE_DOOM
-from .Objects_TheLastWay import DESIRABLE_OBJECTS_THE_LAST_WAY
-from .Objects_Westopolis import DESIRABLE_OBJECTS_WESTOPOLIS
-from .Objects_Bosses import DESIRABLE_OBJECTS_BOSSES
+from .StageObjects.Objects_BlackComet import DESIRABLE_OBJECTS_BLACK_COMET
+from .StageObjects.Objects_CentralCity import DESIRABLE_OBJECTS_CENTRAL_CITY
+from .StageObjects.Objects_CircusPark import DESIRABLE_OBJECTS_CIRCUS_PARK
+
+from .StageObjects.Objects_CosmicFall import DESIRABLE_OBJECTS_COSMIC_FALL
+from .StageObjects.Objects_CrypticCastle import DESIRABLE_OBJECTS_CRYPTIC_CASTLE
+from .StageObjects.Objects_AirFleet import DESIRABLE_OBJECTS_AIR_FLEET
+from .StageObjects.Objects_DeathRuins import DESIRABLE_OBJECTS_DEATH_RUINS
+from .StageObjects.Objects_DigitalCircuit import DESIRABLE_OBJECTS_DIGITAL_CIRCUIT
+from .StageObjects.Objects_FinalHaunt import DESIRABLE_OBJECTS_FINAL_HAUNT
+from .StageObjects.Objects_GlyphicCanyon import DESIRABLE_OBJECTS_GLYPHIC_CANYON
+from .StageObjects.Objects_GunFortress import DESIRABLE_OBJECTS_GUN_FORTRESS
+from .StageObjects.Objects_IronJungle import DESIRABLE_OBJECTS_IRON_JUNGLE
+from .StageObjects.Objects_LavaShelter import DESIRABLE_OBJECTS_LAVA_SHELTER
+from .StageObjects.Objects_LethalHighway import DESIRABLE_OBJECTS_LETHAL_HIGHWAY
+from .StageObjects.Objects_LostImpact import DESIRABLE_OBJECTS_LOST_IMPACT
+from .StageObjects.Objects_MadMatrix import DESIRABLE_OBJECTS_MAD_MATRIX
+from .StageObjects.Objects_PrisonIsland import DESIRABLE_OBJECTS_PRISON_ISLAND
+from .StageObjects.Objects_SkyTroops import DESIRABLE_OBJECTS_SKY_TROOPS
+from .StageObjects.Objects_SpaceGadget import DESIRABLE_OBJECTS_SPACE_GADGET
+from .StageObjects.Objects_TheArk import DESIRABLE_OBJECTS_THE_ARK
+from .StageObjects.Objects_TheDoom import DESIRABLE_OBJECTS_THE_DOOM
+from .StageObjects.Objects_TheLastWay import DESIRABLE_OBJECTS_THE_LAST_WAY
+from .StageObjects.Objects_Westopolis import DESIRABLE_OBJECTS_WESTOPOLIS
+from .StageObjects.Objects_Bosses import DESIRABLE_OBJECTS_BOSSES
 
 ENEMY_CLASS_ALIEN = 0
 ENEMY_CLASS_GUN = 1
@@ -512,6 +513,10 @@ def GetTypeId(objectType):
     print("Unhandled object type", objectType)
     return None
 
+
+def GetDestructibleByType(type):
+    return "Unknown"
+
 def CheckVehicleAttributes(objectType, extra_bytes, index, link_id, address):
 
     if objectType == "Server":
@@ -568,7 +573,7 @@ def CheckVehicleAttributes(objectType, extra_bytes, index, link_id, address):
             return "Unknown Beetle"
 
     if objectType == "Small Bomb":
-        byte_range = int.from_bytes(extra_bytes[0:3], byteorder='little')
+        byte_range = int.from_bytes(extra_bytes[0:3], byteorder='big')
         return f"Small Bomb({byte_range})"
 
 
@@ -659,6 +664,10 @@ def CheckVehicleAttributes(objectType, extra_bytes, index, link_id, address):
         except:
             print("Error with bytes:", extra_bytes)
             return "Character:" + str(character_id)
+
+    if objectType == "Destructible":
+        destructible_type = int.from_bytes(extra_bytes[0:4], byteorder='big')
+        return "Destructible:"+GetDestructibleByType(destructible_type)+str(destructible_type)
 
     return objectType
 
@@ -1031,7 +1040,9 @@ def PrintSETChange(address, index, type, previous, new, additional_bytes, link_i
     unhandled_types = [
     # #"Destructible",
                         "Rings",
-                        "Box",
+                        ""
+                        #"Box"
+                       #]
                         "Empty Wood Box",
                         "Empty Metal Box",
                         "Rings In Wood Box", "Rings In Metal Box",
@@ -1324,7 +1335,7 @@ STAGE_OBJECT_ITEMS = {
     (Levels.STAGE_WESTOPOLIS, Levels.MISSION_ALIGNMENT_HERO): ([ObjectType.BLACK_ASSASSIN, ObjectType.BLACK_VOLT, ObjectType.BLACK_HAWK,
              ObjectType.BLACK_WARRIOR, ObjectType.BLACK_OAK, ObjectType.BLACK_WING,
              ObjectType.BLACK_WORM, ObjectType.BLACK_LARVAE],WORKS_WITH_INDIVIDUAL),
-    (Levels.STAGE_DIGITAL_CIRCUIT, Levels.MISSION_ALIGNMENT_DARK): ([ObjectType.DIGITAL_CORE],WORKS_WITH_INDIVIDUAL),
+    (Levels.STAGE_DIGITAL_CIRCUIT, Levels.MISSION_ALIGNMENT_DARK): ([ObjectType.DIGITAL_CORE],DOES_NOT_WORK_WITH_INDIVIDUAL),
     (Levels.STAGE_GLYPHIC_CANYON, Levels.MISSION_ALIGNMENT_HERO): ([ObjectType.BLACK_ASSASSIN, ObjectType.BLACK_VOLT, ObjectType.BLACK_HAWK,
              ObjectType.BLACK_WARRIOR, ObjectType.BLACK_OAK, ObjectType.BLACK_WING,
              ObjectType.BLACK_WORM, ObjectType.BLACK_LARVAE],WORKS_WITH_INDIVIDUAL),
@@ -1395,7 +1406,7 @@ def GetKeyLocations(stageId):
     keys = []
     key_objects = [ k for k in DESIRABLE_OBJECTS if k.stage == stageId and k.object_type == ObjectType.KEY ]
     for o_key in key_objects:
-        from worlds.shadow_the_hedgehog.Locations import NewKeyLocation
+        from .Locations import NewKeyLocation
         k = NewKeyLocation(stageId, o_key.region, o_key.count)
         keys.append(k)
 
@@ -1418,7 +1429,7 @@ def GetCharacterSanityLocations():
 
 def GetRegionsForGoalRings(stage):
     objects_for_stage = [ x for x in DESIRABLE_OBJECTS if x.stage == stage and x.object_type in
-             [ObjectType.GOAL_RING, ObjectType.DIGITAL_CORE, ObjectType.COSMIC_FALL_COMPUTER_ROOM ]]
+             [ObjectType.GOAL_RING ]]
 
     return list(set([ x.region for x in objects_for_stage]))
 

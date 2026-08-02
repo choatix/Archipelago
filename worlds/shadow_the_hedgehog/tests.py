@@ -12,7 +12,7 @@ from BaseClasses import MultiWorld
 from Options import OptionError
 from . import Levels, Names, ShTHClient, Objects, ShtHWorld, Options, Rules
 from .Items import GetAllItemInfo
-from .Levels import INDIVIDUAL_LEVEL_REGIONS, BACKTRACKING_REGIONS
+from .Levels import INDIVIDUAL_LEVEL_REGIONS
 from .Locations import GetAllLocationInfo
 from .Names import REGION_INDICES, REGION_RESTRICTION_TYPES
 from .Objects import DESIRABLE_OBJECTS
@@ -286,7 +286,7 @@ def TestRegionIndicies():
                 #print("Change to level", region.stageId, region.regionIndex)
             else:
                 if region.regionIndex < previous:
-                    print("Error with", region.stageId, region.regionIndex)
+                    print("Region Error with", region.stageId, region.regionIndex)
                     errors += 1
 
         previous = region.regionIndex

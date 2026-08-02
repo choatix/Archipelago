@@ -1,4 +1,4 @@
-from worlds.shadow_the_hedgehog import Levels
+from . import Levels
 
 class CheckpointData:
     class Westopolis:

@@ -1,6 +1,6 @@
 from enum import IntEnum
 
-from worlds.shadow_the_hedgehog.Names import REGION_INDICES, STAGE_CIRCUS_PARK
+from .Names import REGION_INDICES, STAGE_CIRCUS_PARK
 
 
 class RingObtainType(IntEnum):

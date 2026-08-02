@@ -61,6 +61,7 @@ class ShtHWorld(World):
 
     game: ClassVar[str] = "Shadow The Hedgehog"
     topology_present: bool = True
+    ut_can_gen_without_yaml: bool = True
 
     item_name_to_id: ClassVar[typing.Dict[str, int]] = Items.GetItemDict()
     location_name_to_id: ClassVar[typing.Dict[str, int]] = Locations.GetLocationDict()
@@ -404,7 +405,8 @@ class ShtHWorld(World):
         if self.options.level_progression != Options.LevelProgression.option_select:
             self.shuffled_story_mode, self.leftover_bosses = Story.GetStoryMode(self)
         else:
-            self.shuffled_story_mode, self.leftover_bosses = Story.DefaultStoryMode
+            self.shuffled_story_mode = Story.DefaultStoryMode
+            self.leftover_bosses = []
 
         if hasattr(self.multiworld, "re_gen_passthrough"):
             if "Shadow The Hedgehog" in self.multiworld.re_gen_passthrough:
@@ -687,6 +689,12 @@ class ShtHWorld(World):
                 if "maximum_levels" in passthrough:
                     self.options.maximum_levels = passthrough["maximum_levels"]
 
+                if "goal_rings" in passthrough:
+                    self.options.goal_rings = passthrough["goal_rings"]
+
+                if "logic_tweaks" in passthrough:
+                    self.options.logic_twwaks = passthrough["logic_tweaks"]
+
         # Set maximum of levels required
         # Exclude missions listed in exclude_locations
         maximum_force_missions = self.options.force_objective_sanity_max.value
@@ -871,6 +879,72 @@ class ShtHWorld(World):
                 stage_item = Items.GetStageUnlockItem(first_region)
                 self.multiworld.push_precollected(self.create_item(stage_item))
 
+    def extend_hint_information(self, hint_data: typing.Dict[int, typing.Dict[int, str]]):
+        new_hint_data = {}
+        for stage in self.available_levels:
+
+            if stage in Levels.BOSS_STAGES:
+                base_region_name = Levels.boss_stage_id_to_region(stage)
+            else:
+                base_region_name = Levels.stage_id_to_region(stage, 0)
+
+            region = self.get_region(base_region_name)
+
+            hint_value = ""
+
+            if stage in self.available_select_stages:
+                if self.options.select_gates != Options.SelectGates.option_off:
+                    gate_no = [ int(x[0]) for x in self.gates.items() if stage in x[1]]
+                    hint_value = ", ".join([ ("Gate " + str(s)) if s != 0 else "START" for s in gate_no])
+                else:
+                    hint_value = "Unlock " + Levels.LEVEL_ID_TO_LEVEL[stage]
+
+            if stage in self.available_story_levels:
+                options = [ l for l in self.shuffled_story_mode if l.end_stage_id == stage ]
+                hint_value_story = ", ".join([ Levels.LEVEL_ID_TO_LEVEL[o.start_stage_id]  + " " + Levels.ALIGNMENT_TO_STRING[o.alignment_id]
+                                              if o.start_stage_id is not None else "START"
+                                              for o in options ])
+                if len(hint_value) == 0:
+                    hint_value = hint_value_story
+                else:
+                    hint_value += " or " + hint_value_story
+
+                pass
+
+            for i in region.get_locations():
+                if i.address is not None:
+                    new_hint_data[i.address] = hint_value
+
+            for ind in [i.regionIndex for i in Levels.INDIVIDUAL_LEVEL_REGIONS if i.stageId == stage ]:
+
+                if stage in Levels.BOSS_STAGES:
+                    region_name = Levels.boss_stage_id_to_region(stage, ind)
+                else:
+                    region_name = Levels.stage_id_to_region(stage, ind)
+
+                try:
+                    region = self.get_region(region_name)
+
+                    for i in region.get_locations():
+                        if i.address is not None:
+                            new_hint_data[i.address] = hint_value
+                except:
+                    print("Unavailable region:", region_name)
+
+        # for i in range(self.options.number_of_level_gates.value + 1):
+        #     gate_name = gate_names[i]
+        #     gate_region = self.multiworld.get_region(gate_name, self.player)
+        #     if not gate_region:
+        #         continue
+        #     for exit in gate_region.exits:
+        #         if exit.connected_region.name in gate_names or exit.connected_region.name in no_hint_region_names:
+        #             continue
+        #         level_region = exit.connected_region
+        #         for location in level_region.locations:
+        #             if location.address != None:
+        #                 er_hint_data[location.address] = gate_name
+
+        hint_data[self.player] = new_hint_data
 
 
     @staticmethod
@@ -1025,7 +1099,9 @@ class ShtHWorld(World):
             "floor_weapon_sanity": self.options.floor_weapon_sanity.value,
             "box_sanity": self.options.box_sanity.value,
             "weapon_counts": self.weapon_counts,
-            "maximum_levels": self.options.maximum_levels.value
+            "maximum_levels": self.options.maximum_levels.value,
+            "goal_rings": self.options.goal_rings.value,
+            "logic_tweaks": self.options.logic_tweaks.value
         }
 
         return slot_data

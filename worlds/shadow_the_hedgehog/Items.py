@@ -26,6 +26,7 @@ ITEM_ID_START_AT_JUNK = 3000
 ITEM_ID_START_AT_AMMO_BOOST = 3050
 ITEM_ID_START_AT_CHECKPOINTS = 3150
 ITEM_ID_START_AT_CHARACTERS = 3350
+ITEM_ID_START_AT_GOAL_RING = 3375
 
 ITEM_ID_START_AT_MISSION = 1000
 ITEM_ID_START_AT_IMPORTANT = 10
@@ -235,7 +236,8 @@ def GetStageAlignmentObject(stageId, alignmentId):
         return None
 
     item = i[0]
-    if item.mission_object_name is None or item.mission_object_name in ["Goal Ring", "Computer Room", "Core", "400 Rings"]:
+    if item.mission_object_name is None or item.mission_object_name in ["Goal Ring","400 Rings"]:
+        #, "Computer Room", "Core", ]:
         return None
 
     return LEVEL_ID_TO_LEVEL[stageId] + " " + item.mission_object_name
@@ -518,10 +520,11 @@ def GetAllItemInfoData():
     checkpoint_items = GetCheckpointItems()
 
     character_items = GetCharacterItems()
+    goal_ring_item = GetGoalRingItem()
 
     return (emerald_items, required_items, level_unlock_items, stage_objective_items, junk_items,
             token_items, weapon_items, vehicle_items, level_warp_items, rifle_components,
-            weapon_group_items, object_items, key_items, trap_items, checkpoint_items, character_items)
+            weapon_group_items, object_items, key_items, trap_items, checkpoint_items, character_items, [goal_ring_item])
 
 
 
@@ -715,7 +718,7 @@ def GetItemsFromWeaponInfo(world, weapon_items, weapon_group_items):
 def CountItems(world: World):
     (emerald_items, required_items, level_unlock_items, stage_objective_items_x,
      junk_items, token_items, weapon_items, vehicle_items, warp_items, rifle_components,
-     weapon_group_items, object_items, key_items, trap_items, checkpoint_items, character_items) = GetAllItemInfo()
+     weapon_group_items, object_items, key_items, trap_items, checkpoint_items, character_items, goal_ring_items) = GetAllItemInfo()
 
     if (not world.options.objective_sanity or
             world.options.objective_sanity_behaviour == Options.ObjectiveSanityBehaviour.option_base_clear):
@@ -813,6 +816,10 @@ def CountItems(world: World):
         mw_character_items = [ShadowTheHedgehogItem(i, world.player) for i in relevant_characters]
         item_count = increment_item_count(item_count, mw_character_items)
 
+    if "Item Required For Character" in world.options.goal_rings or "Item Required For Neutral" in world.options.goal_rings:
+        mw_goal_ring_item = ShadowTheHedgehogItem(goal_ring_items[0], world.player)
+        item_count = increment_item_count(item_count, [mw_goal_ring_item])
+
     return item_count
 
 
@@ -827,7 +834,7 @@ def GetStageItems(world, stage_objective_items=None, set=True):
     if stage_objective_items is None:
         (emerald_items, required_items, level_unlock_items, stage_objective_items,
          junk_items, token_items, weapon_items, vehicle_items, warp_items, rifle_components,
-         weapon_group_items, object_items, key_items, trap_items,checkpoint_items, character_items) = GetAllItemInfo()
+         weapon_group_items, object_items, key_items, trap_items,checkpoint_items, character_items,goal_ring_items) = GetAllItemInfo()
 
     if (not world.options.objective_sanity or
             world.options.objective_sanity_behaviour == Options.ObjectiveSanityBehaviour.option_base_clear):
@@ -929,7 +936,7 @@ def GetStageItems(world, stage_objective_items=None, set=True):
 def GetShadowRifle():
     (emerald_items, required_items, level_unlock_items, stage_objective_items,
      junk_items, token_items, weapon_items, vehicle_items, warp_items, rifle_components,
-     weapon_group_items, object_items, key_items, trap_items,checkpoint_items, character_items) = GetAllItemInfo()
+     weapon_group_items, object_items, key_items, trap_items,checkpoint_items, character_items,goal_ring_items) = GetAllItemInfo()
 
     return [w for w in weapon_items if w.name == 'Shadow Rifle' or w.name == 'Weapon:Shadow Rifle'][0]
 
@@ -985,6 +992,10 @@ def GetCharacterItems():
 
     return items
 
+def GetGoalRingItem():
+    return ItemInfo(ITEM_ID_START_AT_GOAL_RING, "Goal Rings", ItemClassification.progression, None, None, "Goal Ring", None)
+
+
 def GetObjectItems():
     id_s = ITEM_ID_START_AT_OBJECTS
     objects = Names.ObjectsAndSkills
@@ -1001,7 +1012,7 @@ def GetObjectItems():
 def PopulateItemPool(world: World):
     (emerald_items, required_items, level_unlock_items, stage_objective_items,
      junk_items, token_items, weapon_items, vehicle_items, warp_items, rifle_components,
-     weapon_group_items, object_items, key_items, trap_items,checkpoint_items, character_items) = GetAllItemInfo()
+     weapon_group_items, object_items, key_items, trap_items,checkpoint_items, character_items,goal_ring_items) = GetAllItemInfo()
 
     shadow_item_pool = []
 
@@ -1197,6 +1208,11 @@ def PopulateItemPool(world: World):
     # Add checks here for checks locked by The Last Way when this is the final part
     # If required, replace all TLW checks with junk items in the pool, start inventory will get amended
 
+    if "Item Required For Character" in world.options.goal_rings or "Item Required For Neutral" in world.options.goal_rings:
+        mw_goal_ring_item = ShadowTheHedgehogItem(goal_ring_items[0], world.player)
+        item_count = increment_item_count(item_count, [mw_goal_ring_item])
+        shadow_item_pool += [mw_goal_ring_item]
+
     counted_items = CountItems(world)
     if counted_items != item_count:
         raise Exception("Invalid count of items!", counted_items, item_count)
@@ -1261,7 +1277,7 @@ def RemoveExcessAvailableFromFullPool(world, to_remove, pool):
 def get_item_groups():
     (emerald_items, required_items, level_unlock_items, stage_objective_items,
      junk_items, token_items, weapon_items, vehicle_items, warp_items, rifle_components,
-     weapon_group_items, object_items, key_items, trap_items, checkpoint_items, character_items) = GetAllItemInfo()
+     weapon_group_items, object_items, key_items, trap_items, checkpoint_items, character_items, goal_ring_items) = GetAllItemInfo()
 
     item_groups: typing.Dict[str, list] = {
         "Chaos Emeralds": [e.name for e in emerald_items],

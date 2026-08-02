@@ -13,7 +13,7 @@ import Utils
 from BaseClasses import ItemClassification
 from CommonClient import ClientCommandProcessor, CommonContext, get_base_parser, gui_enabled, logger, server_loop
 from NetUtils import ClientStatus
-from worlds.shadow_the_hedgehog.ObjectTypes import ObjectTypeVehicles
+from .ObjectTypes import ObjectTypeVehicles
 from .Options import WeaponsanityHold
 from . import Levels, Items, Locations, Utils as ShadowUtils, Weapons, Story, Objects, Checkpoints, ObjectTypes
 from .Levels import *
@@ -127,6 +127,7 @@ class GAME_ADDRESSES:
     CENTRAL_CITY_TIMER = 0x807D6924
     COSMIC_FALL_TIMER = 0x807D6C18
     LAST_WAY_TIMER = 0x807D6C90
+    SPACE_GADGET_RACE_TIMER = 0x807D6B50
 
     SUBTITLE_INFO = 0x8057FA6C
     LAST_SUBTITLE_TEXT = 0x80573340
@@ -1484,11 +1485,13 @@ class ShTHContext(CommonContext):
         self.client_cache = {}
         self.required_characters = 0
         self.death_link = False
-        self.objective_sanity_unlock = True
+        self.objective_sanity_unlock = False
 
         self.floor_weapon_sanity = False
         self.box_sanity = False
         self.weapon_counts = {}
+        self.set_change_history = []
+        self.goal_rings = Options.GoalRings.default
 
     def GetObjectDataStart(self):
         if self.object_offset is None:
@@ -1871,6 +1874,8 @@ class ShTHContext(CommonContext):
             if "floor_weapon_sanity" in slot_data:
                 self.floor_weapon_sanity = slot_data["floor_weapon_sanity"]
 
+            if "goal_rings" in slot_data:
+                self.goal_rings = slot_data["goal_rings"]
 
             self.restoreState()
             self.awaiting_server = False
@@ -2203,7 +2208,7 @@ async def check_save_loaded(ctx):
             if last_cutscene_id in (926, 8201, 8202, 8203, 8204):
                 finished = True
         else:
-            finished = True
+            finished = IsEndGameEnabled(ctx)
 
 
         if len(messages) > 0:
@@ -2303,7 +2308,7 @@ def IsEndGameEnabled(ctx):
             set_last_way = False
         pass
 
-    if ctx.required_characters:
+    if ctx.required_characters > 0:
         if len([t for t in ctx.tokens if
                 t[1].name == Items.Progression.CharacterToken]) < ctx.required_characters:
             set_last_way = False
@@ -2311,33 +2316,6 @@ def IsEndGameEnabled(ctx):
 
     return set_last_way
 
-def HandleLocationAutoclears():
-    location_dict = Locations.GetLocationInfoDict()
-    all_locations = location_dict.values()
-    level_clears = [ a for a in all_locations if a.location_type == Locations.LOCATION_TYPE_MISSION_CLEAR]
-    space_gadget_hero = [ a for a in level_clears if a.stageId == STAGE_SPACE_GADGET
-                             and a.alignmentId == MISSION_ALIGNMENT_HERO][0]
-
-    space_gadget_neutral = [a for a in level_clears if a.stageId == STAGE_SPACE_GADGET
-                         and a.alignmentId == MISSION_ALIGNMENT_NEUTRAL][0]
-
-    cosmic_fall_hero = [a for a in level_clears if a.stageId == STAGE_COSMIC_FALL
-                         and a.alignmentId == MISSION_ALIGNMENT_HERO][0]
-
-    cosmic_fall_dark = [a for a in level_clears if a.stageId == STAGE_COSMIC_FALL
-                         and a.alignmentId == MISSION_ALIGNMENT_DARK][0]
-
-    digital_circuit_dark = [a for a in level_clears if a.stageId == STAGE_DIGITAL_CIRCUIT
-                        and a.alignmentId == MISSION_ALIGNMENT_DARK][0]
-
-    digital_circuit_hero = [a for a in level_clears if a.stageId == STAGE_DIGITAL_CIRCUIT
-                        and a.alignmentId == MISSION_ALIGNMENT_HERO][0]
-
-    return {
-        space_gadget_neutral.locationId: space_gadget_hero,
-        cosmic_fall_dark.locationId: cosmic_fall_hero,
-        digital_circuit_hero.locationId: digital_circuit_dark
-    }
 
 
 def is_level_accessible(ctx, stageId, story=False):
@@ -2548,14 +2526,17 @@ def complete_completable_levels(ctx):
                             location_dict[l].location_type != Locations.LOCATION_TYPE_WARP
                             ]
 
+        has_path = [l for l in remaining_locations if l in location_dict if location_dict[l].stageId == mission.stageId and \
+         mission.alignmentId == location_dict[l].alignmentId and
+         location_dict[l].location_type == Locations.LOCATION_TYPE_TOKEN and location_dict[l].other == ITEM_TOKEN_TYPE_PATH]
+
+        if has_path:
+            continue
+
         if len(mission_complete_locations) > 0 and len(other_locations) == 0:
             new_clears.append(mission.locationId)
             # Mark as completed!
             pass
-
-        auto_clears = HandleLocationAutoclears()
-        if mission.locationId in auto_clears and auto_clears[mission.locationId].locationId in ctx.checked_locations:
-            new_clears.append(mission.locationId)
 
     token_clears = []
     for clear in new_clears:
@@ -2907,7 +2888,6 @@ async def check_level_status(ctx):
         if len(extra_messages) > 0:
             message = [{"cmd": 'LocationChecks', "locations": extra_messages}]
             await ctx.send_msgs(message)
-            check = [l for l in HandleLocationAutoclears() if l in extra_messages]
             ctx.level_state["temp"] = True
 
     current_level_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.ADDRESS_CURRENT_LEVEL, 2)
@@ -2931,12 +2911,13 @@ async def check_level_status(ctx):
             else:
                 new_messages = []
 
+            CheckSpaceGadgetTimerHandle(ctx)
+
             #logger.debug("Detected screen %d", current_screen)
 
             if len(new_messages) > 0:
                 message = [{"cmd": 'LocationChecks', "locations": new_messages}]
                 await ctx.send_msgs(message)
-                check = [ l for l in HandleLocationAutoclears() if l in new_messages ]
                 ctx.level_state["temp"] = True
 
         return None
@@ -2977,56 +2958,34 @@ async def check_level_status(ctx):
             logger.error("Currently in story mode, your options require playing in Select Mode.")
             return None
 
+        if ctx.boss_delay > 0:
+            ctx.boss_delay -= 1
+
+        if in_story_mode:
+            warp_location = [w for w in warp_locations if w.stageId == current_level]
+            if len(warp_location) == 1 and warp_location[0].locationId not in ctx.checked_locations:
+                messages = [warp_location[0].locationId]
+                message = [{"cmd": 'LocationChecks', "locations": messages}]
+                await ctx.send_msgs(message)
+
         if (ctx.last_level is None or current_level != ctx.last_level) and current_level in Levels.LEVEL_ID_TO_LEVEL:
             if ctx.info_logging and ctx.boss_delay == 0:
                 logger.info("Now in level: %s", Levels.LEVEL_ID_TO_LEVEL[current_level])
             ctx.last_level = current_level
 
-            if in_story_mode:
-                warp_location = [ w for w in warp_locations if w.stageId == current_level]
-                if len(warp_location) == 1 and warp_location[0].locationId not in ctx.checked_locations:
-                    messages = [warp_location[0].locationId]
-                    message = [{"cmd": 'LocationChecks', "locations": messages}]
-                    await ctx.send_msgs(message)
+            if current_level == BOSS_DEVIL_DOOM and not IsEndGameEnabled(ctx):
 
-                if current_level == BOSS_DEVIL_DOOM and not IsEndGameEnabled(ctx):
-
-                    if level_status_value != LevelStatusOptions.Active:
-                        ctx.boss_delay = 1
-                        ctx.last_level = None
-                        return None
-
-                    #current_rings_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.RINGS_ADDRESS, 4)
-                    #current_rings = int.from_bytes(current_rings_bytes, byteorder="big")
-                    handle_exit_stage(ctx)
-
-                    #if ctx.boss_delay == 0:
-                    #    ctx.last_level = None
-                    #    if 0 < current_rings < 50:
-                    #        logger.info("You do not have the required items to fight the final boss")
-
-                            #logger.info("Set rings to 0")
-                            #new_rings = 0
-                            #new_bytes = new_rings.to_bytes(4, byteorder='big')
-                            #writeBytes(GAME_ADDRESSES.RINGS_ADDRESS, new_bytes)
-                            #ctx.boss_delay = 3
-                    #else:
-                    #    ctx.boss_delay -= 1
-                    #    ctx.last_level = None
-
+                if level_status_value != LevelStatusOptions.Active:
+                    ctx.boss_delay = 5
+                    ctx.last_level = None
                     return None
 
-            this_stage_unlock = [unlock for unlock in ctx.handled if unlock[0].item in info and \
-             info[unlock[0].item].stageId == current_level and info[unlock[0].item].type == "level_unlock"]
+                logger.info("You do not have the items required to fight the final boss.")
 
-            if len(this_stage_unlock) == 0:
-                #message = [{"cmd": 'LocationChecks', "locations": messages}]
-                #await ctx.send_msgs(message)
-                # Give the player the stage unlock (for story convinence)
-                pass
+                handle_exit_stage(ctx)
+                ctx.last_level = None
 
-
-        # Check if level has loaded
+                return None
 
         return current_level
 
@@ -4319,7 +4278,7 @@ async def handle_skills(ctx):
     dash_power = 2
 
     for skill in object_names:
-        address = 0x0
+        address = None
         valueToWrite = 0
         bytes_size = 0
 
@@ -4379,7 +4338,7 @@ async def handle_skills(ctx):
             writeBytes(GAME_ADDRESSES.AIR_DASH_ATTACK_POWER, bytes_to_write)
 
 
-async def handle_objects(ctx, current_level):
+async def handle_objects(ctx: ShTHContext, current_level):
 
     despawn_only = False
     if current_level is None:
@@ -4645,7 +4604,7 @@ async def handle_objects(ctx, current_level):
                     loaded_bytes = dolphin_memory_engine.read_bytes(ProximityDataStart, 20)
 
                     if loaded_bytes[0:4] != zero_bytes:
-                        print("LB Door Prox:", loaded_bytes[0:4])
+                        #print("LB Door Prox:", loaded_bytes[0:4])
                         address_to_write = ProximityDataStart
                         writeBytes(address_to_write, zero_bytes)
 
@@ -4654,7 +4613,7 @@ async def handle_objects(ctx, current_level):
                         data = loaded_bytes[8+0+(i*4):8+4+(i*4)]
                         if data != proximity_bytes:
                             address_to_write = ProximityDataStart + 8+(4*i)
-                            print("Write 0 to=:", address_to_write, proximity_bytes)
+                            #print("Write 0 to=:", address_to_write, proximity_bytes)
                             writeBytes(address_to_write , proximity_bytes)
 
 
@@ -4800,6 +4759,115 @@ async def handle_objects(ctx, current_level):
             else:
                 despawn = True
                 states_to_add[object_name+character] = False
+
+        elif object.object_type == Objects.ObjectType.GOAL_RING:
+            despawn_neutral_goal_ring = False
+            despawn_aligned_goal_ring = False
+
+            goal_ring = [m for m in Locations.MissionClearLocations if m.stageId == current_level
+                    and m.mission_object_name == "Goal Ring"]
+
+            goal_ring_aligned = None
+            goal_ring_neutral = None
+
+            if len(goal_ring) != 0:
+                if current_level == Levels.STAGE_SPACE_GADGET:
+                    goal_ring_aligned = [ x for x in goal_ring if x.alignmentId == Levels.MISSION_ALIGNMENT_HERO ][0]
+                    #goal_ring_aligned.character = Characters.Sonic
+                    goal_ring_neutral = [x for x in goal_ring if x.alignmentId == Levels.MISSION_ALIGNMENT_NEUTRAL][0]
+                else:
+                    goal_ring = goal_ring[0]
+                    if goal_ring.alignmentId == Levels.MISSION_ALIGNMENT_HERO or goal_ring.alignmentId == Levels.MISSION_ALIGNMENT_DARK:
+                        goal_ring_aligned = goal_ring
+                    elif goal_ring.alignmentId == Levels.MISSION_ALIGNMENT_NEUTRAL:
+                        goal_ring_neutral = goal_ring
+
+                if goal_ring_aligned is not None and goal_ring_aligned.character is not None and "Character Required For Goal Ring" in ctx.goal_rings:
+                    character_to_name = Characters(goal_ring_aligned.character).name
+                    allowed_character = len(
+                        [info[unlock[0].item].name for unlock in ctx.items_to_handle if unlock[0].item in info and \
+                         info[unlock[0].item].name == character_to_name]) > 0
+
+                    if not allowed_character:
+                        despawn_aligned_goal_ring = True
+
+                if goal_ring_aligned is not None and goal_ring_aligned.character is not None and "Item Required For Character" in ctx.goal_rings:
+                    have_item = len(
+                        [info[unlock[0].item].name for unlock in ctx.items_to_handle if unlock[0].item in info and \
+                         info[unlock[0].item].name == "Goal Rings"]) > 0
+
+                    if not have_item:
+                        despawn_aligned_goal_ring = True
+
+                if goal_ring_neutral is not None and goal_ring_neutral.character is None and "Item Required For Neutral" in ctx.goal_rings:
+                    pass
+                    have_item = len(
+                        [info[unlock[0].item].name for unlock in ctx.items_to_handle if unlock[0].item in info and \
+                         info[unlock[0].item].name == "Goal Rings"]) > 0
+
+                    if not have_item:
+                        despawn_neutral_goal_ring = True
+
+
+            despawn_goal_ring = False
+            if goal_ring_aligned is None and goal_ring_neutral is not None:
+                despawn_goal_ring = despawn_neutral_goal_ring
+            elif goal_ring_aligned is not None and goal_ring_neutral is None:
+                despawn_goal_ring = despawn_aligned_goal_ring
+            elif goal_ring_aligned is not None and goal_ring_neutral is not None:
+
+                if despawn_neutral_goal_ring and despawn_aligned_goal_ring:
+                    despawn_goal_ring = True
+                # elif not despawn_neutral_goal_ring and despawn_aligned_goal_ring:
+                #     race_seconds = 1
+                #     new_bytes = race_seconds.to_bytes(4, byteorder='big')
+                #     writeBytes(GAME_ADDRESSES.SPACE_GADGET_RACE_TIMER, new_bytes)
+                #
+                # elif despawn_neutral_goal_ring and not despawn_aligned_goal_ring:
+                #     race_seconds = 30000
+                #     new_bytes = race_seconds.to_bytes(4, byteorder='big')
+                #     writeBytes(GAME_ADDRESSES.SPACE_GADGET_RACE_TIMER, new_bytes)
+                # else:
+                    #race_seconds = 300
+                    #new_bytes = race_seconds.to_bytes(4, byteorder='big')
+                    #writeBytes(GAME_ADDRESSES.SPACE_GADGET_RACE_TIMER, new_bytes)
+                    despawn_goal_ring = False
+
+            if not despawn_goal_ring:
+                if object_name in ctx.level_state:
+                    spawn = True
+                    states_to_remove.append(object_name)
+            else:
+                despawn = True
+                states_to_add[object_name] = False
+
+        elif (ctx.character_sanity == Options.CharacterSanity.option_unlock and
+              object.object_type in (Objects.ObjectType.COSMIC_FALL_COMPUTER_ROOM, Objects.ObjectType.DIGITAL_CORE)):
+
+            character = None
+
+            if object.object_type == Objects.ObjectType.COSMIC_FALL_COMPUTER_ROOM:
+                character = [m for m in Locations.MissionClearLocations if m.stageId == current_level
+                         and m.mission_object_name == "Computer Room"][0].character
+            elif object.object_type == Objects.ObjectType.DIGITAL_CORE:
+                character = [m for m in Locations.MissionClearLocations if m.stageId == current_level
+                         and m.mission_object_name == "Core"][0].character
+
+            character_to_name = Characters(character).name
+
+            allowed_character = len(
+                [info[unlock[0].item].name for unlock in ctx.items_to_handle if unlock[0].item in info and \
+                 info[unlock[0].item].name == character_to_name]) > 0
+
+            if allowed_character:
+                if object_name in ctx.level_state:
+                    print("Spawn o", object.index)
+                    spawn = True
+                    states_to_remove.append(object_name)
+            else:
+                print("Despawn o", object.index)
+                despawn = True
+                states_to_add[object_name] = False
 
         if despawn and loaded_spawn_data not in (0x00, 0x04):
             writeBytes(spawn_address, despawn_bytes)
@@ -4959,6 +5027,82 @@ async def handle_objects(ctx, current_level):
                 print("Delete from state", entry)
                 del ctx.level_state[entry]
                 print("Delete from state", ctx.level_state)
+
+def CheckSpaceGadgetTimerHandle(ctx):
+    current_level = Levels.STAGE_SPACE_GADGET
+    despawn_neutral_goal_ring = False
+    despawn_aligned_goal_ring = False
+
+    info = Items.GetItemLookupDict()
+
+    goal_ring = [m for m in Locations.MissionClearLocations if m.stageId == current_level
+                 and m.mission_object_name == "Goal Ring"]
+
+    goal_ring_aligned = None
+    goal_ring_neutral = None
+
+    if len(goal_ring) != 0:
+        if current_level == Levels.STAGE_SPACE_GADGET:
+            goal_ring_aligned = [x for x in goal_ring if x.alignmentId == Levels.MISSION_ALIGNMENT_HERO][0]
+            # goal_ring_aligned.character = Characters.Sonic
+            goal_ring_neutral = [x for x in goal_ring if x.alignmentId == Levels.MISSION_ALIGNMENT_NEUTRAL][0]
+        else:
+            goal_ring = goal_ring[0]
+            if goal_ring.alignmentId == Levels.MISSION_ALIGNMENT_HERO or goal_ring.alignmentId == Levels.MISSION_ALIGNMENT_DARK:
+                goal_ring_aligned = goal_ring
+            elif goal_ring.alignmentId == Levels.MISSION_ALIGNMENT_NEUTRAL:
+                goal_ring_neutral = goal_ring
+
+        if goal_ring_aligned is not None and goal_ring_aligned.character is not None and "Character Required For Goal Ring" in ctx.goal_rings:
+            character_to_name = Characters(goal_ring_aligned.character).name
+            allowed_character = len(
+                [info[unlock[0].item].name for unlock in ctx.items_to_handle if unlock[0].item in info and \
+                 info[unlock[0].item].name == character_to_name]) > 0
+
+            if not allowed_character:
+                despawn_aligned_goal_ring = True
+
+        if goal_ring_aligned is not None and goal_ring_aligned.character is not None and "Item Required For Character" in ctx.goal_rings:
+            have_item = len(
+                [info[unlock[0].item].name for unlock in ctx.items_to_handle if unlock[0].item in info and \
+                 info[unlock[0].item].name == "Goal Rings"]) > 0
+
+            if not have_item:
+                despawn_aligned_goal_ring = True
+
+        if goal_ring_neutral is not None and goal_ring_neutral.character is None and "Item Required For Neutral" in ctx.goal_rings:
+            pass
+            have_item = len(
+                [info[unlock[0].item].name for unlock in ctx.items_to_handle if unlock[0].item in info and \
+                 info[unlock[0].item].name == "Goal Rings"]) > 0
+
+            if not have_item:
+                despawn_neutral_goal_ring = True
+
+    despawn_goal_ring = False
+    if goal_ring_aligned is None and goal_ring_neutral is not None:
+        despawn_goal_ring = despawn_neutral_goal_ring
+    elif goal_ring_aligned is not None and goal_ring_neutral is None:
+        despawn_goal_ring = despawn_aligned_goal_ring
+    elif goal_ring_aligned is not None and goal_ring_neutral is not None:
+
+        if despawn_neutral_goal_ring and despawn_aligned_goal_ring:
+            despawn_goal_ring = True
+        elif not despawn_neutral_goal_ring and despawn_aligned_goal_ring:
+            race_seconds = 1
+            new_bytes = race_seconds.to_bytes(4, byteorder='big')
+            writeBytes(GAME_ADDRESSES.SPACE_GADGET_RACE_TIMER, new_bytes)
+
+        elif despawn_neutral_goal_ring and not despawn_aligned_goal_ring:
+            race_seconds = 30000
+            new_bytes = race_seconds.to_bytes(4, byteorder='big')
+            writeBytes(GAME_ADDRESSES.SPACE_GADGET_RACE_TIMER, new_bytes)
+        else:
+            race_seconds = 300
+            new_bytes = race_seconds.to_bytes(4, byteorder='big')
+            writeBytes(GAME_ADDRESSES.SPACE_GADGET_RACE_TIMER, new_bytes)
+            despawn_goal_ring = False
+
 
 def TextToShadowBytes(message):
     shadow_bytes = []

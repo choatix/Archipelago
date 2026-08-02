@@ -5,7 +5,8 @@ from math import ceil, floor
 from BaseClasses import MultiWorld, Region, Entrance, Item, ItemClassification
 from worlds.AutoWorld import World
 from worlds.generic.Rules import add_rule
-from . import Items, Levels, Utils, Weapons, Regions, Vehicle, Options, Locations, Names, Objects, Story, Rings
+from . import Items, Levels, Utils, Weapons, Regions, Vehicle, Options, Locations, Names, Objects, Story, Rings, \
+    Backtracking
 from .Crafts import Crafts
 
 from .Items import ShadowTheHedgehogItem, GetLevelTokenItems
@@ -528,12 +529,13 @@ def handle_path_rules(world, options, player, from_region_id, additional_level_r
         if access_region.hardLogicOnly and options.logic_level != Options.LogicLevel.option_hard:
             rule = lambda state: False
         else:
-            access_rule = lambda state: state.can_reach_region(
-                Levels.stage_id_to_region(additional_level_region.stageId, required_stage_region), player)
+            #print("Check region access for::", additional_level_region.stageId, required_stage_region)
+            region_name = Levels.stage_id_to_region(additional_level_region.stageId, required_stage_region)
+            access_rule = lambda state, r=region_name: state.can_reach_region(r, player)
 
             indirects.append(Levels.stage_id_to_region(additional_level_region.stageId, required_stage_region))
 
-            rule = lambda state, r=rule: access_rule(state) and r(state)
+            rule = lambda state, r=rule, a_rule=access_rule: a_rule(state) and r(state)
 
 
     if Names.REGION_RESTRICTION_TYPES.Craft in additional_level_region.restrictionTypes:
@@ -581,6 +583,54 @@ def handle_path_rules(world, options, player, from_region_id, additional_level_r
 
     if Names.REGION_RESTRICTION_TYPES.Defense in additional_level_region.restrictionTypes and options.objective_sanity_unlock:
         rule = lambda state, r=rule: state.has("Lava Shelter Defense", player) and r(state)
+
+
+    if Names.REGION_RESTRICTION_TYPES.DeathRuinsWalls in additional_level_region.restrictionTypes:
+        if options.weapon_sanity_unlock:
+            explosion_rule = Weapons.GetRuleByWeaponRequirement(options, player, Weapons.WeaponAttributes.EXPLOSION,
+                                                                additional_level_region.stageId, from_region_id)
+            if options.logic_level == Options.LogicLevel.option_easy:
+                rule = lambda state, r=rule, e_rule=explosion_rule: e_rule(state) and r(state)
+            else:
+                if "Triangle Jump" in options.object_unlocks:
+                    shot_rule = Weapons.GetRuleByWeaponRequirement(options, player, Weapons.WeaponAttributes.SHOT,
+                                                                   additional_level_region.stageId, from_region_id)
+
+                    triangle_jump_rule = lambda state: state.has("Triangle Jump", player)
+                    rule = lambda state, r=rule, e_rule=explosion_rule, s_rule=shot_rule, t_rule=triangle_jump_rule:\
+                        r(state) and (e_rule(state) or s_rule(state) or t_rule(state))
+
+
+    if Names.REGION_RESTRICTION_TYPES.PrisonIslandGoo in additional_level_region.restrictionTypes:
+        if options.vehicle_logic:
+            if Names.LOGIC_TWEAK_AIR_SAUCER_PRISON_ISLAND in options.logic_tweaks or \
+                options.logic_level != Options.LogicLevel.option_hard:
+                rule = lambda state, r=rule: r(state) and state.has("Vehicle:Air Saucer", player)
+
+    if Names.REGION_RESTRICTION_TYPES.VacuumWall in additional_level_region.restrictionTypes:
+        if options.weapon_sanity_unlock:
+            if Names.LOGIC_TWEAK_VACUUM_POD_FINAL_HAUNT in options.logic_tweaks:
+                rule = lambda state, r=rule: r(state) and state.has("Weapon:Vacuum Pod", player)
+            else:
+                w_rule = Weapons.GetRuleByWeaponRequirement(options, player, Weapons.WeaponAttributes.VACUUM,
+                                                            additional_level_region.stageId, from_region_id)
+                rule = lambda state, r=rule: r(state) and w_rule(state)
+
+    if Names.REGION_RESTRICTION_TYPES.BombSuck in additional_level_region.restrictionTypes:
+        if options.weapon_sanity_unlock:
+            if Names.LOGIC_TWEAK_VACUUM_POD_CENTRAL_CITY in options.logic_tweaks:
+                rule = lambda state, r=rule: r(state) and state.has("Weapon:Vacuum Pod", player)
+            else:
+                w_rule = Weapons.GetRuleByWeaponRequirement(options, player, Weapons.WeaponAttributes.VACUUM,
+                                                            additional_level_region.stageId, from_region_id)
+                rule = lambda state, r=rule: r(state) and w_rule(state)
+
+    if Names.REGION_RESTRICTION_TYPES.SkyTroopsJumper in additional_level_region.restrictionTypes:
+        if options.vehicle_logic:
+            if Names.LOGIC_TWEAK_AIR_SAUCER_PRISON_ISLAND in options.logic_tweaks or \
+                    options.logic_level == Options.LogicLevel.option_easy:
+                rule = lambda state, r=rule: r(state) and state.has("Vehicle:Gun Jumper", player)
+
 
     return rule, indirects
 
@@ -842,9 +892,15 @@ def GetGateKeyRequirementCount(world, player, gate_no):
         return count + count_requirements
 
 
-def GetGateKeyRule(world, player, gate_no):
+def GetGateKeyRule(world, player, gate_no, include_event=False):
     # Add weapon unlocks as gate requirement
     solid_requirements, count_requirements, count_options = GetIndividualGateKeyRequirements(world, player, gate_no)
+
+    if include_event:
+        required_event = Names.GetGateEventName(gate_no)
+        event_rule = lambda state, e=required_event: state.has(e, player)
+    else:
+        event_rule = lambda state: True
 
     if len(solid_requirements) == 0 and count_requirements is None:
         # Happens when there are no available options in the game
@@ -852,12 +908,14 @@ def GetGateKeyRule(world, player, gate_no):
         world.gate_requirements[gate_no] = {}
         return lambda state: True
     elif len(solid_requirements) > 0 and count_requirements is None:
-        return lambda state, sr=solid_requirements, : state.has_all_counts(sr, player)
+        return lambda state, sr=solid_requirements, e=event_rule, : state.has_all_counts(sr, player) and e(state)
     elif count_requirements is not None:
-        return lambda state, co=count_options, r=count_requirements: state.has_from_list(co, player, count_requirements)
+        return lambda state, co=count_options, r=count_requirements, e=event_rule:\
+            state.has_from_list(co, player, count_requirements) and e(state)
     else:
-        return lambda state, sr=solid_requirements,co=count_options, r=count_requirements: (
-                state.has_all_counts(sr, player) and state.has_from_list(co, player, count_requirements))
+        return lambda state, sr=solid_requirements,co=count_options, r=count_requirements, e=event_rule: (
+                state.has_all_counts(sr, player) and state.has_from_list(co, player, count_requirements) and
+                e(state))
 
 #
 # def CountRegionAccessibility(state, keys, data, ix, player, perc=100, stageId=None):
@@ -1158,7 +1216,7 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
         event_location.place_locked_item(Item(view_name,
                                               ItemClassification.progression_skip_balancing, None, player))
 
-    for backtrack_region in Levels.BACKTRACKING_REGIONS:
+    for backtrack_region in Backtracking.BACKTRACKING_REGIONS:
         if backtrack_region.stageId not in world.available_levels:
             continue
 
@@ -1218,6 +1276,7 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
             character_rule = None
             rule_change = False
 
+
             # If not goal ring type, require the character in the stage
             if clear.requirement_count is not None:
                 character_for_mission = clear.character.name
@@ -1235,9 +1294,26 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
                     else:
                         character_region_rule = lambda state, rq=region_required, cr=character_region_rule: state.can_reach_region(rq, player) or cr(state)
 
-                if character_region_rule is not None:
+                if character_region_rule is not None and character_rule is not None:
                     character_rule = lambda state, crr=character_region_rule, cr=character_rule: (
                         crr(state) and cr(state))
+
+            else:
+                goal_rings_options = world.options.goal_rings
+                if "Character Required For Goal Ring" in goal_rings_options and clear.character is not None:
+                    character_rule = lambda state, cm=clear.character.name: state.has(cm, player)
+
+                if "Item Required For Character" in  goal_rings_options and clear.character is not None:
+                    char_rule = lambda state: state.has("Goal Rings", player)
+
+                    if character_rule is not None:
+                        character_rule = lambda state, c_rule=character_rule, c_rule2=char_rule: c_rule(state) and c_rule2(state)
+                    else:
+                        character_rule = char_rule
+
+                if "Item Required For Neutral" in goal_rings_options and clear.character is None:
+                    character_rule = lambda state: state.has("Goal Rings", player)
+
 
             if clear.requirements is not None:
                 for req in clear.requirements:
@@ -1283,7 +1359,7 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
                 #    level_rule = lambda state, l_rule=level_rule, n_rule=new_rule: n_rule(state) and l_rule(state)
                 #    rule_change = True
 
-                if clear.requirement_count is not None and world.options.objective_sanity:
+                if clear.requirement_count is not None and world.options.objective_sanity and clear.requirement_count > 1:
 
                     location_details = ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_OBJECTIVE,
                                                                                  clear.mission_object_name,
@@ -1431,6 +1507,11 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
                         rule_change = True
 
                 location = multiworld.get_location(name, player)
+
+                if character_rule is not None:
+                    level_rule = lambda state, l_rule=level_rule, c_rule=character_rule: l_rule(state) and c_rule(state)
+                    rule_change = True
+
                 if rule_change:
                     add_rule(location, level_rule)
 
@@ -1627,6 +1708,9 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
 
     for gate in world.gates.items():
         gate_no = gate[0]
+        if type(gate_no) != int:
+            gate_no = int(gate_no)
+
         gate_stages = gate[1]
 
         if gate_no == 0:
@@ -1635,6 +1719,13 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
         menu_region = world.get_region("Menu")
 
         handled_gate_items = []
+
+        required_event = Names.GetGateEventName(gate_no)
+        event_rule = GetGateKeyRule(world, player, gate_no, include_event=False)
+        event_location = multiworld.get_location(required_event, player)
+        event_location.access_rule = event_rule
+        event_location.place_locked_item(Item(required_event,
+                                              ItemClassification.progression_skip_balancing, None, player))
 
         for gate_stage in gate_stages:
 
@@ -1650,7 +1741,7 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
                 check_x1 = Regions.GetDefaultCheckpointRegionForStage(world, gate_stage)
                 base_region_name = Levels.stage_id_to_region(gate_stage, check_x1)
 
-            rule = GetGateKeyRule(world, player, gate_no)
+            rule = GetGateKeyRule(world, player, gate_no, include_event=True)
             if gate_stage in Levels.BOSS_STAGES and gate_stage not in Levels.LAST_STORY_STAGES and gate_stage not in Levels.FINAL_BOSSES:
                     boss_stage_requirement = Story.GetVanillaBossStage(gate_stage)
                     if boss_stage_requirement is not None:
@@ -1923,7 +2014,7 @@ def GetCheckpointEscapes(options, level):
                     regionTo = int(path_item[0:-1].split("/")[0])
                     regionFrom = int(path_item[0:-1].split("/")[1])
                     skip_please.append(regionTo)
-                    bt_region = [l for l in Levels.BACKTRACKING_REGIONS if
+                    bt_region = [l for l in Backtracking.BACKTRACKING_REGIONS if
                                  l.stageId == level and l.backtrackFromRegion == regionFrom and l.backtrackToRegion == regionTo]
 
                     if len(bt_region) == 0:
@@ -2019,6 +2110,7 @@ def GetCheckpointEscapes(options, level):
         elif fully_stuck_on:
             stuck_regions.append(item)
 
+    #print("CE", level, region_simplified, stuck_regions, unstickable_regions)
     return region_simplified, stuck_regions, unstickable_regions
 
 STORED_CHECKPOINT_ESCAPES = {}
@@ -2064,7 +2156,11 @@ CHECKPOINT_ESCAPE_GROUPS_RESET_RESTRICTED = \
               REGION_INDICES.AIR_FLEET_KEY_DOOR,
               REGION_INDICES.AIR_FLEET_AIR_SAUCER,
               REGION_INDICES.AIR_FLEET_RAILS,
-              REGION_INDICES.AIR_FLEET_SECRET_1],
+              REGION_INDICES.AIR_FLEET_SECRET_1,
+                REGION_INDICES.AIR_FLEET_KEYDOOR_ENTRANCE,
+                REGION_INDICES.AIR_FLEET_ZERO_DOOR,
+            REGION_INDICES.AIR_FLEET_TRIANGLE_JUMP
+              ],
     },
 
     Levels.STAGE_COSMIC_FALL:
@@ -2074,6 +2170,12 @@ CHECKPOINT_ESCAPE_GROUPS_RESET_RESTRICTED = \
 }
 
 CHECKPOINT_ESCAPE_GROUPS = {
+
+    Levels.STAGE_DIGITAL_CIRCUIT:
+    {
+        "A": [REGION_INDICES.DIGITAL_CIRCUIT_HOLE_BLACK_ARM_CASE],
+        "B": [REGION_INDICES.DIGITAL_CIRCUIT_SEVEN_LIGHT_BAR, REGION_INDICES.DIGITAL_CIRCUIT_SEVEN_POLES]
+    },
 
     Levels.STAGE_GLYPHIC_CANYON: {
         "A": [REGION_INDICES.GLYPHIC_CANYON_SIX_DOOR]
@@ -2157,6 +2259,11 @@ CHECKPOINT_ESCAPE_GROUPS = {
         "B": [REGION_INDICES.SPACE_GADGET_LAST_DARK_ROOM]
     },
 
+    Levels.STAGE_LOST_IMPACT:
+        {
+
+        },
+
     Levels.STAGE_GUN_FORTRESS: {
         "A": [REGION_INDICES.GUN_FORTRESS_TURRET_OR_FIRE,
               REGION_INDICES.GUN_FORTRESS_ZIPWIRE_NORMAL],
@@ -2198,7 +2305,27 @@ CHECKPOINT_ESCAPE_GROUPS = {
     Levels.STAGE_LAVA_SHELTER:
     {
         "A": [REGION_INDICES.LAVA_SHELTER_DEFENSE_FOUR,
-              REGION_INDICES.LAVA_SHELTER_LIGHT_DASH_DARK]
+              REGION_INDICES.LAVA_SHELTER_LIGHT_DASH_DARK],
+
+        "B": [
+            REGION_INDICES.LAVA_SHELTER_ONE_DOOR, REGION_INDICES.LAVA_SHELTER_ONE_DOOR,
+            REGION_INDICES.LAVA_SHELTER_ONE_UPPER_DOOR, REGION_INDICES.LAVA_SHELTER_ONE_DOOR,
+            REGION_INDICES.LAVA_SHELTER_ONE_UPPER_DOOR, REGION_INDICES.LAVA_SHELTER_ONE_DOOR,
+            REGION_INDICES.LAVA_SHELTER_UPPER_OR_SAUCER, REGION_INDICES.LAVA_SHELTER_ONE_LOWER,
+            REGION_INDICES.LAVA_SHELTER_ONE_LOWER_DOOR, REGION_INDICES.LAVA_SHELTER_ONE_LOWER_DOOR_2,
+            REGION_INDICES.LAVA_SHELTER_DEFENSE_ONE_ROOM, REGION_INDICES.LAVA_SHELTER_BEFORE_TWO_DOOR
+        ],
+
+        "C": [
+            REGION_INDICES.LAVA_SHELTER_TWO_DOOR, REGION_INDICES.LAVA_SHELTER_PULLEY,
+            REGION_INDICES.LAVA_SHELTER_POLE_DESCEND, REGION_INDICES.LAVA_SHELTER_SECRET,
+            REGION_INDICES.LAVA_SHELTER_PULLEY_OR_LAVA, REGION_INDICES.LAVA_SHELTER_TWO_DOOR_2
+        ],
+
+        "D": [
+            REGION_INDICES.LAVA_SHELTER_DEFENSE_FOUR, REGION_INDICES.LAVA_SHELTER_LIGHT_DASH_DARK,
+            REGION_INDICES.LAVA_SHELTER_PULLEY_DARK,REGION_INDICES.LAVA_SHELTER_POLES
+        ]
     },
 
     Levels.STAGE_COSMIC_FALL:
