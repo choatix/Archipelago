@@ -1,6 +1,6 @@
 
 from .. import Options
-from ..Levels import LevelRegion
+from .LevelRegion import LevelRegion
 from ..Names import REGION_INDICES, REGION_RESTRICTION_TYPES, BOSS_EGG_BREAKER_IJ, BOSS_EGG_BREAKER_MM
 
 LEVEL_REGIONS = [

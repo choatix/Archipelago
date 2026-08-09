@@ -19,6 +19,8 @@ from .Regions import character_name_to_region, region_name_for_character, weapon
 from . import Utils as ShadowUtils
 from .Rings import RingInfo, RingInformation
 
+from .LevelRegions.LevelRegion import LevelRegion
+
 
 def GetKeyRule(options, stage, player):
 
@@ -648,7 +650,7 @@ def restrict_objects(multiworld, world, player):
                 continue
 
             location_with_restriction = world.get_location(entry_location_name)
-            dummy_region = Levels.LevelRegion(object.stage, object.region, [object.restrictionType])
+            dummy_region = LevelRegion(object.stage, object.region, [object.restrictionType])
 
             access_rule = handle_path_rules(world, world.options, player, object.region, dummy_region,
                                                                       Levels.REGION_RESTRICTION_REFERENCE_TYPES.BaseLogic)[0]
@@ -1250,7 +1252,7 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
 
         mock_from_region = ()
 
-        mock_region_info = (Levels.LevelRegion(backtrack_region.stageId,
+        mock_region_info = (LevelRegion(backtrack_region.stageId,
                                                backtrack_region.backtrackToRegion,
                                                backtrack_region.restrictionTypes)
                             .setFromRegion(backtrack_region.backtrackFromRegion)
@@ -1345,7 +1347,7 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
 
             if clear.requirements is not None:
                 for req in clear.requirements:
-                    lr = Levels.LevelRegion(clear.stageId, None, req)
+                    lr = LevelRegion(clear.stageId, None, req)
                     lr.setLogicType(clear.logicType)
 
                     logic_type = Levels.REGION_RESTRICTION_REFERENCE_TYPES.BaseLogic
@@ -1361,7 +1363,7 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
                         rule_change = True
             if clear.craft_requirements is not None:
                 for req in clear.craft_requirements:
-                    lr = Levels.LevelRegion(clear.stageId, None, req)
+                    lr = LevelRegion(clear.stageId, None, req)
                     lr.setLogicType(clear.logicType)
 
                     logic_type = Levels.REGION_RESTRICTION_REFERENCE_TYPES.CraftLogic
@@ -1585,7 +1587,7 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
         if boss.requirements is not None:
             if boss.stageId not in world.available_levels:
                 continue
-            lr = Levels.LevelRegion(boss.stageId, None, boss.requirements)
+            lr = LevelRegion(boss.stageId, None, boss.requirements)
             lr.setLogicType(boss.logicType)
             req_rule, indirects = handle_path_rules(world, world.options, player, lr.regionIndex, lr, Levels.REGION_RESTRICTION_REFERENCE_TYPES.BossLogic)
             if req_rule is not None:
@@ -2055,7 +2057,7 @@ def GetCheckpointEscapes(options, level):
 
                     bt_region = bt_region[0]
 
-                    mock_region_info = (Levels.LevelRegion(bt_region.stageId,
+                    mock_region_info = (LevelRegion(bt_region.stageId,
                                                            bt_region.backtrackToRegion,
                                                            bt_region.restrictionTypes)
                                         .setFromRegion(bt_region.backtrackFromRegion)

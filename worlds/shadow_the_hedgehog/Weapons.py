@@ -1,9 +1,7 @@
-import json
 from dataclasses import dataclass
 
 from BaseClasses import ItemClassification
-from . import Levels, Options, Objects, Names, Items, ObjectTypes
-from .Levels import LevelRegion
+from . import Levels, Options, Objects, Names, ObjectTypes
 from .Names import REGION_INDICES, WEAPONS
 from .ObjectTypes import ObjectType
 
@@ -871,11 +869,11 @@ def CalculateWeaponDupes(world):
         elif not world.options.weapon_sanity_unlock:
             pass
         elif weapon_min == weapon_max:
-            weapon_counts[w] = weapon_min
+            weapon_counts[w] = weapon_min.value
         else:
             weapon_maximum = weapon_max if weapon_max > weapon_min else weapon_min
             weapon_minimum = weapon_max if weapon_max < weapon_min else weapon_min
-            r = world.random.randrange(weapon_minimum, weapon_maximum)
+            r = world.random.randrange(weapon_minimum.value, weapon_maximum.value)
             weapon_counts[w] = r
             #new_weapons.extend([w] * r)
 

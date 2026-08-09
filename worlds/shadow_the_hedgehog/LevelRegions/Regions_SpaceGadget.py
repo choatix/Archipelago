@@ -1,6 +1,6 @@
 
 from .. import Options
-from ..Levels import LevelRegion
+from .LevelRegion import LevelRegion
 from ..Names import STAGE_SPACE_GADGET, REGION_INDICES, REGION_RESTRICTION_TYPES
 
 LEVEL_REGIONS = [

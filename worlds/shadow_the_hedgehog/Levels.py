@@ -1,12 +1,9 @@
+import os
+import sys
 from dataclasses import dataclass
 
 from . import Options, Names, Backtracking
-from .LevelRegions.LevelRegion import LevelRegion
-from .LevelRegions import Regions_Westopolis, Regions_DigitalCircuit, Regions_GlyphicCanyon, Regions_Bosses, \
-    Regions_LethalHighway, Regions_CrypticCastle, Regions_PrisonIsland, Regions_CentralCity, Regions_TheDoom, \
-    Regions_SkyTroops, Regions_MadMatrix, Regions_DeathRuins, Regions_CircusPark, Regions_TheArk, Regions_AirFleet, \
-    Regions_IronJungle, Regions_SpaceGadget, Regions_LostImpact, Regions_BlackComet, Regions_LavaShelter, \
-    Regions_CosmicFall, Regions_FinalHaunt, Regions_TheLastWay, Regions_GunFortress
+from .LevelRegions import *
 
 from .Names import *
 
