@@ -371,3 +371,12 @@ def GetObjectiveSanityFlag(details, level_info):
         return details.enemy_objective_sanity
 
     return details.objective_sanity
+
+def IsEnemyObjectiveSanity(details, level_info):
+    if level_info is None:
+        return False
+
+    if level_info[0] == TYPE_ID_OBJECTIVE_ENEMY:
+        return True
+
+    return False

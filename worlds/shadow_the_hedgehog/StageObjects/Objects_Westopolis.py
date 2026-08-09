@@ -43,7 +43,7 @@ DESIRABLE_OBJECTS_WESTOPOLIS  = [
     SETObject(ObjectType.GUN_SOLDIER, Levels.STAGE_WESTOPOLIS, 28, "12",
               region=REGION_INDICES.WESTOPOLIS_CHECKPOINT_ONE, weapon=WEAPONS.PISTOL, old_name="11"),
     SETObject(ObjectType.GUN_SOLDIER, Levels.STAGE_WESTOPOLIS, 93, "13",
-              region=REGION_INDICES.WESTOPOLIS_CHECKPOINT_ONE, weapon=WEAPONS.PISTOL, old_name="12"),
+              region=REGION_INDICES.WESTOPOLIS_GUN_CASE, weapon=WEAPONS.PISTOL, old_name="12"),
     SETObject(ObjectType.GUN_SOLDIER, Levels.STAGE_WESTOPOLIS, 242, "14",
               region=REGION_INDICES.WESTOPOLIS_GUN_CASE, weapon=WEAPONS.PISTOL, old_name="13"),
     SETObject(ObjectType.BLACK_WING, Levels.STAGE_WESTOPOLIS, 217, "15",

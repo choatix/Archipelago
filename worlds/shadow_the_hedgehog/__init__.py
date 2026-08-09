@@ -1,6 +1,7 @@
 import copy
 import math
 import typing
+from dataclasses import fields
 from typing import ClassVar, Tuple, Any
 
 from BaseClasses import Tutorial, CollectionState, Item, ItemClassification
@@ -97,6 +98,7 @@ class ShtHWorld(World):
         self.available_checkpoints = {}
         self.weapon_counts = {}
         self.chosen_paths = []
+        self.using_gate_count = 0
 
         for token in Items.TOKENS:
             self.required_tokens[token] = 0
@@ -163,7 +165,7 @@ class ShtHWorld(World):
 
 
         #if self.options.story_shuffle == Options.StoryShuffle.option_chaos:
-        #    self.options.story_shuffle = Options.StoryShuffle(Options.StoryShuffle.option_off)
+        #    self.options.story_shuffle = Options.StoryShuffle(Options.StoryShuffle.option_disabled)
 
         if self.options.auto_clear_missions and not self.options.objective_sanity or \
             (self.options.objective_sanity and not self.options.enemy_objective_sanity):
@@ -171,14 +173,14 @@ class ShtHWorld(World):
 
         if (self.options.weapon_sanity_hold == Options.WeaponsanityHold.option_unlocked
                 and not self.options.weapon_sanity_unlock):
-            self.options.weapon_sanity_hold = Options.WeaponsanityHold(Options.WeaponsanityHold.option_on)
+            self.options.weapon_sanity_hold = Options.WeaponsanityHold(Options.WeaponsanityHold.option_always_on)
 
         if self.options.level_progression == Options.LevelProgression.option_select and \
             self.options.starting_stages == 0:
             self.options.starting_stages = Options.StartingStages(1)
 
         if self.options.shadow_mod.value != Options.ShadowMod.option_vanilla and\
-            self.options.character_sanity != Options.CharacterSanity.option_off:
+            self.options.character_sanity != Options.CharacterSanity.option_disabled:
             raise OptionError("Unable to play charactersanity outside of vanilla")
 
         if self.options.shadow_mod.value != Options.ShadowMod.option_vanilla:
@@ -188,7 +190,7 @@ class ShtHWorld(World):
             self.options.key_sanity:
             raise OptionError("Key/RSR sanity not supported in Reloaded at this time.")
 
-        #if self.options.story_shuffle == Options.StoryShuffle.option_off and \
+        #if self.options.story_shuffle == Options.StoryShuffle.option_disabled and \
         #    self.options.include_last_way_shuffle:
 
             # If story is off, last way cannot be shuffled
@@ -219,18 +221,18 @@ class ShtHWorld(World):
             self.options.select_percentage = Options.SelectPercentage(100)
 
         if (self.options.level_progression != Options.LevelProgression.option_select and
-                self.options.story_shuffle == Options.StoryShuffle.option_off and "Westopolis" in self.options.excluded_stages):
+                self.options.story_shuffle == Options.StoryShuffle.option_disabled and "Westopolis" in self.options.excluded_stages):
             raise OptionError("Westopolis stage cannot be excluded on story without shuffle enabled.")
 
         if (self.options.level_progression == Options.LevelProgression.option_select or \
-            not self.options.include_last_way_shuffle or self.options.story_shuffle == Options.StoryShuffle.option_off):
+            not self.options.include_last_way_shuffle or self.options.story_shuffle == Options.StoryShuffle.option_disabled):
             if "The Last Way" in self.options.excluded_stages.value:
                 print("You cannot exclude The Last Way when it's required to reach the goal")
                 self.options.excluded_stages.value.remove("The Last Way")
 
         if self.options.chaos_control_logic_level in [ Options.ChaosControlLogicLevel.option_hard, Options.ChaosControlLogicLevel.option_intermediate] and\
             self.options.logic_level != Options.LogicLevel.option_hard:
-            self.options.chaos_control_logic_level = Options.ChaosControlLogicLevel(Options.ChaosControlLogicLevel.option_off)
+            self.options.chaos_control_logic_level = Options.ChaosControlLogicLevel(Options.ChaosControlLogicLevel.option_disabled)
 
         if not self.options.enemy_objective_sanity and self.options.enemy_sanity:
             self.options.enemy_sanity = Options.Enemysanity(False)
@@ -240,7 +242,7 @@ class ShtHWorld(World):
                 self.options.enable_traps = Options.EnableTraps(False)
 
         if self.options.level_progression == Options.LevelProgression.option_story:
-            self.options.select_gates = Options.SelectGates(Options.SelectGates.option_off)
+            self.options.select_gates = Options.SelectGates(Options.SelectGates.option_disabled)
 
             if not self.options.story_shuffle:
                 self.options.include_last_way_shuffle = Options.IncludeLastStoryShuffle(False)
@@ -271,6 +273,23 @@ class ShtHWorld(World):
         if self.options.objective_sanity_unlock and not self.options.objective_sanity:
             raise OptionError("You cannot use objective unlock without it being enabled")
 
+        if not self.options.use_object_unlocks and len(self.options.object_unlocks.value) > 0:
+            self.options.object_unlocks = Options.ObjectUnlocks([])
+
+        if self.options.objective_sanity_unlock and \
+            self.options.objective_sanity_behaviour == Options.ObjectiveSanityBehaviour.option_base_clear:
+            raise OptionError("You cannot use objective unlock and base clear together!")
+
+        if Names.GOAL_RING_RULE_CHARACTER_FOR_GOAL_RING in self.options.goal_rings and self.options.character_sanity != Options.CharacterSanity.option_unlock:
+            raise OptionError("You cannot lock characters for clearing goals but not have them unlockable")
+
+        if self.options.level_progression != Options.LevelProgression.option_select and \
+            self.options.story_shuffle == Options.StoryShuffle.option_disabled and \
+            self.options.maximum_levels < 22:
+            raise OptionError("You cannot use maximum levels when playing unshuffled story mode!")
+
+        if self.options.goal_characters and self.options.character_sanity == Options.CharacterSanity.option_disabled:
+            raise OptionError("You cannot have character goal with character sanity disabled!")
 
     def calculate_non_objective_sanity_maximums(self):
         relevant_mission_clears =  [m for m in Locations.MissionClearLocations if
@@ -580,9 +599,11 @@ class ShtHWorld(World):
 
                 if "gates" in passthrough:
                     self.gates = passthrough["gates"]
+                    print("Found gates:", self.gates)
 
                 if "gate_requirements" in passthrough:
-                    self.gate_requirements = passthrough["gate_requirements"]
+                    self.gate_requirements = Rules.LoadGateRequirements(passthrough["gate_requirements"])
+                    print("gate_requirements:", self.gate_requirements)
 
                 if "shadow_mod" in passthrough:
                     self.options.shadow_mod = passthrough["shadow_mod"]
@@ -693,7 +714,26 @@ class ShtHWorld(World):
                     self.options.goal_rings = passthrough["goal_rings"]
 
                 if "logic_tweaks" in passthrough:
-                    self.options.logic_twwaks = passthrough["logic_tweaks"]
+                    self.options.logic_tweaks = passthrough["logic_tweaks"]
+
+                if "goal_chaos_emeralds" in passthrough:
+                    self.options.goal_chaos_emeralds = passthrough["goal_chaos_emeralds"]
+
+                if "starting_stages" in passthrough:
+                    self.options.starting_stages = passthrough["starting_stages"]
+
+                if "percent_overrides" in passthrough:
+                    self.options.percent_overrides = passthrough["percent_overrides"]
+
+                if "gate_density" in passthrough:
+                    self.options.gate_density = passthrough["gate_density"]
+                    print("Found gate density:", passthrough["gate_density"])
+
+                if "rifle_components" in passthrough:
+                    self.options.rifle_components = passthrough["rifle_components"]
+
+                if "using_gate_count" in passthrough:
+                    self.using_gate_count = passthrough["using_gate_count"]
 
         # Set maximum of levels required
         # Exclude missions listed in exclude_locations
@@ -724,28 +764,6 @@ class ShtHWorld(World):
                 if len(self.chosen_paths) == 0:
                     raise OptionError("Invalid chosen path count")
 
-
-            # TODO: Check first gate requirement count when playing gates
-            if (self.options.select_gates != Options.SelectGates.option_off) and self.options.level_progression \
-                == Options.LevelProgression.option_select:
-
-                stage_items = Items.GetStageItems(self, None, True)
-
-                #TODO: Handle this properly inside count_locations
-                if(len(self.gates)) != 0:
-                    # Get check count from first gates
-                    total_requirements = Rules.GetGateKeyRequirementCount(self, self.player, 1)
-                    gate_1_checks_locations = (Locations.count_locations(self, levels=self.gates[0]))
-
-                    if total_requirements > gate_1_checks_locations:
-                        raise OptionError(f"Invalid gate checks alongside requirements. Check your gate requirements. "
-                                          f"({total_requirements},{gate_1_checks_locations})")
-                # Get minimum gate requirement
-
-                # Check if higher
-
-                pass
-
             if self.options.level_progression != Options.LevelProgression.option_select and \
                 self.options.story_progression_balancing_passes > 0:
 
@@ -774,7 +792,7 @@ class ShtHWorld(World):
         item_count = Items.CountItems(self)
         location_count = Locations.count_locations(self)
 
-        #if self.options.exceeding_items_filler != Options.ExceedingItemsFiller.option_off:
+        #if self.options.exceeding_items_filler != Options.ExceedingItemsFiller.option_disabled:
             # if item_count > location_count:
             #     #print("item_count=", item_count, "location_count=", location_count)
             #     potential_downgrades, removals = Items.GetPotentialDowngradeItems(self)
@@ -789,7 +807,7 @@ class ShtHWorld(World):
 
         #        self.excess_item_count = item_count - location_count
 
-        #elif self.options.exceeding_items_filler == Options.ExceedingItemsFiller.option_off and \
+        #elif self.options.exceeding_items_filler == Options.ExceedingItemsFiller.option_disabled and \
         #    location_count < item_count and not self.options.start_inventory_excess_items:
         #    raise OptionError("Invalid count of items present:"+str(location_count)+" vs "+str(item_count))
 
@@ -893,14 +911,17 @@ class ShtHWorld(World):
             hint_value = ""
 
             if stage in self.available_select_stages:
-                if self.options.select_gates != Options.SelectGates.option_off:
+                if self.options.select_gates != Options.SelectGates.option_disabled:
                     gate_no = [ int(x[0]) for x in self.gates.items() if stage in x[1]]
                     hint_value = ", ".join([ ("Gate " + str(s)) if s != 0 else "START" for s in gate_no])
                 else:
                     hint_value = "Unlock " + Levels.LEVEL_ID_TO_LEVEL[stage]
 
             if stage in self.available_story_levels:
-                options = [ l for l in self.shuffled_story_mode if l.end_stage_id == stage ]
+                if stage not in Levels.BOSS_STAGES:
+                    options = [ l for l in self.shuffled_story_mode if l.end_stage_id == stage ]
+                else:
+                    options = [ l for l in self.shuffled_story_mode if l.boss == stage ]
                 hint_value_story = ", ".join([ Levels.LEVEL_ID_TO_LEVEL[o.start_stage_id]  + " " + Levels.ALIGNMENT_TO_STRING[o.alignment_id]
                                               if o.start_stage_id is not None else "START"
                                               for o in options ])
@@ -983,6 +1004,8 @@ class ShtHWorld(World):
 
 
     def fill_slot_data(self):
+        #print("FSD", self.gates)
+
         slot_data = {
             "check_level": None if len(self.first_regions) == 0 else self.first_regions[0],
             "first_levels": self.first_regions,
@@ -1101,8 +1124,25 @@ class ShtHWorld(World):
             "weapon_counts": self.weapon_counts,
             "maximum_levels": self.options.maximum_levels.value,
             "goal_rings": self.options.goal_rings.value,
-            "logic_tweaks": self.options.logic_tweaks.value
+            "logic_tweaks": self.options.logic_tweaks.value,
+
+            # Only for UT
+            "goal_chaos_emeralds": self.options.goal_chaos_emeralds.value,
+            "starting_stages": self.options.starting_stages.value,
+            "percent_overrides": self.options.percent_overrides.value,
+            "gate_density": self.options.gate_density.value,
+            "rifle_components": self.options.rifle_components.value,
+            "using_gate_count": self.using_gate_count
         }
+
+        print("SLOT DATA IS:", slot_data)
+
+        TEST = False
+        if TEST:
+            for f in fields(Options.ShadowTheHedgehogOptions):
+                if f.name not in slot_data:
+                    print("Missing from slot data:", f.name)
+
 
         return slot_data
 
@@ -1133,10 +1173,10 @@ class ShtHWorld(World):
 
 
     def write_spoiler(self, spoiler_handle: typing.TextIO):
-        if self.options.story_shuffle != Options.StoryShuffle.option_off:
+        if self.options.story_shuffle != Options.StoryShuffle.option_disabled:
             Story.PrintStoryMode(self, spoiler_handle)
 
-        if self.options.select_gates != Options.SelectGates.option_off:
+        if self.options.select_gates != Options.SelectGates.option_disabled:
             self.PrintGates(spoiler_handle, self.gates, self.gate_requirements)
 
         if self.options.checkpoint_shuffle == Options.CheckpointShuffle.option_start_and_unlock:

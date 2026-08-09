@@ -234,7 +234,7 @@ def handle_path_rules(world, options, player, from_region_id, additional_level_r
         final_item = Items.GetFinalItem()
         return lambda state: state.has(final_item.name, player), indirects
 
-    if options.chaos_control_logic_level != Options.ChaosControlLogicLevel.option_off \
+    if options.chaos_control_logic_level != Options.ChaosControlLogicLevel.option_disabled \
         and additional_level_region.chaosControlLogicRequiresHeal:
 
         weapon_rule = Weapons.GetRuleByWeaponRequirement(options, player, Weapons.WeaponAttributes.HEAL,
@@ -242,7 +242,7 @@ def handle_path_rules(world, options, player, from_region_id, additional_level_r
 
         if additional_level_region.chaosControlLogicType == Options.ChaosControlLogicLevel.option_intermediate and \
                 options.chaos_control_logic_level not in \
-                [Options.ChaosControlLogicLevel.option_off, Options.ChaosControlLogicLevel.option_easy]:
+                [Options.ChaosControlLogicLevel.option_disabled, Options.ChaosControlLogicLevel.option_easy]:
 
             return weapon_rule, indirects
 
@@ -748,6 +748,17 @@ def CalculateObjectiveValueForGate(value, max_gates, gate_no, gate_density, rate
 
     return expected_result
 
+
+def LoadGateRequirements(reqs):
+    output = {}
+    for r in reqs.items():
+        key = r[0]
+        values = r[1]
+
+        output[int(key)] = values
+
+    return output
+
 def GetIndividualGateKeyRequirements(world, player, gate_no):
     if(type(gate_no)) != int:
         gate_no = int(gate_no)
@@ -759,7 +770,9 @@ def GetIndividualGateKeyRequirements(world, player, gate_no):
     reqs = {}
     if gate_no in world.gate_requirements:
         reqs = world.gate_requirements[gate_no]
+        #print("Found gate requirements:", gate_no, reqs)
     else:
+        #print("Gate requirements not found, generating now", gate_no, world.gate_requirements)
         if world.options.gate_unlock_requirement == Options.GateUnlockRequirement.option_objective:
             full_reqs = world.objective_requirements.copy()
             reqs = {}
@@ -769,7 +782,7 @@ def GetIndividualGateKeyRequirements(world, player, gate_no):
                 key = o[0]
                 value = o[1]
 
-                base_value_to_set = CalculateObjectiveValueForGate(value, world.options.select_gates_count, gate_no, gate_density,
+                base_value_to_set = CalculateObjectiveValueForGate(value, world.using_gate_count, gate_no, gate_density,
                                                                    rounding=False)
 
                 reqs[key] = floor(base_value_to_set)
@@ -792,12 +805,11 @@ def GetIndividualGateKeyRequirements(world, player, gate_no):
                 if i < gate_no:
                     gated_stages.extend(world.gates[i])
 
-            previous_gates = {}
             for o in [ a for a in full_reqs.items() if Items.GetItemByName(a[0]).stageId
                                                   in gated_stages ]:
                 key = o[0]
                 value = o[1]
-                base_value_to_set = CalculateObjectiveValueForGate(value, world.options.select_gates_count, gate_no, gate_density,
+                base_value_to_set = CalculateObjectiveValueForGate(value, world.using_gate_count, gate_no, gate_density,
                                                             rounding=False)
 
                 reqs[key] = floor(base_value_to_set)
@@ -842,7 +854,7 @@ def GetIndividualGateKeyRequirements(world, player, gate_no):
             for item, w_count in weapon_counts.items():
                 count += w_count
 
-            gate_value = CalculateObjectiveValueForGate(count, world.options.select_gates_count, gate_no, gate_density)
+            gate_value = CalculateObjectiveValueForGate(count, world.using_gate_count, gate_no, gate_density)
 
             reqs = {
 
@@ -853,6 +865,33 @@ def GetIndividualGateKeyRequirements(world, player, gate_no):
 
             reqs["Count"] = gate_value
             world.gate_requirements[gate_no] = reqs
+
+        elif world.options.gate_unlock_requirement == Options.GateUnlockRequirement.option_stage_items:
+            full_reqs = world.objective_requirements.copy()
+            reqs = {}
+            count = 0
+            gated_stages = []
+            for i in world.gates.keys():
+                if i == gate_no:
+                    gated_stages.extend(world.gates[i])
+
+            for o in [a for a in full_reqs.items() if Items.GetItemByName(a[0]).stageId
+                                                      in gated_stages]:
+                key = o[0]
+                value = o[1]
+                base_value_to_set = CalculateObjectiveValueForGate(value, world.using_gate_count, gate_no, gate_density*3,
+                                                                   rounding=False)
+
+                reqs[key] = int(floor(base_value_to_set))
+                if reqs[key] == 0:
+                    reqs[key] = 1
+                count += ceil(base_value_to_set)
+
+            #if count < 1 and :
+            #    count = 1
+            reqs["Count"] = count
+            world.gate_requirements[gate_no] = reqs
+
         else:
             print("Unknown requirements:", reqs)
 
@@ -860,6 +899,12 @@ def GetIndividualGateKeyRequirements(world, player, gate_no):
 
     count_options = []
     count_requirements = None
+
+    if "Count" in reqs:
+        reqs["Count"] = int(floor(reqs["Count"]))
+
+        if reqs["Count"] == 0 and len([r for r in reqs.items() if r[0] != "Count"]) > 0:
+            reqs["Count"] = 1
 
     for r in reqs.items():
         if r[0] == "Count":
@@ -869,27 +914,8 @@ def GetIndividualGateKeyRequirements(world, player, gate_no):
                 solid_requirements[r[0]] =  r[1]
             count_options.append(r[0])
 
+    #print("Returning:", solid_requirements, count_requirements, count_options)
     return solid_requirements, count_requirements, count_options
-
-def GetGateKeyRequirementCount(world, player, gate_no):
-    solid_requirements, count_requirements, count_options = GetIndividualGateKeyRequirements(world, player, gate_no)
-    if len(solid_requirements) == 0 and count_requirements is None:
-        return 0
-    elif len(solid_requirements) > 0 and count_requirements is None:
-        count = 0
-        for i in solid_requirements.values():
-            count += i
-
-        return count
-    elif count_requirements is not None:
-        return count_requirements
-    else:
-        count = 0
-        for i in solid_requirements.values():
-            count += i
-
-        # Does not account for crossover which the rule might
-        return count + count_requirements
 
 
 def GetGateKeyRule(world, player, gate_no, include_event=False):
@@ -902,14 +928,16 @@ def GetGateKeyRule(world, player, gate_no, include_event=False):
     else:
         event_rule = lambda state: True
 
-    if len(solid_requirements) == 0 and count_requirements is None:
+    #print("GateInfo", gate_no, solid_requirements, count_requirements, count_options)
+
+    if len(solid_requirements) == 0 and (count_requirements is None or count_requirements == 0):
         # Happens when there are no available options in the game
         # Such as objective enemy sanity being disabled and only these stages being available, so just be open
         world.gate_requirements[gate_no] = {}
         return lambda state: True
-    elif len(solid_requirements) > 0 and count_requirements is None:
+    elif len(solid_requirements) > 0 and (count_requirements is None or count_requirements == 0):
         return lambda state, sr=solid_requirements, e=event_rule, : state.has_all_counts(sr, player) and e(state)
-    elif count_requirements is not None:
+    elif len(solid_requirements) == 0 and count_requirements is not None and count_requirements != 0:
         return lambda state, co=count_options, r=count_requirements, e=event_rule:\
             state.has_from_list(co, player, count_requirements) and e(state)
     else:
@@ -1094,7 +1122,7 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
         #            world.get_region(start_region_name),
         #            checkpoint_rule)
 
-    if world.options.checkpoint_shuffle != Options.CheckpointShuffle.option_off:
+    if world.options.checkpoint_shuffle != Options.CheckpointShuffle.option_disabled:
         for stage in Levels.ALL_STAGES:
             if stage in Levels.BOSS_STAGES:
                 continue
@@ -1300,19 +1328,19 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
 
             else:
                 goal_rings_options = world.options.goal_rings
-                if "Character Required For Goal Ring" in goal_rings_options and clear.character is not None:
+                if Names.GOAL_RING_RULE_CHARACTER_FOR_GOAL_RING in goal_rings_options and clear.character is not None:
                     character_rule = lambda state, cm=clear.character.name: state.has(cm, player)
 
-                if "Item Required For Character" in  goal_rings_options and clear.character is not None:
-                    char_rule = lambda state: state.has("Goal Rings", player)
+                if Names.GOAL_RING_RULE_ITEM_REQUIRED_FOR_CHARACTER in goal_rings_options and clear.character is not None:
+                    char_rule = lambda state: state.has(Items.ITEM_NAME_GOAL_RINGS, player)
 
                     if character_rule is not None:
                         character_rule = lambda state, c_rule=character_rule, c_rule2=char_rule: c_rule(state) and c_rule2(state)
                     else:
                         character_rule = char_rule
 
-                if "Item Required For Neutral" in goal_rings_options and clear.character is None:
-                    character_rule = lambda state: state.has("Goal Rings", player)
+                if Names.GOAL_RING_RULE_ITEM_REQUIRED_FOR_NEUTRAL in goal_rings_options and clear.character is None:
+                    character_rule = lambda state: state.has(Items.ITEM_NAME_GOAL_RINGS, player)
 
 
             if clear.requirements is not None:
@@ -1466,16 +1494,20 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
                         total += count
 
                 finish_count = 1
+                is_enemy_sanity = clear.mission_object_name in ("Soldier", "Artificial Chaos", "Alien")
                 if (not world.options.objective_sanity
-                        or world.options.objective_sanity_behaviour != Options.ObjectiveSanityBehaviour.option_default) or \
+                        or world.options.objective_sanity_behaviour == Options.ObjectiveSanityBehaviour.option_base_clear
+                        or world.options.objective_sanity_behaviour == Options.ObjectiveSanityBehaviour.option_manual_clear
+                        or (world.options.objective_sanity_behaviour == Options.ObjectiveSanityBehaviour.option_manual_clear_no_enemy and is_enemy_sanity)) or \
                         not result_sanity:
                     finish_count = max_required
                     if finish_count == 0:
                         finish_count = 1
 
                 # Enemy stage clears don't require completing objectives
-                if world.options.enemy_objective_sanity and world.options.objective_sanity_behaviour == Options.ObjectiveSanityBehaviour.option_default and \
-                    clear.mission_object_name in ("Soldier", "Artificial Chaos", "Alien"):
+                if (world.options.enemy_objective_sanity and world.options.objective_sanity_behaviour == Options.ObjectiveSanityBehaviour.option_default or
+                world.options.enemy_objective_sanity and world.options.objective_sanity_behaviour == Options.ObjectiveSanityBehaviour.option_manual_clear_no_enemy) and \
+                    is_enemy_sanity:
                     finish_count = 0
 
                 prog_rule = lambda state, keys=progress_dist_by_name.keys(), data=progress_dist_by_name,\
@@ -1605,7 +1637,7 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
                 if world.options.character_sanity == Options.CharacterSanity.option_unlock:
                     rule = lambda state, c=character: state.has(c, player)
 
-                region_stage.connect(region, region_name_for_character(Levels.LEVEL_ID_TO_LEVEL[stage], character, region_index), rule=rule)
+                region_stage.connect(region, region_name_for_character(stage, character, region_index), rule=rule)
                 already_added.append((stage, region_index))
 
 
@@ -1634,7 +1666,7 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
                     region_stage = world.get_region(Levels.boss_stage_id_to_region(stage, region_index))
                 else:
                     region_stage = world.get_region(Levels.stage_id_to_region(stage, region_index))
-                region_stage.connect(region, region_name_for_weapon(Levels.LEVEL_ID_TO_LEVEL[stage], region_index, weapon.name),
+                region_stage.connect(region, region_name_for_weapon(stage, region_index, weapon.name),
                                      rule=rule)
 
     if world.options.enemy_sanity and world.options.objective_sanity_system != Options.ObjectiveSanitySystem.option_individual:
@@ -1798,7 +1830,7 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
         tokens = get_token_count(world, Items.Progression.PathToken, token_assignments,
                                  world.options.goal_paths)
         goal_has.append(tokens)
-    if world.options.goal_characters == Options.GoalCharacters.option_on:
+    if world.options.goal_characters == Options.GoalCharacters:
         goal_has.append(("Character Token", len(world.available_characters)))
 
     goal_has_lw.extend(goal_has)
@@ -1807,7 +1839,7 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
 
     # If in Story shuffle, Devil Doom is somewhere else
     if world.options.include_last_way_shuffle and world.options.level_progression != Options.LevelProgression.option_select\
-            and world.options.story_shuffle != Options.StoryShuffle.option_off:
+            and world.options.story_shuffle != Options.StoryShuffle.option_disabled:
 
         # handle requirement that DD must be found in the level shuffle!
         #if world.options.goal_devil_doom:
@@ -2041,7 +2073,11 @@ def GetCheckpointEscapes(options, level):
 
                     region = region[0]
                     # TODO: Improve to make this work better!
-                    from_regions = region.fromRegions
+                    from_regions = []
+                    if region.isSpecial:
+                        from_regions = []
+                    else:
+                        from_regions = region.fromRegions
 
                 output = []
 
@@ -2110,7 +2146,7 @@ def GetCheckpointEscapes(options, level):
         elif fully_stuck_on:
             stuck_regions.append(item)
 
-    #print("CE", level, region_simplified, stuck_regions, unstickable_regions)
+    print("CE", level, region_simplified, stuck_regions, unstickable_regions)
     return region_simplified, stuck_regions, unstickable_regions
 
 STORED_CHECKPOINT_ESCAPES = {}
@@ -2178,7 +2214,7 @@ CHECKPOINT_ESCAPE_GROUPS = {
     },
 
     Levels.STAGE_GLYPHIC_CANYON: {
-        "A": [REGION_INDICES.GLYPHIC_CANYON_SIX_DOOR]
+        "A": [REGION_INDICES.GLYPHIC_CANYON_BELOW_SEVEN]
     },
 
     Levels.STAGE_LETHAL_HIGHWAY: {
@@ -2191,10 +2227,13 @@ CHECKPOINT_ESCAPE_GROUPS = {
 
     Levels.STAGE_PRISON_ISLAND:
     {
-        "A": []
+        "A": [REGION_INDICES.PRISON_ISLAND_SIX_CASE_HOLE],
+        "B": [REGION_INDICES.PRISON_ISLAND_THREE_OVER, REGION_INDICES.PRISON_ISLAND_THREE_CASE,
+                REGION_INDICES.PRISON_ISLAND_SWITCH]
     },
 
     Levels.STAGE_CRYPTIC_CASTLE: {
+
         "A": [REGION_INDICES.CRYPTIC_CASTLE_TWO_BALLOON,
               REGION_INDICES.CRYPTIC_CASTLE_BOMB_EASY_1,
               REGION_INDICES.CRYPTIC_CASTLE_TWO_LOWER],
@@ -2233,7 +2272,8 @@ CHECKPOINT_ESCAPE_GROUPS = {
 
     Levels.STAGE_MAD_MATRIX:
         {
-            "A": []
+            "A": [REGION_INDICES.MAD_MATRIX_RED_ENTRY,
+                  REGION_INDICES.MAD_MATRIX_RED_TRIANGLE_JUMP]
         },
 
     Levels.STAGE_DEATH_RUINS:
@@ -2342,7 +2382,11 @@ CHECKPOINT_ESCAPE_GROUPS = {
 
     Levels.STAGE_FINAL_HAUNT: {
         "A": [REGION_INDICES.FINAL_HAUNT_SHIELD_ONE],
-        "F": [REGION_INDICES.FINAL_HAUNT_HERO_SPLIT],
+        "F": [REGION_INDICES.FINAL_HAUNT_HERO_SPLIT,
+              REGION_INDICES.FINAL_HAUNT_TWO_TRIANGLE_JUMP,
+              REGION_INDICES.FINAL_HAUNT_HERO_CASE,
+              REGION_INDICES.FINAL_HAUNT_VACUUM_HARD,
+              REGION_INDICES.FINAL_HAUNT_HERO_GOO],
         "B": [REGION_INDICES.FINAL_HAUNT_BEFORE_ROCKET],
         "C": [REGION_INDICES.FINAL_HAUNT_SHIELD_TWO],
         "G": [REGION_INDICES.FINAL_HAUNT_FOUR_LOWER],
@@ -2352,6 +2396,6 @@ CHECKPOINT_ESCAPE_GROUPS = {
               REGION_INDICES.FINAL_HAUNT_FIVE_KEY_DOOR_1,
               REGION_INDICES.FINAL_HAUNT_FIVE_SECRET_TURRET_1,
               REGION_INDICES.FINAL_HAUNT_VOLT_OR_FIVE],
-        "E": [REGION_INDICES.FINAL_HAUNT_SHIELD_THREE]
+        "E": [REGION_INDICES.FINAL_HAUNT_SHIELD_THREE],
     }
 }

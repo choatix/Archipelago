@@ -37,6 +37,8 @@ ID_START_AT_OTHER = 0
 ITEM_ID_START_AT_TOKEN = 5000
 
 
+ITEM_NAME_GOAL_RINGS = "Goal Rings"
+
 @dataclass
 class ItemInfo:
     itemId: int
@@ -564,7 +566,7 @@ def ChooseJunkItems(random, junk, traps, options, junk_count, available_weapons)
         trap_count = int(junk_count / 100 * trap_percentage)
         filler_count = int(junk_count - trap_count)
 
-        if options.poison_trap_enabled != Options.PoisonTraps.option_off:
+        if options.poison_trap_enabled != Options.PoisonTraps.option_disabled:
             poison_item = \
                 [j for j in traps if j.type == "poisontrap"][0]
             trap_items.append(poison_item)
@@ -755,7 +757,7 @@ def CountItems(world: World):
 
     use_level_unlock_items = []
     if world.options.level_progression != Options.LevelProgression.option_story and \
-            world.options.select_gates == Options.SelectGates.option_off:
+            world.options.select_gates == Options.SelectGates.option_disabled:
         use_level_unlock_items = [l for l in level_unlock_items if l.stageId not in world.first_regions and
                                   l.stageId in world.available_levels
                                   # and (l.stageId not in Levels.FINAL_BOSSES
@@ -797,7 +799,7 @@ def CountItems(world: World):
                                                         x in available_objects and object_item_name not in world.starting_items]) > 0:
                     item_count = increment_item_count(item_count, 1, item_type=object_item_name)
 
-    if world.options.checkpoint_shuffle != Options.CheckpointShuffle.option_off:
+    if world.options.checkpoint_shuffle != Options.CheckpointShuffle.option_disabled:
         relevant_checkpoint_items = [c for c in checkpoint_items if c.stageId in world.available_levels and
                                      c.value in world.available_checkpoints[c.stageId]]
 
@@ -807,16 +809,17 @@ def CountItems(world: World):
         relevant_key_items = len([c for c in key_items if c.stageId in world.available_levels]) * world.options.keys_required_for_doors
         item_count = increment_item_count(item_count, relevant_key_items, item_type="Door Keys")
 
-    if (world.options.select_gates != Options.SelectGates.option_off and world.options.gate_unlock_requirement == Options.GateUnlockRequirement.option_items
+    if (world.options.select_gates != Options.SelectGates.option_disabled and world.options.gate_unlock_requirement == Options.GateUnlockRequirement.option_items
             and len(world.gates.keys()) > 0):
-        item_count = increment_item_count(item_count, int(world.options.select_gates_count), item_type="Gate Key")
+        item_count = increment_item_count(item_count, int(world.using_gate_count), item_type="Gate Key")
 
     if world.options.character_sanity == Options.CharacterSanity.option_unlock:
         relevant_characters = [ x for x in character_items if x.name in world.available_characters ]
         mw_character_items = [ShadowTheHedgehogItem(i, world.player) for i in relevant_characters]
         item_count = increment_item_count(item_count, mw_character_items)
 
-    if "Item Required For Character" in world.options.goal_rings or "Item Required For Neutral" in world.options.goal_rings:
+    if (Names.GOAL_RING_RULE_ITEM_REQUIRED_FOR_CHARACTER in world.options.goal_rings or
+            Names.GOAL_RING_RULE_ITEM_REQUIRED_FOR_NEUTRAL in world.options.goal_rings):
         mw_goal_ring_item = ShadowTheHedgehogItem(goal_ring_items[0], world.player)
         item_count = increment_item_count(item_count, [mw_goal_ring_item])
 
@@ -993,7 +996,7 @@ def GetCharacterItems():
     return items
 
 def GetGoalRingItem():
-    return ItemInfo(ITEM_ID_START_AT_GOAL_RING, "Goal Rings", ItemClassification.progression, None, None, "Goal Ring", None)
+    return ItemInfo(ITEM_ID_START_AT_GOAL_RING, ITEM_NAME_GOAL_RINGS, ItemClassification.progression, None, None, "Goal Ring", None)
 
 
 def GetObjectItems():
@@ -1018,7 +1021,7 @@ def PopulateItemPool(world: World):
 
     use_level_unlock_items = []
     if world.options.level_progression != Options.LevelProgression.option_story and \
-        world.options.select_gates == Options.SelectGates.option_off:
+        world.options.select_gates == Options.SelectGates.option_disabled:
             use_level_unlock_items = [l for l in level_unlock_items if l.stageId not in world.first_regions and
                                       l.stageId in world.available_levels
                                       # and (l.stageId not in Levels.FINAL_BOSSES
@@ -1182,15 +1185,15 @@ def PopulateItemPool(world: World):
         item_count = increment_item_count(item_count, mw_key_items)
 
     if (world.options.gate_unlock_requirement == Options.GateUnlockRequirement.option_items and
-            world.options.select_gates != Options.SelectGates.option_off) and len(world.gates.keys()) > 0:
+            world.options.select_gates != Options.SelectGates.option_disabled) and len(world.gates.keys()) > 0:
         gate_key_item = [ l for l in key_items if l.type == 'gatekey'][0]
-        gate_count = world.options.select_gates_count
+        gate_count = world.using_gate_count
         mw_prep_items = [ gate_key_item ] * gate_count
         mw_gate_keys = [ ShadowTheHedgehogItem(i, world.player) for i in mw_prep_items ]
         item_count = increment_item_count(item_count, mw_gate_keys)
         shadow_item_pool += mw_gate_keys
 
-    if world.options.checkpoint_shuffle != Options.CheckpointShuffle.option_off:
+    if world.options.checkpoint_shuffle != Options.CheckpointShuffle.option_disabled:
         relevant_checkpoint_items = [ c for c in checkpoint_items if c.stageId in world.available_levels and
                                       c.value in world.available_checkpoints[c.stageId] ]
 
@@ -1208,7 +1211,8 @@ def PopulateItemPool(world: World):
     # Add checks here for checks locked by The Last Way when this is the final part
     # If required, replace all TLW checks with junk items in the pool, start inventory will get amended
 
-    if "Item Required For Character" in world.options.goal_rings or "Item Required For Neutral" in world.options.goal_rings:
+    if (Names.GOAL_RING_RULE_ITEM_REQUIRED_FOR_CHARACTER in world.options.goal_rings or
+            Names.GOAL_RING_RULE_ITEM_REQUIRED_FOR_NEUTRAL in world.options.goal_rings):
         mw_goal_ring_item = ShadowTheHedgehogItem(goal_ring_items[0], world.player)
         item_count = increment_item_count(item_count, [mw_goal_ring_item])
         shadow_item_pool += [mw_goal_ring_item]

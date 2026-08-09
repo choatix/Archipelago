@@ -7,15 +7,16 @@ LEVEL_REGIONS = [
 LevelRegion(STAGE_FINAL_HAUNT, REGION_INDICES.FINAL_HAUNT_CHECKPOINT_ONE,
                         REGION_RESTRICTION_TYPES.NoRestriction),
     LevelRegion(STAGE_FINAL_HAUNT, REGION_INDICES.FINAL_HAUNT_WEAPON_OR_BACK,
-                        REGION_RESTRICTION_TYPES.VacuumOrShot),
+                        REGION_RESTRICTION_TYPES.VacuumOrShot).setAsDiversion(),
     LevelRegion(STAGE_FINAL_HAUNT, REGION_INDICES.FINAL_HAUNT_ONE_CASE,
                         REGION_RESTRICTION_TYPES.BlackArmCase)
-        .setFromRegion(REGION_INDICES.FINAL_HAUNT_CHECKPOINT_ONE),
+        .setFromRegion(REGION_INDICES.FINAL_HAUNT_CHECKPOINT_ONE)
+        .setLogicType(Options.LogicLevel.option_hard),
     LevelRegion(STAGE_FINAL_HAUNT, REGION_INDICES.FINAL_HAUNT_ONE_TURRET,
                         REGION_RESTRICTION_TYPES.BlackArmsTurret).setAsDiversion(),
     LevelRegion(STAGE_FINAL_HAUNT, REGION_INDICES.FINAL_HAUNT_CHECKPOINT_TWO,
                         REGION_RESTRICTION_TYPES.NoRestriction)
-        .setFromRegion(REGION_INDICES.FINAL_HAUNT_CHECKPOINT_ONE),
+        .setFromRegion(REGION_INDICES.FINAL_HAUNT_ONE_CASE),
     LevelRegion(STAGE_FINAL_HAUNT, REGION_INDICES.FINAL_HAUNT_TWO_CASE,
                         REGION_RESTRICTION_TYPES.BlackArmCase).setAsDiversion(),
     LevelRegion(STAGE_FINAL_HAUNT, REGION_INDICES.FINAL_HAUNT_VACUUM,
@@ -32,7 +33,7 @@ LevelRegion(STAGE_FINAL_HAUNT, REGION_INDICES.FINAL_HAUNT_CHECKPOINT_ONE,
                 REGION_RESTRICTION_TYPES.TriangleJump),
         #.setLogicType(Options.LogicLevel.option_hard),
     LevelRegion(STAGE_FINAL_HAUNT, REGION_INDICES.FINAL_HAUNT_HERO_CASE,
-                REGION_RESTRICTION_TYPES.BlackArmCase),
+                REGION_RESTRICTION_TYPES.BlackArmCase).setAsDiversion(),
     LevelRegion(STAGE_FINAL_HAUNT, REGION_INDICES.FINAL_HAUNT_VACUUM_HARD,
                         REGION_RESTRICTION_TYPES.VacuumWall)
         .setLogicType(Options.LogicLevel.option_normal, Options.ChaosControlLogicLevel.option_easy)
@@ -84,7 +85,7 @@ LevelRegion(STAGE_FINAL_HAUNT, REGION_INDICES.FINAL_HAUNT_CHECKPOINT_ONE,
     LevelRegion(STAGE_FINAL_HAUNT, REGION_INDICES.FINAL_HAUNT_CHECKPOINT_FIVE,
                         REGION_RESTRICTION_TYPES.NoRestriction),
     LevelRegion(STAGE_FINAL_HAUNT, REGION_INDICES.FINAL_HAUNT_FIVE_CASE,
-                        REGION_RESTRICTION_TYPES.BlackArmCase),
+                        REGION_RESTRICTION_TYPES.BlackArmCase).setAsDiversion(),
     LevelRegion(STAGE_FINAL_HAUNT, REGION_INDICES.FINAL_HAUNT_FIVE_VACUUM,
                         REGION_RESTRICTION_TYPES.VacuumWall)
         .setFromRegion(REGION_INDICES.FINAL_HAUNT_CHECKPOINT_FIVE),

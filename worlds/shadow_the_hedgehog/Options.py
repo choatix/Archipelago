@@ -101,9 +101,7 @@ class GoalCharacters(Toggle):
     Whether meeting all the characters is included in the goal.
     """
     display_name = "Goal: Characters"
-    option_off = 0
-    option_on = 1
-    default = option_off
+    default = False
 
 class ObjectiveSanity(DefaultOnToggle):
     """
@@ -150,7 +148,8 @@ class ObjectiveSanityBehaviour(Choice):
     display_name = "Objective Sanity Behaviour"
     option_default = 0
     option_manual_clear = 1
-    option_base_clear = 2
+    option_manual_clear_no_enemy = 2
+    option_base_clear = 3
     default = option_default
 
 class ObjectivePercentage(Range):
@@ -186,7 +185,7 @@ class ObjectiveCompletionEnemyPercentage(Range):
     display_name = "Objective Completion Enemy Percentage"
     range_start = 1
     range_end = 100
-    default = 90
+    default = 50
 
 
 class ObjectiveItemPercentageAvailable(Range):
@@ -288,7 +287,7 @@ class Checkpointsanity(DefaultOnToggle):
 class CheckpointShuffle(Choice):
     """
         Determines whether checkpoint shuffle is enabled.
-        Off: Checkpoint behaviour acts as normal.
+        Disabled: Checkpoint behaviour acts as normal.
         Unlocks Only: All checkpoints are added as items into the multiworld,
             allowing you to jump to later in the stage when unlocking.
         Start And Unlock: Checkpoints spawns for stages are randomised to be other checkpoints.
@@ -296,10 +295,10 @@ class CheckpointShuffle(Choice):
             You must pause and press Y then restart the stage.
     """
     display_name = "Checkpoint Shuffle"
-    option_off = 0
+    option_disabled = 0
     option_unlocks_only = 1
     option_start_and_unlock = 2
-    default = option_off
+    default = option_disabled
 
 class CheckpointRules(OptionSet):
     """
@@ -337,10 +336,10 @@ class CharacterSanity(Choice):
         Disabling is handling by overwriting the value and cutscene will never play.
     """
     display_name = "Character Sanity"
-    option_off = 0
-    option_on = 1
+    option_disabled = 0
+    option_enabled = 1
     option_unlock = 2
-    default_value = option_on
+    default = option_enabled
 
 class WeaponsanityUnlock(Toggle):
     """
@@ -374,10 +373,10 @@ class WeaponsanityHold(Choice):
     If on is chosen, you will still lose the item in this mode, but will get the check.
     """
     display_name = "Weapon Sanity Hold"
-    option_off = 0  # No checks for holding weapons
+    option_disabled = 0  # No checks for holding weapons
     option_unlocked = 1  # Requires the item to be unlocked to get the check.
-    option_on = 2  # Does not require the item to be unlocked to get the check.
-    default = 0
+    option_always_on = 2  # Does not require the item to be unlocked to get the check.
+    default = option_disabled
 
 class VehicleLogic(Toggle):
     """Determines if vehicle logic is active. Vehicles will not be avialable for use until found."""
@@ -409,14 +408,14 @@ class StartingStages(Range):
     display_name = "Starting Stages"
     range_start = 0
     range_end = 22
-    default = 1
+    default = 3
 
 class SelectGates(Choice):
     """
         Determines distribution behaviour for select gates.
     """
     display_name = "Select Gates"
-    option_off = 0
+    option_disabled = 0
     option_early = 1
     option_medium = 2
     option_late = 3
@@ -428,7 +427,7 @@ class SelectGatesCount(Range):
     """
     display_name = "Select Gates Count"
     range_start = 1
-    range_end = 10
+    range_end = 22
     default = 5
 
 class GateUnlockRequirement(Choice):
@@ -446,7 +445,8 @@ class GateUnlockRequirement(Choice):
     option_chaos_emeralds = 2
     option_objective_available = 3
     option_weapons = 4
-    default = option_objective_available
+    option_stage_items = 5
+    default = option_chaos_emeralds
 
 class GateDensity(Range):
     """
@@ -456,7 +456,7 @@ class GateDensity(Range):
     display_name = "Gate Density"
     range_start = 0
     range_end = 100
-    default = 0
+    default = 1
 
 class ForceObjectiveSanityChance(Range):
     """Determines the probability of a objective-sanity stage being force-added to Priority Locations"""
@@ -497,7 +497,7 @@ class ExceedingItemsFiller(Choice):
         Off is only recommended for testing a yaml.
     """
     display_name = "Exceeding Items Filler"
-    option_off = 0  # Never remove or convert exceeding items into filler. Only use to test yaml.
+    option_disabled = 0  # Never remove or convert exceeding items into filler. Only use to test yaml.
     option_minimise = 1  # Remove excess items to prevent failures.
     option_always = 2  # Always mark exceeding items as filler.
     option_chance = 3 # Sometimes mark exceeding items as filler.
@@ -518,12 +518,12 @@ class RingLink(Choice):
     Unsafe enables ring link during Circus Park missions and during Devil Doom.
 
     """
-    option_off = 0
-    option_on = 1
+    option_disabled = 0
+    option_enabled = 1
     option_unsafe = 2
 
     display_name = "Ring Link"
-    default = option_off
+    default = option_disabled
 
 class AutoClearMissions(DefaultOnToggle):
     """
@@ -612,17 +612,17 @@ class ChaosControlLogicLevel(Choice):
     """
         Determines the chaos control logic level for play-through.
         Note: This functionality may not work quite as intended yet with checkpoint shuffle.
-        Off: Chaos Control is never required to make progress.
+        Disabled: Chaos Control is never required to make progress.
         Easy: Stages where the player will naturally have chaos control are included.
         Intermediate: Stages with workarounds that are not extremely complicated are included.
         Hard: Requires the player to work out building up and handling gauge.
     """
     display_name = "Chaos Control Logic Level"
-    option_off = 0  # Disables requirements for chaos control logic
+    option_disabled = 0  # Disables requirements for chaos control logic
     option_easy = 1  # Enables chaos control as logic passes apart from those requiring intensive gauge management
     option_intermediate = 2 # Enabled some management of chaos control gauge
     option_hard = 3  # Requires intensive management of chaos control gauge to mark these areas
-    default = option_off
+    default = option_disabled
 
 class BossLogicLevel(Choice):
     """
@@ -669,11 +669,11 @@ class StoryShuffle(Choice):
     Chaos mode will shuffle the story. For more information on chaos shuffle, please read the documentation.
     """
     display_name = "Story Shuffle"
-    option_off = 0  # Story stages will be in vanilla order
+    option_disabled = 0  # Story stages will be in vanilla order
     #option_basic = 1
     #option_shuffle = 2
     option_chaos = 3
-    default = option_off
+    default = option_disabled
 
 class IncludeLastStoryShuffle(Toggle):
     """
@@ -741,7 +741,7 @@ class SingleDiablon(Toggle):
     """
     display_name = "Single Diablon"
 
-class RifleComponents(Toggle):
+class RifleComponents(DefaultOnToggle):
     """
         Whether parts are required for the Shadow Rifle to be complete and available.
     """
@@ -805,7 +805,7 @@ class StoryProgressionBalancingPasses(Range):
         The lowest value from all passes will be used.
     """
     display_name = "Story Progression Balancing Passes"
-    option_off = 0
+    option_disabled = 0
     range_start = 0
     range_end = 5
     default = 1
@@ -824,6 +824,11 @@ class ShadowMod(Choice):
     option_sx = 2
     default = option_vanilla
 
+class UseObjectUnlocks(Toggle):
+    """
+        Whether any object unlocks are enabled
+    """
+    display_name = "Use Object Unlocks"
 
 class ObjectUnlocks(OptionSet):
     """
@@ -887,7 +892,7 @@ class SelectPercentage(Range):
     display_name = "Select Percentage"
     range_start = 0
     range_end = 100
-    default_value = range_end
+    default = range_end
 
 class ExcludeGoModeItems(DefaultOnToggle):
     """
@@ -908,33 +913,33 @@ class PoisonTraps(Choice):
         Enables traps for the multiworld
     """
     display_name = "Enable Poison Traps"
-    option_off = 0
+    option_disabled = 0
     option_low = 1
     option_medium = 2
     option_high = 3
-    default = option_off
+    default = option_disabled
 
 class AmmoTraps(Choice):
     """
         Enables traps for the multiworld
     """
     display_name = "Enable Ammo Traps"
-    option_off = 0
+    option_disabled = 0
     option_low = 1
     option_medium = 2
     option_high = 3
-    default = option_off
+    default = option_disabled
 
 class CheckpointTraps(Choice):
     """
         Enables traps for the multiworld
     """
     display_name = "Enable Checkpoint Traps"
-    option_off = 0
+    option_disabled = 0
     option_low = 1
     option_medium = 2
     option_high = 3
-    default = option_off
+    default = option_disabled
 
 class TrapFillPercentage(Range):
     """
@@ -947,7 +952,7 @@ class TrapFillPercentage(Range):
 
 class MaximumLevels(Range):
     """
-        Maximum level count to be included in the game.
+        Maximum level count to be included in the game. Intended as a debug feature or for making a smaller game.
     """
     display_name = "Maximum Levels"
     range_start = 1
@@ -989,6 +994,11 @@ class DeathLink(DefaultOnToggle):
 class LogicTweaks(OptionSet):
     """
         List of specific rules for changing logic
+
+        Gun Jumper in Sky Troops: Require the Gun Jumper to proceed in Sky Troops, even outside of easy logic
+        Vacuum Pod in Final Haunt: Require Vacuum Pod to suck walls in Final Haunt, even if you have the Egg Vacuum
+        Vacuum Pod in Central City: Require Vacuum Pod to suck bombs in Central City, even if you have the Egg Vacuum
+        Air Saucer in Prison Island: Require the Air Saucer to traverse Prison Island, even on hard logic
     """
 
     dislay_name = "Logic Tweaks"
@@ -1083,6 +1093,7 @@ class ShadowTheHedgehogOptions(PerGameCommonOptions):
     story_progression_balancing: StoryProgressionBalancing
     story_progression_balancing_passes: StoryProgressionBalancingPasses
     shadow_mod: ShadowMod
+    use_object_unlocks: UseObjectUnlocks
     object_unlocks: ObjectUnlocks
     objective_sanity_unlock: ObjectiveSanityUnlock
     shadow_boxes: ShadowBoxes
@@ -1117,11 +1128,11 @@ shadow_option_groups = [
                              CharacterSanity, Checkpointsanity,
                              Keysanity, Enemysanity,
                              WeaponsanityUnlock, WeaponsanityHold,
-                             VehicleLogic, ObjectUnlocks, ObjectiveSanityUnlock,
+                             VehicleLogic, UseObjectUnlocks, ObjectiveSanityUnlock,
                              ShadowBoxes, EnergyCores, GoldBeetleSanity,
                              DoorSanity, KeyCollectionMethod, Itemsanity,
-                             CheckpointShuffle, CheckpointRules, MinimalCheckpointPercentage,
-                             Boxsanity, FloorWeaponSanity]),
+                             CheckpointShuffle,
+                             Boxsanity, FloorWeaponSanity, GoalRings]),
 
     OptionGroup("Progression", [StartingStages, LevelProgression, SelectGates,
                                 SelectGatesCount, GateUnlockRequirement,
@@ -1143,18 +1154,18 @@ shadow_option_groups = [
         ObjectiveSanitySystem, ObjectiveSanityBehaviour, KeysRequiredForDoors,
         ObjectivePercentage, ObjectiveCompletionPercentage, ObjectiveItemPercentageAvailable, ObjectiveFrequency,
         EnemyObjectivePercentage, ObjectiveCompletionEnemyPercentage, ObjectiveItemEnemyPercentageAvailable, EnemyObjectiveFrequency,
-        EnemySanityPercentage, EnemyFrequency, PercentOverrides
+        EnemySanityPercentage, EnemyFrequency, PercentOverrides, LogicTweaks
         ]),
 
     OptionGroup("Configuration", [
+        ObjectUnlocks,
         RifleComponents, ExcludedStages,
         SingleDiablon, SingleBlackDoom, SingleEggDealer,
         BossEnemysanity, DifficultEnemysanity, LastWayEnemysanity,
         StoryAndSelectStartTogether, StoryProgressionBalancing, StoryProgressionBalancingPasses,
         ForceObjectiveSanityChance, ForceObjectiveSanityMax, ForceObjectiveSanityMaxCounter,
         StartingLevelMethod, SecretStoryProgression, CheckpointConvenience, MinimumRank, AutoClearMissions,
-        StartInventoryExcessItems
-
+        StartInventoryExcessItems, MaximumLevels, CheckpointRules, MinimalCheckpointPercentage
     ]),
 
     OptionGroup("Extra Items", [RingFiller, GaugeFiller, AmmoBoostFiller,

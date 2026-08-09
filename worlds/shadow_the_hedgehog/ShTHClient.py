@@ -263,6 +263,9 @@ async def ShowSETChanges(current_level, ctx):
     known_objects = [s.index for s in known_objects_full ]
 
     force_full_check = False
+    if ctx.restart:
+        logger.info("Force pass due to restart")
+        force_full_check = True
 
     bytes_size = (OBJECT_SIZE * (set_item_count + 1))
     full_loaded_bytes = dolphin_memory_engine.read_bytes(start_address, (OBJECT_SIZE * (set_item_count + 1)))
@@ -381,14 +384,19 @@ class ShTHCommandProcessor(ClientCommandProcessor):
     def __init__(self, ctx: CommonContext):
         super().__init__(ctx)
 
+    def cmd_spaceGadget(self, *args):
+        """Changes Space Gadget Neutral Timer if available"""
+        CheckSpaceGadgetTimerHandle(self.ctx, True)
 
     def _cmd_setregion(self, *args):
+        """Stores region info manually"""
         arguments = self.parse_args(args)
         region_value = arguments["r"]
         self.set_change_region = region_value
         self.set_change_history.append(self.set_change_region)
 
     def _cmd_sethistory(self, *args):
+        """ Prints SET Information for debugging """
         # May wish to re-parse the data here
         logger.info(self.set_change_history)
 
@@ -446,7 +454,7 @@ class ShTHCommandProcessor(ClientCommandProcessor):
     def _cmd_objects(self, *args):
         """Prints the object unlocks status for the player."""
         if isinstance(self.ctx, ShTHContext):
-            object_info = self.ctx.get_current_objects()
+            object_info = self.ctx.get_current_objects(self.ctx)
             logger.info(object_info)
 
     def _cmd_weapons(self, *args):
@@ -510,12 +518,12 @@ class ShTHCommandProcessor(ClientCommandProcessor):
     def _cmd_gates(self, *args):
         """Prints the requirements for the next available gate."""
         if isinstance(self.ctx, ShTHContext):
-            gate_info = self.get_gate_info(self.ctx)
-            print(gate_info)
+            gate_info, open_gates = self.get_gate_info(self.ctx)
             if len(gate_info) == 0:
                 logger.info("No more gates to open!")
             else:
                 logger.info("\n".join([ str(g[0]) + ":" + str(g[1]) + "/" + str(g[2]) for g in gate_info]))
+                logger.info("Open Gates:" + ",".join(open_gates))
 
     def _cmd_token(self, *args):
         """ Show requirements for GO Mode"""
@@ -843,6 +851,7 @@ class ShTHCommandProcessor(ClientCommandProcessor):
         current_items = [info[i.item].name for i in ctx.items_received]
 
         result = []
+        open_gates = []
         for item in required_items.items():
             gate_no = item[0]
             gate_reqs = item[1]
@@ -879,9 +888,9 @@ class ShTHCommandProcessor(ClientCommandProcessor):
                     result.append((item_name, count, total))
                 break
             else:
-                print(f"Gate {gate_no} is open")
+                open_gates.append(gate_no)
 
-        return result
+        return result, open_gates
 
 
     def get_required_tokens(self, ctx):
@@ -1355,7 +1364,7 @@ class ShTHContext(CommonContext):
         self.objective_percentage = 100
         self.objective_item_percentage = 100
         self.checkpoint_sanity = False
-        self.character_sanity = Options.CharacterSanity.option_on
+        self.character_sanity = True
         #self.checked_locations = []
         self.required_mission_tokens = 0
         self.required_hero_tokens = 0
@@ -1371,7 +1380,7 @@ class ShTHContext(CommonContext):
         self.gates = {}
         self.gate_requirements = {}
         self.select_gates = Options.SelectGates.default
-        self.select_gates_count = Options.SelectGatesCount.default
+        self.using_gate_count = Options.SelectGatesCount.default
         self.gate_unlock_requirement = Options.GateUnlockRequirement.default
 
         self.enemy_sanity = False
@@ -1486,12 +1495,15 @@ class ShTHContext(CommonContext):
         self.required_characters = 0
         self.death_link = False
         self.objective_sanity_unlock = False
+        self.despawn_only_mode = False
 
         self.floor_weapon_sanity = False
         self.box_sanity = False
         self.weapon_counts = {}
         self.set_change_history = []
         self.goal_rings = Options.GoalRings.default
+        self.state_memory = {}
+        self.neutral_forced = None
 
     def GetObjectDataStart(self):
         if self.object_offset is None:
@@ -1512,12 +1524,12 @@ class ShTHContext(CommonContext):
         hold_locations = [ locations[s].other for s in self.checked_locations if locations[s].location_type == Locations.LOCATION_TYPE_WEAPON_HOLD]
         return name in [ h for h in hold_locations ]
 
-    def get_current_objects(self):
+    def get_current_objects(self, ctx):
         info = Items.GetItemLookupDict()
 
         object_options = []
-        if self.ctx.object_unlocks:
-            object_options = self.ctx.object_unlocks
+        if ctx.object_unlocks:
+            object_options = ctx.object_unlocks
 
         object_results = [
             (x, (len([info[unlock[0].item].name for unlock in self.items_to_handle if unlock[0].item in info and \
@@ -1573,7 +1585,7 @@ class ShTHContext(CommonContext):
 
         results = [ weapon.name for weapon in allowed_weapons ]
 
-        if held and self.weapon_sanity_hold_option != Options.WeaponsanityHold.option_off:
+        if held and self.weapon_sanity_hold_option != Options.WeaponsanityHold.option_disabled:
             results = [ r + " " + ("(Held)" if self.HasWeaponBeenHeld(r) else "(Not Held)")
                         for r in results ]
             pass
@@ -1686,8 +1698,8 @@ class ShTHContext(CommonContext):
                 self.gate_requirements = slot_data["gate_requirements"]
             if "select_gates" in slot_data:
                 self.select_gates = slot_data["select_gates"]
-            if "select_gates_count" in slot_data:
-                self.select_gates_count = slot_data["select_gates_count"]
+            if "using_gate_count" in slot_data:
+                self.using_gate_count = slot_data["using_gate_count"]
             if "gate_unlock_requirement" in slot_data:
                 self.gate_unlock_requirement = slot_data["gate_unlock_requirement"]
 
@@ -2913,7 +2925,13 @@ async def check_level_status(ctx):
 
             CheckSpaceGadgetTimerHandle(ctx)
 
-            #logger.debug("Detected screen %d", current_screen)
+            selected_level_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.ADDRESS_SELECT_LEVEL, 2)
+            selected_level = int.from_bytes(selected_level_bytes, byteorder='big')
+
+            if selected_level != 0:
+                new_bytes = int(0).to_bytes(2, byteorder='big')
+                writeBytes(GAME_ADDRESSES.ADDRESS_SELECT_LEVEL, new_bytes)
+
 
             if len(new_messages) > 0:
                 message = [{"cmd": 'LocationChecks', "locations": new_messages}]
@@ -3238,7 +3256,7 @@ async def check_weapons(ctx, current_level):
                 await disable_weapon(ctx)
                 ctx.last_weapon = None
 
-                if ctx.weapon_sanity_hold_option == WeaponsanityHold.option_on:
+                if ctx.weapon_sanity_hold_option == WeaponsanityHold.option_always_on:
 
                     # Give the check, remove the check later
                     current_weapon = weapon_dict_by_id[current_weapon_id]
@@ -3253,7 +3271,7 @@ async def check_weapons(ctx, current_level):
         if current_weapon_id is not None:
             check_ammo_boost = False
             if ctx.weapon_sanity_hold_option in \
-                (WeaponsanityHold.option_unlocked, WeaponsanityHold.option_on):
+                (WeaponsanityHold.option_unlocked, WeaponsanityHold.option_always_on):
 
                 if ctx.last_weapon != current_weapon_id:
                     #logger.info("Now holding weapon: %s", weapon_dict_by_id[current_weapon_id].name)
@@ -3388,7 +3406,7 @@ async def handle_ring_link(ctx, level, death):
     old_tags = ctx.game_tags.copy()
     if ctx.poison_traps > 0:
         return
-    if ctx.ring_link != Options.RingLink.option_off:
+    if ctx.ring_link != Options.RingLink.option_disabled:
         if "RingLink" not in ctx.game_tags:
             ctx.game_tags.append("RingLink")
             ctx.tags.add("RingLink")
@@ -4409,12 +4427,24 @@ async def handle_objects(ctx: ShTHContext, current_level):
 
     # skills won't be handled here yet, as they change parts OF the skill, handle this elsewhere
 
+    force_reload_objects = ["level_object", "Goal Ring", "Character", "Object"]
+
     allowed_vehicles = [info[unlock[0].item] for unlock in ctx.items_to_handle if unlock[0].item in info and \
                         info[unlock[0].item].type == "Vehicle"]
 
-    object_despawn_present = len(owned_objects) + len(allowed_vehicles)
+    allowed_objectives = [info[unlock[0].item] for unlock in ctx.items_to_handle if unlock[0].item in info and \
+                        info[unlock[0].item].type in force_reload_objects ]
 
-    force_full_check = despawn_only
+    object_despawn_present = len(owned_objects) + len(allowed_vehicles) + len(allowed_objectives)
+
+    force_full_check = False
+    if not ctx.despawn_only_mode and despawn_only:
+        ctx.despawn_only_mode = True
+        force_full_check = True
+    elif ctx.despawn_only_mode and not despawn_only:
+        ctx.despawn_only_mode = False
+        force_full_check = True
+
     if "Objects" in ctx.client_cache:
         value = ctx.client_cache["Objects"]
         if value != object_despawn_present:
@@ -4433,6 +4463,9 @@ async def handle_objects(ctx: ShTHContext, current_level):
     max_index = max([o.index for o in relevant_objects])
 
     bytes_size = (OBJECT_SIZE * (max_index+1))
+
+    if force_full_check:
+        await handle_skills(ctx)
 
     full_loaded_bytes = dolphin_memory_engine.read_bytes(start_address, bytes_size)
 
@@ -4579,42 +4612,69 @@ async def handle_objects(ctx: ShTHContext, current_level):
                 case_bytes = unlinked_case.to_bytes(1, byteorder='big')
 
                 if available:
-                    pass
-                    #Do nothing here for now, need to store original link ID here
+                    if (current_level, object_index) in ctx.state_memory:
+                        original_link_id = ctx.state_memory[(current_level, object_index)]
+
+                        if loaded_link_id != original_link_id:
+                            writeBytes(link_id_addr, original_link_id)
                 else:
                     if loaded_link_id != unlinked_case:
+
+                        ctx.state_memory[(current_level,object_index)] = loaded_link_id_bytes
+
                         writeBytes(link_id_addr, case_bytes)
 
                 pass
             elif object.object_type == Objects.ObjectType.HEAVY_DOOR or \
                     object.object_type == Objects.ObjectType.PROXIMITY_DOOR:
 
-                no_proximity = 3296329728 #Equivalent to -100 in bfloat
-                proximity_bytes = no_proximity.to_bytes(4, byteorder='big')
+                no_proximity = -100
+                no_proximity_bytes = struct.pack('>f', no_proximity)
 
-                value = 0
+                #good_proximity = 500  # Equivalent to -100 in bfloat
+                #good_proximity_bytes = struct.pack('>f', good_proximity)
+
+                value = 0xFF
                 zero_bytes = value.to_bytes(4, byteorder='big')
 
+                #print("DOOR-", available, ctx.state_memory)
+
                 if available:
-                    pass
+
+                    ProximityDataStart = loaded_extra_pointer
+                    loaded_bytes = dolphin_memory_engine.read_bytes(ProximityDataStart, 20)
+                    link_id_addr = ProximityDataStart
+
+                    if (current_level, object_index) in ctx.state_memory:
+                        original_link_id = ctx.state_memory[(current_level, object_index)]
+
+                        if loaded_bytes[0:4] != original_link_id:
+                            writeBytes(link_id_addr, original_link_id)
+
+                        for i in range(0, 3):
+                            data = loaded_bytes[8+0+(i*4):8+4+(i*4)]
+                            original_proximity_bytes = ctx.state_memory[(current_level, object_index, i)]
+                            if data != original_proximity_bytes:
+                                address_to_write = ProximityDataStart + 8+(4*i)
+                                writeBytes(address_to_write , original_proximity_bytes)
+
                 else:
                     ProximityDataStart = loaded_extra_pointer
-                    #ProximityDataStart = loaded_extra_pointer + 0x8
-                    #print("Load from:", ProximityDataStart)
                     loaded_bytes = dolphin_memory_engine.read_bytes(ProximityDataStart, 20)
 
                     if loaded_bytes[0:4] != zero_bytes:
-                        #print("LB Door Prox:", loaded_bytes[0:4])
-                        address_to_write = ProximityDataStart
-                        writeBytes(address_to_write, zero_bytes)
+                        link_id_addr = ProximityDataStart
+                        writeBytes(link_id_addr, zero_bytes)
+                        ctx.state_memory[(current_level, object_index)] = loaded_bytes[0:4]
+                    #else:
+                    #    ctx.state_memory[(current_level, object_index)] = loaded_bytes[0:4]
 
-                    #print("Data=:", loaded_bytes)
                     for i in range(0, 3):
                         data = loaded_bytes[8+0+(i*4):8+4+(i*4)]
-                        if data != proximity_bytes:
+                        if data != no_proximity_bytes:
+                            ctx.state_memory[(current_level, object_index, i)] = data
                             address_to_write = ProximityDataStart + 8+(4*i)
-                            #print("Write 0 to=:", address_to_write, proximity_bytes)
-                            writeBytes(address_to_write , proximity_bytes)
+                            writeBytes(address_to_write , no_proximity_bytes)
 
 
             else:
@@ -4753,12 +4813,12 @@ async def handle_objects(ctx: ShTHContext, current_level):
                  info[unlock[0].item].name == character]) > 0
 
             if allowed_character:
-                if object_name in ctx.level_state:
+                if object_name+"-"+character in ctx.level_state:
                     spawn = True
-                    states_to_remove.append(object_name+character)
+                    states_to_remove.append(object_name+"-"+character)
             else:
                 despawn = True
-                states_to_add[object_name+character] = False
+                states_to_add[object_name+"-"+character] = False
 
         elif object.object_type == Objects.ObjectType.GOAL_RING:
             despawn_neutral_goal_ring = False
@@ -4782,7 +4842,8 @@ async def handle_objects(ctx: ShTHContext, current_level):
                     elif goal_ring.alignmentId == Levels.MISSION_ALIGNMENT_NEUTRAL:
                         goal_ring_neutral = goal_ring
 
-                if goal_ring_aligned is not None and goal_ring_aligned.character is not None and "Character Required For Goal Ring" in ctx.goal_rings:
+                if (goal_ring_aligned is not None and goal_ring_aligned.character is not None and
+                        Names.GOAL_RING_RULE_CHARACTER_FOR_GOAL_RING in ctx.goal_rings):
                     character_to_name = Characters(goal_ring_aligned.character).name
                     allowed_character = len(
                         [info[unlock[0].item].name for unlock in ctx.items_to_handle if unlock[0].item in info and \
@@ -4791,19 +4852,21 @@ async def handle_objects(ctx: ShTHContext, current_level):
                     if not allowed_character:
                         despawn_aligned_goal_ring = True
 
-                if goal_ring_aligned is not None and goal_ring_aligned.character is not None and "Item Required For Character" in ctx.goal_rings:
+                if (goal_ring_aligned is not None and goal_ring_aligned.character is not None and
+                        Names.GOAL_RING_RULE_ITEM_REQUIRED_FOR_CHARACTER in ctx.goal_rings):
                     have_item = len(
                         [info[unlock[0].item].name for unlock in ctx.items_to_handle if unlock[0].item in info and \
-                         info[unlock[0].item].name == "Goal Rings"]) > 0
+                         info[unlock[0].item].name == Items.ITEM_NAME_GOAL_RINGS]) > 0
 
                     if not have_item:
                         despawn_aligned_goal_ring = True
 
-                if goal_ring_neutral is not None and goal_ring_neutral.character is None and "Item Required For Neutral" in ctx.goal_rings:
+                if (goal_ring_neutral is not None and goal_ring_neutral.character is None and
+                        Names.GOAL_RING_RULE_ITEM_REQUIRED_FOR_NEUTRAL in ctx.goal_rings):
                     pass
                     have_item = len(
                         [info[unlock[0].item].name for unlock in ctx.items_to_handle if unlock[0].item in info and \
-                         info[unlock[0].item].name == "Goal Rings"]) > 0
+                         info[unlock[0].item].name == Items.ITEM_NAME_GOAL_RINGS]) > 0
 
                     if not have_item:
                         despawn_neutral_goal_ring = True
@@ -4827,7 +4890,7 @@ async def handle_objects(ctx: ShTHContext, current_level):
                 #     race_seconds = 30000
                 #     new_bytes = race_seconds.to_bytes(4, byteorder='big')
                 #     writeBytes(GAME_ADDRESSES.SPACE_GADGET_RACE_TIMER, new_bytes)
-                # else:
+                else:
                     #race_seconds = 300
                     #new_bytes = race_seconds.to_bytes(4, byteorder='big')
                     #writeBytes(GAME_ADDRESSES.SPACE_GADGET_RACE_TIMER, new_bytes)
@@ -5019,16 +5082,25 @@ async def handle_objects(ctx: ShTHContext, current_level):
     if not despawn_only:
         for key, value in states_to_add.items():
             if key not in ctx.level_state:
-                print("Add to state", key, value)
+                #print("Add to state", key, value)
                 ctx.level_state[key] = value
 
         for entry in states_to_remove:
             if entry in ctx.level_state:
-                print("Delete from state", entry)
+                #print("Delete from state", entry)
                 del ctx.level_state[entry]
-                print("Delete from state", ctx.level_state)
+                #print("Delete from state", ctx.level_state)
 
-def CheckSpaceGadgetTimerHandle(ctx):
+def CheckSpaceGadgetTimerHandle(ctx, change_neutral=False):
+    change_neutral_to = None
+    if change_neutral:
+        if ctx.neutral_forced is None:
+            change_neutral_to = True
+        elif ctx.neutral_forced:
+            change_neutral_to = False
+        else:
+            change_neutral_to = True
+
     current_level = Levels.STAGE_SPACE_GADGET
     despawn_neutral_goal_ring = False
     despawn_aligned_goal_ring = False
@@ -5053,7 +5125,8 @@ def CheckSpaceGadgetTimerHandle(ctx):
             elif goal_ring.alignmentId == Levels.MISSION_ALIGNMENT_NEUTRAL:
                 goal_ring_neutral = goal_ring
 
-        if goal_ring_aligned is not None and goal_ring_aligned.character is not None and "Character Required For Goal Ring" in ctx.goal_rings:
+        if (goal_ring_aligned is not None and goal_ring_aligned.character is not None and
+                Names.GOAL_RING_RULE_CHARACTER_FOR_GOAL_RING in ctx.goal_rings):
             character_to_name = Characters(goal_ring_aligned.character).name
             allowed_character = len(
                 [info[unlock[0].item].name for unlock in ctx.items_to_handle if unlock[0].item in info and \
@@ -5062,19 +5135,21 @@ def CheckSpaceGadgetTimerHandle(ctx):
             if not allowed_character:
                 despawn_aligned_goal_ring = True
 
-        if goal_ring_aligned is not None and goal_ring_aligned.character is not None and "Item Required For Character" in ctx.goal_rings:
+        if (goal_ring_aligned is not None and goal_ring_aligned.character is not None and
+                Names.GOAL_RING_RULE_ITEM_REQUIRED_FOR_CHARACTER in ctx.goal_rings):
             have_item = len(
                 [info[unlock[0].item].name for unlock in ctx.items_to_handle if unlock[0].item in info and \
-                 info[unlock[0].item].name == "Goal Rings"]) > 0
+                 info[unlock[0].item].name == Items.ITEM_NAME_GOAL_RINGS]) > 0
 
             if not have_item:
                 despawn_aligned_goal_ring = True
 
-        if goal_ring_neutral is not None and goal_ring_neutral.character is None and "Item Required For Neutral" in ctx.goal_rings:
+        if (goal_ring_neutral is not None and goal_ring_neutral.character is None and
+                Names.GOAL_RING_RULE_ITEM_REQUIRED_FOR_NEUTRAL in ctx.goal_rings):
             pass
             have_item = len(
                 [info[unlock[0].item].name for unlock in ctx.items_to_handle if unlock[0].item in info and \
-                 info[unlock[0].item].name == "Goal Rings"]) > 0
+                 info[unlock[0].item].name == Items.ITEM_NAME_GOAL_RINGS]) > 0
 
             if not have_item:
                 despawn_neutral_goal_ring = True
@@ -5098,7 +5173,10 @@ def CheckSpaceGadgetTimerHandle(ctx):
             new_bytes = race_seconds.to_bytes(4, byteorder='big')
             writeBytes(GAME_ADDRESSES.SPACE_GADGET_RACE_TIMER, new_bytes)
         else:
-            race_seconds = 300
+            if ctx.neutral_forced is not None and ctx.neutral_forced:
+                race_seconds = 10
+            else:
+                race_seconds = 300
             new_bytes = race_seconds.to_bytes(4, byteorder='big')
             writeBytes(GAME_ADDRESSES.SPACE_GADGET_RACE_TIMER, new_bytes)
             despawn_goal_ring = False
@@ -5256,8 +5334,6 @@ async def update_level_behaviour(ctx, current_level, death):
         await ShowSETChanges(current_level, ctx)
 
     await ctx.update_death_link(ctx.death_link)
-
-    await handle_skills(ctx)
 
     #DisplayMessages(ctx)
 
@@ -5473,6 +5549,7 @@ async def update_level_behaviour(ctx, current_level, death):
                                                                      ctx.override_settings)
 
         result_sanity = ShadowUtils.GetObjectiveSanityFlag(ctx, location_details)
+        is_enemy_sanity = ShadowUtils.IsEnemyObjectiveSanity(ctx, location_details)
 
         heroMaxAdjusted = ShadowUtils.getMaxRequired(
             ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_COMPLETION,
@@ -5531,7 +5608,8 @@ async def update_level_behaviour(ctx, current_level, death):
             hero_count_max = heroMaxAdjusted
 
             if ctx.objective_sanity_behaviour == Options.ObjectiveSanityBehaviour.option_manual_clear or\
-                ctx.objective_sanity_behaviour == Options.ObjectiveSanityBehaviour.option_base_clear:
+                ctx.objective_sanity_behaviour == Options.ObjectiveSanityBehaviour.option_base_clear or \
+                    (ctx.objective_sanity_behaviour == Options.ObjectiveSanityBehaviour.option_manual_clear_no_enemy and not is_enemy_sanity):
                 ctx.level_state["hero_completable"] = COMPLETE_FLAG_ON_MANUAL
                 hero_write = ctx.level_state["hero_progress"]
                 manual_decrease = True
@@ -5539,7 +5617,9 @@ async def update_level_behaviour(ctx, current_level, death):
                 ctx.level_state["hero_completable"] = COMPLETE_FLAG_ON_SET
             handle_count = True
         elif (hero_completable == COMPLETE_FLAG_OFF_SET and
-                  ctx.death_flag and ctx.objective_sanity_behaviour == Options.ObjectiveSanityBehaviour.option_manual_clear):
+                  ctx.death_flag and
+              (ctx.objective_sanity_behaviour == Options.ObjectiveSanityBehaviour.option_manual_clear or
+               (ctx.objective_sanity_behaviour == Options.ObjectiveSanityBehaviour.option_manual_clear_no_enemy and not is_enemy_sanity))):
             set_max_up = True
             hero_count_max = heroMaxAvailable + extra_increase
         else:
@@ -5602,6 +5682,7 @@ async def update_level_behaviour(ctx, current_level, death):
             restore_dark = True
 
         dark_completable = ctx.level_state["dark_completable"]
+        is_enemy_sanity = ShadowUtils.IsEnemyObjectiveSanity(ctx, location_details)
         if dark_completable == COMPLETE_FLAG_OFF:
             set_max_up = True
             if ctx.objective_sanity and result_sanity: #and ctx.objective_sanity_behaviour != Options.ObjectiveSanityBehaviour.option_base_clear:
@@ -5624,7 +5705,8 @@ async def update_level_behaviour(ctx, current_level, death):
             dark_count_max = darkMaxAdjusted
 
             if ctx.objective_sanity_behaviour == Options.ObjectiveSanityBehaviour.option_manual_clear or \
-                    ctx.objective_sanity_behaviour == Options.ObjectiveSanityBehaviour.option_base_clear:
+                    ctx.objective_sanity_behaviour == Options.ObjectiveSanityBehaviour.option_base_clear or \
+                (ctx.objective_sanity_behaviour == Options.ObjectiveSanityBehaviour.option_manual_clear_no_enemy and not is_enemy_sanity):
                 ctx.level_state["dark_completable"] = COMPLETE_FLAG_ON_MANUAL
                 dark_write = ctx.level_state["dark_progress"]
                 handle_count = True
@@ -5632,7 +5714,8 @@ async def update_level_behaviour(ctx, current_level, death):
             else:
                 ctx.level_state["dark_completable"] = COMPLETE_FLAG_ON_SET
         elif (dark_completable == COMPLETE_FLAG_OFF_SET and
-              ctx.death_flag and ctx.objective_sanity_behaviour == Options.ObjectiveSanityBehaviour.option_manual_clear):
+              ctx.death_flag and (ctx.objective_sanity_behaviour == Options.ObjectiveSanityBehaviour.option_manual_clear or
+                                  (ctx.objective_sanity_behaviour == Options.ObjectiveSanityBehaviour.option_manual_clear_no_enemy and not is_enemy_sanity))):
             set_max_up = True
             dark_count_max = darkMaxAvailable + extra_increase
         else:
@@ -6312,7 +6395,7 @@ async def check_charactersanity(ctx, level):
         check = True
         set_state = True
 
-    if ctx.character_sanity != Options.CharacterSanity.option_off and level != Levels.STAGE_THE_LAST_WAY:
+    if ctx.character_sanity != Options.CharacterSanity.option_disabled and level != Levels.STAGE_THE_LAST_WAY:
         for character in GAME_ADDRESSES.CharacterAddresses:
             if character.name in ctx.characters_met:
                 continue

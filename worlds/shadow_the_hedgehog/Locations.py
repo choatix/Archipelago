@@ -835,7 +835,7 @@ def GetAllLocationInfo():
                             other=Levels.ITEM_TOKEN_TYPE_BOSS)
         token_locations.append(info)
 
-        boss_path_token_id, boss_path_token_name = GetBossTokenNames(boss.stageId,
+        boss_path_token_id, boss_path_token_name = GetBossPathTokenNames(boss.stageId,
                                                            Levels.ITEM_TOKEN_TYPE_PATH)
         info = LocationInfo(LOCATION_TYPE_TOKEN, boss_path_token_id, boss_path_token_name,
                             stageId=boss.stageId, alignmentId=None, count=None, total=None,
@@ -1103,7 +1103,7 @@ def create_locations(world, regions: Dict[str, Region]):
         within_region.locations.append(completion_location)
         pass
 
-    if world.options.character_sanity != Options.CharacterSanity.option_off:
+    if world.options.character_sanity != Options.CharacterSanity.option_disabled:
         for character in charactersanity_locations:
             region_name = Regions.character_name_to_region(character.other)
             if region_name not in regions:
@@ -1448,7 +1448,7 @@ def count_last_way_locations(world):
         lw_weapons.append(weapon.name)
 
     world.available_weapons = lw_weapons
-    world.options.character_sanity = Options.CharacterSanity.option_off
+    world.options.character_sanity = Options.CharacterSanity.option_disabled
 
     result = count_locations(world)
     world.available_levels = backup_levels
@@ -1562,7 +1562,7 @@ def count_locations(world, levels=None):
     if world.options.checkpoint_sanity:
         count = increment_location_count(count, len(checkpointsanity_locations), "c")
 
-    if world.options.character_sanity != Options.CharacterSanity.option_off:
+    if world.options.character_sanity != Options.CharacterSanity.option_disabled:
         if levels is not None and len(levels) > 0:
             for c in charactersanity_locations:
                 levels_in = Objects.CharacterToLevel[c.other]
@@ -1958,7 +1958,7 @@ def SetRegionEvents(world, player, regions):
         region_event.progress_type = LocationProgressType.PRIORITY
         o_region.locations.append(region_event)
 
-    for i in range(1, world.options.select_gates_count+1):
+    for i in range(1, world.using_gate_count+1):
         menu_region = regions["Menu"]
         event_name = Names.GetGateEventName(i)
         event_location = ShadowTheHedgehogLocation(player, event_name, None, menu_region)

@@ -14,6 +14,7 @@ class LevelRegion:
     hardLogicOnly: bool = False
     iccLogicOnly: bool = False
     isDiversion: bool = False
+    isSpecial: bool = False
 
     def __init__(self, stageId, regionIndex,
                  restrictionTypes: list[Names.REGION_RESTRICTION_TYPES] | Names.REGION_RESTRICTION_TYPES):
@@ -29,7 +30,7 @@ class LevelRegion:
             self.restrictionTypes = restrictionTypes
         self.fromRegions = None if regionIndex is None else [regionIndex - 1]
         self.logicType = Options.LogicLevel.option_normal
-        self.chaosControlLogicType = Options.ChaosControlLogicLevel.option_off
+        self.chaosControlLogicType = Options.ChaosControlLogicLevel.option_disabled
         self.chaosControlLogicRequiresHeal = False
 
     def setHardLogicOnly(self):
@@ -41,7 +42,7 @@ class LevelRegion:
         return self
 
     def setLogicType(self, logicLevel,
-                     chaosControlLogicLevel=Options.ChaosControlLogicLevel.option_off,
+                     chaosControlLogicLevel=Options.ChaosControlLogicLevel.option_disabled,
                      chaosControlRequiresHeal=False):
 
 
@@ -58,6 +59,12 @@ class LevelRegion:
 
         return self
 
+    # Diversion means this region auto links back to its previous
     def setAsDiversion(self):
         self.isDiversion = True
+        return self
+
+    # Special case that doesn't work as a region for escape pathing
+    def setAsSpecial(self):
+        self.isSpecial = True
         return self

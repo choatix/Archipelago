@@ -33,24 +33,41 @@ def character_name_to_region(name):
 def weapon_name_to_region(name):
     return "REGION_" + name
 
-def region_name_for_character(stage_name, name, region):
-    return name + "_in_" + stage_name + "_" + str(region)
+def region_name_for_character(stage_id, name, region):
+    stage_name = Levels.LEVEL_ID_TO_LEVEL[stage_id]
+    region_name_base = Names.GetRegionName(stage_id, region)
+    return name + "_in_" + stage_name + "_" + region_name_base
 
-def region_name_for_weapon(stage_name, region_index, name):
-    return f"{name}_in_{stage_name}_{region_index}"
+def region_name_for_weapon(stage_id, region_index, name):
+    stage_name = Levels.LEVEL_ID_TO_LEVEL[stage_id]
+    region_name_base = Names.GetRegionName(stage_id, region_index)
+    return f"{name}_in_{stage_name}_{region_name_base}"
 
 def handle_maximum_levels(world):
     max_stages = world.options.maximum_levels
     if max_stages >= 22:
         return
 
+    # What to do with story mode when not shuffled?!
+
     base_stages = [ s for s in Levels.ALL_STAGES if s not in Levels.BOSS_STAGES and s not in Levels.LAST_STORY_STAGES \
             and Levels.LEVEL_ID_TO_LEVEL[s] not in world.options.excluded_stages ]
 
-    if len(base_stages) > max_stages:
-        chosen_stages = world.random.sample(base_stages, max_stages)
-    else:
-        chosen_stages = base_stages
+    chosen_stages = []
+    if len(list(world.options.plando_starting_stages)) > 0:
+        forced_stages = [ x for x in base_stages if Levels.LEVEL_ID_TO_LEVEL[x] in world.options.plando_starting_stages ]
+        if len(forced_stages) > max_stages:
+            chosen_stages.extend(world.random.sample(forced_stages, max_stages))
+        else:
+            chosen_stages.extend(forced_stages)
+
+        base_stages = [ s for s in base_stages if s not in chosen_stages ]
+
+    if len(chosen_stages) < max_stages:
+        if len(base_stages)-len(chosen_stages) > max_stages:
+            chosen_stages.extend(world.random.sample(base_stages, max_stages-len(chosen_stages)))
+        else:
+            chosen_stages.extend(base_stages)
 
     for stage in base_stages:
         if stage not in chosen_stages:
@@ -158,7 +175,7 @@ def DetermineGates(world):
     gate_mode = world.options.select_gates
     select_gates_count = world.options.select_gates_count + 1
 
-    if gate_mode == Options.SelectGates.option_off:
+    if gate_mode == Options.SelectGates.option_disabled:
         return {}
 
     stages_to_assign = [ l for l in Levels.ALL_STAGES if l in world.available_select_stages and l not in world.first_regions ]
@@ -171,6 +188,7 @@ def DetermineGates(world):
 
     in_start = [ x for x in stages_to_assign if x not in world.first_regions ]
     if len(in_start) == 0:
+        world.using_gate_count = 0
         # Disable gates here
         return {}
 
@@ -179,10 +197,35 @@ def DetermineGates(world):
 
     world.random.shuffle(stages_to_assign)
 
-    gates = {0: world.first_regions}
+    non_standard_stages = [ b for b in stages_to_assign if b in Levels.BOSS_STAGES or b in Levels.LAST_STORY_STAGES ]
+    standard_stages =  [ l for l in stages_to_assign if l not in Levels.BOSS_STAGES and l not in Levels.LAST_STORY_STAGES ]
+
+    if world.options.gate_unlock_requirement == Options.GateUnlockRequirement.option_chaos_emeralds:
+        select_gates_count = 7
+    elif world.options.gate_unlock_requirement == Options.GateUnlockRequirement.option_stage_items:
+        select_gates_count = len(standard_stages) + 1
+    elif len(standard_stages) < select_gates_count:
+        select_gates_count = len(standard_stages)
+
+    if select_gates_count == 0 and len(non_standard_stages) == 0:
+        return {}
+
+    if select_gates_count ==  0 and len(non_standard_stages) > 0:
+        select_gates_count = 1
+
+    world.using_gate_count = select_gates_count
+
+    gates = {0: []}
+
+    for stage in world.first_regions:
+        if stage not in gates[0]:
+            gates[0].append(stage)
+        else:
+            print("Duplicate stage!", stage)
+
     weights = []
 
-    for i in range(1, select_gates_count):
+    for i in range(1, select_gates_count+1):
         gates[i] = []
         percentage = i / select_gates_count * 100
         weight = 50
@@ -191,16 +234,23 @@ def DetermineGates(world):
         elif gate_mode == Options.SelectGates.option_late:
             weight = int(percentage * weight)
 
+        if weight == 0:
+            weight = 1
+
         weights.append(weight)
 
     valid_gates = [ l for l in gates.keys() if l != 0 ]
 
-    for stage in stages_to_assign:
+    for stage in standard_stages:
         empty_gates = [ g[0] for g in gates.items() if len(g[1]) == 0 ]
         if len(empty_gates) > 0:
             randomised_gate = world.random.choice(empty_gates)
         else:
             randomised_gate = world.random.choices(valid_gates, k=1, weights=weights)[0]
+        gates[randomised_gate].append(stage)
+
+    for stage in non_standard_stages:
+        randomised_gate = world.random.choices(valid_gates, k=1, weights=weights)[0]
         gates[randomised_gate].append(stage)
 
     return gates
@@ -216,7 +266,7 @@ def early_region_checks(world):
     story_sorted_stages = Story.StoryToOrder(world.shuffled_story_mode)
 
     last_way_required = (not world.options.include_last_way_shuffle or
-                           world.options.story_shuffle == Options.StoryShuffle.option_off)
+                           world.options.story_shuffle == Options.StoryShuffle.option_disabled)
 
     if last_way_required:
         story_sorted_stages.append(Levels.STAGE_THE_LAST_WAY)
@@ -298,7 +348,7 @@ def early_region_checks(world):
                                       and s not in Levels.LAST_STORY_STAGES ]
         available_select_stages.extend(story_inaccessible_stages)
 
-        if world.leftover_bosses is not None:
+        if world.leftover_bosses is not None and world.options.select_bosses:
 
             missing_bosses =  [ l for l in list(set(world.leftover_bosses)) if Story.GetVanillaBossStage(l) is None or
                                             l in Levels.FINAL_BOSSES or
@@ -315,7 +365,8 @@ def early_region_checks(world):
                                   (l not in Levels.LAST_STORY_STAGES or world.options.include_last_way_shuffle)
                                   and (Story.GetVanillaBossStage(l) is None or l in Levels.FINAL_BOSSES
                                                                or Levels.LEVEL_ID_TO_LEVEL[
-                                                                   Story.GetVanillaBossStage(l)] not in world.options.excluded_stages)]
+                                                                   Story.GetVanillaBossStage(l)] not in world.options.excluded_stages)
+                             and (world.options.select_bosses or not l in Levels.BOSS_STAGES) ]
         if len(available_stages) == 0:
             break
         new_item = world.random.choice(available_stages)
@@ -859,7 +910,7 @@ def FindStartingItems(world, required=False):
         elif option == Names.REGION_RESTRICTION_TYPES.TriangleJump:
             item_options.append("Triangle Jump")
         elif option == Names.REGION_RESTRICTION_TYPES.Pole:
-            item_options.append("Pole")
+            item_options.append("Poles")
         elif option == Names.REGION_RESTRICTION_TYPES.BlackArmCase:
             item_options.append("Black Arm Case Key")
         elif option == Names.REGION_RESTRICTION_TYPES.GunCase:

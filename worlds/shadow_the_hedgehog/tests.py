@@ -6,19 +6,15 @@ import pkgutil
 import shutil
 import sys
 import time
-
+from dataclasses import fields, MISSING
+from typing import get_type_hints
 
 from BaseClasses import MultiWorld
-from Options import OptionError
-from . import Levels, Names, ShTHClient, Objects, ShtHWorld, Options, Rules
+from . import Levels, Objects, ShtHWorld, Options, Rules
 from .Items import GetAllItemInfo
 from .Levels import INDIVIDUAL_LEVEL_REGIONS
 from .Locations import GetAllLocationInfo
-from .Names import REGION_INDICES, REGION_RESTRICTION_TYPES
 from .Objects import DESIRABLE_OBJECTS
-from .Objects_AirFleet import DESIRABLE_OBJECTS_AIR_FLEET
-from .Objects_GlyphicCanyon import DESIRABLE_OBJECTS_GLYPHIC_CANYON
-from .Objects_PrisonIsland import DESIRABLE_OBJECTS_PRISON_ISLAND
 from .Options import ShadowTheHedgehogOptions
 
 
@@ -234,7 +230,7 @@ def TestCheckpointPathing():
     options.vehicle_logic = True
     options.keys_required_for_doors = 5
     options.key_collection_method = Options.KeyCollectionMethod.option_arch
-    options.chaos_control_logic_level = Options.ChaosControlLogicLevel.option_off
+    options.chaos_control_logic_level = Options.ChaosControlLogicLevel.option_disabled
 
     all_results = Rules.GetAllCheckpointEscapes(options)
     print(all_results)
@@ -365,19 +361,31 @@ for item in DESIRABLE_OBJECTS:
         if enemy_for_stage:
             enemy_for_stage = False
 
-
+#from unittest.mock import MagicMock
 def TestSlotData():
+    errors = 0
     mw = MultiWorld(1)
     world = ShtHWorld(mw, 1)
 
-    o = ShadowTheHedgehogOptions.__dict__
-    print(o)
+    #world.options = MagicMock(spec=ShadowTheHedgehogOptions)
+    type_hints = get_type_hints(ShadowTheHedgehogOptions)
+
+    for f in fields(ShadowTheHedgehogOptions):
+        setattr(
+            world.options,
+            f.name,
+            #MagicMock(spec=type_hints[f.name], name=f.name)
+        )
 
     slot_data = ShtHWorld.fill_slot_data(world)
+
+    expected_missing = []
 
 
     for option in world.options.__dict__:
         print(option)
+
+    return errors
 
 
 #for item in DESIRABLE_OBJECTS_PRISON_ISLAND:
@@ -386,7 +394,7 @@ def TestSlotData():
 
 errors = 0
 
-#errors = TestSlotData()
+errors += TestSlotData()
 #errors += TestCheckpointPathing()
 
 errors +=  TestItemIds()

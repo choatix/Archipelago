@@ -212,12 +212,12 @@ def IsLogicLevelApplicable(region, options, path_type, starting_items):
         return False
 
     if region.chaosControlLogicType == Options.ChaosControlLogicLevel.option_easy and \
-            options.chaos_control_logic_level != Options.ChaosControlLogicLevel.option_off:
+            options.chaos_control_logic_level != Options.ChaosControlLogicLevel.option_disabled:
         return False
 
     if region.chaosControlLogicType == Options.ChaosControlLogicLevel.option_intermediate and \
             options.chaos_control_logic_level not in \
-        [Options.ChaosControlLogicLevel.option_off, Options.ChaosControlLogicLevel.option_easy]:
+        [Options.ChaosControlLogicLevel.option_disabled, Options.ChaosControlLogicLevel.option_easy]:
 
         #if region.chaosControlLogicRequiresHeal:
         #    return True
@@ -360,6 +360,13 @@ def GetCharacterTokenNames(characterName, characterId, stageId, type):
 def GetBossTokenNames(stageId, type):
     id_name = int(str(LOCATION_ID_PLUS) + str(0) + str(stageId) + str(type) + "0")
     token_name_part = "Final Boss Token" if type == ITEM_TOKEN_TYPE_FINAL_BOSS else "Boss Token"
+    view_name = f"{LEVEL_ID_TO_LEVEL[stageId]} {token_name_part}"
+
+    return id_name, view_name
+
+def GetBossPathTokenNames(stageId, type):
+    id_name = int(str(LOCATION_ID_PLUS) + str(0) + str(stageId) + str(type) + "0")
+    token_name_part = "Final Boss Path Token" if type == ITEM_TOKEN_TYPE_FINAL_BOSS else "Boss Path Token"
     view_name = f"{LEVEL_ID_TO_LEVEL[stageId]} {token_name_part}"
 
     return id_name, view_name
