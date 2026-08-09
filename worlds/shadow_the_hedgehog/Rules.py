@@ -2146,7 +2146,6 @@ def GetCheckpointEscapes(options, level):
         elif fully_stuck_on:
             stuck_regions.append(item)
 
-    print("CE", level, region_simplified, stuck_regions, unstickable_regions)
     return region_simplified, stuck_regions, unstickable_regions
 
 STORED_CHECKPOINT_ESCAPES = {}
