@@ -1388,6 +1388,10 @@ def GetAvailableVehicles(world):
     valid_vehicle_items = [ v for v in vehicle_items if v not in [ObjectTypeVehicles.GUN_LIFT_FAST] ]
     return valid_vehicle_items
 
+def GetStagesWithGoalRings():
+    goal_rings = list(set([gr.stage for gr in DESIRABLE_OBJECTS if gr.object_type == ObjectType.GOAL_RING]))
+    goal_rings.sort()
+    return goal_rings
 
 def GetShadowBonusWeapons(stageId):
     box_weapons = [ m.weapon for m in GetDesirableObjectsForStage(stageId) if m.object_type == ObjectType.SHADOW_BOX

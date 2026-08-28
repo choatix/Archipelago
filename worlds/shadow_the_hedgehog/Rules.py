@@ -140,6 +140,14 @@ def CraftCalculation(world, options, state, player, stage_id, craft_info, region
         if not additional_rule(state):
             return False
 
+    if Names.LOGIC_TWEAK_CRAFT_FULL_STAGE_ACCESS in options.logic_tweaks or\
+        (Names.LOGIC_TWEAK_CRAFT_FULL_STAGE_ACCESS_AIR_FLEET and stage_id == Levels.STAGE_AIR_FLEET) or\
+        (Names.LOGIC_TWEAK_CRAFT_FULL_STAGE_ACCESS_IRON_JUNGLE and stage_id == Levels.STAGE_IRON_JUNGLE):
+
+        for c in craft_info.spawns:
+            if not state.can_reach_region(Levels.stage_id_to_region(stage_id, c.region), player):
+                return False
+
     total = 0
     #debug_reachable = []
     #debug_no_weapons = []
@@ -346,7 +354,7 @@ def handle_path_rules(world, options, player, from_region_id, additional_level_r
         elif not weapon_available and options.object_unlocks and Names.SkillToName(Names.ObjectsAndSkills.Heal_Units) in options.object_unlocks:
             heal_rule = unit_rule
 
-        rule = lambda state, r=rule: heal_rule(state) and r(state)
+        rule = lambda state, r=rule, h=heal_rule: h(state) and r(state)
         outputs.append("Heal")
 
     if Names.REGION_RESTRICTION_TYPES.GoldBeetle in additional_level_region.restrictionTypes:
@@ -489,6 +497,12 @@ def handle_path_rules(world, options, player, from_region_id, additional_level_r
         for restriction in additional_level_region.restrictionTypes:
             if restriction == Names.REGION_RESTRICTION_TYPES.NoRestriction:
                 continue
+
+            if restriction == Names.REGION_RESTRICTION_TYPES.Heal:
+                continue
+            elif restriction == Names.REGION_RESTRICTION_TYPES.Explosion:
+                continue
+
 
             found_skills = [o for o in object_restrictions.items() if o[1] == restriction]
             if len(found_skills) == 0:
@@ -1333,16 +1347,24 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
                 if Names.GOAL_RING_RULE_CHARACTER_FOR_GOAL_RING in goal_rings_options and clear.character is not None:
                     character_rule = lambda state, cm=clear.character.name: state.has(cm, player)
 
-                if Names.GOAL_RING_RULE_ITEM_REQUIRED_FOR_CHARACTER in goal_rings_options and clear.character is not None:
-                    char_rule = lambda state: state.has(Items.ITEM_NAME_GOAL_RINGS, player)
+                if Names.GOAL_RING_RULE_ITEM_REQUIRED_FOR_CHARACTER in goal_rings_options and clear.character is not None and \
+                    clear.stageId in Objects.GetStagesWithGoalRings():
+                    if Names.GOAL_RING_UNIQUE_GOAL_RINGS in goal_rings_options:
+                        char_rule = lambda state, name=Items.GetGoalRingName(clear.stageId): state.has(name, player)
+                    else:
+                        char_rule = lambda state: state.has(Items.ITEM_NAME_GOAL_RINGS, player)
 
                     if character_rule is not None:
                         character_rule = lambda state, c_rule=character_rule, c_rule2=char_rule: c_rule(state) and c_rule2(state)
                     else:
                         character_rule = char_rule
 
-                if Names.GOAL_RING_RULE_ITEM_REQUIRED_FOR_NEUTRAL in goal_rings_options and clear.character is None:
-                    character_rule = lambda state: state.has(Items.ITEM_NAME_GOAL_RINGS, player)
+                if Names.GOAL_RING_RULE_ITEM_REQUIRED_FOR_NEUTRAL in goal_rings_options and clear.character is None and \
+                    clear.stageId in Objects.GetStagesWithGoalRings():
+                    if Names.GOAL_RING_UNIQUE_GOAL_RINGS in goal_rings_options:
+                        character_rule = lambda state, name=Items.GetGoalRingName(clear.stageId): state.has(name, player)
+                    else:
+                        character_rule = lambda state: state.has(Items.ITEM_NAME_GOAL_RINGS, player)
 
 
             if clear.requirements is not None:
@@ -1389,7 +1411,8 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
                 #    level_rule = lambda state, l_rule=level_rule, n_rule=new_rule: n_rule(state) and l_rule(state)
                 #    rule_change = True
 
-                if clear.requirement_count is not None and world.options.objective_sanity and clear.requirement_count > 1:
+                if (clear.requirement_count is not None and world.options.objective_sanity and
+                        (clear.requirement_count > 1 or clear.is_craft)):
 
                     location_details = ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_OBJECTIVE,
                                                                                  clear.mission_object_name,
@@ -1500,15 +1523,15 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
                 if (not world.options.objective_sanity
                         or world.options.objective_sanity_behaviour == Options.ObjectiveSanityBehaviour.option_base_clear
                         or world.options.objective_sanity_behaviour == Options.ObjectiveSanityBehaviour.option_manual_clear
-                        or (world.options.objective_sanity_behaviour == Options.ObjectiveSanityBehaviour.option_manual_clear_no_enemy and is_enemy_sanity)) or \
+                        or (world.options.objective_sanity_behaviour == Options.ObjectiveSanityBehaviour.option_manual_clear_no_enemy and not is_enemy_sanity)) or \
                         not result_sanity:
                     finish_count = max_required
                     if finish_count == 0:
                         finish_count = 1
 
                 # Enemy stage clears don't require completing objectives
-                if (world.options.enemy_objective_sanity and world.options.objective_sanity_behaviour == Options.ObjectiveSanityBehaviour.option_default or
-                world.options.enemy_objective_sanity and world.options.objective_sanity_behaviour == Options.ObjectiveSanityBehaviour.option_manual_clear_no_enemy) and \
+                if ((world.options.enemy_objective_sanity and world.options.objective_sanity_behaviour == Options.ObjectiveSanityBehaviour.option_default) or
+                        (world.options.enemy_objective_sanity and world.options.objective_sanity_behaviour == Options.ObjectiveSanityBehaviour.option_manual_clear_no_enemy)) and \
                     is_enemy_sanity:
                     finish_count = 0
 
@@ -1643,33 +1666,34 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
                 already_added.append((stage, region_index))
 
 
-    for weapon in Weapons.WEAPON_INFO:
-        if weapon.name in world.available_weapons:
-            region_name = weapon_name_to_region(weapon.name)
-            region = world.get_region(region_name)
-            for stage in weapon.available_stages:
-                region_index = 0
-                if type(stage) is tuple:
-                    region_index = stage[1]
-                    stage = stage[0]
-                    pass
+    if world.options.weapon_sanity_hold != Options.WeaponsanityHold.option_disabled:
+        for weapon in Weapons.WEAPON_INFO:
+            if weapon.name in world.available_weapons:
+                region_name = weapon_name_to_region(weapon.name)
+                region = world.get_region(region_name)
+                for stage in weapon.available_stages:
+                    region_index = 0
+                    if type(stage) is tuple:
+                        region_index = stage[1]
+                        stage = stage[0]
+                        pass
 
-                if stage not in world.available_levels:
-                    continue
+                    if stage not in world.available_levels:
+                        continue
 
-                rule = lambda state: True
+                    rule = lambda state: True
 
-                if (world.options.weapon_sanity_unlock and
-                    world.options.weapon_sanity_hold == Options.WeaponsanityHold.option_unlocked) or \
-                    Weapons.WeaponAttributes.SPECIAL in weapon.attributes:
-                        rule = Weapons.GetRuleByWeaponRequirement(None, player, weapon.name, None, None)
+                    if (world.options.weapon_sanity_unlock and
+                        world.options.weapon_sanity_hold == Options.WeaponsanityHold.option_unlocked) or \
+                        Weapons.WeaponAttributes.SPECIAL in weapon.attributes:
+                            rule = Weapons.GetRuleByWeaponRequirement(None, player, weapon.name, None, None)
 
-                if stage in Levels.BOSS_STAGES:
-                    region_stage = world.get_region(Levels.boss_stage_id_to_region(stage, region_index))
-                else:
-                    region_stage = world.get_region(Levels.stage_id_to_region(stage, region_index))
-                region_stage.connect(region, region_name_for_weapon(stage, region_index, weapon.name),
-                                     rule=rule)
+                    if stage in Levels.BOSS_STAGES:
+                        region_stage = world.get_region(Levels.boss_stage_id_to_region(stage, region_index))
+                    else:
+                        region_stage = world.get_region(Levels.stage_id_to_region(stage, region_index))
+                    region_stage.connect(region, region_name_for_weapon(stage, region_index, weapon.name),
+                                         rule=rule)
 
     if world.options.enemy_sanity and world.options.objective_sanity_system != Options.ObjectiveSanitySystem.option_individual:
         for enemy in Locations.GetEnemySanityLocations():

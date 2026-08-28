@@ -43,7 +43,8 @@ LevelRegion(STAGE_AIR_FLEET, REGION_INDICES.AIR_FLEET_GOLD_BEETLE,
                     REGION_RESTRICTION_TYPES.GoldBeetle).setAsDiversion(),
 LevelRegion(STAGE_AIR_FLEET, REGION_INDICES.AIR_FLEET_WIND_POLES,
                     REGION_RESTRICTION_TYPES.Pole)
-    .setLogicType(Options.LogicLevel.option_easy),
+    .setLogicType(Options.LogicLevel.option_easy)
+    .setFromRegion(REGION_INDICES.AIR_FLEET_CHECKPOINT_TWO),
 LevelRegion(STAGE_AIR_FLEET, REGION_INDICES.AIR_FLEET_TWO_LOWER,
                     REGION_RESTRICTION_TYPES.NoRestriction)
     .setFromRegion([REGION_INDICES.AIR_FLEET_WIND_POLES,

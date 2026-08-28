@@ -762,7 +762,7 @@ class ShtHWorld(World):
             if self.options.goal_paths > 0:
                 self.chosen_paths = Story.ChooseGoalLibraryPaths(self, self.options.goal_paths)
                 if len(self.chosen_paths) == 0:
-                    raise OptionError("Invalid chosen path count")
+                    raise OptionError("Invalid chosen path count:", self.available_levels)
 
             if self.options.level_progression != Options.LevelProgression.option_select and \
                 self.options.story_progression_balancing_passes > 0:
@@ -950,7 +950,8 @@ class ShtHWorld(World):
                         if i.address is not None:
                             new_hint_data[i.address] = hint_value
                 except:
-                    print("Unavailable region:", region_name)
+                    pass
+                #    print("Unavailable region:", region_name)
 
         # for i in range(self.options.number_of_level_gates.value + 1):
         #     gate_name = gate_names[i]
@@ -1135,7 +1136,7 @@ class ShtHWorld(World):
             "using_gate_count": self.using_gate_count
         }
 
-        print("SLOT DATA IS:", slot_data)
+        #print("SLOT DATA IS:", slot_data)
 
         TEST = False
         if TEST:

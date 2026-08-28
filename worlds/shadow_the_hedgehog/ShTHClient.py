@@ -1336,7 +1336,7 @@ class ShTHContext(CommonContext):
     async def update_death_link(self, death_link: bool):
         if death_link:
             self.game_tags.append("DeathLink")
-        await super().update_death_link(death_link)
+            await super().update_death_link(death_link)
 
 
     def __init__(self, server_address, password):
@@ -1625,7 +1625,16 @@ class ShTHContext(CommonContext):
 
             already_checked_chars = [ c for c in characters if c.locationId in self.checked_locations ]
             for char in already_checked_chars:
-                self.characters_met.append(char.other)
+                valid = True
+                if self.required_characters > 0:
+                    charTokenLocation = [c.locationId for c in token_locations if
+                                         c.other == Levels.ITEM_TOKEN_TYPE_CHARACTER and c.count == char.count]
+                    already_checked_char_token = [c for c in charTokenLocation if c in self.checked_locations]
+                    if len(already_checked_char_token) == 0:
+                        valid = False
+
+                if valid:
+                    self.characters_met.append(char.other)
 
     def despawn_enemies(self):
         enemy_types = Objects.GetStandardEnemyTypes()
@@ -2259,7 +2268,7 @@ async def check_save_loaded(ctx):
     return loaded
 
 def IsLastWayEnabled(ctx):
-    if IsEndGameEnabled(ctx):
+    if IsEndGameEnabled(ctx, include_last_way=False):
         return True
 
     if Levels.STAGE_THE_LAST_WAY in ctx.available_levels:
@@ -2268,7 +2277,7 @@ def IsLastWayEnabled(ctx):
     return False
 
 
-def IsEndGameEnabled(ctx):
+def IsEndGameEnabled(ctx, include_last_way=True):
     set_last_way = True
     if ctx.requires_emeralds:
         if len(ctx.emeralds) != 7:
@@ -2314,7 +2323,7 @@ def IsEndGameEnabled(ctx):
                 t[1].name == Items.Progression.PathToken]) < ctx.required_paths:
             set_last_way = False
 
-    if ctx.goal_last_way:
+    if include_last_way and ctx.goal_last_way:
         if len([t for t in ctx.tokens if
                 t[1].name == Items.Progression.LastWayToken]) < 1:
             set_last_way = False
@@ -3455,7 +3464,7 @@ async def handle_ring_link(ctx, level, death):
         await ctx.send_msgs([msg])
 
 def handle_death_link(ctx):
-    if ctx.last_level_status != LevelStatusOptions.Death:
+    if ctx.last_level_status == LevelStatusOptions.Active:
         value = LevelSelectorOptions.Death
         death_bytes = value.to_bytes(1, byteorder='big')
         writeBytes(GAME_ADDRESSES.LEVEL_SELECTOR, death_bytes)
@@ -4300,6 +4309,9 @@ async def handle_skills(ctx):
         valueToWrite = 0
         bytes_size = 0
 
+        if skill[1] not in ctx.object_unlocks:
+            continue
+
         if skill[0] == Objects.ObjectsAndSkills.Dark_Spin_Dash:
             address = GAME_ADDRESSES.DARK_SPIN_DASH_SPEED
             if skill[1] in owned_objects:
@@ -4854,19 +4866,30 @@ async def handle_objects(ctx: ShTHContext, current_level):
 
                 if (goal_ring_aligned is not None and goal_ring_aligned.character is not None and
                         Names.GOAL_RING_RULE_ITEM_REQUIRED_FOR_CHARACTER in ctx.goal_rings):
-                    have_item = len(
-                        [info[unlock[0].item].name for unlock in ctx.items_to_handle if unlock[0].item in info and \
-                         info[unlock[0].item].name == Items.ITEM_NAME_GOAL_RINGS]) > 0
+
+                    if Names.GOAL_RING_UNIQUE_GOAL_RINGS in ctx.goal_rings:
+                        have_item = len(
+                            [info[unlock[0].item].name for unlock in ctx.items_to_handle if unlock[0].item in info and \
+                             info[unlock[0].item].name == Items.ITEM_NAME_GOAL_RINGS]) > 0
+                    else:
+                        have_item = len(
+                            [info[unlock[0].item].name for unlock in ctx.items_to_handle if unlock[0].item in info and \
+                             info[unlock[0].item].name == Items.GetGoalRingName(current_level)]) > 0
 
                     if not have_item:
                         despawn_aligned_goal_ring = True
 
                 if (goal_ring_neutral is not None and goal_ring_neutral.character is None and
                         Names.GOAL_RING_RULE_ITEM_REQUIRED_FOR_NEUTRAL in ctx.goal_rings):
-                    pass
-                    have_item = len(
-                        [info[unlock[0].item].name for unlock in ctx.items_to_handle if unlock[0].item in info and \
-                         info[unlock[0].item].name == Items.ITEM_NAME_GOAL_RINGS]) > 0
+
+                    if Names.GOAL_RING_UNIQUE_GOAL_RINGS in ctx.goal_rings:
+                        have_item = len(
+                            [info[unlock[0].item].name for unlock in ctx.items_to_handle if unlock[0].item in info and \
+                             info[unlock[0].item].name == Items.GetGoalRingName(current_level)]) > 0
+                    else:
+                        have_item = len(
+                            [info[unlock[0].item].name for unlock in ctx.items_to_handle if unlock[0].item in info and \
+                            info[unlock[0].item].name == Items.ITEM_NAME_GOAL_RINGS]) > 0
 
                     if not have_item:
                         despawn_neutral_goal_ring = True
@@ -5137,19 +5160,30 @@ def CheckSpaceGadgetTimerHandle(ctx, change_neutral=False):
 
         if (goal_ring_aligned is not None and goal_ring_aligned.character is not None and
                 Names.GOAL_RING_RULE_ITEM_REQUIRED_FOR_CHARACTER in ctx.goal_rings):
-            have_item = len(
-                [info[unlock[0].item].name for unlock in ctx.items_to_handle if unlock[0].item in info and \
-                 info[unlock[0].item].name == Items.ITEM_NAME_GOAL_RINGS]) > 0
+
+            if Names.GOAL_RING_UNIQUE_GOAL_RINGS in ctx.goal_rings:
+                have_item = len(
+                    [info[unlock[0].item].name for unlock in ctx.items_to_handle if unlock[0].item in info and \
+                     info[unlock[0].item].name == Items.GetGoalRingName(Levels.STAGE_SPACE_GADGET)]) > 0
+            else:
+                have_item = len(
+                    [info[unlock[0].item].name for unlock in ctx.items_to_handle if unlock[0].item in info and \
+                    info[unlock[0].item].name == Items.ITEM_NAME_GOAL_RINGS]) > 0
 
             if not have_item:
                 despawn_aligned_goal_ring = True
 
         if (goal_ring_neutral is not None and goal_ring_neutral.character is None and
                 Names.GOAL_RING_RULE_ITEM_REQUIRED_FOR_NEUTRAL in ctx.goal_rings):
-            pass
-            have_item = len(
-                [info[unlock[0].item].name for unlock in ctx.items_to_handle if unlock[0].item in info and \
-                 info[unlock[0].item].name == Items.ITEM_NAME_GOAL_RINGS]) > 0
+
+            if Names.GOAL_RING_UNIQUE_GOAL_RINGS in ctx.goal_rings:
+                have_item = len(
+                    [info[unlock[0].item].name for unlock in ctx.items_to_handle if unlock[0].item in info and \
+                     info[unlock[0].item].name == Items.GetGoalRingName(Levels.STAGE_SPACE_GADGET)]) > 0
+            else:
+                have_item = len(
+                    [info[unlock[0].item].name for unlock in ctx.items_to_handle if unlock[0].item in info and \
+                     info[unlock[0].item].name == Items.ITEM_NAME_GOAL_RINGS]) > 0
 
             if not have_item:
                 despawn_neutral_goal_ring = True
@@ -6202,8 +6236,9 @@ async def check_death(ctx: ShTHContext):
             return None
         ctx.dead = True
 
-        death_message = GetDeathMessage(ctx.last_level)
-        await ctx.send_death(death_message)
+        if ctx.death_link:
+            death_message = GetDeathMessage(ctx.last_level)
+            await ctx.send_death(death_message)
 
         return True
 
@@ -6414,6 +6449,7 @@ async def check_charactersanity(ctx, level):
                     if len(charTokenLocation) > 0:
                         if charTokenLocation[0] not in ctx.checked_locations:
                             messages.append(charTokenLocation[0])
+                            new_met_characters.append(character.name)
 
     else:
         if len(ctx.characters_met) == 0:

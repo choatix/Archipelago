@@ -92,7 +92,8 @@ class REGION_RESTRICTION_REFERENCE_TYPES:
 def IsWeaponsanityRestriction(restriction_types):
     weapons = [Names.REGION_RESTRICTION_TYPES.Torch, Names.REGION_RESTRICTION_TYPES.LongRangeGun,
                Names.REGION_RESTRICTION_TYPES.Vacuum, Names.REGION_RESTRICTION_TYPES.Gun,
-               Names.REGION_RESTRICTION_TYPES.Heal, Names.REGION_RESTRICTION_TYPES.AnyStageWeapon,
+               #Names.REGION_RESTRICTION_TYPES.Heal,
+               Names.REGION_RESTRICTION_TYPES.AnyStageWeapon,
                Names.REGION_RESTRICTION_TYPES.VacuumOrShot, Names.REGION_RESTRICTION_TYPES.VacuumWall,
                Names.REGION_RESTRICTION_TYPES.BombSuck,
                Names.REGION_RESTRICTION_TYPES.SatelliteGun]

@@ -39,6 +39,12 @@ ITEM_ID_START_AT_TOKEN = 5000
 
 ITEM_NAME_GOAL_RINGS = "Goal Rings"
 
+def GetGoalRingName(stageId):
+    if stageId is None:
+        return ITEM_NAME_GOAL_RINGS
+    else:
+        return f"{Levels.LEVEL_ID_TO_LEVEL[stageId]} Goal Ring"
+
 @dataclass
 class ItemInfo:
     itemId: int
@@ -522,11 +528,11 @@ def GetAllItemInfoData():
     checkpoint_items = GetCheckpointItems()
 
     character_items = GetCharacterItems()
-    goal_ring_item = GetGoalRingItem()
+    goal_ring_items = GetGoalRingItems()
 
     return (emerald_items, required_items, level_unlock_items, stage_objective_items, junk_items,
             token_items, weapon_items, vehicle_items, level_warp_items, rifle_components,
-            weapon_group_items, object_items, key_items, trap_items, checkpoint_items, character_items, [goal_ring_item])
+            weapon_group_items, object_items, key_items, trap_items, checkpoint_items, character_items, goal_ring_items)
 
 
 
@@ -820,8 +826,12 @@ def CountItems(world: World):
 
     if (Names.GOAL_RING_RULE_ITEM_REQUIRED_FOR_CHARACTER in world.options.goal_rings or
             Names.GOAL_RING_RULE_ITEM_REQUIRED_FOR_NEUTRAL in world.options.goal_rings):
-        mw_goal_ring_item = ShadowTheHedgehogItem(goal_ring_items[0], world.player)
-        item_count = increment_item_count(item_count, [mw_goal_ring_item])
+
+        if Names.GOAL_RING_UNIQUE_GOAL_RINGS in world.options.goal_rings:
+            goal_count = len([ x for x in goal_ring_items if x.stageId is not None])
+            item_count = increment_item_count(item_count, goal_count)
+        else:
+            item_count = increment_item_count(item_count, 1)
 
     return item_count
 
@@ -893,49 +903,6 @@ def GetStageItems(world, stage_objective_items=None, set=True):
     return mw_stage_items
 
 
-# def GetPotentialDowngradeItems(world, mw_stage_items=None):
-#     potential_downgrade = []
-#     to_remove = []
-#
-#     if mw_stage_items is None:
-#         mw_stage_items = GetStageItems(world, set=False)
-#
-#     override_settings = world.options.percent_overrides
-#     itemdict = GetItemLookupDict()
-#
-#     indexer = {}
-#     for item in mw_stage_items:
-#         item_lookup = itemdict[item.code]
-#         lookup = [x for x in MissionClearLocations
-#                   if x.stageId == item_lookup.stageId and x.alignmentId == item_lookup.alignmentId][0]
-#         if item_lookup.name not in indexer:
-#             indexer[item_lookup.name] = 0
-#
-#         indexer[item_lookup.name] += 1
-#
-#         max_required_complete = ShadowUtils.getMaxRequired(
-#             ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_COMPLETION, lookup.mission_object_name,
-#                                                       world.options, lookup.stageId, lookup.alignmentId,world.options.percent_overrides),
-#             lookup.requirement_count, lookup.stageId, lookup.alignmentId,
-#             override_settings)
-#
-#         max_available = ShadowUtils.getMaxRequired(
-#             ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_OBJECTIVE_AVAILABLE,
-#                                                       lookup.mission_object_name,
-#                                                       world.options, lookup.stageId, lookup.alignmentId,
-#                                                       world.options.percent_overrides),
-#             lookup.requirement_count, lookup.stageId, lookup.alignmentId,
-#             override_settings)
-#
-#         if indexer[item_lookup.name] > max_available:
-#             to_remove.append(item)
-#         elif indexer[item_lookup.name] > max_required_complete:
-#             potential_downgrade.append(item)
-#
-#
-#     return potential_downgrade, to_remove
-
-
 def GetShadowRifle():
     (emerald_items, required_items, level_unlock_items, stage_objective_items,
      junk_items, token_items, weapon_items, vehicle_items, warp_items, rifle_components,
@@ -995,8 +962,18 @@ def GetCharacterItems():
 
     return items
 
-def GetGoalRingItem():
-    return ItemInfo(ITEM_ID_START_AT_GOAL_RING, ITEM_NAME_GOAL_RINGS, ItemClassification.progression, None, None, "Goal Ring", None)
+def GetGoalRingItems():
+    index = 1
+    base_goal_ring = ItemInfo(ITEM_ID_START_AT_GOAL_RING, ITEM_NAME_GOAL_RINGS, ItemClassification.progression, None, None, "Goal Ring", None)
+
+    goal_rings = [base_goal_ring]
+    for stage in Objects.GetStagesWithGoalRings():
+        stage_goal_ring = ItemInfo(ITEM_ID_START_AT_GOAL_RING+index, GetGoalRingName(stage), ItemClassification.progression,
+                                  stage, None,  "Goal Ring", None)
+        index += 1
+        goal_rings.append(stage_goal_ring)
+
+    return goal_rings
 
 
 def GetObjectItems():
@@ -1041,15 +1018,6 @@ def PopulateItemPool(world: World):
     mw_stage_items = GetStageItems(world, stage_objective_items)
 
     weapon_dict = Weapons.GetWeaponDict()
-    #special_weapons_weaponsanity_extras = [copy.copy(w) for w in weapon_items if
-    #                         Weapons.WeaponAttributes.SPECIAL in weapon_dict[w.name].attributes and
-    #                         w.name != 'Shadow Rifle' and w.name != 'Weapon:Shadow Rifle']
-
-    #weapon_items = [w for w in weapon_items if
-    #                w.name != "Weapon:Shadow Rifle" and
-    #                w.name != "Shadow Rifle"]
-
-    #weapon_items.extend(special_weapons_weaponsanity_extras)
 
     available_weapons = [w for w in weapon_items if w.name in world.available_weapons]
     available_weapons = copy.deepcopy(available_weapons)
@@ -1062,17 +1030,7 @@ def PopulateItemPool(world: World):
                 w.classification = weapon_classification
 
     mw_weapon_items = GetItemsFromWeaponInfo(world, weapon_items, weapon_group_items)
-    #mw_weapon_special_only = [ShadowTheHedgehogItem(w, world.player) for w in special_weapons_weaponsanity_extras]
 
-    # Not sure how much this helps
-    #for weapon in special_weapons_weaponsanity_extras:
-    #    print("Change weapon to Useful", weapon.name)
-    #    weapon.classification = ItemClassification.useful
-
-    #shadow_rifle = GetShadowRifle()
-    #if not world.options.rifle_components:
-    #    mw_weapon_special_only.append(ShadowTheHedgehogItem(shadow_rifle, world.player))
-    #    mw_weapon_items.append(ShadowTheHedgehogItem(shadow_rifle, world.player))
     if world.options.rifle_components:
         mw_weapon_items.extend([ShadowTheHedgehogItem(w, world.player) for w in rifle_components])
 
@@ -1213,13 +1171,27 @@ def PopulateItemPool(world: World):
 
     if (Names.GOAL_RING_RULE_ITEM_REQUIRED_FOR_CHARACTER in world.options.goal_rings or
             Names.GOAL_RING_RULE_ITEM_REQUIRED_FOR_NEUTRAL in world.options.goal_rings):
-        mw_goal_ring_item = ShadowTheHedgehogItem(goal_ring_items[0], world.player)
-        item_count = increment_item_count(item_count, [mw_goal_ring_item])
-        shadow_item_pool += [mw_goal_ring_item]
+
+        if Names.GOAL_RING_UNIQUE_GOAL_RINGS in world.options.goal_rings:
+            goal_ring_items = [x for x in goal_ring_items if x.stageId is not None]
+            mw_goal_ring_items = [ ShadowTheHedgehogItem(i, world.player)
+                                   for i in goal_ring_items ]
+            item_count = increment_item_count(item_count, mw_goal_ring_items)
+            shadow_item_pool += mw_goal_ring_items
+        else:
+            mw_goal_ring_item = ShadowTheHedgehogItem([x for x in goal_ring_items if x.stageId is None][0], world.player)
+            item_count = increment_item_count(item_count, [mw_goal_ring_item])
+            shadow_item_pool += [mw_goal_ring_item]
+
+
+
 
     counted_items = CountItems(world)
     if counted_items != item_count:
         raise Exception("Invalid count of items!", counted_items, item_count)
+
+    plando_non_pool = len([ p for p in world.options.plando_items if not p.from_pool ])
+    location_count = location_count - plando_non_pool
 
     junk_count = (location_count - item_count - len(mw_useful_items))
     print("Junk count is", location_count, junk_count)

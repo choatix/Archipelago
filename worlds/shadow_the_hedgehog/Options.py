@@ -956,8 +956,8 @@ class MaximumLevels(Range):
     """
     display_name = "Maximum Levels"
     range_start = 1
-    range_end = 22
-    default = 22
+    range_end = 23
+    default = 23
 
 class GoalRings(OptionSet):
     """
@@ -985,7 +985,7 @@ class LastWayEnemysanity(DefaultOnToggle):
     """
     display_name = "Last Way Enemysanity"
 
-class DeathLink(DefaultOnToggle):
+class DeathLink(Toggle):
     """
         Toggle to enable Death Link
     """
@@ -1003,7 +1003,7 @@ class LogicTweaks(OptionSet):
 
     dislay_name = "Logic Tweaks"
     valid_keys = Names.getValidLogicTweaks()
-    default = []
+    default = [Names.LOGIC_TWEAK_CRAFT_FULL_STAGE_ACCESS]
 
 
 @dataclass

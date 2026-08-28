@@ -750,7 +750,8 @@ def GetAllLocationInfo():
         token_locations.append(path_info)
 
         i = 0
-        if location.requirement_count is not None and location.requirement_count > 1:
+        if (location.requirement_count is not None and
+                (location.requirement_count > 1 or location.is_craft)):
             requirement_token_id, requirement_token_name = GetLevelTokenNames(location.stageId, location.alignmentId,
                                                                 ITEM_TOKEN_TYPE_OBJECTIVE)
             info = LocationInfo(LOCATION_TYPE_TOKEN, requirement_token_id, requirement_token_name,

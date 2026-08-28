@@ -116,7 +116,9 @@ def GetRuleByWeaponRequirementData(options, player, req, stageId: int|None, from
     individual_weapon_rules = []
     base_rule = None
     if len(base_matches) > 0:
-        if have_weapon_rule:
+        if (have_weapon_rule or
+                # If only options are special weapons, then you need the weapon
+                (len([ x for x in matches_items if WeaponAttributes.SPECIAL in x.attributes ]) == len(matches_items))):
             base_rule = lambda state, em=base_matches, p=player: state.has_any(em, p)
             if as_weapon:
                 for weapon in base_matches:
@@ -152,8 +154,8 @@ def GetRuleByWeaponRequirementData(options, player, req, stageId: int|None, from
 
             region_escapes = [ Levels.GetDistributionEscapeRegionEventName(stageId, l) for l in weapon_regions ]
 
-
-            if have_weapon_rule:
+            # TODO: Handle here too for special weapons
+            if have_weapon_rule or WeaponAttributes.SPECIAL in weapon.attributes:
                 secondary_new_rule = lambda state, re=region_escapes, m=matches, p=player: (
                         state.has_any(m, p) and state.has_any(re, p))
             else:
@@ -799,7 +801,7 @@ def GetWeaponClassification(world, weapon : WeaponInfo):
     if world.options.weapon_sanity_hold == Options.WeaponsanityHold.option_unlocked:
         return ItemClassification.progression
 
-    if WeaponAttributes.SPECIAL in weapon.attributes and world.options.weapon_sanity_hold:
+    if WeaponAttributes.SPECIAL in weapon.attributes:
         return ItemClassification.progression
 
     # technically need to check if item is required for any regions
@@ -807,9 +809,6 @@ def GetWeaponClassification(world, weapon : WeaponInfo):
     # but an issue with easy logic Gold Beetle (Vacuum)
     # and hard logic Doom (Satelitte)
     # and Shadow Rifle for easy craft logic
-
-    if WeaponAttributes.SPECIAL in weapon.attributes:
-        return ItemClassification.progression
 
     if len(weapon.attributes) == 0:
         return ItemClassification.filler

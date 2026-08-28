@@ -275,7 +275,7 @@ BACKTRACKING_REGIONS = [
                     REGION_RESTRICTION_TYPES.NoRestriction),
 
     BacktrackRegion(STAGE_THE_DOOM, REGION_INDICES.THE_DOOM_CHECKPOINT_FOUR,
-                    REGION_INDICES.THE_DOOM_CHECKPOINT_THREE, Options.LogicLevel.option_normal,
+                    REGION_INDICES.THE_DOOM_THREE_ROOM, Options.LogicLevel.option_normal,
                     [REGION_RESTRICTION_TYPES.Explosion, REGION_RESTRICTION_TYPES.Door]),
     BacktrackRegion(STAGE_THE_DOOM, REGION_INDICES.THE_DOOM_WALL_ROOM,
                     REGION_INDICES.THE_DOOM_ONE_DOOR, Options.LogicLevel.option_normal,

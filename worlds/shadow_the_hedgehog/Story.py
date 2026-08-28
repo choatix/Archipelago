@@ -1785,6 +1785,8 @@ def StringToStory(string):
     return story
 
 def ChooseGoalLibraryPaths(world, count):
+    # TODO Add handling here for select bosses being disabled on select only
+
     valid_libraries = [ l for l in Libraries if
                         len([ ll for ll in l.required_levels if ((type(ll) is int and ll in world.available_levels)
                               or (type(ll) is tuple and ll[0] in world.available_levels))])
