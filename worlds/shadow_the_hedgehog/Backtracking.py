@@ -12,6 +12,7 @@ class BacktrackRegion:
     logicType: int
     hardLogicOnly: bool
     iccLogicOnly: bool
+    keyRegion: bool
     restrictionTypes: list[Names.REGION_RESTRICTION_TYPES]
 
     def __init__(self, stageId, fromRegion, toRegion,
@@ -22,6 +23,7 @@ class BacktrackRegion:
         self.logicType = logicType
         self.hardLogicOnly = False
         self.iccLogicOnly = False
+        self.keyRegion = False
 
         if type(restrictionTypes) != list:
             self.restrictionTypes = [restrictionTypes]
@@ -31,6 +33,9 @@ class BacktrackRegion:
     def setHardLogicOnly(self):
         self.hardLogicOnly = True
         return self
+
+    def setAsKeyRegion(self):
+        self.keyRegion = True
 
 
 
@@ -203,10 +208,10 @@ BACKTRACKING_REGIONS = [
                     REGION_INDICES.CENTRAL_CITY_SIX_WEAPON_OR_BOMB, Options.LogicLevel.option_normal,
                     REGION_RESTRICTION_TYPES.NoRestriction),
     BacktrackRegion(STAGE_CENTRAL_CITY, REGION_INDICES.CENTRAL_CITY_BIG_BOMB,
-                    0, Options.LogicLevel.option_normal,
+                    0, Options.LogicLevel.option_hard,
                     REGION_RESTRICTION_TYPES.NoBacktracking),
     BacktrackRegion(STAGE_CENTRAL_CITY, REGION_INDICES.CENTRAL_CITY_BLACK_ARM_CASE,
-                    0, Options.LogicLevel.option_normal,
+                    0, Options.LogicLevel.option_hard,
                     REGION_RESTRICTION_TYPES.NoBacktracking),
 
     BacktrackRegion(STAGE_CIRCUS_PARK, REGION_INDICES.CIRCUS_PARK_CHECKPOINT_ONE,
@@ -554,10 +559,13 @@ BACKTRACKING_REGIONS = [
 
     BacktrackRegion(STAGE_LOST_IMPACT, REGION_INDICES.LOST_IMPACT_CHECKPOINT_THREE,
                     REGION_INDICES.LOST_IMPACT_THREE_LIFT_OR_WEAPON, Options.LogicLevel.option_normal,
-                    [REGION_RESTRICTION_TYPES.NoBacktracking, REGION_RESTRICTION_TYPES.Gun]),
+                    [REGION_RESTRICTION_TYPES.NoBacktracking, REGION_RESTRICTION_TYPES.Gun]).setHardLogicOnly(),
     BacktrackRegion(STAGE_LOST_IMPACT, REGION_INDICES.LOST_IMPACT_CHECKPOINT_FOUR,
                     REGION_INDICES.LOST_IMPACT_CHECKPOINT_THREE, Options.LogicLevel.option_easy,
                     [REGION_RESTRICTION_TYPES.NoBacktracking, REGION_RESTRICTION_TYPES.Door]),
+    BacktrackRegion(STAGE_LOST_IMPACT, REGION_INDICES.LOST_IMPACT_CHECKPOINT_FOUR,
+                    REGION_INDICES.LOST_IMPACT_FOUR_LIFT_OR_WEAPON, Options.LogicLevel.option_normal,
+                    [REGION_RESTRICTION_TYPES.NoBacktracking, REGION_RESTRICTION_TYPES.Gun]).setHardLogicOnly(),
     BacktrackRegion(STAGE_LOST_IMPACT, REGION_INDICES.LOST_IMPACT_CHECKPOINT_SIX,
                     REGION_INDICES.LOST_IMPACT_SIX_ROOM, Options.LogicLevel.option_normal,
                     REGION_RESTRICTION_TYPES.Door),

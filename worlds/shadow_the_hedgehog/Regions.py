@@ -357,20 +357,21 @@ def early_region_checks(world):
             world.available_levels.extend(missing_bosses)
 
 
-
-    total_select_stages = math.ceil(len(world.available_levels) * world.options.select_percentage / 100)
-    while len(available_select_stages) < total_select_stages:
-        available_stages = [ l for l in world.available_levels if l not in available_select_stages
-                             and l != Levels.BOSS_DEVIL_DOOM and
-                                  (l not in Levels.LAST_STORY_STAGES or world.options.include_last_way_shuffle)
-                                  and (Story.GetVanillaBossStage(l) is None or l in Levels.FINAL_BOSSES
-                                                               or Levels.LEVEL_ID_TO_LEVEL[
-                                                                   Story.GetVanillaBossStage(l)] not in world.options.excluded_stages)
-                             and (world.options.select_bosses or not l in Levels.BOSS_STAGES) ]
-        if len(available_stages) == 0:
-            break
-        new_item = world.random.choice(available_stages)
-        available_select_stages.append(new_item)
+    if world.options.level_progression != Options.LevelProgression.option_story:
+        total_select_stages = math.ceil(len(world.available_levels) * world.options.select_percentage / 100)
+        #print("Total select stages:", total_select_stages)
+        while len(available_select_stages) < total_select_stages:
+            available_stages = [ l for l in world.available_levels if l not in available_select_stages
+                                 and l != Levels.BOSS_DEVIL_DOOM and
+                                      (l not in Levels.LAST_STORY_STAGES or world.options.include_last_way_shuffle)
+                                      and (Story.GetVanillaBossStage(l) is None or l in Levels.FINAL_BOSSES
+                                                                   or Levels.LEVEL_ID_TO_LEVEL[
+                                                                       Story.GetVanillaBossStage(l)] not in world.options.excluded_stages)
+                                 and (world.options.select_bosses or not l in Levels.BOSS_STAGES) ]
+            if len(available_stages) == 0:
+                break
+            new_item = world.random.choice(available_stages)
+            available_select_stages.append(new_item)
 
     if world.options.level_progression != Options.LevelProgression.option_story:
         world.available_select_stages = available_select_stages
@@ -386,7 +387,7 @@ def early_region_checks(world):
 
     for weapon in Weapons.WEAPON_INFO:
         levels_in = weapon.available_stages
-        levels_in = [ (l[0] if type(l) is tuple else l) for l in levels_in  ]
+        levels_in = [ (l[0] if type(l) is tuple else l) for l in levels_in if l not in world.skip_regions ]
         levels_left = [ l for l in levels_in if l in world.available_levels ]
 
         if len(levels_left) == 0:
@@ -443,6 +444,10 @@ def create_regions(world) -> Dict[str, Region]:
                 continue
 
             if additional_region.regionIndex == 0:
+                continue
+
+            if additional_region.keyRegion and (world.options.key_logic == Options.KeyLogic.option_locked or
+             world.options.key_logic == Options.KeyLogic.option_not_logically_required):
                 continue
 
             if level_id in Levels.BOSS_STAGES:
@@ -726,6 +731,10 @@ def connect_by_story_mode(multiworld: MultiWorld, world, player: int, order: typ
                         Options.ChaosControlLogicLevel.option_hard, Options.ChaosControlLogicLevel.option_intermediate]:
                         continue
 
+                    if region.keyRegion and (world.options.key_logic == Options.KeyLogic.option_locked or
+                                                        world.options.key_logic == Options.KeyLogic.option_not_logically_required):
+                        continue
+
                     level_region_name = Levels.stage_id_to_region(region.stageId, region.regionIndex)
                     region_to_add = world.get_region(level_region_name)
                     if boss_end_entrance is not None:
@@ -800,6 +809,10 @@ def connect_by_story_mode(multiworld: MultiWorld, world, player: int, order: typ
 
             if (region.iccLogicOnly and world.options.chaos_control_logic_level
                     not in [ Options.ChaosControlLogicLevel.option_hard, Options.ChaosControlLogicLevel.option_intermediate]):
+                continue
+
+            if region.keyRegion and (world.options.key_logic == Options.KeyLogic.option_locked or
+             world.options.key_logic == Options.KeyLogic.option_not_logically_required):
                 continue
 
             level_region_name = Levels.stage_id_to_region(region.stageId, region.regionIndex)
@@ -917,7 +930,14 @@ def FindStartingItems(world, required=False):
             item_options.append("GUN Case Key")
         elif option == Names.REGION_RESTRICTION_TYPES.Switch:
             item_options.append("Switch")
+        elif option == Names.REGION_RESTRICTION_TYPES.Terminal:
+            item_options.append("Mad Matrix Terminal")
+        elif option == Names.REGION_RESTRICTION_TYPES.KeyDoor:
+            pass
+        elif option == Names.REGION_RESTRICTION_TYPES.GunLift:
+            item_options.append("Vehicle:Gun Lift")
         else:
+            raise Exception("Failed to handle:", option)
             failed_item_options.append(option)
 
     if len(item_options) == 0:
@@ -1046,3 +1066,21 @@ def GenerateFirstAndAvailableCheckpoints(world):
 
     return first_checkpoints, available_checkpoints
 
+
+def getSkippedRegions(world):
+    skip_regions = []
+    if world.options.logic_level != Options.LogicLevel.option_hard:
+        hard_only = [r for r in Levels.INDIVIDUAL_LEVEL_REGIONS if r.hardLogicOnly]
+        skip_regions.extend([(h.stageId, h.regionIndex) for h in hard_only])
+
+    if world.options.chaos_control_logic_level not in [
+        Options.ChaosControlLogicLevel.option_hard, Options.ChaosControlLogicLevel.option_intermediate]:
+        icc_only = [r for r in Levels.INDIVIDUAL_LEVEL_REGIONS if r.iccLogicOnly]
+        skip_regions.extend([(h.stageId, h.regionIndex) for h in icc_only])
+
+    if world.options.key_logic == Options.KeyLogic.option_locked or \
+            world.options.key_logic == Options.KeyLogic.option_not_logically_required:
+        key_regions = [r for r in Levels.INDIVIDUAL_LEVEL_REGIONS if r.keyRegion]
+        skip_regions.extend([(h.stageId, h.regionIndex) for h in key_regions])
+
+    return skip_regions

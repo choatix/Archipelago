@@ -15,6 +15,7 @@ class LevelRegion:
     iccLogicOnly: bool = False
     isDiversion: bool = False
     isSpecial: bool = False
+    keyRegion: bool = False
 
     def __init__(self, stageId, regionIndex,
                  restrictionTypes: list[Names.REGION_RESTRICTION_TYPES] | Names.REGION_RESTRICTION_TYPES):
@@ -33,12 +34,19 @@ class LevelRegion:
         self.chaosControlLogicType = Options.ChaosControlLogicLevel.option_disabled
         self.chaosControlLogicRequiresHeal = False
 
+        if Names.REGION_RESTRICTION_TYPES.KeyDoor in self.restrictionTypes:
+            self.keyRegion = True
+
     def setHardLogicOnly(self):
         self.hardLogicOnly = True
         return self
 
     def setICCLogicOnly(self):
         self.iccLogicOnly = True
+        return self
+
+    def setAsKeyRegion(self):
+        self.keyRegion = True
         return self
 
     def setLogicType(self, logicLevel,

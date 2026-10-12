@@ -812,8 +812,9 @@ def CountItems(world: World):
         item_count = increment_item_count(item_count, len(relevant_checkpoint_items), item_type="Checkpoints")
 
     if world.options.key_collection_method != Options.KeyCollectionMethod.option_local:
-        relevant_key_items = len([c for c in key_items if c.stageId in world.available_levels]) * world.options.keys_required_for_doors
-        item_count = increment_item_count(item_count, relevant_key_items, item_type="Door Keys")
+        if world.options.key_logic != Options.KeyLogic.option_locked:
+            relevant_key_items = len([c for c in key_items if c.stageId in world.available_levels]) * world.options.max_keys
+            item_count = increment_item_count(item_count, relevant_key_items, item_type="Door Keys")
 
     if (world.options.select_gates != Options.SelectGates.option_disabled and world.options.gate_unlock_requirement == Options.GateUnlockRequirement.option_items
             and len(world.gates.keys()) > 0):
@@ -940,8 +941,6 @@ def GetCheckpointItems():
             if check_count == 0:
                 if not Locations.HasCheckpointZero(checkpoint.stageId):
                     continue
-
-            # TODO Link Check 1 to Check 0 somewhere
 
             item = ItemInfo(id_c, GetCheckpointItemName(checkpoint.stageId, check_count),
                             ItemClassification.progression, checkpoint.stageId, None, "checkpoint", check_count)
@@ -1134,9 +1133,10 @@ def PopulateItemPool(world: World):
     if world.options.object_unlocks:
         shadow_item_pool += mw_object_items
 
-    if world.options.key_collection_method in [Options.KeyCollectionMethod.option_arch, Options.KeyCollectionMethod.option_both]:
+    if world.options.key_collection_method in [Options.KeyCollectionMethod.option_arch, Options.KeyCollectionMethod.option_both] and\
+        world.options.key_logic != Options.KeyLogic.option_locked:
         choice_key_items = [ x for x in key_items if x.stageId is not None and x.stageId in world.available_levels]
-        choice_key_items *= world.options.keys_required_for_doors
+        choice_key_items *= world.options.max_keys
         mw_key_items = [ShadowTheHedgehogItem(i, world.player) for i in choice_key_items]
         shadow_item_pool += mw_key_items
 
@@ -1182,9 +1182,6 @@ def PopulateItemPool(world: World):
             mw_goal_ring_item = ShadowTheHedgehogItem([x for x in goal_ring_items if x.stageId is None][0], world.player)
             item_count = increment_item_count(item_count, [mw_goal_ring_item])
             shadow_item_pool += [mw_goal_ring_item]
-
-
-
 
     counted_items = CountItems(world)
     if counted_items != item_count:

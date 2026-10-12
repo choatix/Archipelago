@@ -530,11 +530,13 @@ class ShTHCommandProcessor(ClientCommandProcessor):
         if isinstance(self.ctx, ShTHContext):
             stage = None
             arguments = self.parse_args(args)
-            token_dict = self.get_required_tokens(self.ctx)
+            token_dict, extra_info = self.get_required_tokens(self.ctx)
             if token_dict is None:
                 logger.error("Unable to work out tokens")
             else:
                 logger.info("\n".join([ f"{s[0]}={s[1]}/{s[2]}" for s in token_dict]))
+                if extra_info is not None and len(extra_info) > 0:
+                    logger.info(f"Required paths: {",".join(extra_info)}")
 
     def _cmd_boss(self, *args):
         """ Show story based requirements for accessibility to a boss"""
@@ -895,6 +897,7 @@ class ShTHCommandProcessor(ClientCommandProcessor):
 
     def get_required_tokens(self, ctx):
         token_requirements = []
+        extra_info = []
 
         if ctx.requires_emeralds:
             token_requirements.append(("Chaos Emeralds", len(ctx.emeralds), 7))
@@ -953,7 +956,16 @@ class ShTHCommandProcessor(ClientCommandProcessor):
                                             t[1].name == Items.Progression.PathToken]),
                                        ctx.required_paths))
 
-        return token_requirements
+            libraries = [ x.library_name for x in Story.GetLibraries() if x.index in ctx.chosen_paths ]
+            extra_info.extend(libraries)
+
+        if ctx.goal_last_way:
+            token_requirements.append(("Last Way Token",
+                                       len([t for t in ctx.tokens if
+                                            t[1].name == Items.Progression.LastWayToken]),
+                                       1))
+
+        return token_requirements, extra_info
 
 
     def _cmd_story_progression(self, *args):
@@ -1364,7 +1376,7 @@ class ShTHContext(CommonContext):
         self.objective_percentage = 100
         self.objective_item_percentage = 100
         self.checkpoint_sanity = False
-        self.character_sanity = True
+        self.character_sanity = Options.CharacterSanity.option_enabled
         #self.checked_locations = []
         self.required_mission_tokens = 0
         self.required_hero_tokens = 0
@@ -1377,6 +1389,7 @@ class ShTHContext(CommonContext):
         self.key_sanity = False
         self.key_collection_method = Options.KeyCollectionMethod.default
         self.keys_required_for_doors = Options.KeysRequiredForDoors.default
+        self.key_logic = Options.KeyLogic.option_allowed
         self.gates = {}
         self.gate_requirements = {}
         self.select_gates = Options.SelectGates.default
@@ -1700,6 +1713,9 @@ class ShTHContext(CommonContext):
 
             if "keys_required_for_doors" in slot_data:
                 self.keys_required_for_doors = slot_data["keys_required_for_doors"]
+
+            if "key_logic" in slot_data:
+                self.key_logic = slot_data["key_logic"]
 
             if "gates" in slot_data:
                 self.gates = slot_data["gates"]
@@ -2066,6 +2082,104 @@ def RankToOption(rank_number, rank_option):
 
     return False
 
+
+async def checkLevelClears(ctx, first_game_load=False):
+    mission_clear_locations, mission_locations, end_location, enemy_locations, \
+        checkpointsanity_locations, charactersanity_locations, \
+        token_locations, weaponsanity_locations, boss_locations, \
+        warp_locations, object_locations = Locations.GetActiveLocationInfo()
+
+    per_stage = {}
+    cleared_missions = []
+
+    messages = []
+    for stage_clear_address in GetStageClearAddresses().items():
+        stage, alignment = stage_clear_address[0]
+        clear_address_data = stage_clear_address[1]
+        clear_address = clear_address_data[0]
+        clear_address_rank = clear_address_data[1]
+        clear_address_time = clear_address_data[2]
+
+        if not is_level_accessible(ctx, stage):
+            continue
+
+        if ctx.story_mode_available and is_level_accessible(ctx, stage, story=True):
+            if stage not in ctx.available_levels:
+                ctx.available_levels.append(stage)
+
+        if not is_mission_completable(ctx, stage, alignment):
+            # print("IMC", stage, alignment, "not completable")
+            continue
+
+        time_bytes = dolphin_memory_engine.read_bytes(clear_address_time, 6)
+        time_data = struct.unpack('>IBB', time_bytes)
+
+        # Add handle that level must not be set to default time!
+
+        current_bytes = dolphin_memory_engine.read_bytes(clear_address, 1)
+        current_status = int.from_bytes(current_bytes, byteorder='big')
+
+        # TODO: Handle auto boss clears and completion based on time
+
+        if current_status == 1:
+            if first_game_load and SAVE_VALUE_CHECK:
+                ctx.save_rejected = True
+                logger.error("Game has preloaded but has clear data. Please start from a new save.")
+                break
+
+            if time_data[0] == 99 and time_data[1] == 59 and time_data[2] == 99:
+                continue
+
+            if ctx.minimum_rank != Options.MinimumRank.option_e:
+                rank_bytes = dolphin_memory_engine.read_bytes(clear_address_rank, 4)
+                rank = int.from_bytes(rank_bytes, byteorder='big')
+                if RankToOption(rank, ctx.minimum_rank):
+                    continue
+
+            cleared_missions.append((stage, alignment))
+            if stage not in per_stage:
+                per_stage[stage] = []
+            per_stage[stage].append(alignment)
+
+            clear_location = [m for m in mission_clear_locations if m.stageId == stage
+                              and m.alignmentId == alignment and m.locationId not in ctx.checked_locations]
+
+            associated_token_locations = [t for t in token_locations if t.alignmentId ==
+                                          alignment and t.stageId == stage and t.locationId not in ctx.checked_locations]
+
+            boss_location = [b for b in boss_locations if b.stageId == stage and b.locationId not in
+                             ctx.checked_locations]
+
+            if len(associated_token_locations) > 0:
+                messages.extend([a.locationId for a in associated_token_locations])
+
+            if len(clear_location) == 1:
+                messages.append(clear_location[0].locationId)
+
+            if len(boss_location) == 1:
+                messages.append(boss_location[0].locationId)
+        elif current_status == 0:
+            clear_location = [m for m in mission_clear_locations if m.stageId == stage
+                              and m.alignmentId == alignment and m.locationId in ctx.checked_locations]
+
+            if len(clear_location) > 0:
+                for c in clear_location:
+                    logger.info(f"Restore {c.name}")
+                    set_complete = 1
+                    set_complete_bytes = set_complete.to_bytes(1, byteorder='big')
+
+                    set_seconds = 58
+                    set_seconds_bytes = set_seconds.to_bytes(1, byteorder='big')
+
+                    writeBytes(clear_address, set_complete_bytes)
+                    writeBytes(clear_address_time + 4, set_seconds_bytes)
+
+    if len(messages) > 0:
+        unsent_messages = [message for message in messages if message not in ctx.checked_locations]
+        message = [{"cmd": 'LocationChecks', "locations": unsent_messages}]
+        await ctx.send_msgs(message)
+
+
 async def check_save_loaded(ctx):
 
     # Check a save is loaded. Write to static memory address with seed info
@@ -2074,6 +2188,8 @@ async def check_save_loaded(ctx):
     # If first load, set the memory to whether it can go in the save-data
 
     if ctx.save_rejected:
+        logger.error("Unrecognised save value. Please load from the correct/new save.")
+        handle_exit_stage(ctx)
         return False
 
     loaded = False
@@ -2086,11 +2202,6 @@ async def check_save_loaded(ctx):
     if loaded_bytes == 1:
         loaded = True
 
-    mission_clear_locations, mission_locations, end_location, enemy_locations,\
-        checkpointsanity_locations, charactersanity_locations,\
-        token_locations, weaponsanity_locations, boss_locations,\
-        warp_locations, object_locations = Locations.GetActiveLocationInfo()
-
     random_bytes = dolphin_memory_engine.read_bytes(GAME_ADDRESSES.EXTRA_SAVE_DATA, 8)
     loaded_bytes = int.from_bytes(random_bytes, byteorder='big')
 
@@ -2099,99 +2210,14 @@ async def check_save_loaded(ctx):
     if loaded_bytes == 0:
         first_game_load = True
     elif SAVE_VALUE_CHECK and loaded_bytes != ctx.save_value:
-        logger.error("Unrecognised save value. Please load from the correct/new save.")
+        logger.error(f"Unrecognised save value. Please load from the correct/new save. ({loaded_bytes} vs {ctx.save_value})")
         ctx.save_rejected = True
         loaded = False
 
     # TODO: Check for newly obtained instead of all
 
     if loaded and len(ctx.level_state.keys()) == 0:
-
-        per_stage = {}
-        cleared_missions = []
-
-        messages = []
-        for stage_clear_address in GetStageClearAddresses().items():
-            stage, alignment = stage_clear_address[0]
-            clear_address_data = stage_clear_address[1]
-            clear_address = clear_address_data[0]
-            clear_address_rank = clear_address_data[1]
-            clear_address_time = clear_address_data[2]
-
-            if not is_level_accessible(ctx, stage):
-                continue
-
-            if ctx.story_mode_available and is_level_accessible(ctx, stage, story=True):
-                if stage not in ctx.available_levels:
-                    ctx.available_levels.append(stage)
-
-            if not is_mission_completable(ctx, stage, alignment):
-                #print("IMC", stage, alignment, "not completable")
-                continue
-
-            time_bytes = dolphin_memory_engine.read_bytes(clear_address_time, 6)
-            time_data = struct.unpack('>IBB', time_bytes)
-
-            # Add handle that level must not be set to default time!
-
-            current_bytes = dolphin_memory_engine.read_bytes(clear_address, 1)
-            current_status = int.from_bytes(current_bytes, byteorder='big')
-
-            # TODO: Handle auto boss clears and completion based on time
-
-            if current_status == 1:
-                if first_game_load and SAVE_VALUE_CHECK:
-                    ctx.save_rejected = True
-                    logger.error("Game has preloaded but has clear data. Please start from a new save.")
-                    break
-
-                if time_data[0] == 99 and time_data[1] == 59 and time_data[2] == 99:
-                    continue
-
-                if ctx.minimum_rank != Options.MinimumRank.option_e:
-                    rank_bytes = dolphin_memory_engine.read_bytes(clear_address_rank, 4)
-                    rank = int.from_bytes(rank_bytes, byteorder='big')
-                    if RankToOption(rank, ctx.minimum_rank):
-                        continue
-
-                cleared_missions.append((stage,alignment))
-                if stage not in per_stage:
-                    per_stage[stage] = []
-                per_stage[stage].append(alignment)
-
-                clear_location = [m for m in mission_clear_locations if m.stageId == stage
-                                  and m.alignmentId == alignment and m.locationId not in ctx.checked_locations]
-
-                associated_token_locations = [t for t in token_locations if t.alignmentId ==
-                                              alignment and t.stageId == stage and t.locationId not in ctx.checked_locations]
-
-                boss_location = [ b for b in boss_locations if b.stageId == stage and b.locationId not in
-                                   ctx.checked_locations ]
-
-                if len(associated_token_locations) > 0:
-                    messages.extend([ a.locationId for a in associated_token_locations])
-
-                if len(clear_location) == 1:
-                    messages.append(clear_location[0].locationId)
-
-                if len(boss_location) == 1:
-                    messages.append(boss_location[0].locationId)
-            elif current_status == 0:
-                clear_location = [m for m in mission_clear_locations if m.stageId == stage
-                                  and m.alignmentId == alignment and m.locationId in ctx.checked_locations]
-
-                if len(clear_location) > 0:
-                    for c in clear_location:
-                        logger.info(f"Restore {c.name}")
-                        set_complete = 1
-                        set_complete_bytes = set_complete.to_bytes(1, byteorder='big')
-
-                        set_seconds = 58
-                        set_seconds_bytes = set_seconds.to_bytes(1, byteorder='big')
-
-                        writeBytes(clear_address, set_complete_bytes)
-                        writeBytes(clear_address_time+4, set_seconds_bytes)
-
+        await checkLevelClears(ctx, first_game_load=first_game_load)
 
         # decide settings for goal
 
@@ -2230,12 +2256,6 @@ async def check_save_loaded(ctx):
                 finished = True
         else:
             finished = IsEndGameEnabled(ctx)
-
-
-        if len(messages) > 0:
-            unsent_messages = [ message for message in messages if message not in ctx.checked_locations]
-            message = [{"cmd": 'LocationChecks', "locations": unsent_messages}]
-            await ctx.send_msgs(message)
 
         if finished and not ctx.finished_game:
             clear_location = Locations.GetClearLocations()[0]
@@ -2345,6 +2365,9 @@ def is_level_accessible(ctx, stageId, story=False):
     if not story and stageId in ctx.available_levels:
         return True
 
+    if stageId == Levels.STAGE_THE_LAST_WAY and IsLastWayEnabled(ctx):
+        return True
+
     if ctx.select_mode_available and not story:
         i = [
             unlock for unlock in ctx.items_to_handle if unlock[0].item in info
@@ -2414,6 +2437,104 @@ def is_level_accessible(ctx, stageId, story=False):
 
 # By handling in this function, all handling is auto-handled with stage access, etc as well!
 
+
+def is_goal_ring_available(ctx, current_level, alignment):
+
+    # Need to check if there is a goal ring
+
+    info = Items.GetItemLookupDict()
+
+    despawn_neutral_goal_ring = False
+    despawn_aligned_goal_ring = False
+
+    goal_ring = [m for m in Locations.MissionClearLocations if m.stageId == current_level
+                 and m.mission_object_name == "Goal Ring"]
+
+    if len(goal_ring) > 0:
+        return True
+
+    goal_ring_aligned = None
+    goal_ring_neutral = None
+
+    if len(goal_ring) != 0:
+        if current_level == Levels.STAGE_SPACE_GADGET:
+            goal_ring_aligned = [x for x in goal_ring if x.alignmentId == Levels.MISSION_ALIGNMENT_HERO][0]
+            # goal_ring_aligned.character = Characters.Sonic
+            goal_ring_neutral = [x for x in goal_ring if x.alignmentId == Levels.MISSION_ALIGNMENT_NEUTRAL][0]
+        else:
+            goal_ring = goal_ring[0]
+            if goal_ring.alignmentId == Levels.MISSION_ALIGNMENT_HERO or goal_ring.alignmentId == Levels.MISSION_ALIGNMENT_DARK:
+                goal_ring_aligned = goal_ring
+            elif goal_ring.alignmentId == Levels.MISSION_ALIGNMENT_NEUTRAL:
+                goal_ring_neutral = goal_ring
+
+        if (goal_ring_aligned is not None and goal_ring_aligned.character is not None and
+                Names.GOAL_RING_RULE_CHARACTER_FOR_GOAL_RING in ctx.goal_rings):
+            character_to_name = Characters(goal_ring_aligned.character).name
+            allowed_character = len(
+                [info[unlock[0].item].name for unlock in ctx.items_to_handle if unlock[0].item in info and \
+                 info[unlock[0].item].name == character_to_name]) > 0
+
+            if not allowed_character:
+                despawn_aligned_goal_ring = True
+
+        if (goal_ring_aligned is not None and goal_ring_aligned.character is not None and
+                Names.GOAL_RING_RULE_ITEM_REQUIRED_FOR_CHARACTER in ctx.goal_rings):
+
+            if Names.GOAL_RING_UNIQUE_GOAL_RINGS in ctx.goal_rings:
+                have_item = len(
+                    [info[unlock[0].item].name for unlock in ctx.items_to_handle if unlock[0].item in info and \
+                     info[unlock[0].item].name == Items.GetGoalRingName(current_level)]) > 0
+            else:
+                have_item = len(
+                    [info[unlock[0].item].name for unlock in ctx.items_to_handle if unlock[0].item in info and \
+                     info[unlock[0].item].name == Items.ITEM_NAME_GOAL_RINGS]) > 0
+
+            if not have_item:
+                despawn_aligned_goal_ring = True
+
+        if (goal_ring_neutral is not None and goal_ring_neutral.character is None and
+                Names.GOAL_RING_RULE_ITEM_REQUIRED_FOR_NEUTRAL in ctx.goal_rings):
+
+            if Names.GOAL_RING_UNIQUE_GOAL_RINGS in ctx.goal_rings:
+                have_item = len(
+                    [info[unlock[0].item].name for unlock in ctx.items_to_handle if unlock[0].item in info and \
+                     info[unlock[0].item].name == Items.GetGoalRingName(current_level)]) > 0
+            else:
+                have_item = len(
+                    [info[unlock[0].item].name for unlock in ctx.items_to_handle if unlock[0].item in info and \
+                     info[unlock[0].item].name == Items.ITEM_NAME_GOAL_RINGS]) > 0
+
+            if not have_item:
+                despawn_neutral_goal_ring = True
+
+    if alignment == Levels.MISSION_ALIGNMENT_NEUTRAL and despawn_neutral_goal_ring:
+        return False
+
+    if alignment == Levels.MISSION_ALIGNMENT_HERO and despawn_aligned_goal_ring:
+        return False
+
+    return True
+
+def is_character_available(ctx, current_level, alignment):
+    relevant_stages = [ m for m in MissionClearLocations if m.stageId == current_level and m.alignmentId == alignment ]
+
+    if len(relevant_stages) == 0:
+        return True
+
+    relevant_stage = relevant_stages[0]
+
+    if relevant_stage.character is None:
+        return True
+
+    info = Items.GetItemLookupDict()
+
+    allowed_character = len(
+        [info[unlock[0].item].name for unlock in ctx.items_to_handle if unlock[0].item in info and \
+         info[unlock[0].item].name == Characters(relevant_stage.character).name]) > 0
+
+    return allowed_character
+
 def is_mission_completable(ctx, stage, alignment):
     relevant_level_clears = [ mc for mc in MissionClearLocations if mc.alignmentId == alignment and mc.stageId == stage]
     relevant_boss_clears = [ b for b in Locations.BossClearLocations if b.stageId == stage ]
@@ -2430,8 +2551,34 @@ def is_mission_completable(ctx, stage, alignment):
 
     clear = relevant_level_clears[0]
 
+    if not is_goal_ring_available(ctx, stage, alignment):
+        return False
+
+    if not is_character_available(ctx, stage, alignment):
+        return False
+
+    if ctx.objective_sanity_unlock:
+        stage_item_relevant = [o[1] for o in Objects.STAGE_OBJECT_ITEMS.items() if
+                               o[0][0] == stage and o[0][1] == alignment]
+        if len(stage_item_relevant) > 0:
+            l_new = []
+            for l in stage_item_relevant:
+                l_new.extend(l[0])
+            l = [o for o in l_new if o not in Objects.GetStandardEnemyTypes()]
+
+            if len(l) > 0:
+                allowed_item = len(
+                    [info[unlock[0].item].name for unlock in ctx.items_to_handle if unlock[0].item in info and \
+                     info[unlock[0].item].type in l]) > 0
+
+                if not allowed_item:
+                    return False
+
     if clear.requirement_count is None:
         return True
+
+    # TODO Check for character permissions here
+    # Check for goal ring accessibility and by character
 
     stage_detail = ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_OBJECTIVE,
                                                   clear.mission_object_name, ctx,
@@ -2491,34 +2638,37 @@ def complete_completable_levels(ctx):
         # Don't autoclear missions if they lead to a stage you haven't accessed via story mode yet
         # Makes tracking easier for getting to that stage
         if ctx.story_mode_available:
-            story_path_entry = [ s for s in story if s.start_stage_id == mission.stageId
-                                     and s.alignment_id == mission.alignmentId][0]
+            story_path_entries = [ s for s in story if s.start_stage_id == mission.stageId
+                                     and s.alignment_id == mission.alignmentId]
 
-            routes_to = [ s for s in story if s.end_stage_id == story_path_entry.end_stage_id ]
-            if story_path_entry.end_stage_id is None:
-                routes_to = [ s for s in routes_to if s.boss == story_path_entry.boss ]
+            if len(story_path_entries) > 0:
+                story_path_entry = story_path_entries[0]
 
-            if story_path_entry.boss is not None:
-                r_boss = [b for b in Locations.BossClearLocations if b.stageId == story_path_entry.boss][0]
-                boss_location_id, boss_location_name = Locations.GetBossLocationName(r_boss.name, r_boss.stageId)
-                u_bosses = [b for b in uncleared_bosses if b == boss_location_id]
-                if len(u_bosses) != 0:
-                    continue
+                routes_to = [ s for s in story if s.end_stage_id == story_path_entry.end_stage_id ]
+                if story_path_entry.end_stage_id is None:
+                    routes_to = [ s for s in routes_to if s.boss == story_path_entry.boss ]
 
-            available = False
-            for route in routes_to:
-                is_remaining = [ s for s in uncleared_stages
-                                 if s.stageId == route.start_stage_id and s.alignmentId == route.alignment_id ]
-
-                if route.boss is not None:
-                    r_boss = [ b for b in Locations.BossClearLocations if b.stageId == route.boss][0]
+                if story_path_entry.boss is not None:
+                    r_boss = [b for b in Locations.BossClearLocations if b.stageId == story_path_entry.boss][0]
                     boss_location_id, boss_location_name = Locations.GetBossLocationName(r_boss.name, r_boss.stageId)
-                    u_bosses = [ b for b in uncleared_bosses if b == boss_location_id]
+                    u_bosses = [b for b in uncleared_bosses if b == boss_location_id]
                     if len(u_bosses) != 0:
                         continue
 
-                if len(is_remaining) == 0:
-                    available = True
+                available = False
+                for route in routes_to:
+                    is_remaining = [ s for s in uncleared_stages
+                                     if s.stageId == route.start_stage_id and s.alignmentId == route.alignment_id ]
+
+                    if route.boss is not None:
+                        r_boss = [ b for b in Locations.BossClearLocations if b.stageId == route.boss][0]
+                        boss_location_id, boss_location_name = Locations.GetBossLocationName(r_boss.name, r_boss.stageId)
+                        u_bosses = [ b for b in uncleared_bosses if b == boss_location_id]
+                        if len(u_bosses) != 0:
+                            continue
+
+                    if len(is_remaining) == 0:
+                        available = True
 
             if not available:
                 continue
@@ -2769,22 +2919,27 @@ def CheckAutoWarps(ctx):
 
         if path.boss is not None:
             boss_warp_location = [w for w in warp_locations if w.stageId == path.boss]
-            if len(boss_warp_location) == 1 and boss_warp_location[0].locationId not in ctx.checked_locations:
+            if len(boss_warp_location) == 1 and boss_warp_location[0].locationId not in ctx.checked_locations and \
+                boss_warp_location[0].locationId in ctx.missing_locations:
                 if boss_warp_location[0].locationId not in found_warps:
+                    print("Add warp:", boss_warp_location[0].name)
                     found_warps.append(boss_warp_location[0].locationId)
 
             boss_clear_location = [c for c in boss_locations if path.boss == c.stageId]
-            if len(boss_clear_location) != 1 or boss_clear_location[0].locationId not in ctx.checked_locations:
+            if len(boss_clear_location) != 1 or boss_clear_location[0].locationId not in ctx.checked_locations and \
+                    boss_clear_location[0].locationId in ctx.missing_locations:
                 # Disable the end path if it isn't accessible
                 end_path_location = None
 
         # Don't check the end path if there isn't one
         if end_path_location is not None:
             end_warp_location = [w for w in warp_locations if w.stageId == end_path_location]
-            if len(end_warp_location) == 1 and end_warp_location[0].locationId not in ctx.checked_locations:
+            if len(end_warp_location) == 1 and end_warp_location[0].locationId not in ctx.checked_locations and \
+                    end_warp_location[0].locationId in ctx.missing_locations:
                 if end_warp_location[0].locationId not in found_warps:
 
                     if is_level_accessible(ctx,end_warp_location[0].stageId, story=True):
+                        print("Add warp 2", end_warp_location[0].name)
                         found_warps.append(end_warp_location[0].locationId)
 
     return found_warps
@@ -2907,6 +3062,7 @@ async def check_level_status(ctx):
         extra_messages = CheckAutoWarps(ctx)
 
         if len(extra_messages) > 0:
+            print("Send extra messages:", len(extra_messages), extra_messages)
             message = [{"cmd": 'LocationChecks', "locations": extra_messages}]
             await ctx.send_msgs(message)
             ctx.level_state["temp"] = True
@@ -2925,7 +3081,6 @@ async def check_level_status(ctx):
             ctx.music = None
             ctx.last_object_bytes = None
             ctx.last_set_changes_bytes = None
-            print("Set music to None")
             ctx.key_restore_complete = False
             if ctx.auto_clear_missions:
                 new_messages = complete_completable_levels(ctx)
@@ -2941,6 +3096,8 @@ async def check_level_status(ctx):
                 new_bytes = int(0).to_bytes(2, byteorder='big')
                 writeBytes(GAME_ADDRESSES.ADDRESS_SELECT_LEVEL, new_bytes)
 
+            if "temp" in ctx.level_state:
+                del ctx.level_state["temp"]
 
             if len(new_messages) > 0:
                 message = [{"cmd": 'LocationChecks', "locations": new_messages}]
@@ -3000,17 +3157,20 @@ async def check_level_status(ctx):
                 logger.info("Now in level: %s", Levels.LEVEL_ID_TO_LEVEL[current_level])
             ctx.last_level = current_level
 
-            if current_level == BOSS_DEVIL_DOOM and not IsEndGameEnabled(ctx):
+            if current_level == BOSS_DEVIL_DOOM and not IsEndGameEnabled(ctx) and ctx.goal_devil_doom:
 
                 if level_status_value != LevelStatusOptions.Active:
                     ctx.boss_delay = 5
                     ctx.last_level = None
                     return None
 
-                logger.info("You do not have the items required to fight the final boss.")
-
-                handle_exit_stage(ctx)
-                ctx.last_level = None
+                await checkLevelClears(ctx, first_game_load=True)
+                if IsEndGameEnabled(ctx):
+                    logger.info("You just unlocked the final boss! Congratulations!")
+                else:
+                    logger.info("You do not have the items required to fight the final boss.")
+                    handle_exit_stage(ctx)
+                    ctx.last_level = None
 
                 return None
 
@@ -4870,11 +5030,11 @@ async def handle_objects(ctx: ShTHContext, current_level):
                     if Names.GOAL_RING_UNIQUE_GOAL_RINGS in ctx.goal_rings:
                         have_item = len(
                             [info[unlock[0].item].name for unlock in ctx.items_to_handle if unlock[0].item in info and \
-                             info[unlock[0].item].name == Items.ITEM_NAME_GOAL_RINGS]) > 0
+                             info[unlock[0].item].name == Items.GetGoalRingName(current_level)]) > 0
                     else:
                         have_item = len(
                             [info[unlock[0].item].name for unlock in ctx.items_to_handle if unlock[0].item in info and \
-                             info[unlock[0].item].name == Items.GetGoalRingName(current_level)]) > 0
+                             info[unlock[0].item].name == Items.ITEM_NAME_GOAL_RINGS]) > 0
 
                     if not have_item:
                         despawn_aligned_goal_ring = True
@@ -5002,6 +5162,7 @@ async def handle_objects(ctx: ShTHContext, current_level):
             # Enemies which respawn write 8 then B in quick succession
             object_values_complete.append(0xB)
             object_values_complete.append(0x8)
+
 
         # Base style objects 0
         if (key_sanity and object.object_type == Objects.ObjectType.KEY) or \
@@ -6022,6 +6183,8 @@ async def update_level_behaviour(ctx, current_level, death):
                                  c.count == a]
                     messages.extend(locations)
 
+    #print("Key flags:", ctx.key_collection_method, ctx.keys_required_for_doors)
+
     if (ctx.key_sanity or
         ctx.key_collection_method != Options.KeyCollectionMethod.option_local or
         ctx.keys_required_for_doors != 5) and current_level in KEY_IDENTIFIER_BY_STAGE:
@@ -6430,7 +6593,8 @@ async def check_charactersanity(ctx, level):
         check = True
         set_state = True
 
-    if ctx.character_sanity != Options.CharacterSanity.option_disabled and level != Levels.STAGE_THE_LAST_WAY:
+    if ctx.character_sanity != Options.CharacterSanity.option_disabled and level != Levels.STAGE_THE_LAST_WAY\
+            and level != Levels.BOSS_DEVIL_DOOM:
         for character in GAME_ADDRESSES.CharacterAddresses:
             if character.name in ctx.characters_met:
                 continue

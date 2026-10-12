@@ -230,13 +230,13 @@ DESIRABLE_OBJECTS_THE_DOOM = [
               region=REGION_INDICES.THE_DOOM_FAN_ROOM),
 
     SETObject(ObjectType.ITEM_CAPSULE, Levels.STAGE_THE_DOOM, 203, 'Lift Cross A',
-              region=REGION_INDICES.THE_DOOM_FOUR_DOOR),
+              region=REGION_INDICES.THE_DOOM_FOUR_DOOR_TRIANGLE_JUMP),
     SETObject(ObjectType.ITEM_CAPSULE, Levels.STAGE_THE_DOOM, 350, 'Lift Cross B',
-              region=REGION_INDICES.THE_DOOM_FOUR_DOOR),
+              region=REGION_INDICES.THE_DOOM_FOUR_DOOR_TRIANGLE_JUMP),
     SETObject(ObjectType.ITEM_CAPSULE, Levels.STAGE_THE_DOOM, 351, 'Lift Cross C',
-              region=REGION_INDICES.THE_DOOM_FOUR_DOOR),
+              region=REGION_INDICES.THE_DOOM_FOUR_DOOR_TRIANGLE_JUMP),
     SETObject(ObjectType.ITEM_CAPSULE, Levels.STAGE_THE_DOOM, 352, 'Lift Cross D',
-              region=REGION_INDICES.THE_DOOM_FOUR_DOOR),
+              region=REGION_INDICES.THE_DOOM_FOUR_DOOR_TRIANGLE_JUMP),
 
     SETObject(ObjectType.ITEM_CAPSULE, Levels.STAGE_THE_DOOM, 284, 'Blast Room A',
               region=REGION_INDICES.THE_DOOM_WALL_ROOM),

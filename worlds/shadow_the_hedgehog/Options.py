@@ -252,6 +252,23 @@ class Keysanity(Toggle):
     """
     display_name = "Key Sanity"
 
+class KeyLogic(Choice):
+    """
+        Determines logic for key access and usage.
+        Logic: Whether logical paths can be used including the key door
+        Checks: Any checks exclusive to key doors should be removable
+        Locking: To prevent out-of-logic, always lock the key doors (may go into collect method)
+    """
+
+    display_name = "Key Logic"
+    option_allowed = 0 # Checks included, path in logic
+    option_remove_checks = 1 # Checks removed, path in logic
+    option_not_logically_required = 2 # Checks removed, path not in logic
+    option_locked = 3 # No out of logic option available
+
+    default = option_allowed
+
+
 class KeysRequiredForDoors(Range):
     """
         Determines how many keys are required to open doors. This works by providing fake keys to the player.
@@ -259,7 +276,16 @@ class KeysRequiredForDoors(Range):
     display_name = "Keys Required For Doors"
     range_start = 0
     range_end = 5
-    default = 5
+    default = 1
+
+class MaximumKeys(Range):
+    """
+        Determines how many keys are available in the pool when using arch items.
+    """
+    display_name = "Maximum Keys"
+    range_start = 0
+    range_end = 5
+    default = 2
 
 class KeyCollectionMethod(Choice):
     """
@@ -274,7 +300,7 @@ class KeyCollectionMethod(Choice):
     option_local = 0
     option_arch = 1
     option_both = 2
-    default = option_local
+    default = option_arch
 
 class Checkpointsanity(DefaultOnToggle):
     """
@@ -518,6 +544,7 @@ class RingLink(Choice):
     Unsafe enables ring link during Circus Park missions and during Devil Doom.
 
     """
+
     option_disabled = 0
     option_enabled = 1
     option_unsafe = 2
@@ -1039,12 +1066,11 @@ class ShadowTheHedgehogOptions(PerGameCommonOptions):
     enemy_sanity_percentage: EnemySanityPercentage
     difficult_enemy_sanity: DifficultEnemysanity
     key_sanity: Keysanity
-
     box_sanity: Boxsanity
     floor_weapon_sanity: FloorWeaponSanity
-
-
+    key_logic: KeyLogic
     keys_required_for_doors: KeysRequiredForDoors
+    max_keys: MaximumKeys
     key_collection_method: KeyCollectionMethod
     checkpoint_sanity: Checkpointsanity
     checkpoint_shuffle: CheckpointShuffle
@@ -1151,7 +1177,7 @@ shadow_option_groups = [
                          GoalCharacters]),
 
     OptionGroup("Objective Configuration", [
-        ObjectiveSanitySystem, ObjectiveSanityBehaviour, KeysRequiredForDoors,
+        ObjectiveSanitySystem, ObjectiveSanityBehaviour, KeysRequiredForDoors, MaximumKeys, KeyLogic,
         ObjectivePercentage, ObjectiveCompletionPercentage, ObjectiveItemPercentageAvailable, ObjectiveFrequency,
         EnemyObjectivePercentage, ObjectiveCompletionEnemyPercentage, ObjectiveItemEnemyPercentageAvailable, EnemyObjectiveFrequency,
         EnemySanityPercentage, EnemyFrequency, PercentOverrides, LogicTweaks

@@ -1787,13 +1787,25 @@ def StringToStory(string):
 def ChooseGoalLibraryPaths(world, count):
     # TODO Add handling here for select bosses being disabled on select only
 
-    valid_libraries = [ l for l in Libraries if
+    if world.options.level_progression == Options.LevelProgression.option_select and \
+        not world.options.select_bosses:
+        valid_libraries = [l for l in Libraries if
+                           len([ll for ll in [ a for a in l.required_levels if a not in Levels.BOSS_STAGES] if ((type(ll) is int and ll in world.available_levels)
+                                                                   or (type(ll) is tuple and ll[
+                                       0] in world.available_levels))])
+                           == len([ a for a in l.required_levels if a not in Levels.BOSS_STAGES])]
+    else:
+        valid_libraries = [ l for l in Libraries if
                         len([ ll for ll in l.required_levels if ((type(ll) is int and ll in world.available_levels)
                               or (type(ll) is tuple and ll[0] in world.available_levels))])
                         == len(l.required_levels)]
 
-    if len(valid_libraries) < count:
+
+    if len(valid_libraries) == 0:
         return []
+
+    if len(valid_libraries) < count:
+        return [ v.index for v in valid_libraries ]
 
     return [p.index for p in world.random.sample(valid_libraries, k=count.value)]
 

@@ -99,6 +99,7 @@ class ShtHWorld(World):
         self.weapon_counts = {}
         self.chosen_paths = []
         self.using_gate_count = 0
+        self.skip_regions = []
 
         for token in Items.TOKENS:
             self.required_tokens[token] = 0
@@ -109,11 +110,25 @@ class ShtHWorld(World):
         super(ShtHWorld, self).__init__(*args, **kwargs)
 
     def emergency_sphere_one_handler(self):
+
+        # Hard-coded scenario
+
+        if len(self.first_regions) == 1 and self.first_regions[0] == Levels.STAGE_WESTOPOLIS and \
+                self.options.object_unlocks and "Black Arm Case Key" in self.options.object_unlocks \
+                and not self.options.enemy_objective_sanity:
+            item = "Black Arm Case Key"
+            self.starting_items.append(item)
+            self.multiworld.push_precollected(self.create_item(item))
+
         sphere_one_useful = []
         if not hasattr(self.multiworld, "re_gen_passthrough"):
             while len(sphere_one_useful) == 0:
                 sphere_one_locs = self.multiworld.get_reachable_locations(CollectionState(self.multiworld), self.player)
                 sphere_one_useful = [s for s in sphere_one_locs if not s.locked]
+
+                push_items = Regions.FindStartingItems(self, required=True)
+
+                # TODO: How to handle unlocks / checks such as Westopolis ??
 
                 if len(sphere_one_useful) > 0:
                     break
@@ -128,7 +143,7 @@ class ShtHWorld(World):
                 if len(locked_items) != 0:
                     continue
 
-                push_items = Regions.FindStartingItems(self, required=True)
+
                 for item in push_items:
                     print("Push emergency item:", item)
                     # TODO Remove from itempool as well should occur?
@@ -142,7 +157,7 @@ class ShtHWorld(World):
         l_x = Locations.count_locations(self)
 
         if l_count != l_x:
-            print("Invalid location counting")
+            raise Exception("Invalid location counting")
 
         player_items = [a for a in self.multiworld.itempool if a.player == self.player]
         if len(player_items) not in [l_count, l_x]:
@@ -271,7 +286,8 @@ class ShtHWorld(World):
             raise OptionError("You cannot use weapons as an unlock without them disabled")
 
         if self.options.objective_sanity_unlock and not self.options.objective_sanity:
-            raise OptionError("You cannot use objective unlock without it being enabled")
+            self.options.objective_sanity_unlock = Options.ObjectiveSanityUnlock(False)
+            print("You cannot use objective unlock without it being enabled, it has been disabled")
 
         if not self.options.use_object_unlocks and len(self.options.object_unlocks.value) > 0:
             self.options.object_unlocks = Options.ObjectUnlocks([])
@@ -281,15 +297,38 @@ class ShtHWorld(World):
             raise OptionError("You cannot use objective unlock and base clear together!")
 
         if Names.GOAL_RING_RULE_CHARACTER_FOR_GOAL_RING in self.options.goal_rings and self.options.character_sanity != Options.CharacterSanity.option_unlock:
-            raise OptionError("You cannot lock characters for clearing goals but not have them unlockable")
+            self.options.goal_rings.value.remove(Names.GOAL_RING_RULE_CHARACTER_FOR_GOAL_RING)
+            print("You cannot lock characters for clearing goals but not have them unlockable -- "
+                  "goal ring rule for characters has been disabled. ")
 
         if self.options.level_progression != Options.LevelProgression.option_select and \
             self.options.story_shuffle == Options.StoryShuffle.option_disabled and \
-            self.options.maximum_levels < 22:
-            raise OptionError("You cannot use maximum levels when playing unshuffled story mode!")
+            self.options.maximum_levels < Options.MaximumLevels.default:
+            self.options.maximum_levels = Options.MaximumLevels(Options.MaximumLevels.default)
+            print("You cannot use maximum levels when playing unshuffled story mode - maximum levels has been set to maximum")
 
         if self.options.goal_characters and self.options.character_sanity == Options.CharacterSanity.option_disabled:
-            raise OptionError("You cannot have character goal with character sanity disabled!")
+            self.options.goal_characters = Options.GoalCharacters(False)
+            print("You cannot have character goal with character sanity disabled, this goal requirement has been disabled")
+
+        if self.options.max_keys < self.options.keys_required_for_doors:
+            self.options.keys_required_for_doors = Options.KeysRequiredForDoors(self.options.max_keys.value)
+
+        if self.options.logic_level == Options.LogicLevel.option_hard and self.options.key_logic != Options.KeyLogic.option_allowed:
+            print("Hard logic requires keys handling to be enabled.")
+            self.options.key_logic = Options.KeyLogic(Options.KeyLogic.option_allowed)
+
+        if self.options.key_logic == Options.KeyLogic.option_locked:
+            self.options.key_collection_method = Options.KeyCollectionMethod(Options.KeyCollectionMethod.option_arch)
+            self.options.keys_required_for_doors = Options.KeysRequiredForDoors(5)
+            self.options.max_keys = Options.MaximumKeys(0)
+            self.options.key_collection_method = Options.KeyCollectionMethod(Options.KeyCollectionMethod.option_arch)
+
+        if self.options.goal_paths > 0 and self.options.maximum_levels != Options.MaximumLevels.default:
+            self.options.maximum_levels = Options.MaximumLevels(Options.MaximumLevels.default)
+            print("You cannot use maximum levels when playing with path goals, so maximum levels has been set to maximum.")
+
+
 
     def calculate_non_objective_sanity_maximums(self):
         relevant_mission_clears =  [m for m in Locations.MissionClearLocations if
@@ -497,6 +536,12 @@ class ShtHWorld(World):
 
                 if "keys_required_for_doors" in passthrough:
                     self.options.keys_required_for_doors = passthrough["keys_required_for_doors"]
+
+                if "key_logic" in passthrough:
+                    self.options.key_logic = passthrough["key_logic"]
+
+                if "max_keys" in passthrough:
+                    self.options.max_keys = passthrough["max_keys"]
 
                 if "select_gates" in passthrough:
                     self.options.select_gates = passthrough["select_gates"]
@@ -735,6 +780,9 @@ class ShtHWorld(World):
                 if "using_gate_count" in passthrough:
                     self.using_gate_count = passthrough["using_gate_count"]
 
+                if "enemy_objective_sanity" in passthrough:
+                    self.options.enemy_objective_sanity = passthrough["enemy_objective_sanity"]
+
         # Set maximum of levels required
         # Exclude missions listed in exclude_locations
         maximum_force_missions = self.options.force_objective_sanity_max.value
@@ -743,6 +791,7 @@ class ShtHWorld(World):
         mission_counter = 0
         mission_total = 0
 
+        self.skip_regions = Regions.getSkippedRegions(self)
         Regions.early_region_checks(self)
 
         if not hasattr(self.multiworld, "re_gen_passthrough"):
@@ -763,6 +812,9 @@ class ShtHWorld(World):
                 self.chosen_paths = Story.ChooseGoalLibraryPaths(self, self.options.goal_paths)
                 if len(self.chosen_paths) == 0:
                     raise OptionError("Invalid chosen path count:", self.available_levels)
+                elif len(self.chosen_paths) < self.options.goal_paths:
+                    self.options.goal_paths = Options.GoalPaths(len(self.chosen_paths))
+                    print(f"Path goal count has been reduced to its maximum: {len(self.chosen_paths)}")
 
             if self.options.level_progression != Options.LevelProgression.option_select and \
                 self.options.story_progression_balancing_passes > 0:
@@ -1034,6 +1086,8 @@ class ShtHWorld(World):
             "key_sanity": self.options.key_sanity.value,
             "key_collection_method": self.options.key_collection_method.value,
             "keys_required_for_doors": self.options.keys_required_for_doors.value,
+            "key_logic": self.options.key_logic.value,
+            "max_keys": self.options.max_keys.value,
             "gates": self.gates,
             "gate_requirements": self.gate_requirements,
             "select_gates": self.options.select_gates.value,

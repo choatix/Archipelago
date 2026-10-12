@@ -14,17 +14,21 @@ LevelRegion(STAGE_AIR_FLEET, REGION_INDICES.AIR_FLEET_KEYDOOR_ENTRANCE,
 LevelRegion(STAGE_AIR_FLEET, REGION_INDICES.AIR_FLEET_KEY_DOOR,
                     REGION_RESTRICTION_TYPES.KeyDoor).setAsDiversion(),
 LevelRegion(STAGE_AIR_FLEET, REGION_INDICES.AIR_FLEET_AIR_SAUCER,
-                    REGION_RESTRICTION_TYPES.AirSaucer).setAsDiversion(),
+                    REGION_RESTRICTION_TYPES.AirSaucer).setAsDiversion()
+    .setAsKeyRegion(),
 LevelRegion(STAGE_AIR_FLEET, REGION_INDICES.AIR_FLEET_RAIL_HARD,
                     REGION_RESTRICTION_TYPES.NoRestriction)
     .setHardLogicOnly()
-    .setFromRegion(REGION_INDICES.AIR_FLEET_PULLEY).setAsDiversion(),
+    .setFromRegion(REGION_INDICES.AIR_FLEET_PULLEY).setAsDiversion()
+    .setAsKeyRegion(),
 LevelRegion(STAGE_AIR_FLEET, REGION_INDICES.AIR_FLEET_RAILS,
                     REGION_RESTRICTION_TYPES.NoRestriction)
     .setFromRegion([REGION_INDICES.AIR_FLEET_RAIL_HARD,
-                    REGION_INDICES.AIR_FLEET_AIR_SAUCER]),
+                    REGION_INDICES.AIR_FLEET_AIR_SAUCER])
+    .setAsKeyRegion(),
 LevelRegion(STAGE_AIR_FLEET, REGION_INDICES.AIR_FLEET_SECRET_1,
-                    REGION_RESTRICTION_TYPES.NoRestriction).setAsDiversion(),
+                    REGION_RESTRICTION_TYPES.NoRestriction).setAsDiversion()
+    .setAsKeyRegion(),
 LevelRegion(STAGE_AIR_FLEET, REGION_INDICES.AIR_FLEET_TRIANGLE_JUMP,
                     REGION_RESTRICTION_TYPES.TriangleJump).setAsDiversion()
     .setFromRegion(REGION_INDICES.AIR_FLEET_PULLEY),
@@ -55,10 +59,9 @@ LevelRegion(STAGE_AIR_FLEET, REGION_INDICES.AIR_FLEET_THREE_FLOATERS,
                     REGION_RESTRICTION_TYPES.VacuumOrShot).setAsDiversion(),
 LevelRegion(STAGE_AIR_FLEET, REGION_INDICES.AIR_FLEET_SECRET_RAIL,
                     [REGION_RESTRICTION_TYPES.Door, REGION_RESTRICTION_TYPES.RegionAccess(REGION_INDICES.AIR_FLEET_AIR_SAUCER)])
-.setLogicType(Options.LogicLevel.option_hard),
+.setLogicType(Options.LogicLevel.option_hard).setAsKeyRegion(),
 LevelRegion(STAGE_AIR_FLEET, REGION_INDICES.AIR_FLEET_SECRET_2,
-        REGION_RESTRICTION_TYPES.Door
-            ),
+        REGION_RESTRICTION_TYPES.Door).setAsKeyRegion(),
 LevelRegion(STAGE_AIR_FLEET, REGION_INDICES.AIR_FLEET_THREE_POLE,
                     REGION_RESTRICTION_TYPES.Pole)
     .setFromRegion(REGION_INDICES.AIR_FLEET_CHECKPOINT_THREE),
@@ -96,6 +99,7 @@ LevelRegion(STAGE_AIR_FLEET, REGION_INDICES.AIR_FLEET_SECRET_3,
                     [REGION_RESTRICTION_TYPES.Door,
                      REGION_RESTRICTION_TYPES.RegionAccess(REGION_INDICES.AIR_FLEET_AIR_SAUCER)])
             .setFromRegion(REGION_INDICES.AIR_FLEET_CHECKPOINT_SIX)
+            .setAsKeyRegion()
             .setLogicType(Options.LogicLevel.option_hard).setAsDiversion(),
 LevelRegion(STAGE_AIR_FLEET, REGION_INDICES.AIR_FLEET_OUTSIDE_SECTION,
                     REGION_RESTRICTION_TYPES.NoRestriction)

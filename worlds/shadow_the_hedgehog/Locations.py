@@ -565,77 +565,6 @@ def GetEnemySanityLocations():
     return EnemySanityLocations
 
 
-
-#EnemySanityLocations = \
-#[
-#    EnemySanityLocation(STAGE_WESTOPOLIS, ENEMY_CLASS_ALIEN, 45, "Black Arm"),
-#    EnemySanityLocation(STAGE_WESTOPOLIS, ENEMY_CLASS_GUN, 36, "GUN Soldier"),
-#
-#    EnemySanityLocation(STAGE_DIGITAL_CIRCUIT, ENEMY_CLASS_GUN, 46, "GUN Soldier"),
-#    EnemySanityLocation(STAGE_DIGITAL_CIRCUIT, ENEMY_CLASS_ALIEN, 17, "Black Arm"),
-#
-#    EnemySanityLocation(STAGE_GLYPHIC_CANYON, ENEMY_CLASS_GUN, 8, "GUN Soldier"),
-#    EnemySanityLocation(STAGE_GLYPHIC_CANYON, ENEMY_CLASS_ALIEN, 60, "Black Arm"),
-#
-#    EnemySanityLocation(STAGE_LETHAL_HIGHWAY, ENEMY_CLASS_GUN, 30, "GUN Soldier"),
-#    EnemySanityLocation(STAGE_LETHAL_HIGHWAY, ENEMY_CLASS_ALIEN, 137, "Black Arm"),
-#
-#    EnemySanityLocation(STAGE_CRYPTIC_CASTLE, ENEMY_CLASS_EGG, 17, "Egg Pawn"),
-#    EnemySanityLocation(STAGE_CRYPTIC_CASTLE, ENEMY_CLASS_ALIEN, 52, "Black Arm"),
-#
-#    EnemySanityLocation(STAGE_PRISON_ISLAND, ENEMY_CLASS_GUN, 41, "GUN Soldier"),
-#    EnemySanityLocation(STAGE_PRISON_ISLAND, ENEMY_CLASS_ALIEN, 88, "Black Arm"),
-#
-#    EnemySanityLocation(STAGE_CIRCUS_PARK, ENEMY_CLASS_GUN, 21, "GUN Soldier"),
-#    EnemySanityLocation(STAGE_CIRCUS_PARK, ENEMY_CLASS_EGG, 29, "Egg Pawn"),
-#
-#    #EnemySanityLocation(STAGE_CENTRAL_CITY, ENEMY_CLASS_GUN, 100, "GUN Soldier"),
-#    #EnemySanityLocation(STAGE_CENTRAL_CITY, ENEMY_CLASS_ALIEN, 100, "Black Arm"),
-#    # 39 BA, 28G, time limit..
-#
-#    EnemySanityLocation(STAGE_THE_DOOM, ENEMY_CLASS_GUN, 60, "GUN Soldier"),
-#
-#    EnemySanityLocation(STAGE_SKY_TROOPS, ENEMY_CLASS_ALIEN, 73, "Black Arm"),
-#    EnemySanityLocation(STAGE_SKY_TROOPS, ENEMY_CLASS_EGG, 11, "Egg Pawn"),
-#
-#    EnemySanityLocation(STAGE_MAD_MATRIX, ENEMY_CLASS_EGG, 31, "Egg Pawn"),
-#    EnemySanityLocation(STAGE_MAD_MATRIX, ENEMY_CLASS_ALIEN, 8, "Black Arm"),
-#
-#    EnemySanityLocation(STAGE_DEATH_RUINS, ENEMY_CLASS_GUN, 21, "GUN Soldier"),
-#    EnemySanityLocation(STAGE_DEATH_RUINS, ENEMY_CLASS_ALIEN, 50, "Black Arm"),
-#
-#    EnemySanityLocation(STAGE_THE_ARK, ENEMY_CLASS_GUN, 74, "GUN Soldier"),
-#    EnemySanityLocation(STAGE_THE_ARK, ENEMY_CLASS_ALIEN, 21, "Black Arm"),
-#
-#    EnemySanityLocation(STAGE_AIR_FLEET, ENEMY_CLASS_GUN, 48, "GUN Soldier"),
-#    EnemySanityLocation(STAGE_AIR_FLEET, ENEMY_CLASS_ALIEN, 35, "Black Arm"),
-##
-#    EnemySanityLocation(STAGE_IRON_JUNGLE, ENEMY_CLASS_GUN, 28, "GUN Soldier"),
-#    EnemySanityLocation(STAGE_IRON_JUNGLE, ENEMY_CLASS_EGG, 37, "Egg Pawn"),
-#
-#    EnemySanityLocation(STAGE_SPACE_GADGET, ENEMY_CLASS_GUN, 25, "GUN Soldier"),
-#    EnemySanityLocation(STAGE_SPACE_GADGET, ENEMY_CLASS_ALIEN, 33, "Black Arm"),
-#
-#    EnemySanityLocation(STAGE_LOST_IMPACT, ENEMY_CLASS_GUN, 37, "GUN Soldier"),
-#    EnemySanityLocation(STAGE_LOST_IMPACT, ENEMY_CLASS_ALIEN, 35, "Artificial Chaos"),
-#
-#    EnemySanityLocation(STAGE_GUN_FORTRESS, ENEMY_CLASS_GUN, 94, "GUN Soldier"),
-#    EnemySanityLocation(STAGE_GUN_FORTRESS, ENEMY_CLASS_ALIEN, 18, "Black Arm"),
-#
-#    EnemySanityLocation(STAGE_BLACK_COMET, ENEMY_CLASS_GUN, 53, "GUN Soldier"),
-#    EnemySanityLocation(STAGE_BLACK_COMET, ENEMY_CLASS_ALIEN, 83, "Black Arm"),
-#    # To Handle random respawns from the ships -- might want to make BA lower
-#
-#    EnemySanityLocation(STAGE_LAVA_SHELTER, ENEMY_CLASS_EGG, 74, "Egg Robot"),
-#
-#    EnemySanityLocation(STAGE_COSMIC_FALL, ENEMY_CLASS_GUN, 7, "GUN Soldier"),
-#    EnemySanityLocation(STAGE_COSMIC_FALL, ENEMY_CLASS_ALIEN, 24, "Black Arm"),
-#
-#    EnemySanityLocation(STAGE_FINAL_HAUNT, ENEMY_CLASS_ALIEN, 122, "Black Arm"),
-#]
-
-# TODO, use other settings to determine if check 0 is backtracable on logic settings
-
 def GetCheckpointLocations():
     CheckLocations = []
     for stage in [ l for l in Levels.ALL_STAGES if l not in Levels.BOSS_STAGES]:
@@ -1053,6 +982,9 @@ def create_locations(world, regions: Dict[str, Region]):
             if not world.options.last_way_enemysanity and enemy.stageId == STAGE_THE_LAST_WAY:
                 continue
 
+            #if (enemy.stageId, enemy.regionId) not in world.skip_regions:
+            #    continue
+
             max_required = ShadowUtils.getMaxRequired(
                 ShadowUtils.getObjectiveTypeAndPercentage(ShadowUtils.TYPE_ID_ENEMY,
                                                           enemy.name, world.options,
@@ -1187,7 +1119,7 @@ def create_locations(world, regions: Dict[str, Region]):
 
     if world.options.shadow_boxes:
         for box_location in [ x for x in object_locations if x.other == ObjectType.SHADOW_BOX and
-                              x.stageId in world.available_levels]:
+                              x.stageId in world.available_levels and (x.stageId, x.regionId) not in world.skip_regions]:
             if world.options.exclude_go_mode_items and box_location.stageId == STAGE_THE_LAST_WAY and \
                     not world.options.include_last_way_shuffle:
                 continue
@@ -1201,7 +1133,8 @@ def create_locations(world, regions: Dict[str, Region]):
 
         for core_location in [ x for x in object_locations if (x.other == ObjectType.ENERGY_CORE or
                                  x.other == ObjectType.ENERGY_CORE_IN_WOOD_BOX) and
-                                                              x.stageId in world.available_levels]:
+                                                              x.stageId in world.available_levels
+                                                              and (x.stageId, x.regionId) not in world.skip_regions]:
 
             if world.options.exclude_go_mode_items and core_location.stageId == STAGE_THE_LAST_WAY and \
                     not world.options.include_last_way_shuffle:
@@ -1217,9 +1150,8 @@ def create_locations(world, regions: Dict[str, Region]):
                 print("Error with core:", core_location)
 
     if world.options.door_sanity:
-
         for door_location in [ x for x in object_locations if x.other == ObjectType.KEY_DOOR and
-                               x.stageId in world.available_levels]:
+                               x.stageId in world.available_levels and (x.stageId, x.regionId) not in world.skip_regions]:
 
             if world.options.exclude_go_mode_items and door_location.stageId == STAGE_THE_LAST_WAY and \
                     not world.options.include_last_way_shuffle:
@@ -1234,7 +1166,7 @@ def create_locations(world, regions: Dict[str, Region]):
     if world.options.gold_beetle_sanity:
 
         for beetle_location in [ x for x in object_locations if x.other == ObjectType.GOLD_BEETLE and
-                                 x.stageId in world.available_levels]:
+                                 x.stageId in world.available_levels and (x.stageId, x.regionId) not in world.skip_regions] :
 
             if world.options.exclude_go_mode_items and beetle_location.stageId == STAGE_THE_LAST_WAY and \
                     not world.options.include_last_way_shuffle:
@@ -1249,7 +1181,7 @@ def create_locations(world, regions: Dict[str, Region]):
     if world.options.key_sanity:
 
         for key_location in [ x for x in object_locations if x.other == ObjectType.KEY and
-                                 x.stageId in world.available_levels]:
+                                 x.stageId in world.available_levels and (x.stageId, x.regionId) not in world.skip_regions]:
 
             if world.options.exclude_go_mode_items and key_location.stageId == STAGE_THE_LAST_WAY and \
                     not world.options.include_last_way_shuffle:
@@ -1319,7 +1251,7 @@ def create_locations(world, regions: Dict[str, Region]):
         for objective_location in [x for x in object_locations if x.other in enemy_types and x not in object_location_checks and
                                    x.stageId in world.available_levels
                                     and (world.options.boss_enemy_sanity or x.stageId not in Levels.BOSS_STAGES)
-                                    and (world.options.difficult_enemy_sanity or not x.flag) ]:
+                                    and (world.options.difficult_enemy_sanity or not x.flag) and (x.stageId, x.regionId) not in world.skip_regions ]:
 
             if world.options.exclude_go_mode_items and objective_location.stageId == STAGE_THE_LAST_WAY and \
                     not world.options.include_last_way_shuffle:
@@ -1342,7 +1274,7 @@ def create_locations(world, regions: Dict[str, Region]):
         item_types = Objects.GetItemBoxTypes()
         for objective_location in [x for x in object_locations if x.other in item_types and
                                    x.stageId in world.available_levels
-                                    and (world.options.difficult_enemy_sanity or not x.flag) ]:
+                                    and (world.options.difficult_enemy_sanity or not x.flag) and (x.stageId, x.regionId) not in world.skip_regions ]:
 
             if world.options.exclude_go_mode_items and objective_location.stageId == STAGE_THE_LAST_WAY and \
                     not world.options.include_last_way_shuffle:
@@ -1361,7 +1293,7 @@ def create_locations(world, regions: Dict[str, Region]):
     if world.options.box_sanity:
 
         for box_location in [ x for x in object_locations if x.other in Objects.GetBoxTypes() and
-                                                              x.stageId in world.available_levels]:
+                                                              x.stageId in world.available_levels and (x.stageId, x.regionId) not in world.skip_regions]:
 
             if world.options.exclude_go_mode_items and box_location.stageId == STAGE_THE_LAST_WAY and \
                     not world.options.include_last_way_shuffle:
@@ -1393,7 +1325,7 @@ def create_locations(world, regions: Dict[str, Region]):
     if world.options.floor_weapon_sanity:
 
         for floor_location in [ x for x in object_locations if x.other == ObjectType.FLOOR_WEAPON and
-                                                              x.stageId in world.available_levels]:
+                                                              x.stageId in world.available_levels and (x.stageId, x.regionId) not in world.skip_regions]:
 
             if world.options.exclude_go_mode_items and floor_location.stageId == STAGE_THE_LAST_WAY and \
                     not world.options.include_last_way_shuffle:
@@ -1465,7 +1397,6 @@ def count_locations(world, levels=None):
      charactersanity_locations, token_locations,
      weaponsanity_locations, boss_locations, warp_locations,
      object_locations) = GetActiveLocationInfo()
-
 
     location_available_levels = world.available_levels
     if levels is not None:
@@ -1597,22 +1528,24 @@ def count_locations(world, levels=None):
 
     if world.options.shadow_boxes:
         count = increment_location_count(count, len([x for x in object_locations if x.other == ObjectType.SHADOW_BOX
-                                                     if x.stageId in location_available_levels and (not world.options.exclude_go_mode_items or x.stageId != STAGE_THE_LAST_WAY or \
-                                world.options.include_last_way_shuffle)]), "b")
+                                                     if x.stageId in location_available_levels and
+                                                     (not world.options.exclude_go_mode_items or x.stageId != STAGE_THE_LAST_WAY or \
+                                world.options.include_last_way_shuffle) and (x.stageId, x.regionId) not in world.skip_regions
+                                                     ]), "b")
 
     if world.options.gold_beetle_sanity:
         count = increment_location_count(count, len([x for x in object_locations if x.other == ObjectType.GOLD_BEETLE
-                                                     if x.stageId in location_available_levels]), "g")
+                                                     if x.stageId in location_available_levels and (x.stageId, x.regionId) not in world.skip_regions]), "g")
 
     if world.options.energy_cores:
         count = increment_location_count(count, len([x for x in object_locations if x.other == ObjectType.ENERGY_CORE
                                                      or x.other == ObjectType.ENERGY_CORE_IN_WOOD_BOX
-                                                     if x.stageId in location_available_levels]), "c")
+                                                     if x.stageId in location_available_levels and (x.stageId, x.regionId) not in world.skip_regions]), "c")
 
     if world.options.door_sanity:
         count = increment_location_count(count, len([x for x in object_locations if x.other == ObjectType.KEY_DOOR
                                                      if x.stageId in location_available_levels and (not world.options.exclude_go_mode_items or x.stageId != STAGE_THE_LAST_WAY or \
-                                world.options.include_last_way_shuffle)]), "kd")
+                                world.options.include_last_way_shuffle) and (x.stageId, x.regionId) not in world.skip_regions]), "kd")
 
     object_location_checks = []
     if world.options.objective_sanity and world.options.objective_sanity_system != Options.ObjectiveSanitySystem.option_count_up:
@@ -1666,7 +1599,7 @@ def count_locations(world, levels=None):
                                       (world.options.boss_enemy_sanity or x.stageId not in Levels.BOSS_STAGES)
                                       and (world.options.difficult_enemy_sanity or not x.flag) and
                                       (not world.options.exclude_go_mode_items or x.stageId != STAGE_THE_LAST_WAY or
-                                       world.options.include_last_way_shuffle)]
+                                       world.options.include_last_way_shuffle) and (x.stageId, x.regionId) not in world.skip_regions]
 
         if not world.options.last_way_enemysanity:
             banned_enemy_sanity_object_checks = [ x for x in enemy_sanity_object_checks if x.stageId == STAGE_THE_LAST_WAY]
@@ -1681,7 +1614,7 @@ def count_locations(world, levels=None):
                                    x.stageId in location_available_levels
                                     and (world.options.difficult_enemy_sanity or not x.flag) and
                     (not world.options.exclude_go_mode_items or x.stageId != STAGE_THE_LAST_WAY or
-                     world.options.include_last_way_shuffle)
+                     world.options.include_last_way_shuffle) and (x.stageId, x.regionId) not in world.skip_regions
                     ]
 
         count = increment_location_count(count, len(possible), "i")
@@ -1692,10 +1625,10 @@ def count_locations(world, levels=None):
                                    x.stageId in location_available_levels
                                     and (world.options.difficult_enemy_sanity or not x.flag) and
                     (not world.options.exclude_go_mode_items or x.stageId != STAGE_THE_LAST_WAY or
-                     world.options.include_last_way_shuffle)
+                     world.options.include_last_way_shuffle) and (x.stageId, x.regionId) not in world.skip_regions
                     ]
 
-        count = increment_location_count(count, len(possible), "i")
+        count = increment_location_count(count, len(possible), "f")
 
     if world.options.box_sanity:
         item_types = Objects.GetBoxTypes()
@@ -1703,7 +1636,7 @@ def count_locations(world, levels=None):
                                    x.stageId in location_available_levels
                                     and (world.options.difficult_enemy_sanity or not x.flag) and
                     (not world.options.exclude_go_mode_items or x.stageId != STAGE_THE_LAST_WAY or
-                     world.options.include_last_way_shuffle)
+                     world.options.include_last_way_shuffle) and (x.stageId, x.regionId) not in world.skip_regions
                     ]
 
         possible = [ p for p in possible if not
@@ -1711,7 +1644,7 @@ def count_locations(world, levels=None):
                      or
                      (world.options.item_sanity and p.other in [ObjectType.ITEM_IN_BOX, ObjectType.ITEM_IN_METAL_BOX]))
                      ]
-        count = increment_location_count(count, len(possible), "i")
+        count = increment_location_count(count, len(possible), "b")
 
     return count
 
@@ -1927,6 +1860,10 @@ def SetRegionEvents(world, player, regions):
             continue
 
         if region.regionIndex == 0:
+            continue
+
+        if region.keyRegion and (world.options.key_logic == Options.KeyLogic.option_locked or
+                                            world.options.key_logic == Options.KeyLogic.option_not_logically_required):
             continue
 
         if (region.iccLogicOnly and world.options.chaos_control_logic_level not in

@@ -109,17 +109,16 @@ LevelRegion(STAGE_FINAL_HAUNT, REGION_INDICES.FINAL_HAUNT_CHECKPOINT_ONE,
                         REGION_RESTRICTION_TYPES.KeyDoor)
         .setFromRegion(REGION_INDICES.FINAL_HAUNT_VOLT_OR_FIVE).setAsDiversion(),
     LevelRegion(STAGE_FINAL_HAUNT, REGION_INDICES.FINAL_HAUNT_FIVE_SECRET_TURRET_1,
-                REGION_RESTRICTION_TYPES.BlackArmsTurret).setAsDiversion(),
+                REGION_RESTRICTION_TYPES.BlackArmsTurret).setAsDiversion().setAsKeyRegion(),
 
     LevelRegion(STAGE_FINAL_HAUNT, REGION_INDICES.FINAL_HAUNT_GOO,
                 REGION_RESTRICTION_TYPES.DarkSpinDash)
     .setFromRegion(REGION_INDICES.FINAL_HAUNT_VOLT_OR_FIVE),
     LevelRegion(STAGE_FINAL_HAUNT, REGION_INDICES.FINAL_HAUNT_FIVE_KEY_DOOR_2,
-                        REGION_RESTRICTION_TYPES.KeyDoor)
+                        REGION_RESTRICTION_TYPES.KeyDoor).setAsKeyRegion()
         .setFromRegion(REGION_INDICES.FINAL_HAUNT_VOLT_OR_FIVE).setAsDiversion(),
     LevelRegion(STAGE_FINAL_HAUNT, REGION_INDICES.FINAL_HAUNT_FIVE_SECRET_TURRET_2,
-                REGION_RESTRICTION_TYPES.BlackArmsTurret).setAsDiversion(),
-
+                REGION_RESTRICTION_TYPES.BlackArmsTurret).setAsDiversion().setAsKeyRegion(),
     LevelRegion(STAGE_FINAL_HAUNT, REGION_INDICES.FINAL_HAUNT_LIGHT_DASH,
                     REGION_RESTRICTION_TYPES.LightDash)
     .setLogicType(Options.LogicLevel.option_normal, Options.ChaosControlLogicLevel.option_easy)
@@ -142,9 +141,10 @@ LevelRegion(STAGE_FINAL_HAUNT, REGION_INDICES.FINAL_HAUNT_CHECKPOINT_ONE,
     LevelRegion(STAGE_FINAL_HAUNT, REGION_INDICES.FINAL_HAUNT_BEHIND_KEY_DOOR_3,
                     REGION_RESTRICTION_TYPES.RegionAccess(REGION_INDICES.FINAL_HAUNT_KEY_DOOR_3))
     .setLogicType(Options.LogicLevel.option_hard)
-    .setFromRegion(REGION_INDICES.FINAL_HAUNT_CHECKPOINT_SEVEN).setAsDiversion(),
+    .setFromRegion(REGION_INDICES.FINAL_HAUNT_CHECKPOINT_SEVEN).setAsDiversion()
+    .setAsKeyRegion(),
     LevelRegion(STAGE_FINAL_HAUNT, REGION_INDICES.FINAL_HAUNT_SECRET_TURRET_2,
-                REGION_RESTRICTION_TYPES.BlackArmsTurret).setAsDiversion(),
+                REGION_RESTRICTION_TYPES.BlackArmsTurret).setAsDiversion().setAsKeyRegion(),
     LevelRegion(STAGE_FINAL_HAUNT, REGION_INDICES.FINAL_HAUNT_SEVEN_DOOR,
                 REGION_RESTRICTION_TYPES.Door)
         .setFromRegion(REGION_INDICES.FINAL_HAUNT_CHECKPOINT_SEVEN),

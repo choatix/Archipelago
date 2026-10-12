@@ -48,7 +48,7 @@ def GetKeyRule(options, stage, player):
 def GetIndirectRulesForRings(ring_info):
     return list(set([ x.region for x in ring_info ]))
 
-def RingCalculation(options, state, player, stage_id, ring_info, region_data):
+def RingCalculation(options, state, player, stage_id, ring_info, region_data, skip_regions):
     indirect_regions = []
     repeatable_bells = [ l for l in ring_info if l.obtain_type == Rings.RingObtainType.Bell]
 
@@ -64,6 +64,10 @@ def RingCalculation(options, state, player, stage_id, ring_info, region_data):
         region = ring_availability.region
         if region not in indirect_regions:
             indirect_regions.append(region)
+
+        if (stage_id, region) in skip_regions:
+            continue
+
         current_region = None
         if ring_availability.region in region_data:
             current_region = region_data[ring_availability.region]
@@ -219,7 +223,9 @@ def GetRelevantTokenItem(token: LocationInfo):
 
     return level_token_items[0]
 
-def handle_path_rules(world, options, player, from_region_id, additional_level_region, path_type, outputs=[]):
+def handle_path_rules(world, options, player, from_region_id, additional_level_region, path_type,
+                      skip_regions=[], outputs=[],
+                      ):
     rule = lambda state: True
     indirects = []
 
@@ -262,6 +268,12 @@ def handle_path_rules(world, options, player, from_region_id, additional_level_r
             return weapon_rule, indirects
 
     if Names.REGION_RESTRICTION_TYPES.KeyDoor in additional_level_region.restrictionTypes:
+
+        if options.key_logic == Options.KeyLogic.option_not_logically_required or \
+            options.key_logic == Options.KeyLogic.option_locked:
+            rule = lambda state: False
+            return rule, indirects
+
         key_rule, regions = GetKeyRule(options, additional_level_region.stageId, player)
         rule = lambda state,r=rule: key_rule(state) and r(state)
         indirects.extend(regions)
@@ -544,6 +556,9 @@ def handle_path_rules(world, options, player, from_region_id, additional_level_r
 
         if access_region.hardLogicOnly and options.logic_level != Options.LogicLevel.option_hard:
             rule = lambda state: False
+        elif access_region.keyRegion and (options.key_logic == Options.KeyLogic.option_locked or \
+                                        options.key_logic == Options.KeyLogic.option_not_logically_required):
+            rule = lambda state: False
         else:
             #print("Check region access for::", additional_level_region.stageId, required_stage_region)
             region_name = Levels.stage_id_to_region(additional_level_region.stageId, required_stage_region)
@@ -578,11 +593,13 @@ def handle_path_rules(world, options, player, from_region_id, additional_level_r
             region_data[r.regionIndex] = r
 
         rule = lambda state, o=options, p=player,\
-            s=additional_level_region.stageId, ri=ring_info, rd=region_data: RingCalculation(o, state, p, s, ri, rd)
+            s=additional_level_region.stageId, ri=ring_info, rd=region_data: RingCalculation(o, state, p, s, ri, rd,
+                                                                                             skip_regions=skip_regions)
 
         ring_indirects = GetIndirectRulesForRings(ring_info)
+        valid_ring_indirects = [ x for x in ring_indirects if ((additional_level_region.stageId, x) not in skip_regions)]
 
-        for ring_indirect in ring_indirects:
+        for ring_indirect in valid_ring_indirects:
             indirects.append(Levels.stage_id_to_region(additional_level_region.stageId, ring_indirect))
 
     if Names.REGION_RESTRICTION_TYPES.Lantern in additional_level_region.restrictionTypes and options.objective_sanity_unlock:
@@ -643,7 +660,7 @@ def handle_path_rules(world, options, player, from_region_id, additional_level_r
 
     if Names.REGION_RESTRICTION_TYPES.SkyTroopsJumper in additional_level_region.restrictionTypes:
         if options.vehicle_logic:
-            if Names.LOGIC_TWEAK_AIR_SAUCER_PRISON_ISLAND in options.logic_tweaks or \
+            if Names.LOGIC_TWEAK_SKY_TROOPS_GUN_JUMPER in options.logic_tweaks or \
                     options.logic_level == Options.LogicLevel.option_easy:
                 rule = lambda state, r=rule: r(state) and state.has("Vehicle:Gun Jumper", player)
 
@@ -1169,15 +1186,20 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
                                     checkpoint_rule)
 
 
-    skip_regions = []
-    if world.options.logic_level != Options.LogicLevel.option_hard:
-        hard_only = [ r for r in Levels.INDIVIDUAL_LEVEL_REGIONS if r.hardLogicOnly]
-        skip_regions.extend([ (h.stageId, h.regionIndex) for h in hard_only])
-
-    if world.options.chaos_control_logic_level not in [
-        Options.ChaosControlLogicLevel.option_hard, Options.ChaosControlLogicLevel.option_intermediate]:
-        icc_only = [ r for r in Levels.INDIVIDUAL_LEVEL_REGIONS if r.iccLogicOnly ]
-        skip_regions.extend([ (h.stageId, h.regionIndex) for h in icc_only])
+    skip_regions = world.skip_regions
+    # if world.options.logic_level != Options.LogicLevel.option_hard:
+    #     hard_only = [ r for r in Levels.INDIVIDUAL_LEVEL_REGIONS if r.hardLogicOnly]
+    #     skip_regions.extend([ (h.stageId, h.regionIndex) for h in hard_only])
+    #
+    # if world.options.chaos_control_logic_level not in [
+    #     Options.ChaosControlLogicLevel.option_hard, Options.ChaosControlLogicLevel.option_intermediate]:
+    #     icc_only = [ r for r in Levels.INDIVIDUAL_LEVEL_REGIONS if r.iccLogicOnly ]
+    #     skip_regions.extend([ (h.stageId, h.regionIndex) for h in icc_only])
+    #
+    # if world.options.key_logic == Options.KeyLogic.option_locked or \
+    #                                     world.options.key_logic == Options.KeyLogic.option_not_logically_required:
+    #     key_regions = [r for r in Levels.INDIVIDUAL_LEVEL_REGIONS if r.keyRegion]
+    #     skip_regions.extend([(h.stageId, h.regionIndex) for h in key_regions])
 
     for additional_level_region in Levels.INDIVIDUAL_LEVEL_REGIONS:
         if additional_level_region.stageId not in world.available_levels:
@@ -1214,7 +1236,8 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
             #    logic_type = Levels.REGION_RESTRICTION_REFERENCE_TYPES.CraftLogic
 
             path_rule, indirects = handle_path_rules(world, world.options, player, region_from, additional_level_region,
-                                          logic_type)
+                                          logic_type, skip_regions=skip_regions)
+
             if path_rule is not None:
                 connection_name = Names.GetRegionEntranceName(base_region_name, new_region_name,
                                                               additional_level_region.restrictionTypes)
@@ -1223,9 +1246,12 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
 
                 if indirects is not None:
                     for indirect in indirects:
-                        multiworld.register_indirect_condition(
-                            multiworld.get_region(indirect, player),
-                            multiworld.get_entrance(connection_name, player))
+                        try:
+                            multiworld.register_indirect_condition(
+                                multiworld.get_region(indirect, player),
+                                multiworld.get_entrance(connection_name, player))
+                        except:
+                            print("Error with key-related rule:", indirect)
 
             else:
                 print("Path rule is None", base_region_name, new_region_name)
@@ -1275,7 +1301,10 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
         if backtrack_region.hardLogicOnly:
             mock_region_info.setHardLogicOnly()
 
-        if (mock_region_info.stageId, mock_region_info) in skip_regions:
+        if (mock_region_info.stageId, backtrack_region.backtrackFromRegion) in skip_regions:
+            continue
+
+        if (mock_region_info.stageId, backtrack_region.backtrackToRegion) in skip_regions:
             continue
 
         from_region_name = Levels.stage_id_to_region(mock_region_info.stageId, backtrack_region.backtrackFromRegion)
@@ -1681,6 +1710,9 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
                     if stage not in world.available_levels:
                         continue
 
+                    if (stage, region_index) in skip_regions:
+                        continue
+
                     rule = lambda state: True
 
                     if (world.options.weapon_sanity_unlock and
@@ -1900,9 +1932,10 @@ def set_rules(multiworld: MultiWorld, world: World, player: int):
             dd_region, entrance)
 
         for i in [l for l in Levels.INDIVIDUAL_LEVEL_REGIONS if l.stageId == Levels.STAGE_THE_LAST_WAY]:
-            lw_sub_region = multiworld.get_region(Levels.stage_id_to_region(Levels.STAGE_THE_LAST_WAY, i.regionIndex), player)
-            multiworld.register_indirect_condition(
-                lw_sub_region, entrance)
+            if (Levels.STAGE_THE_LAST_WAY, i.regionIndex) not in skip_regions:
+                lw_sub_region = multiworld.get_region(Levels.stage_id_to_region(Levels.STAGE_THE_LAST_WAY, i.regionIndex), player)
+                multiworld.register_indirect_condition(
+                    lw_sub_region, entrance)
 
     final_item = Items.GetFinalItem()
     mw_final_item = ShadowTheHedgehogItem(final_item, world.player)
